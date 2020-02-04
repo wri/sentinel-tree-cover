@@ -1,4 +1,7 @@
 
 config.yaml
 data/*
+gcloud-key.json
+*.DS_Store
+.DS_Store
 
