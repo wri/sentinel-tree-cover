@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+  <link rel="stylesheet" href="lib/css/ol.css" />
+  <link rel="stylesheet" href="lib/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="lib/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="lib/css/leaflet.css" />
+  <link rel="stylesheet" href="lib/css/L.Control.Basemaps.css" />
+  <link rel="stylesheet" href="lib/css/mainpage.css?v={r911}" />
+  <link rel="stylesheet" href="lib/css/bootstrap-toggle.css" />
+  <link rel="stylesheet" href="lib/css/dropdown.css" />
+  <link rel="stylesheet" href="lib/css/transition.css" />
+
+  <title>UESI</title>
+
+
+
+
+  <script type="text/javascript" src="lib/js/ol.js"></script>
+  <script src="lib/js/leaflet-src.js"></script>
+  <script src="lib/js/leaflet.ajax.js"></script>
+  <script src="lib/js/jquery-3.1.1.min.js"></script>
+  <script src="lib/js/spin.js"></script>
+  <script src="lib/js/leaflet.spin.js"></script>
+  <script src="lib/js/turf.min.js" charset="utf-8"></script>
+  <script src="lib/js/bootstrap.min.js"></script>
+  <script src="lib/js/L.Control.Basemaps.js"></script>
+  <script src="lib/js/geotiff.js"></script>
+  <script src="lib/js/plotty.js"></script>
+  <script src="lib/js/leaflet-geotiff.js"></script>
+  <script src="https://d3js.org/d3.v2.js"></script>
+  <script src="lib/js/bootstrap-toggle.js"></script>
+  <script src="lib/js/dropdown.min.js"></script>
+  <script src="lib/js/transition.min.js"></script>
+
+
+
+  <!-- BRING IN THE JAVASCIPT HERE -->
+
+
+
+  <script type="text/javascript" src="lib/mapindex.js"></script>
+  <!-- <script type="text/javascript" src="lib/map1.js"></script> -->
+
+
+
+</head>
+
+<body>
+  <!--###############################
+  ######### POPUP ON PAGE LOAD ######
+  ################################-->
+
+  <div class="modal fade" id="PageModal" tabindex="-1" role="dialog" aria-labelledby="Modal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+              aria-hidden="true">&times;</span>
+          </button>
+          <h4 class="modal-title" id="Modal">Urban Environmental and Social Inclusion Index</h4>
+
+        </div>
+        <div class="modal-body">
+          <!--<p>Explore how environmental performance and social inclusion vary on the neighborhood scale.</p>
+                <p>Choose a city from the dropdown on the top and an indicator from the list on the left.</p>
+                <p>Raw data can be shown instead by clicking the toggle on the navigation bar. </p>
+                <p>The base map can be switched to imagery by clicking the globe on the bottom-left.</p>
+                <p>Compare two indicators by clicking the "Compare Two Indicators" button on the top-right.</p>-->
+          <img src="includes/images/test.png" style="max-width:100%">
+        </div>
+        <div class="modal-footer" style="margin: 0 auto;">
+          <button type="button" class="btn btn-primary" style="margin: 0 auto;" data-dismiss="modal">Get
+            Started</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <nav class="navbar navbar-fixed-top navbar-default" role="navigation">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <img src="includes/images/URBAN_Logo_BW.png" alt="" width="150" height="50" align="right"
+            style="margin-right:140px">
+          <button type="button" class="navbar-toggle" data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+          </ul>
+          <!--<style>
+              .toggle.ios, .toggle-on.ios, .toggle-off.ios { border-radius: 9px; }
+              .toggle.ios .toggle-handle { border-radius: 9px; }
+              div#bs-example-navbar-collapse-1 span#a {
+                display: inline;
+              }
+              div#bs-example-navbar-collapse-1:hover span#a {
+                display: none;
+              }
+              div#bs-example-navbar-collapse-1 span#b {
+                display: none;
+              }
+              div#bs-example-navbar-collapse-1:hover span#b {
+                display: inline;
+              }
+            </style>-->
+          <!--<label class="checkbox-inline" style="position:absolute; bottom:15%">
+              <input id="toggle-event" type="checkbox" checked data-toggle="toggle" data-on="<span id='a'>Toggle View</span><span id='b'>Indicator</span>" data-style='ios' data-off="<span id='a'>Toggle View</span><span id='b'>Raw</span>">
+            </label>-->
+
+
+          <!--<form class="navbar-form navbar-left" role="search">
+              <div class="form-group">
+                <input type="text" class="form-control" placeholder="Search">
+              </div>
+              <button type="submit" class="btn btn-default">Submit</button>
+            </form>-->
+
+
+
+          <ul class="nav navbar-nav navbar-right">
+            <!--<li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">City <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li><a href="#">Amsterdam</a></li>
+                  <li><a href="#">Bangkok</a></li>
+                  <li><a href="#">Beijing</a></li>
+                  <li class="divider"></li>
+                  <li><a href="#">Separated link</a></li>
+                </ul>
+              </li>-->
+            <!--<img src="images/ddl_logo_2019.png" alt="" width="100" height="50" align = "right" style="margin-right:20px">-->
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+  </div>
+  </nav>
+
+
+  <div class="navbar-offset"></div>
+
+
+  <div id="map">
+  </div>
+
+  <div class="row main-row">
+    <div class="col-sm-4 col-md-3 sidebar sidebar-left pull-left">
+      <div class="panel-group sidebar-body" id="accordion-left">
+        <!--<div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">
+                  <a data-toggle="collapse" href="#properties">
+                    <i class="fa fa-list-alt"></i>
+                    About this indicator
+                  </a>
+                </h4>
+              </div>
+              <div id="properties" class="panel-collapse collapse">
+                <div class="panel-body" id="overview">
+                  <p>
+                  Click on an indicator above to map various demographic and environmental variables.
+                  </p>
+                  <script>
+                  if (current_indicator=="PM25") {
+                    document.getElementById("overview").innerHTML = "hello"
+                  }
+                  </script>
+                  <p>
+                  Click on any neighborhood to explore the data.
+                  </p>
+                </div>
+              </div>
+            </div>-->
+        <div id="help" class="panel panel-default">
+        </div>
+      </div>
+      <!--###############################
+              ######### HOW TO USE WEBSITE ######
+              ################################-->
+
+    </div>
+  </div>
+  </div>
+  <div class="mini-submenu mini-submenu-left pull-left">
+    <i class="fa fa-list-alt"></i>
+  </div>
+  </div>
+
+  <script>
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip()
+    })
+  </script>
+</body>
+
+</html>

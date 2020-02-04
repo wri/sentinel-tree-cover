@@ -1,0 +1,89 @@
+@media (min-width:500px) {
+        #map { width: 50%; border-right: 2px solid white; }
+        #map1 { width: 50%; border-left: 2px solid white; }
+      }
+      @media (max-width:400px) {
+        #map1 { border: None }
+        #map1 { display: None; border: None }
+      }
+
+      #map1 { position: absolute; top: 50px; bottom: 0px; left: 50%; right: 0px; }
+      #map1 .ol-zoom { font-size: 1.2em; }
+      #map1 { z-index: 35; }
+
+      body { overflow: hidden; }
+      .navbar-offset { margin-top: 50px; }
+      .navbar-brand {margin-right: 5px;}
+      .marginBottom-0 {margin-bottom:0;}
+
+      .dropdown-submenu{position:relative;}
+      .dropdown-submenu>.dropdown-menu{top:0;left:100%;margin-top:-6px;margin-left:-1px;-webkit-border-radius:0 6px 6px 6px;-moz-border-radius:0 6px 6px 6px;border-radius:0 6px 6px 6px;}
+      /*.dropdown-submenu:hover>.dropdown-menu{display:block;}*/
+      .dropdown-submenu>a:after{display:block;content:" ";float:right;width:0;height:0;border-color:transparent;border-style:solid;border-width:5px 0 5px 5px;border-left-color:#cccccc;margin-top:5px;margin-right:-10px;}
+      .dropdown-submenu:hover>a:after{border-left-color:#ffffff;}
+      .dropdown-submenu.pull-left{float:none;}.dropdown-submenu.pull-left>.dropdown-menu{left:-100%;margin-left:10px;-webkit-border-radius:6px 0 6px 6px;-moz-border-radius:6px 0 6px 6px;border-radius:6px 0 6px 6px;}
+      .dropdown-submenu:hover .dropdown-submenu-content {
+        display: block;
+      }
+      #map { position: absolute; top: 50px; bottom: 0px; left: 0px; right: 0px; }
+      #map .ol-zoom { font-size: 1.2em; }
+      .legend {
+        line-height: 18px;
+        color: #555;
+        background-color: white;
+        margin: 5px;
+        padding: 11px;
+        border-radius: 10px;
+        max-height: 25%;
+      }
+      .legend i {
+        width: 18px;
+        height: 18px;
+        float: left;
+        margin-right: 8px;
+        opacity: 0.7;
+        font-size: 16;
+      }
+      .zoom-top-opened-sidebar { margin-top: 5px; }
+      .zoom-top-collapsed { margin-top: 45px; }
+      .mini-submenu{
+        display:none;
+        background-color: rgba(255, 255, 255, 0.46);
+        border: 1px solid rgba(0, 0, 0, 0.9);
+        border-radius: 4px;
+        padding: 9px;
+        /*position: relative;*/
+        width: 42px;
+        text-align: center;
+      }
+      .modal-dialog{
+        position: absolute;
+        left: 50%;
+        margin-left: -242px;
+        height: 500px;
+        top: 50%;
+        margin-top: -150px;
+        width: 35%;
+      }
+      .mini-submenu-left {
+        position: absolute;
+        top: 60px;
+        left: .5em;
+        z-index: 40;
+      }
+      #map { z-index: 35; }
+      .sidebar { z-index: 45; width:275px;}
+      .main-row { position: relative; top: 0; }
+      .mini-submenu:hover{
+        cursor: pointer;
+      }
+      .slide-submenu{
+        background: rgba(0, 0, 0, 0.45);
+        display: inline-block;
+        padding: 0 8px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      h4 {
+        text-align: left;
+      }
