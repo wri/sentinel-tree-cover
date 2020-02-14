@@ -1,0 +1,4 @@
+model_checkpoint_path: "model"
+all_model_checkpoint_paths: "../1-78-1/model"
+all_model_checkpoint_paths: "../1-78-7/model"
+all_model_checkpoint_paths: "model"

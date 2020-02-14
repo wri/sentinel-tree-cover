@@ -4,7 +4,14 @@ Counting trees outside the forest with image segmentation
 ![img](https://raw.githubusercontent.com/wri/restoration-mapper/master/references/example_img.png)
 ![img2](https://raw.githubusercontent.com/wri/restoration-mapper/master/references/webmap.png)
 
-This project aims to produce wall-to-wall maps of trees outside the forest based on freely available Sentinel 2 imagery to serve as baseline data for restoration monitoring programs. The prototype webmap is available [here](https://restorationmapper.org/)
+[Restoration Mapper](https://restorationmapper.org) is an online tool to create wall-to-wall maps from a Collect Earth Online (CEO) mapathon using open source artificial intelligence and open source satellite imagery. The Restoration Mapper approach enables restoration monitoring stakeholders to:
+*  Rapidly assess tree density in non-forested landscapes
+*  Establish wall-to-wall baseline data
+*  Measure yearly change in tree density without conducting follow-up mapathons
+*  Generate maps relevant to land use planning
+*  Identify agroforestry, riparian buffer zones, and crop buffer zones
+*  Generate GeoTIFFs for further spatial analysis or combination with other datasets
+
 
 This model uses a Fully Connected Architecture with:
 *  [Convolutional LSTM](https://papers.nips.cc/paper/5955-convolutional-lstm-network-a-machine-learning-approach-for-precipitation-nowcasting.pdf) encoder with [layer normalization](https://arxiv.org/abs/1607.06450)
