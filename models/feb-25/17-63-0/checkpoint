@@ -1,4 +1,0 @@
-model_checkpoint_path: "model"
-all_model_checkpoint_paths: "../15-62-4/model"
-all_model_checkpoint_paths: "../16-62-1/model"
-all_model_checkpoint_paths: "model"

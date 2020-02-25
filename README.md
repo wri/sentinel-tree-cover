@@ -14,28 +14,29 @@ Counting trees outside the forest with image segmentation
 
 
 This model uses a Fully Connected Architecture with:
-*  [Convolutional LSTM](https://papers.nips.cc/paper/5955-convolutional-lstm-network-a-machine-learning-approach-for-precipitation-nowcasting.pdf) encoder with [layer normalization](https://arxiv.org/abs/1607.06450)
+*  [Convolutional GRU](https://papers.nips.cc/paper/5955-convolutional-lstm-network-a-machine-learning-approach-for-precipitation-nowcasting.pdf) encoder with [layer normalization](https://arxiv.org/abs/1607.06450)
 *  [Feature pyramid attention](https://arxiv.org/abs/1805.10180) between encoder and decoder
 *  Concurrent spatial and channel squeeze excitation [decoder](https://arxiv.org/abs/1803.02579)
 *  [AdaBound](https://arxiv.org/abs/1902.09843) optimizer
-*  [Focal loss](https://arxiv.org/abs/1708.02002) for a warm-up, fine tuned with [Lovasz softmax](https://arxiv.org/abs/1705.08790). Focal loss is tuned (gamma and alpha) for each image.
-*  Expectation maximization to identify pixel-level shifts between Sentinel and Digital Globe data.
+*  Binary cross entropy, weighted by effective number of samples, and boundary loss
 *  Hypercolumns to facilitate pixel-level accuracy
-*  DropBlock and Zoneout
-*  Temporal squeeze and excitation
-*  Atruous convolutions
+*  DropBlock and Zoneout for generalization
 *  Smoothed image predictions across moving windows
+*  Heavy use of skip connections to facilitate smooth loss functions
 
-The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m with DSen2 and corrected for atmospheric deviations, with additional inputs of the slope derived from Mapzen DEM. The specific pre-processing steps are:
+The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m with DSen2 and corrected for atmospheric deviations, with additional inputs of the slope derived from the Mapzen DEM. The specific pre-processing steps are:
 
-*  Download all L1C and L2A imagery for a 16x16 plot
+*  Download all L1C and L2A imagery for a 16x16 plot, subsetting dates with >70 degree zenith
 *  Download DEM imagery for a 180x180m region and calculate slope, clipping the border pixels
+*  Download Sentinel 1 imagery (VV-VH, gamma backscatter) and fuse to Sentinel 2
+*  Super-resolve 20m bands to 10m with DSen2
 *  Identify missing and outlier band values and correct by linearly interpolating betwen the nearest two "clean" time steps
-*  Calculate cloud cover probability with a 20% threshold
+*  Calculate cloud cover probability with a 20% threshold, and identify shadows by band thresholding
 *  Select the imagery closest to a 15 day window that is clean, linearly interpolating when data is missing
 *  Apply 5-pixel median band filter to DEM
-*  Apply Whittaker smoothing to each time series for each pixel for each band
-*  Calculate EVI, BI, MSAVI2, SI
+*  Apply Whittaker smoothing (lambda = 800) to each time series for each pixel for each band
+*  Calculate EVI, BI, MSAVI2
+*  
 
 
 The current metrics are **83% accuracy, 82% recall** at 10m scale across Ethiopia, Kenya, Ghana, Latin America, and India.
