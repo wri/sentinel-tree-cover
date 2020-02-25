@@ -6,4 +6,7 @@ gcloud-key.json
 .DS_Store
 models/january-super-india-2
 tile_data/*
+models/feb-24/*
+models/feb-20/*
+models/feb-12/*
 
