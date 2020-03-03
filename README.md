@@ -24,6 +24,9 @@ This model uses a Fully Connected Architecture with:
 *  Smoothed image predictions across moving windows
 *  Heavy use of skip connections to facilitate smooth loss functions
 
+![img4](https://raw.githubusercontent.com/wri/restoration-mapper/master/references/model.png)
+
+
 The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m with DSen2 and corrected for atmospheric deviations, with additional inputs of the slope derived from the Mapzen DEM. The specific pre-processing steps are:
 
 *  Download all L1C and L2A imagery for a 16x16 plot, subsetting dates with >70 degree zenith
@@ -37,11 +40,9 @@ The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m
 *  Apply Whittaker smoothing (lambda = 800) to each time series for each pixel for each band
 *  Calculate EVI, BI, MSAVI2
 
+![img3](https://raw.githubusercontent.com/wri/restoration-mapper/master/references/preprocessing-pipeline.png)
 
 The current metrics are **83% accuracy, 82% recall** at 10m scale across Ethiopia, Kenya, Ghana, Latin America, and India.
-
-![img3](https://raw.githubusercontent.com/wri/restoration-mapper/master/references/preprocessing-pipeline.png)
-![img4](https://raw.githubusercontent.com/wri/restoration-mapper/master/references/model.png)
 
 The training and testing areas are located below.
 
