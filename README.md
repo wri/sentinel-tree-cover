@@ -36,10 +36,12 @@ The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m
 *  Apply 5-pixel median band filter to DEM
 *  Apply Whittaker smoothing (lambda = 800) to each time series for each pixel for each band
 *  Calculate EVI, BI, MSAVI2
-*  
 
 
 The current metrics are **83% accuracy, 82% recall** at 10m scale across Ethiopia, Kenya, Ghana, Latin America, and India.
+
+![img3](https://raw.githubusercontent.com/wri/restoration-mapper/master/references/preprocessing-pipeline.png)
+![img4](https://raw.githubusercontent.com/wri/restoration-mapper/master/references/model.png)
 
 The training and testing areas are located below.
 
