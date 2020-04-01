@@ -1,0 +1,127 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+
+
+```{r}
+library(ggplot2)
+countries = c('Australia', 'Central Asia', "East South America", 'Europe', 'Horn of Africa', 'Middle East', 'North America', 'Northern Africa', 'Sahel', 'South West Asia', 'Southern Africa', 'West South America')
+correlations = c(0.74, 0.73, 0.96, 0.98, 0.88, 0.91, 0.84, 0.81, 0.87, 0.85, 0.96, 0.96)
+lower_ci = c(0.4, 0.33, 0.91, 0.96, 0.78, 0.65, 0.70, 0.5, 0.75, 0.53, 0.94, 0.93)
+upper_ci = c(0.85, 1.0, 0.99, 0.99, 0.96, 1., 0.95, 1., 0.94, 0.97, 0.98, 0.99)
+df = data.frame("Countries" = countries, "Correlations" = correlations, "Lower" = lower_ci, "Upper" = upper_ci)
+```
+
+```{r}
+ggplot(data = df, aes(x = countries, y = correlations))+
+  geom_col()+coord_flip()+theme_bw()+ylab("Pearson correlation")+
+  geom_errorbar(aes(ymin=lower_ci, ymax = upper_ci), width = 0.2)
+
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(rgdal)
+library(sp)
+library(sf)
+library(ggplot2)
+library(rgeos)
+library(broom)
+library(mapproj)
+```
+
+```{r}
+geojson = "../../references/json/land.geojson"
+input.proj <- CRS("+proj=longlat + datum=WGS84")
+map <- readOGR(geojson)
+map.df <- fortify(map)
+```
+
+
+```{r, fig.width=11, fig.height=7}
+library(ggalt)
+fao_data = read.csv("../../data/latlongs/fao-test-shifted.csv")
+
+bastin <- ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  geom_point(data = fao_data, aes(x = LON, y = LAT), color = "blue4", size = 0.2)+
+  ylim(-54, 85)+
+  xlim(-173, 180)+
+  theme_bw()+
+  ggtitle("Global tree cover plots from Bastin et al. 2017")+
+  xlab("")+
+  ylab("")+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+```
+
+```{r, fig.width=11, fig.height=7}
+library(ggalt)
+training_data = read.csv("../../data/latlongs/training_plots.csv")
+
+training_plots = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  geom_point(data = training_data, aes(x = longs, y = lats), color = "red", size = 0.3)+
+  ylim(-54, 85)+
+  xlim(-173, 180)+
+  theme_bw(base_size = 12)+
+  ggtitle("Training plots")+
+  xlab("")+
+  ylab("")+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+```
+
+```{r, fig.width=11, fig.height=7}
+library(ggalt)
+testing_data = read.csv("../../data/latlongs/testing_plots.csv")
+
+testing_plots = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  ylim(-54, 85)+
+  xlim(-173, 180)+
+  geom_point(data = testing_data, aes(x = longs, y = lats), color = "blue3", size = 0.25)+
+  theme_bw(base_size = 12)+
+  xlab("")+
+  ylab("")+
+  ggtitle("Testing plots - global pixel accuracy")+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+```
+
+```{r, fig.width=5, fig.height=5}}
+#geojson = "../../references/json/custom.geo.json"
+#map <- readOGR(geojson)
+#map.df <- fortify(map)
+# Honduras
+y <- seq(14.1, 15.1, 0.1)  #(6, 20)
+x <- seq(-88.7, -87.7, 0.1) #(-90, -80)
+
+# Ghana
+#y <- seq(7.4, 8.4, 0.1) #(-5, 5)
+#x <- seq(-1.2, -0.2, 0.1) #(-2, 12)
+
+# Tanzania
+#x <- seq(36.7, 37.7, 0.1) # 30, 40
+#y <- seq(-6.2, -5.2, 0.1) @ -10, 4
+
+grid <- expand.grid(x,y)
+grid$latlong <- paste(grid$Var2, grid$Var1)
+local = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.2)+
+  geom_point(data = grid, aes(x = Var1, y = Var2), color = "blue3", size = 0.05)+
+  coord_cartesian(ylim = c(6, 20), xlim = c(-90, -80))+
+  theme_bw()+
+  ggtitle("Honduras")+
+  xlab("")+
+  ylab("")
+```
+
+```{r}
+library(grid)
+library(ggmap)
+
+main +
+    inset(ggplotGrob(honduras), xmin = -76.7, xmax = 0, ymin = 20, ymax = 50)
+```
+
