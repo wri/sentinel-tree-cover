@@ -59,6 +59,17 @@ The training and testing areas are located below.
 *  Self training
 *  CRF
 
+## Changelog
+
+### April 03, 2020
+*  Switch Bilinear upsampling in FPA to Nearest Neighbor + Conv-BN
+*  Add learning schedule for batch renormalization as implemented in the original paper
+*  Switch last SELU to RELU
+*  Incorporate drop block into every conv BN block
+*  Add docstrings and code formatting to most of the notebooks
+*  Finalize notebook naming conventions
+
+
 Project Organization
 ------------
 
