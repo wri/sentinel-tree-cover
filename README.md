@@ -61,6 +61,14 @@ The training and testing areas are located below.
 
 ## Changelog
 
+### April 09, 2020
+*  Reduce dropblock to 0.85 from 0.75, increase block size from 3 to 4, as per the original paper
+*  Reduce zoneout from 0.2 to 0.15 to conform to original paper recommendations
+*  Add CSSE block to each conv-bn-relu-drop block instead of after GRU and after FPA
+*  Remove CSSE block after each time step in convGRU
+*  Fix sentinel-1 and sentinel-2 fusion issues
+
+
 ### April 03, 2020
 *  Switch Bilinear upsampling in FPA to Nearest Neighbor + Conv-BN
 *  Add learning schedule for batch renormalization as implemented in the original paper
