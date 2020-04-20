@@ -5,7 +5,7 @@ from tensorflow.initializers import orthogonal
 class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
   """A GRU cell with convolutions instead of multiplications."""
 
-  def __init__(self, shape, filters, kernel, initializer = tf.initializers.orthogonal, fpa = False, padding = 'VALID', pad_input = True, activation=tf.tanh, normalize=False, data_format='channels_last', reuse=None):
+  def __init__(self, shape, filters, kernel, initializer = tf.initializers.orthogonal, sse = False, padding = 'VALID', pad_input = True, activation=tf.tanh, normalize=False, data_format='channels_last', reuse=None):
     super(ConvGRUCell, self).__init__(_reuse=reuse)
     self._filters = filters
     self._kernel = kernel
@@ -14,7 +14,7 @@ class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
     self._padding = padding
     self._initializer = initializer
     self._pad_input = pad_input
-    self._fpa = fpa
+    self._sse = sse
     if data_format == 'channels_last':
         self._size = tf.TensorShape(shape + [self._filters])
         self._feature_axis = self._size.ndims
@@ -41,17 +41,16 @@ class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
       inputs = tf.concat([x, h], axis=self._feature_axis)
       n = channels + self._filters
       m = 2 * self._filters if self._filters > 1 else 2
-      W = tf.get_variable('kernel', self._kernel + [n, m])
+      W = tf.get_variable('kernel', self._kernel + [n, m]) # [3, 3, C, 2C]
       print(W.shape)
       if self._pad_input:
-        inputs = tf.pad(inputs, [[0, 0], [1, 1], [1, 1] ,[0,0] ], 'REFLECT')
-      y = tf.nn.convolution(inputs, W, self._padding, data_format=self._data_format)
-      if self._fpa:
-        W_1 = tf.get_variable("kernel_1", [1, 1, self._filters*2, 1])
-        print(W_1.shape)
-        print(y.shape)
+        inputs_pad = tf.pad(inputs, [[0, 0], [1, 1], [1, 1] ,[0,0] ], 'REFLECT')
+      y = tf.nn.convolution(inputs_pad, W, self._padding, data_format=self._data_format)
+      if self._sse:
+        W_1 = tf.get_variable("kernel_1", [1, 1, m, 1]) # [1, 1, C, 1]
         y_1 = tf.nn.convolution(y, W_1, 'VALID')
         y_1 = tf.nn.sigmoid(y_1)
+        print(y_1.shape)
         y = y * y_1
       if self._normalize:
         r, u = tf.split(y, 2, axis=self._feature_axis)
@@ -67,11 +66,11 @@ class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
       n = channels + self._filters
       m = self._filters
       if self._pad_input:
-        inputs = tf.pad(inputs, [[0, 0], [1, 1], [1, 1] ,[0,0] ], 'REFLECT')
-      W = tf.get_variable('kernel', self._kernel + [n, m])
-      y = tf.nn.convolution(inputs, W, self._padding, data_format=self._data_format)
-      if self._fpa:
-        W_1 = tf.get_variable("kernel_1", [1, 1, m, 1])
+        inputs_pad = tf.pad(inputs, [[0, 0], [1, 1], [1, 1] ,[0,0] ], 'REFLECT') #
+      W = tf.get_variable('kernel', self._kernel + [n, m]) # [3, 3, C, 2C]
+      y = tf.nn.convolution(inputs_pad, W, self._padding, data_format=self._data_format)
+      if self._sse:
+        W_1 = tf.get_variable("kernel_1", [1, 1, m, 1]) #[1, 1, C, 1]
         y_1 = tf.nn.convolution(y, W_1, 'VALID')
         y_1 = tf.nn.sigmoid(y_1)
         y = y * y_1

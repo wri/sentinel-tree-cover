@@ -81,12 +81,14 @@ testing_plots = ggplot()+
   geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
   ylim(-54, 85)+
   xlim(-173, 180)+
-  geom_point(data = testing_data, aes(x = longs, y = lats), color = "blue3", size = 0.25)+
+  geom_point(data = testing_data, aes(x = longs, y = lats), color = "blue3", size = 0.5)+
   theme_bw(base_size = 12)+
   xlab("")+
   ylab("")+
   ggtitle("Testing plots - global pixel accuracy")+
   coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+
+print(testing_plots)
 ```
 
 ```{r, fig.width=5, fig.height=5}}
