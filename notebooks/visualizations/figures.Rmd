@@ -81,8 +81,8 @@ testing_plots = ggplot()+
   geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
   ylim(-54, 85)+
   xlim(-173, 180)+
-  geom_point(data = testing_data, aes(x = longs, y = lats), color = "blue3", size = 0.5)+
-  theme_bw(base_size = 12)+
+  geom_point(data = testing_data, aes(x = longs, y = lats), color = "blue3", size = 0.15)+
+  theme_bw(base_size = 9)+
   xlab("")+
   ylab("")+
   ggtitle("Testing plots - global pixel accuracy")+
