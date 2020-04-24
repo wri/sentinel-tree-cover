@@ -1,3 +1,0 @@
-model_checkpoint_path: "model"
-all_model_checkpoint_paths: "../february-fused-master-39-81.8/model"
-all_model_checkpoint_paths: "model"
