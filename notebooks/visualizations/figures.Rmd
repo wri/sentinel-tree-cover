@@ -76,8 +76,8 @@ ggplot(data = df, aes(x = Countries, y = Correlations, fill=Model))+
   theme_bw()+ylab("Pearson correlation")+
   geom_errorbar(aes(ymin=Lower, ymax = Upper), stat = "identity", position = position_dodge(width=.9), width = 0.2)+
   xlab("")+
-  scale_color_brewer(palette = 1)+
-  scale_y_continuous(limits=c(0.4,1),oob = rescale_none)
+  scale_y_continuous(limits=c(0.4,1),oob = rescale_none)+
+  scale_fill_brewer(type = 'qual')
 ```
 
 ```{r}
