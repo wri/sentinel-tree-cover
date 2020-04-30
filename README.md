@@ -1,8 +1,7 @@
 Counting trees outside the forest with image segmentation
 ==============================
 
-![img](https://raw.githubusercontent.com/wri/restoration-mapper/master/references/example_img.png)
-![img2](https://raw.githubusercontent.com/wri/restoration-mapper/master/references/webmap.png)
+![img](master/references/readme/example.png?raw=true)
 
 [Restoration Mapper](https://restorationmapper.org) is an online tool to create wall-to-wall maps from a Collect Earth Online (CEO) mapathon using open source artificial intelligence and open source satellite imagery. The Restoration Mapper approach enables restoration monitoring stakeholders to:
 *  Rapidly assess tree density in non-forested landscapes
