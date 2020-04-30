@@ -8,3 +8,14 @@ coverage
 awscli
 flake8
 python-dotenv>=0.5.1
+matplotlib
+scipy
+seaborn
+osgeo
+s2cloudless
+sentinelhub
+skimage
+tensorflow==1.13.1
+keras
+tqdm
+pandas
