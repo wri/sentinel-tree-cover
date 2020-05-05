@@ -1,6 +1,7 @@
 Counting trees outside the forest with image segmentation
 ==============================
 
+# Overview
 ![img](references/readme/example.png?raw=true)
 
 [Restoration Mapper](https://restorationmapper.org) is an online tool to create wall-to-wall maps from a Collect Earth Online (CEO) mapathon using open source artificial intelligence and open source satellite imagery. The Restoration Mapper approach enables restoration monitoring stakeholders to:
@@ -11,7 +12,9 @@ Counting trees outside the forest with image segmentation
 *  Identify agroforestry, riparian buffer zones, and crop buffer zones
 *  Generate GeoTIFFs for further spatial analysis or combination with other datasets
 
+# Methodology
 
+## Model
 This model uses a Fully Connected Architecture with:
 *  [Convolutional GRU](https://papers.nips.cc/paper/5955-convolutional-lstm-network-a-machine-learning-approach-for-precipitation-nowcasting.pdf) encoder with [layer normalization](https://arxiv.org/abs/1607.06450)
 *  [Feature pyramid attention](https://arxiv.org/abs/1805.10180) between encoder and decoder
@@ -25,10 +28,10 @@ This model uses a Fully Connected Architecture with:
 
 ![img4](references/readme/model.png?raw=true)
 
+## Data
+The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m with DSen2 and corrected for atmospheric deviations, with additional inputs of the slope derived from the Mapzen DEM and Sentinel-1 VV-VH. The specific pre-processing steps are:
 
-The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m with DSen2 and corrected for atmospheric deviations, with additional inputs of the slope derived from the Mapzen DEM. The specific pre-processing steps are:
-
-*  Download all L1C and L2A imagery for a 16x16 plot, subsetting dates with >70 degree zenith
+*  Download all L1C and L2A imagery for a 16x16 plot
 *  Download DEM imagery for a 180x180m region and calculate slope, clipping the border pixels
 *  Download Sentinel 1 imagery (VV-VH, gamma backscatter) and fuse to Sentinel 2
 *  Super-resolve 20m bands to 10m with DSen2
@@ -41,7 +44,7 @@ The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m
 
 ![img3](references/readme/preprocessing-pipeline.png?raw=true)
 
-The current metrics are **83% accuracy, 82% recall** at 10m scale across Ethiopia, Kenya, Ghana, Latin America, and India.
+The current metrics are **95% accuracy, 94% recall** at 10m scale across 1100 plots distributed globally.
 
 The training and testing areas are located below.
 
@@ -49,7 +52,7 @@ The training and testing areas are located below.
 ![img4](references/readme/test-plots.png?raw=true)
 
 
-## Development roadmap
+# Development roadmap
 
 *  Stochastic weight averaging
 *  Augmentations: shift, small rotations, mirroring
@@ -58,7 +61,10 @@ The training and testing areas are located below.
 *  Self training
 *  CRF
 
-## Changelog
+# Changelog
+
+### May 01
+*  Add final global model and paper replication code
 
 ### April 09, 2020
 *  Reduce dropblock to 0.85 from 0.75, increase block size from 3 to 4, as per the original paper
@@ -77,30 +83,22 @@ The training and testing areas are located below.
 *  Finalize notebook naming conventions
 
 
-Project Organization
+# Project Organization
 ------------
 
     ├── LICENSE
     ├── Makefile           <- Makefile with commands like `make data` or `make train`
     ├── README.md          <- The top-level README for developers using this project.
-    ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
-    │
     ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
     │
     ├── models             <- Trained and serialized models, model predictions, or model summaries
     │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
+    ├── notebooks          <- Jupyter notebooks
+    │   └── baseline 
+    │   └── replicate-paper 
+    │   └── visualization 
     │
     ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-    │
-    ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-    │   └── figures        <- Generated graphics and figures to be used in reporting
     │
     ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
     │                         generated with `pip freeze > requirements.txt`
@@ -127,5 +125,3 @@ Project Organization
 
 
 --------
-
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
