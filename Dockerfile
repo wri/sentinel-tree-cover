@@ -12,13 +12,20 @@ RUN apt-get install -y build-essential python3.6 python3-pip python3-dev
 RUN pip3 -q install pip –upgrade
 
 RUN mkdir src
+RUN mkdir notebooks
+
+COPY notebooks/* notebooks/
+
 WORKDIR src/
 COPY . .
 
 RUN pip3 install -r requirements.txt
 RUN pip3 install jupyter
 
-WORKDIR /src/notebooks
+RUN src/data/download_dataset.py
+RUN src/models/download_model.py
+
+WORKDIR /notebooks
 
 CMD ["jupyter", "notebook", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root"]
 

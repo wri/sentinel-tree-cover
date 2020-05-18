@@ -183,7 +183,8 @@ data = read.csv("../../data/latlongs/landscapes.csv")
   coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
              xlim=c(-130, 167),
              ylim=c(-58, 80))+
-  theme(plot.margin=unit(c(0,0,0,0),"cm"))
+  theme(plot.margin=unit(c(0,0,0,0),"cm"))+
+  ggtitle("Landscape locations of generated wall-to-wall maps")
 
 ```
 
