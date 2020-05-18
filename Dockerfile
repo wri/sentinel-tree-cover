@@ -1,5 +1,4 @@
-# reference: https://hub.docker.com/_/ubuntu/
-FROM tensorflow/tensorflow:1.13.1-gpu
+FROM tensorflow/tensorflow:1.13.1-gpu-py3
 
 # Adds metadata to the image as a key value pair example LABEL version="1.0"
 LABEL maintainer="John Brandt <john.brandt@wri.org>"
@@ -20,7 +19,7 @@ RUN pip install --upgrade pip
 RUN mkdir src
 RUN mkdir notebooks
 
-COPY notebooks/* src/notebooks/
+COPY notebooks/ src/notebooks/
 
 WORKDIR src/
 COPY . .
@@ -33,7 +32,7 @@ RUN add-apt-repository ppa:ubuntugis/ppa && apt-get update &&\
  	apt-get -y install libgdal-dev &&\
  	export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
  	export C_INCLUDE_PATH=/usr/include/gdal &&\
- 	pip install GDAL
+ 	pip install GDAL==$(gdal-config --version | awk -F'[.]' '{print $1"."$2}') --global-option=build_ext --global-option="-I/usr/include/gdal"
 
 RUN python3 src/data/download_dataset.py
 RUN python3 src/models/download_model.py
