@@ -14,7 +14,7 @@ seaborn
 s2cloudless
 sentinelhub
 scikit-image
-tensorflow==1.13.1
+tensorflow==1.15.2
 keras
 tflearn
 tqdm
