@@ -1,5 +1,5 @@
 # reference: https://hub.docker.com/_/ubuntu/
-FROM ubuntu:16.04
+FROM tensorflow/tensorflow:1.13.1-gpu
 
 # Adds metadata to the image as a key value pair example LABEL version="1.0"
 LABEL maintainer="John Brandt <john.brandt@wri.org>"
@@ -7,28 +7,39 @@ LABEL maintainer="John Brandt <john.brandt@wri.org>"
 ##Set environment variables
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
-RUN apt-get update && apt-get -y update
-RUN apt-get install -y build-essential python3.6 python3-pip python3-dev
-RUN pip3 -q install pip –upgrade
+RUN apt-get update -y && apt-get install --no-install-recommends -y -q \
+    ca-certificates gcc libffi-dev wget unzip git openssh-client gnupg curl \
+    python-dev python-setuptools
+
+RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
+    echo "/usr/local/cuda/lib64/stubs" >> /etc/ld.so.conf.d/cuda-9-0.conf && \
+    ldconfig
+
+RUN pip install --upgrade pip
 
 RUN mkdir src
 RUN mkdir notebooks
 
-COPY notebooks/* notebooks/
+COPY notebooks/* src/notebooks/
 
 WORKDIR src/
 COPY . .
 
-RUN pip3 install -r requirements.txt
-RUN pip3 install jupyter
+RUN pip install -r requirements.txt
+RUN pip install jupyter
 
-RUN src/data/download_dataset.py
-RUN src/models/download_model.py
+RUN add-apt-repository ppa:ubuntugis/ppa && apt-get update &&\
+ 	apt-get -y install gdal-bin &&\
+ 	apt-get -y install libgdal-dev &&\
+ 	export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
+ 	export C_INCLUDE_PATH=/usr/include/gdal &&\
+ 	pip install GDAL
 
-WORKDIR /notebooks
+RUN python3 src/data/download_dataset.py
+RUN python3 src/models/download_model.py
 
 CMD ["jupyter", "notebook", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root"]
 
-# docker build -t myaccount/new_project .
-# docker run -p 8888:8888 myaccount/new_project
-# docker push myaccount/new_project
+# docker build -t johnbrandtwri/restoration_mapper .
+# docker run -p 8888:8888 johnbrandtwri/restoration_mapper
+# docker push johnbrandtwri/restoration_mapper

@@ -20,13 +20,14 @@ Counting trees inside and outside the forest with image segmentation
 
 Running the following Docker commands will download the container image and load the `notebooks/` folder.
 ```
-docker pull wri/restoration_mapper
-docker run -p 8888:8888 wri/restoration_mapper
+docker pull johnbrandtwri/restoration_mapper:latest
+docker run -p 8888:8888 johnbrandtwri/restoration_mapper
 ```
 
 ## Without docker
 *  Clone repository
 *  Install dependencies `pip3 install -r requirements.txt`
+*  Install GDAL (different process for different operating systems, see https://gdal.org)
 *  Download model `python3 src/models/download_model.py`
 *  Optional: Download test data `python3 src/models/download_data.py`
 *  Start Jupyter notebook and navigate to `notebooks/` folder
