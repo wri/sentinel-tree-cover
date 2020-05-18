@@ -1,16 +1,40 @@
-Counting trees outside the forest with image segmentation
+Counting trees inside and outside the forest with image segmentation
 ==============================
 
-# Overview
-![img](references/readme/example.png?raw=true)
+# Description
 
-[Restoration Mapper](https://restorationmapper.org) is an online tool to create wall-to-wall maps from a Collect Earth Online (CEO) mapathon using open source artificial intelligence and open source satellite imagery. The Restoration Mapper approach enables restoration monitoring stakeholders to:
+[Restoration Mapper](https://restorationmapper.org) is an online tool to create wall-to-wall maps of tree presence using open source artificial intelligence and open source satellite imagery. The Restoration Mapper approach enables monitoring stakeholders to:
 *  Rapidly assess tree density in non-forested landscapes
 *  Establish wall-to-wall baseline data
 *  Measure yearly change in tree density without conducting follow-up mapathons
 *  Generate maps relevant to land use planning
 *  Identify agroforestry, riparian buffer zones, and crop buffer zones
 *  Generate GeoTIFFs for further spatial analysis or combination with other datasets
+
+![img](references/readme/example.png?raw=true)
+
+# Installation
+
+
+## With Docker
+
+Running the following Docker commands will download the container image and load the `notebooks/` folder.
+```
+docker pull wri/restoration_mapper
+docker run -p 8888:8888 wri/restoration_mapper
+```
+
+## Without docker
+*  Clone repository
+*  Install dependencies `pip3 install -r requirements.txt`
+
+# Usage
+The bulk of this project is created around separate jupyter notebooks for each step of the pipeline. The `notebooks/` folder contains ordered notebooks for downloading training and testing data, training the model, downloading large area tiles, and generating predictions and cloud-optimized Geotiffs of tree cover.
+
+Within the `notebooks/` folder, the subfolder `baseline` additionally contains code to train a Random Forests, Support vector machine, and U-NET baseline model, and the `replicate-paper` folder contains code to generate the accuracy statistics.
+
+The project requires an API key for [Sentinel-hub](http://sentinel-hub.com/), stored as `config.yaml` in the base directory with the structure `key: "YOUR-API-KEY-HERE"`. The `notebooks/4a-download-large-area.ipynb` notebook will allow you to download and preprocess the required Sentinel-1, Sentinel-2, and DEM imagery for an input `(lat, long)` and `(x, y)` size in meters. The tiles will be saved to a named output folder, which can be referenced in `notebokos/4b-predict-large-area.ipynb` to generate a geotiff or cloud-optimized geotiff.
+
 
 # Methodology
 
@@ -45,43 +69,6 @@ The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m
 ![img3](references/readme/preprocessing-pipeline.png?raw=true)
 
 The current metrics are **95% accuracy, 94% recall** at 10m scale across 1100 plots distributed globally.
-
-The training and testing areas are located below.
-
-![img3](references/readme/train-plots.png?raw=true)
-![img4](references/readme/test-plots.png?raw=true)
-
-
-# Development roadmap
-
-*  Stochastic weight averaging
-*  Augmentations: shift, small rotations, mirroring
-*  Hyperparameter search
-*  Regularization search
-*  Self training
-*  CRF
-
-# Changelog
-
-### May 01
-*  Add final global model and paper replication code
-
-### April 09, 2020
-*  Reduce dropblock to 0.85 from 0.75, increase block size from 3 to 4, as per the original paper
-*  Reduce zoneout from 0.2 to 0.15 to conform to original paper recommendations
-*  Add CSSE block to each conv-bn-relu-drop block instead of after GRU and after FPA. Within FPA, cSSE blocks are after three forward and five forward
-*  Remove CSSE block after each time step in convGRU
-*  Fix sentinel-1 and sentinel-2 fusion issues
-
-
-### April 03, 2020
-*  Switch Bilinear upsampling in FPA to Nearest Neighbor + Conv-BN
-*  Add learning schedule for batch renormalization as implemented in the original paper
-*  Switch last SELU to RELU
-*  Incorporate drop block into every conv BN block
-*  Add docstrings and code formatting to most of the notebooks
-*  Finalize notebook naming conventions
-
 
 # Project Organization
 ------------
