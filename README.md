@@ -27,6 +27,9 @@ docker run -p 8888:8888 wri/restoration_mapper
 ## Without docker
 *  Clone repository
 *  Install dependencies `pip3 install -r requirements.txt`
+*  Download model `python3 src/models/download_model.py`
+*  Optional: Download test data `python3 src/models/download_data.py`
+*  Start Jupyter notebook and navigate to `notebooks/` folder
 
 # Usage
 The bulk of this project is created around separate jupyter notebooks for each step of the pipeline. The `notebooks/` folder contains ordered notebooks for downloading training and testing data, training the model, downloading large area tiles, and generating predictions and cloud-optimized Geotiffs of tree cover.
