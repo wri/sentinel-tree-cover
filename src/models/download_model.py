@@ -1,4 +1,6 @@
 import os
+import urllib.request
+import zipfile
 
 if __name__ == "__main__":
 
@@ -8,4 +10,7 @@ if __name__ == "__main__":
 
 	if not os.path.exists(os.path.realpath(model_path + "master/")):
 		print("Downloading model file from cloud storage")
-		#download the file
+		urllib.request.urlretrieve("https://storage.googleapis.com/rm-models/master.zip", "master.zip")
+		with zipfile.ZipFile("master.zip", 'r') as zip_ref:
+		    zip_ref.extractall("../models/")
+
