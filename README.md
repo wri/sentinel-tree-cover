@@ -74,6 +74,10 @@ The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m
 
 The current metrics are **95% accuracy, 94% recall** at 10m scale across 1100 plots distributed globally.
 
+# License
+
+Restoration mapper is released under the GNU General Public License v3.0.
+
 # Project Organization
 ------------
 
