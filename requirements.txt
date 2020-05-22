@@ -20,3 +20,7 @@ tflearn
 tqdm
 pandas
 hickle
+geopandas
+pycountry
+reverse_geocoder
+pycountry_convert
