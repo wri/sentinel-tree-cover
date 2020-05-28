@@ -184,7 +184,7 @@ data = read.csv("../../data/latlongs/landscapes.csv")
              xlim=c(-130, 167),
              ylim=c(-58, 80))+
   theme(plot.margin=unit(c(0,0,0,0),"cm"))+
-  ggtitle("Landscape locations of generated wall-to-wall maps")
+  ggtitle("Landscape locations - Restoration Mapper")
 
 ```
 
