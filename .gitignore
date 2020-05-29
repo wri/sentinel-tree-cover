@@ -13,5 +13,5 @@ models/feb-25/lac/*
 models/march-2/*
 models/*
 raw/*
-
+*.pem
 

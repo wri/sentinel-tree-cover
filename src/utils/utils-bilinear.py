@@ -31,18 +31,6 @@ def evi(x, verbose = False):
         amax = np.argwhere(np.array([np.max(evis[i]) for i in range(x.shape[0])]) > 3)
         amin = np.concatenate([amin, amax])
         amin = np.unique(amin)
-        mins = np.min(evis)
-        maxs = np.max(evis)
-        if mins < -1 or maxs > 1:
-            idx = np.argmin(evis)
-            print(idx.shape)
-            #print(np.argmin(evis, (0, 1)).shape)
-            #min_nir = NIR[idx[0], idx[1], idx[2]]
-            #min_red = RED[idx[0], idx[1], idx[2]]
-            #min_blue = BLUE[idx[0], idx[1], idx[2]]
-            #print("NIR at lowest: {}, RED at lowest: {}, BLUE at lowest: {}".format(
-            #    min_nir, min_red, min_blue))
-            print("evis error: {}, {}, {} steps, clipping to -1.5, 1.5".format(mins, maxs, len(amin)))
     evis = np.clip(evis, -1.5, 1.5)
     x = np.concatenate([x, evis[:, :, :, np.newaxis]], axis = -1)
     return x, amin
