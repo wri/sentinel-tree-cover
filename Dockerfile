@@ -38,6 +38,12 @@ RUN add-apt-repository ppa:ubuntugis/ppa && apt-get update &&\
 RUN python3 src/data/download_dataset.py
 RUN python3 src/models/download_model.py
 
+# Run unit tests
+CMD ["./run_test.sh"]
+
+# Delete API keys once the unit tests are done
+RUN rm config.yaml
+
 CMD ["jupyter", "notebook", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root"]
 
 # docker build -t johnbrandtwri/restoration_mapper .

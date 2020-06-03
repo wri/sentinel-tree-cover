@@ -4,6 +4,32 @@ from tflearn.layers.conv import global_avg_pool
 import itertools
 from tensorflow.python.keras.layers import Conv2D, Lambda, Dense, Multiply, Add
 
+def convertCoords(xy, src='', targ=''):
+    """ Converts coords from one EPSG to another
+
+        Parameters:
+         xy (tuple): input longitiude, latitude tuple
+         src (str): EPSG code associated with xy
+         targ (str): EPSG code of target output
+    
+        Returns:
+         pt (tuple): (x, y) tuple of xy in targ EPSG
+    """
+
+    srcproj = osr.SpatialReference()
+    srcproj.ImportFromEPSG(src)
+    targproj = osr.SpatialReference()
+    if isinstance(targ, str):
+        targproj.ImportFromProj4(targ)
+    else:
+        targproj.ImportFromEPSG(targ)
+    transform = osr.CoordinateTransformation(srcproj, targproj)
+
+    pt = ogr.Geometry(ogr.wkbPoint)
+    pt.AddPoint(xy[0], xy[1])
+    pt.Transform(transform)
+    return([pt.GetX(), pt.GetY()])
+
 def ndvi(x, verbose = False):
     # (B8 - B4)/(B8 + B4)
     NIR = x[:, :, :, 6]
@@ -34,6 +60,54 @@ def evi(x, verbose = False):
     evis = np.clip(evis, -1.5, 1.5)
     x = np.concatenate([x, evis[:, :, :, np.newaxis]], axis = -1)
     return x, amin
+
+def bounding_box(points, expansion = 160):
+    """ Calculates the corners of a bounding box with an
+        input expansion in meters from a given bounding_box
+        
+        Subcalls:
+         calculate_epsg, convertCoords
+
+        Parameters:
+         points (list): output of calc_bbox
+         expansion (float): number of meters to expand or shrink the
+                            points edges to be
+    
+        Returns:
+         bl (tuple): x, y of bottom left corner with edges of expansion meters
+         tr (tuple): x, y of top right corner with edges of expansion meters
+    """
+    bl = list(points[0])
+    tr = list(points[1])
+    
+    epsg = calculate_epsg(bl)
+
+    bl = convertCoords(bl, 4326, epsg)
+    tr = convertCoords(tr, 4326, epsg)
+    init = [b - a for a,b in zip(bl, tr)]
+    distance1 = tr[0] - bl[0]
+    distance2 = tr[1] - bl[1]
+    expansion1 = (expansion - distance1)/2
+    expansion2 = (expansion - distance2)/2
+    bl = [bl[0] - expansion1, bl[1] - expansion2]
+    tr = [tr[0] + expansion1, tr[1] + expansion2]
+
+    after = [b - a for a,b in zip(bl, tr)]   
+    print(after)
+    if max(init) > 130:
+        print("ERROR: Initial field greater than 130m")
+    if min(init) < 120:
+        print("ERROR: Initial field less than 130m")
+        
+    if min(after) < (expansion - 4.5):
+        print("ERROR")
+    if max(after) > (expansion + 5):
+        print("ERROR")
+    diffs = [b - a for b, a in zip(after, init)]
+
+    bl = convertCoords(bl, epsg, 4326)
+    tr = convertCoords(tr, epsg, 4326)
+    return bl, tr
     
 def savi(x, verbose = False):
     # (1.5) * ((08 - 04)/ (08 + 04 + 0.5))
@@ -174,6 +248,7 @@ def remove_blank_steps(array):
                 else:
                     array[i, :, :, k] = array[i - 2, :, :, k]
     return array
+
 
 def thirty_meter(true, pred, thresh = 0.4):
     subs_pred = pred.reshape(196, 1)

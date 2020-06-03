@@ -6,7 +6,6 @@ models/*
 references/*
 raw/*
 docs/*
-config.yaml
 
 *.pem
 gcloud-key.json

@@ -25,3 +25,4 @@ geopandas
 pycountry
 reverse_geocoder
 pycountry_convert
+pytest
