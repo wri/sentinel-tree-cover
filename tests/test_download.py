@@ -5,6 +5,8 @@ from pyproj import Proj, transform
 import pytest
 from src.utils.download_utils import calculate_epsg
 import os
+import unittest
+import datetime
 
 def calculate_bbx_pyproj(coord, step_x, step_y, expansion, multiplier = 1.):
     ''' Calculates the four corners of a bounding box as above
@@ -40,13 +42,14 @@ def calculate_bbx_pyproj(coord, step_x, step_y, expansion, multiplier = 1.):
     return (coord_utm_bottom_left, coord_utm_top_right), CRS[utm_epsg]
 
 
-def load_api_key(path = "../config.yaml"):
-  with open("../config.yaml", 'r') as stream:
+def load_api_key(path = "./config.yaml"):
+    with open(path, 'r') as stream:
         key = (yaml.safe_load(stream))
         API_KEY = key['key']
         AWSKEY = key['awskey']
         AWSSECRET = key['awssecret']
-  return key
+    print("API KEY LOADED")
+    return API_KEY
 
 class TestDownload(unittest.TestCase):
 
@@ -56,7 +59,7 @@ class TestDownload(unittest.TestCase):
 
     def test_download(self):
         bbx, epsg = calculate_bbx_pyproj(self.coords, 0, 0, 10)
-        bbx = BBox(bbx, crs = CRS[epsg])
+        bbx = BBox(bbx, crs = epsg)
 
         image_request = WcsRequest(
                     layer='L2A20',

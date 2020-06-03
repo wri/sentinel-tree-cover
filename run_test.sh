@@ -1,2 +1,2 @@
 #!/bin/bash -e
-python -m pytest --cache-clear
+python3 -m pytest --cache-clear
