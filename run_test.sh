@@ -1,2 +1,2 @@
 #!/bin/bash -e
-python3 -m pytest --cache-clear
+PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -p no:cacheprovider 

@@ -23,17 +23,9 @@ def evi(x, verbose = False):
     RED = x[:, :, :, 2]
     BLUE = x[:, :, :, 0]
     evis = 2.5 * ( (NIR-RED) / (NIR + (6*RED) - (7.5*BLUE) + 1))
-    if verbose:
-        amin = np.argwhere(np.array([np.min(evis[i]) for i in range(x.shape[0])]) < -3)
-        len_amin = len(np.argwhere(evis.flatten() < -3))
-        len_amax = len(np.argwhere(evis.flatten() > 3))
-        print("There are: {} out of bounds EVI".format(len_amin + len_amax))
-        amax = np.argwhere(np.array([np.max(evis[i]) for i in range(x.shape[0])]) > 3)
-        amin = np.concatenate([amin, amax])
-        amin = np.unique(amin)
     evis = np.clip(evis, -1.5, 1.5)
     x = np.concatenate([x, evis[:, :, :, np.newaxis]], axis = -1)
-    return x, amin
+    return x
     
 def savi(x, verbose = False):
     # (1.5) * ((08 - 04)/ (08 + 04 + 0.5))
@@ -101,8 +93,6 @@ def ndmi(x):
     ndmis = np.stack(ndmis)
     x = np.concatenate([x, ndmis[:, :, :, np.newaxis]], axis = -1)
     return x
-
-#tf.reset_default_graph()
 
 def Fully_connected(x, units, layer_name='fully_connected') :
     with tf.name_scope(layer_name) :
