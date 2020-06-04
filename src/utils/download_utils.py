@@ -107,13 +107,11 @@ def calculate_and_save_best_images(img_bands, image_dates):
          keep_steps (arr):
          max_distance (int)
     """
-
     biweekly_dates = [day for day in range(0, 360, 5)] # ideal imagery dates are every 15 days
     
     # Identify the dates where there is < 20% cloud cover
     satisfactory_ids = [x for x in range(0, img_bands.shape[0])]
     satisfactory_dates = [value for idx, value in enumerate(image_dates) if idx in satisfactory_ids]
-    
     
     selected_images = {}
     for i in biweekly_dates:
