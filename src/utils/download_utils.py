@@ -57,9 +57,9 @@ def offset_x(coord, offset):
     outproj_code = calculate_epsg(coord)
     outproj = Proj('epsg:' + str(outproj_code))
     
-    coord_utm =  transform(inproj, outproj, coord[1], coord[0])
-    coord_utm = (coord_utm[0] + offset, coord_utm[1])
-    #coord = transform(outproj, inproj, coord_utm[1], coord_utm[0])
+    coord_utm = transform(inproj, outproj, coord[1], coord[0])
+    coord_utm = list(coord_utm)
+    coord_utm[0] += offset 
     return coord_utm
     
 
@@ -69,9 +69,9 @@ def offset_y(coord, offset):
     outproj_code = calculate_epsg(coord)
     outproj = Proj('epsg:' + str(outproj_code))
     
-    coord_utm =  transform(inproj, outproj, coord[1], coord[0])
-    coord_utm = (coord_utm[0], coord_utm[1] + offset)
-    #coord = transform(outproj, inproj, coord_utm[1], coord_utm[0])
+    coord_utm = transform(inproj, outproj, coord[1], coord[0])
+    coord_utm = list(coord_utm)
+    coord_utm[1] += offset 
     return coord_utm
 
 
