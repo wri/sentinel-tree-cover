@@ -15,6 +15,7 @@ from scipy.sparse.linalg import splu
 from sentinelhub import WmsRequest, WcsRequest, MimeType
 from sentinelhub import CRS, BBox, constants, DataSource, CustomUrlParam
 from skimage.transform import resize
+from pyproj import Proj, transform
 
 
 def calculate_epsg(points):
@@ -48,23 +49,30 @@ def PolygonArea(corners):
     area = abs(area)
     return area
     
-    
+
 def offset_x(coord, offset):
     ''' Converts a WGS 84 to UTM, adds meters, and converts back'''
-    epsg = calculate_epsg(coord)
-    coord = convertCoords(coord, 4326, epsg)
-    coord[0] += offset
-    coord = convertCoords(coord, epsg, 4326)
-    return coord
+
+    inproj = Proj('epsg:4326')
+    outproj_code = calculate_epsg(coord)
+    outproj = Proj('epsg:' + str(outproj_code))
+    
+    coord_utm =  transform(inproj, outproj, coord[1], coord[0])
+    coord_utm = (coord_utm[0] + offset, coord_utm[1])
+    #coord = transform(outproj, inproj, coord_utm[1], coord_utm[0])
+    return coord_utm
     
 
 def offset_y(coord, offset):
     ''' Converts a WGS 84 to UTM, adds meters, and converts back'''
-    epsg = calculate_epsg(coord)
-    coord = convertCoords(coord, 4326, epsg)
-    coord[1] += offset
-    coord = convertCoords(coord, epsg, 4326)
-    return coord
+    inproj = Proj('epsg:4326')
+    outproj_code = calculate_epsg(coord)
+    outproj = Proj('epsg:' + str(outproj_code))
+    
+    coord_utm =  transform(inproj, outproj, coord[1], coord[0])
+    coord_utm = (coord_utm[0], coord_utm[1] + offset)
+    #coord = transform(outproj, inproj, coord_utm[1], coord_utm[0])
+    return coord_utm
 
 
 def calculate_area(bbx):
@@ -72,10 +80,12 @@ def calculate_area(bbx):
     Calculates the area in ha of a [(min_x, min_y), (max_x, max_y)] bbx
     '''
 
-    epsg = calculate_epsg(bbx[0])
+    #epsg = calculate_epsg(bbx[0])
     
-    mins = convertCoords(bbx[0], 4326, epsg)
-    maxs = convertCoords(bbx[1], 4326, epsg)
+    #mins = convertCoords(bbx[0], 4326, epsg)
+    #maxs = convertCoords(bbx[1], 4326, epsg)
+    mins = bbx[0]
+    maxs = bbx[1]
     area = PolygonArea([(mins[0], mins[1]), # BL
                         (mins[0], maxs[1]), # BR
                         (maxs[0], mins[1]), # TL
