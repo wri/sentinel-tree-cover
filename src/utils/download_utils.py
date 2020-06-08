@@ -173,3 +173,31 @@ def calculate_and_save_best_images(img_bands, image_dates):
         
     keep_steps = np.stack(keep_steps)
     return keep_steps, max_distance
+
+
+def calculate_proximal_steps(date, satisfactory):
+    """Returns proximal steps that are cloud and shadow free
+
+         Parameters:
+          date (int): current time step
+          satisfactory (list): time steps with no clouds or shadows
+
+         Returns:
+          arg_before (str): index of the prior clean image
+          arg_after (int): index of the next clean image
+    """
+    arg_before, arg_after = None, None
+    if date > 0:
+        idx_before = satisfactory - date
+        arg_before = idx_before[np.where(idx_before < 0, idx_before, -np.inf).argmax()]
+    if date < np.max(satisfactory):
+        idx_after = satisfactory - date
+        arg_after = idx_after[np.where(idx_after > 0, idx_after, np.inf).argmin()]
+    if not arg_after and not arg_before:
+        arg_after = date
+        arg_before = date
+    if not arg_after:
+        arg_after = arg_before
+    if not arg_before:
+        arg_before = arg_after
+    return arg_before, arg_after

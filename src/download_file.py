@@ -15,7 +15,11 @@ class FileDownloader:
         self.uploaded = 0
         self.percent = 0
         self.config = botocore.config.Config(max_pool_connections=20)
-        self.s3client = boto3.resource('s3', config=self.config,
+        self.s3resource = boto3.resource('s3', config=self.config,
+            aws_access_key_id=AWSKEY,
+            aws_secret_access_key=AWSSECRET,
+        )
+        self.s3client = boto3.client('s3', config=self.config,
             aws_access_key_id=AWSKEY,
             aws_secret_access_key=AWSSECRET,
         )
@@ -23,13 +27,20 @@ class FileDownloader:
         self.files = None
 
     def list_files(self, bucket):
-        bucket = self.s3client.Bucket(args.bucket)
-        files = [file for file in bucket.objects.all()]
-        self.files = files
+        bucket = self.s3resource.Bucket(args.bucket)
+        self.files =  [x.key for x in bucket.objects.all()]
 
 
-    def download(self, bucket, key, file):
-        self.s3client.download_file(bucket, key, file)
+    def download(self, bucket):
+        prefix = "../data/old-s2/"
+        for file in self.files:
+            if 'test-s2' in file:
+                if ".npy" in file:
+                    id_npy = file[-13:]
+                    print(file, id_npy)
+                    self.s3client.download_file(Bucket = bucket, 
+                        Key = file,
+                        Filename = prefix + id_npy)
 
 if __name__ == "__main__":
 
@@ -50,7 +61,7 @@ if __name__ == "__main__":
 
     downloader = FileDownloader(stream = False)
     downloader.list_files('restoration-monitoring')
-    downloader.download(args.bucket)
+    downloader.download('restoration-monitoring')
     #for file in files:
     #   downloader.download(bucket = args.bucket, # rm-guatemala
     #                   key = args.prefix + file,
