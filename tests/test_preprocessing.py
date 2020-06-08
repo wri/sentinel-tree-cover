@@ -29,7 +29,7 @@ class TestTemporalMosaicing(unittest.TestCase):
 	def setUp(self):
 		self.bands = ([np.full(shape = (1, 16, 16, 1), 
                           fill_value = x) for x in range(0, 7)])
-		self.bands = np.concatenate(bands, axis = 0)
+		self.bands = np.concatenate(self.bands, axis = 0)
 		self.image_dates = np.array([0, 22, 105, 232, 295, 310, 330])
 
 	def test_calc_and_save(self):
