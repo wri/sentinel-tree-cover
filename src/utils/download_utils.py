@@ -172,4 +172,4 @@ def calculate_and_save_best_images(img_bands, image_dates):
         keep_steps.append(step)
         
     keep_steps = np.stack(keep_steps)
-    return keep_steps
+    return keep_steps, max_distance
