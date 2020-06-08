@@ -408,6 +408,28 @@ def hd95(result, reference, voxelspacing=None, connectivity=1):
     hd95 = numpy.percentile(numpy.hstack((hd1, hd2)), 95)
     return hd95
 
+def calc_mean_surface_distance(true, pred):
+    '''Calculates the mean surface distance between ground truth
+       and prediction arrays
+    
+         Parameters:
+          y_true (arr):
+          y_pred (arr):
+          
+         Returns:
+          metric (arr):
+    '''
+    if np.sum(true) + np.sum(pred) == 0:
+        return 0
+    if np.sum(true) > 0:
+        if np.sum(pred) > 0:
+            return assd(pred, true) / 14
+        else:
+            return 1
+    if np.sum(true) == 0:
+        if np.sum(pred) > 0:
+            return 1
+
 
 def assd(result, reference, voxelspacing=None, connectivity=1):
     """
