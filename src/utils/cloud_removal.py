@@ -22,7 +22,7 @@ def remove_cloud_and_shadows(tiles, probs, shadows, image_dates, wsize = 9):
         g = np.exp(-((x**2 + y**2)/(2.0*sigma**2)))
         return g
 
-    c_arr = np.reshape(_fspecial_gauss(wsize, 5/2), (1, wsize, wsize, 1))
+    c_arr = np.reshape(_fspecial_gauss(wsize, ((wsize/2) - 1 ) / 2), (1, wsize, wsize, 1))
     o_arr = 1 - c_arr
 
     c_probs = np.copy(probs) - np.min(probs, axis = 0)
@@ -34,12 +34,12 @@ def remove_cloud_and_shadows(tiles, probs, shadows, image_dates, wsize = 9):
     n_interp = 0
     
     
-    for x in range(0, tiles.shape[1] - (wsize - 1), 2):
-        for y in range(0, tiles.shape[2] - (wsize - 1), 2):
+    for x in range(0, tiles.shape[1] - (wsize - 1), 1):
+        for y in range(0, tiles.shape[2] - (wsize - 1), 1):
             subs = c_probs[:, x:x + wsize, y:y+wsize]
-            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < 8)
+            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/10)
             for date in range(0, tiles.shape[0]):
-                if np.sum(subs[date]) >= 8:
+                if np.sum(subs[date]) >= (wsize*wsize)/10:
                     n_interp += 1
                     before, after = calculate_proximal_steps(date, satisfactory)
                     before = date + before
