@@ -3,7 +3,7 @@ import yaml
 from sentinelhub import WmsRequest, WcsRequest, MimeType, CRS, BBox, constants
 from pyproj import Proj, transform
 import pytest
-from src.utils.download_utils import calculate_epsg
+from src.downloading.utils import calculate_epsg
 import os
 import unittest
 import datetime

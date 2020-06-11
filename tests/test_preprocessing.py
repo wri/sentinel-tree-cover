@@ -3,9 +3,9 @@ import os
 import unittest
 import datetime
 
-from src.utils.download_utils import calculate_and_save_best_images
-from src.utils.whittaker_smoother import intialize_smoother, smooth
-from src.utils.whittaker_smoother import unpacking_apply_along_axis, parallel_apply_along_axis
+from src.downloading.utils import calculate_and_save_best_images
+from src.preprocessing.whittaker_smoother import intialize_smoother, smooth
+from src.preprocessing.whittaker_smoother import unpacking_apply_along_axis, parallel_apply_along_axis
 from timeit import default_timer as timer
 
 class TestSmoother(unittest.TestCase):

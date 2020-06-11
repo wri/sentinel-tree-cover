@@ -2,7 +2,7 @@ import numpy as np
 import os
 import unittest
 import datetime
-from src.utils.utils import ndvi, evi, savi, msavi2, bi, si
+from src.preprocessing.indices import ndvi, evi, savi, msavi2, bi, si
 
 class TestIndices(unittest.TestCase):
 
