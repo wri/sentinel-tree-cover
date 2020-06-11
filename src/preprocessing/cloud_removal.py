@@ -1,7 +1,14 @@
 import numpy as np
-from downloading.utils import calculate_proximal_steps
+import sys
+sys.path.append('../')
+from src.downloading.utils import calculate_proximal_steps
+from typing import List, Any, Tuple
 
-def remove_cloud_and_shadows(tiles, probs, shadows, image_dates, wsize = 9):
+def remove_cloud_and_shadows(tiles: np.ndarray,
+                             probs: np.ndarray, 
+                             shadows: np.ndarray,
+                             image_dates: List[int], 
+                             wsize: int = 9) -> np.ndarray:
     """ Interpolates clouds and shadows for each time step with 
         linear combination of proximal clean time steps for each
         region of specified window size

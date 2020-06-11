@@ -16,9 +16,10 @@ from sentinelhub import WmsRequest, WcsRequest, MimeType
 from sentinelhub import CRS, BBox, constants, DataSource, CustomUrlParam
 from skimage.transform import resize
 from pyproj import Proj, transform
+from typing import List, Any, Tuple
 
 
-def calculate_epsg(points):
+def calculate_epsg(points: Tuple[float, float]) -> int:
     """ Calculates the UTM EPSG of an input WGS 84 lon, lat
 
         Parameters:
@@ -39,7 +40,7 @@ def calculate_epsg(points):
     return int(epsg_code)
     
 
-def PolygonArea(corners):
+def PolygonArea(corners: Tuple[float, float]) -> float:
     n = len(corners) # of corners
     area = 0.0
     for i in range(n):
@@ -50,7 +51,7 @@ def PolygonArea(corners):
     return area
     
 
-def offset_x(coord, offset):
+def offset_x(coord: Tuple[float, float], offset: int) -> tuple:
     ''' Converts a WGS 84 to UTM, adds meters, and converts back'''
 
     inproj = Proj('epsg:4326')
@@ -63,7 +64,7 @@ def offset_x(coord, offset):
     return coord_utm
     
 
-def offset_y(coord, offset):
+def offset_y(coord: Tuple[float, float], offset: int) -> tuple:
     ''' Converts a WGS 84 to UTM, adds meters, and converts back'''
     inproj = Proj('epsg:4326')
     outproj_code = calculate_epsg(coord)
@@ -75,7 +76,7 @@ def offset_y(coord, offset):
     return coord_utm
 
 
-def calculate_area(bbx):
+def calculate_area(bbx: list) -> int:
     '''
     Calculates the area in ha of a [(min_x, min_y), (max_x, max_y)] bbx
     '''
@@ -95,7 +96,7 @@ def calculate_area(bbx):
     print(hectares)
 
 
-def calculate_and_save_best_images(img_bands, image_dates):
+def calculate_and_save_best_images(img_bands: np.ndarray, image_dates: np.ndarray) -> np.ndarray:
     """ Interpolate input data of (Time, X, Y, Band) to a constant
         (72, X, Y, Band) shape with one time step every five days
         
@@ -175,7 +176,7 @@ def calculate_and_save_best_images(img_bands, image_dates):
     return keep_steps, max_distance
 
 
-def calculate_proximal_steps(date, satisfactory):
+def calculate_proximal_steps(date: int, satisfactory: list):
     """Returns proximal steps that are cloud and shadow free
 
          Parameters:

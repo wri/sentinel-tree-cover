@@ -46,7 +46,9 @@ RUN chmod +x ./run_test.sh &&\
  	./run_test.sh &&\
  	rm ./config.yaml
 
-CMD ["jupyter", "notebook", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root"]
+EXPOSE 8888:8888
+
+CMD ["jupyter", "notebook", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root", "--NotebookApp.token='restorationmapper'"]
 
 # docker build -t johnbrandtwri/restoration_mapper .
 # docker run -p 8888:8888 johnbrandtwri/restoration_mapper

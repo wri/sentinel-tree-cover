@@ -4,7 +4,7 @@ import scipy
 from scipy.sparse.linalg import splu
 import multiprocessing
 
-def intialize_smoother(lmbd = 800):
+def intialize_smoother(lmbd: int = 800) -> np.ndarray:
     diagonals = np.zeros(2*2+1)
     diagonals[2] = 1.
     for i in range(2):
@@ -21,7 +21,7 @@ def intialize_smoother(lmbd = 800):
 
 splu_coef = intialize_smoother()
 
-def smooth(y, splu_coef = splu_coef):
+def smooth(y: np.ndarray, splu_coef: np.ndarray = splu_coef) -> np.ndarray:
     ''' 
     Apply whittaker smoothing to a 1-dimensional array, returning a 1-dimensional array
     '''
@@ -33,7 +33,8 @@ def unpacking_apply_along_axis(all_args):
     return np.apply_along_axis(func1d, axis, arr)
 
 
-def parallel_apply_along_axis(func1d, axis, arr, *args, **kwargs):
+def parallel_apply_along_axis(func1d: 'function', axis: int,
+                              arr: np.ndarray, *args, **kwargs) -> np.ndarray:
     """
     Like numpy.apply_along_axis(), but takes advantage of multiple
     cores.
@@ -60,7 +61,7 @@ def parallel_apply_along_axis(func1d, axis, arr, *args, **kwargs):
     return np.concatenate(individual_results)
 
 
-def interpolate_array(x, dim = 128, nbands = 14):
+def interpolate_array(x: np.ndarray, dim: int = 128, nbands: int = 14) -> np.ndarray:
     no_dem = np.delete(x, 10, -1)
     no_dem = np.reshape(no_dem, (72, dim*dim*nbands))
     no_dem = parallel_apply_along_axis(smooth, 0, no_dem)

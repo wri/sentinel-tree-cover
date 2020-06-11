@@ -1,6 +1,6 @@
 import numpy as np
 
-def ndvi(x, verbose = False):
+def ndvi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     # (B8 - B4)/(B8 + B4)
     NIR = x[:, :, :, 3]
     RED = x[:, :, :, 2]
@@ -13,7 +13,7 @@ def ndvi(x, verbose = False):
     x = np.concatenate([x, ndvis[:, :, :, np.newaxis]], axis = -1)
     return x
 
-def evi(x, verbose = False):
+def evi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     # 2.5 x (08 - 04) / (08 + 6 * 04 - 7.5 * 02 + 1)
     NIR = x[:, :, :, 3]
     RED = x[:, :, :, 2]
@@ -23,7 +23,7 @@ def evi(x, verbose = False):
     x = np.concatenate([x, evis[:, :, :, np.newaxis]], axis = -1)
     return x
     
-def savi(x, verbose = False):
+def savi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     # (1.5) * ((08 - 04)/ (08 + 04 + 0.5))
     NIR = x[:, :, :, 3]
     RED = x[:, :, :, 2]
@@ -36,7 +36,7 @@ def savi(x, verbose = False):
     x = np.concatenate([x, savis[:, :, :, np.newaxis]], axis = -1)
     return x
 
-def msavi2(x, verbose = False):
+def msavi2(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     # (2 * NIR + 1 - sqrt((2*NIR + 1)^2 - 8*(NIR-RED)) / 2
     NIR = x[:, :, :, 3]
     RED = x[:, :, :, 2]
@@ -56,7 +56,7 @@ def msavi2(x, verbose = False):
     x = np.concatenate([x, msavis[:, :, :, np.newaxis]], axis = -1)
     return x
 
-def bi(x, verbose = False):
+def bi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     # (2 + 0 - 1) / (2 + 0 + 1)
     BLUE = x[:, :, :, 0]
     RED = x[:, :, :, 2]
@@ -70,7 +70,7 @@ def bi(x, verbose = False):
     x = np.concatenate([x, bis[:, :, :, np.newaxis]], axis = -1)
     return x
 
-def si(x, verbose = False):
+def si(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     # (1 - B2) * (1 - B3) * (1 - B4) ** 1/3
     BLUE = x[:, :, :, 0]
     RED = x[:, :, :, 2]
@@ -84,7 +84,7 @@ def si(x, verbose = False):
     x = np.concatenate([x, sis[:, :, :, np.newaxis]], axis = -1)
     return x
 
-def ndmi(x):
+def ndmi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     ndmis = [(im[:, :, 5] - im[:, :, 9]) / (im[:, :, 5] + im[:, :, 9]) for im in x]
     ndmis = np.stack(ndmis)
     x = np.concatenate([x, ndmis[:, :, :, np.newaxis]], axis = -1)
