@@ -11,6 +11,8 @@ Counting trees inside and outside the forest with image segmentation
 *  Identify agroforestry, riparian buffer zones, and crop buffer zones
 *  Generate GeoTIFFs for further spatial analysis or combination with other datasets
 
+This repository contains the source code for the project. The preprint of the publication is available [on arXiv](https://arxiv.org/abs/2005.08702).
+
 ![img](references/readme/example.png?raw=true)
 
 # Installation
@@ -37,7 +39,7 @@ The bulk of this project is created around separate jupyter notebooks for each s
 
 Within the `notebooks/` folder, the subfolder `baseline` additionally contains code to train a Random Forests, Support vector machine, and U-NET baseline model, and the `replicate-paper` folder contains code to generate the accuracy statistics.
 
-The project requires an API key for [Sentinel-hub](http://sentinel-hub.com/), stored as `config.yaml` in the base directory with the structure `key: "YOUR-API-KEY-HERE"`. The `notebooks/4a-download-large-area.ipynb` notebook will allow you to download and preprocess the required Sentinel-1, Sentinel-2, and DEM imagery for an input `(lat, long)` and `(x, y)` size in meters. The tiles will be saved to a named output folder, which can be referenced in `notebokos/4b-predict-large-area.ipynb` to generate a geotiff or cloud-optimized geotiff.
+The project requires an API key for [Sentinel-hub](http://sentinel-hub.com/), stored as `config.yaml` in the base directory with the structure `key: "YOUR-API-KEY-HERE"`. The `notebooks/4a-download-large-area.ipynb` notebook will allow you to download and preprocess the required Sentinel-1, Sentinel-2, and DEM imagery for an input `(lat, long)` and `(x, y)` size in meters. The tiles will be saved to a named output folder, which can be referenced in `notebooks/4b-predict-large-area.ipynb` to generate a geotiff or cloud-optimized geotiff.
 
 
 # Methodology
