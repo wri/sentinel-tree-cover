@@ -1,5 +1,5 @@
 import numpy as np
-from download_utils import calculate_proximal_steps
+from downloading.utils import calculate_proximal_steps
 
 def remove_cloud_and_shadows(tiles, probs, shadows, image_dates, wsize = 9):
     """ Interpolates clouds and shadows for each time step with 

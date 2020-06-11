@@ -152,7 +152,7 @@ def calculate_and_save_best_images(img_bands, image_dates):
                             
     max_distance = 0
     
-    for i in selected_images.keys():
+    for i in sorted(selected_images.keys()):
         if len(selected_images[i]['image_date']) == 2:
             dist = selected_images[i]['image_date'][1] - selected_images[i]['image_date'][0]
             if dist > max_distance:
@@ -161,7 +161,7 @@ def calculate_and_save_best_images(img_bands, image_dates):
     print("Maximum time distance: {}".format(max_distance))
         
     keep_steps = []
-    for i in selected_images.keys():
+    for i in sorted(selected_images.keys()):
         info = selected_images[i]
         if len(info['image_idx']) == 1:
             step = img_bands[info['image_idx'][0]]
