@@ -96,7 +96,8 @@ def calculate_area(bbx: list) -> int:
     print(hectares)
 
 
-def calculate_and_save_best_images(img_bands: np.ndarray, image_dates: np.ndarray) -> np.ndarray:
+def calculate_and_save_best_images(img_bands: np.ndarray,
+                                   image_dates: np.ndarray) -> (np.ndarray, int):
     """ Interpolate input data of (Time, X, Y, Band) to a constant
         (72, X, Y, Band) shape with one time step every five days
         
@@ -176,7 +177,7 @@ def calculate_and_save_best_images(img_bands: np.ndarray, image_dates: np.ndarra
     return keep_steps, max_distance
 
 
-def calculate_proximal_steps(date: int, satisfactory: list):
+def calculate_proximal_steps(date: int, satisfactory: list) -> (int, int):
     """Returns proximal steps that are cloud and shadow free
 
          Parameters:

@@ -33,8 +33,8 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     o_arr = 1 - c_arr
 
     c_probs = np.copy(probs) - np.min(probs, axis = 0)
-    c_probs[np.where(c_probs >= 0.33)] = 1.
-    c_probs[np.where(c_probs < 0.33)] = 0.
+    c_probs[np.where(c_probs >= 0.3)] = 1.
+    c_probs[np.where(c_probs < 0.3)] = 0.
     
     c_probs += shadows
     c_probs[np.where(c_probs >= 1.)] = 1.
@@ -44,7 +44,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     for x in range(0, tiles.shape[1] - (wsize - 1), 1):
         for y in range(0, tiles.shape[2] - (wsize - 1), 1):
             subs = c_probs[:, x:x + wsize, y:y+wsize]
-            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/10)
+            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/15)
             for date in range(0, tiles.shape[0]):
                 if np.sum(subs[date]) >= (wsize*wsize)/10:
                     n_interp += 1
