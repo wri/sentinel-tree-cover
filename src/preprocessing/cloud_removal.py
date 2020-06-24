@@ -3,6 +3,10 @@ import sys
 sys.path.append('../')
 from src.downloading.utils import calculate_proximal_steps
 from typing import List, Any, Tuple
+from functools import reduce
+from skimage.transform import resize
+from tqdm import tnrange, tqdm_notebook
+import math
 
 def remove_cloud_and_shadows(tiles: np.ndarray,
                              probs: np.ndarray, 
@@ -69,3 +73,111 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                     
     print("Interpolated {} px".format(n_interp))
     return tiles
+
+
+
+def mcm_shadow_mask(arr: np.ndarray, c_probs: np.ndarray) -> np.ndarray:
+    """ Calculates the multitemporal shadow mask for Sentinel-2 using
+        the methods from Candra et al. 2020 on L1C images and matching
+        outputs to the s2cloudless cloud probabilities
+
+        Parameters:
+         arr (arr): (Time, X, Y, Band) array of L1C data scaled from [0, 1]
+         c_probs (arr): (Time, X, Y) array of S2cloudless cloud probabilities
+    
+        Returns:
+         shadows_new (arr): cloud mask after Candra et al. 2020 and cloud matching 
+         shadows_original (arr): cloud mask after Candra et al. 2020
+    """
+    def _rank_array(arr):
+        order = arr.argsort()
+        ranks = order.argsort()
+        return ranks
+    
+    imsize = arr.shape[1]
+    if imsize % 8 == 0:
+        size = imsize
+    else:
+        size = imsize + (8 - (imsize % 8))
+    
+    arr = resize(arr, (arr.shape[0], size, size, arr.shape[-1]), order = 0)
+    c_probs = resize(c_probs, (c_probs.shape[0], size, size), order = 0)
+    
+    mean_c_probs = np.mean(c_probs, axis = (1, 2))
+    cloudy_steps = np.argwhere(mean_c_probs > 0.25)
+    images_clean = np.delete(arr, cloudy_steps, 0)
+    cloud_ranks = _rank_array(mean_c_probs)
+    diffs = abs(np.sum(arr - np.mean(images_clean, axis = 0), axis = (1, 2, 3)))
+    diff_ranks = _rank_array(diffs)
+    overall_rank = diff_ranks + cloud_ranks
+    reference_idx = np.argmin(overall_rank)
+    ri = arr[reference_idx]
+    shadows = np.zeros((arr.shape[0], size, size))  
+    
+    # Candra et al. 2020
+    for time in tnrange(arr.shape[0]):
+        for x in range(arr.shape[1]):
+            for y in range(arr.shape[2]):
+                ti_slice = arr[time, x, y]
+                ri_slice = ri[x, y]
+                deltab2 = ti_slice[0] - ri_slice[0]
+                deltab8a = ti_slice[1] - ri_slice[1]
+                deltab11 = ti_slice[2] - ri_slice[2]
+                if deltab2 < 0.10: #(1000/65535):
+                    if deltab8a < -0.04: #(-400/65535):
+                        if deltab11 < -0.04: #(-400/65535):
+                            if ti_slice[0] < 0.095: #(950/65535):
+                                shadows[time, x, y] = 1.
+                                                       
+                            
+    # Remove shadows if cannot coreference a cloud
+    shadow_large = np.reshape(shadows, (shadows.shape[0], size // 8, 8, size // 8, 8))
+    shadow_large = np.sum(shadow_large, axis = (2, 4))
+
+    cloud_large = np.copy(c_probs)
+    cloud_large[np.where(c_probs > 0.33)] = 1.
+    cloud_large[np.where(c_probs < 0.33)] = 0.
+    cloud_large = np.reshape(cloud_large, (shadows.shape[0], size // 8, 8, size // 8, 8))
+    cloud_large = np.sum(cloud_large, axis = (2, 4))
+    for time in tnrange(shadow_large.shape[0]):
+        for x in range(shadow_large.shape[1]):
+            x_low = np.max([x - 8, 0])
+            x_high = np.min([x + 8, shadow_large.shape[1] - 2])
+            for y in range(shadow_large.shape[2]):
+                y_low = np.max([y - 8, 0])
+                y_high = np.min([y + 8, shadow_large.shape[1] - 2])
+                if shadow_large[time, x, y] < 8:
+                    shadow_large[time, x, y] = 0.
+                if shadow_large[time, x, y] >= 8:
+                    shadow_large[time, x, y] = 1.
+                c_prob_window = cloud_large[time, x_low:x_high, y_low:y_high]
+                if np.max(c_prob_window) < 16:
+                    shadow_large[time, x, y] = 0.
+                    
+    shadow_large = resize(shadow_large, (shadow_large.shape[0], size, size), order = 0)
+    shadows *= shadow_large
+    
+    # Go through and aggregate the shadow map to an 80m grid
+    # and extend it one grid size around any positive ID
+    shadows = np.reshape(shadows, (shadows.shape[0], size // 8, 8, size // 8, 8))
+    shadows = np.sum(shadows, axis = (2, 4))
+    shadows[np.where(shadows < 12)] = 0.
+    shadows[np.where(shadows >= 12)] = 1.
+    shadows = resize(shadows, (shadows.shape[0], size, size), order = 0)
+    shadows = np.reshape(shadows, (shadows.shape[0], size//4, 4, size//4, 4))
+    shadows = np.max(shadows, (2, 4))
+    
+    shadows_new = np.zeros_like(shadows)
+    for time in range(shadows.shape[0]):
+        for x in range(shadows.shape[1]):
+            for y in range(shadows.shape[2]):
+                if shadows[time, x, y] == 1:
+                    min_x = np.max([x - 1, 0])
+                    max_x = np.min([x + 2, size//4 - 1])
+                    min_y = np.max([y - 1, 0])
+                    max_y = np.min([y + 2, size//4 - 1])
+                    for x_idx in range(min_x, max_x):
+                        for y_idx in range(min_y, max_y):
+                            shadows_new[time, x_idx, y_idx] = 1.
+    shadows_new = resize(shadows_new, (shadows.shape[0], imsize, imsize), order = 0)
+    return shadows_new
