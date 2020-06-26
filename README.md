@@ -13,7 +13,10 @@ Counting trees inside and outside the forest with image segmentation
 
 This repository contains the source code for the project. The preprint of the publication is available [on arXiv](https://arxiv.org/abs/2005.08702).
 
+# Examples
 ![img](references/readme/example.png?raw=true)
+
+See a time series map of gain detection [here](https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=f13510ee-b7f4-11ea-bf88-a15b6c7adf9a)
 
 # Installation
 
