@@ -8,11 +8,23 @@ from skimage.transform import resize
 from tqdm import tnrange, tqdm_notebook
 import math
 
+def adjust_interpolated_areas(array, interp):
+    for time in range(array.shape[0]):
+        for band in range(array.shape[-1]):
+            interp_i = interp[time, :, :, band]
+            array_i = array[time, :, :, band]
+            if np.sum(interp_i) > 0:
+                adj = (np.median(array_i[np.where(interp_i == 0)]) - 
+                      (np.median(array_i[np.where(interp_i == 1)])))
+                array_i[np.where(interp_i == 1)] += adj
+                array[time, :, :, band] = array_i
+    return array
+
 def remove_cloud_and_shadows(tiles: np.ndarray,
                              probs: np.ndarray, 
                              shadows: np.ndarray,
                              image_dates: List[int], 
-                             wsize: int = 9) -> np.ndarray:
+                             wsize: int = 25) -> np.ndarray:
     """ Interpolates clouds and shadows for each time step with 
         linear combination of proximal clean time steps for each
         region of specified window size
@@ -44,11 +56,12 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     c_probs[np.where(c_probs >= 1.)] = 1.
     n_interp = 0
     
+    areas_interpolated = np.zeros_like(tiles)
     
     for x in range(0, tiles.shape[1] - (wsize - 1), 1):
         for y in range(0, tiles.shape[2] - (wsize - 1), 1):
             subs = c_probs[:, x:x + wsize, y:y+wsize]
-            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/15)
+            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/20)
             for date in range(0, tiles.shape[0]):
                 if np.sum(subs[date]) >= (wsize*wsize)/10:
                     n_interp += 1
@@ -68,11 +81,19 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                     after_weight = 1 - before_weight
                     
                     candidate = before_weight*before_array + after_weight * after_array
-                    candidate = candidate * c_arr + original_array[np.newaxis] * o_arr
+                    #candidate = candidate * c_arr + original_array[np.newaxis] * o_arr
                     tiles[date, x:x+wsize, y:y+wsize, : ] = candidate 
+                    areas_interpolated[date, x:x+wsize, y:y+wsize, : ] = 1.
+
+    tiles = adjust_interpolated_areas(tiles, areas_interpolated)
+
+    #not_interpoted_mean = np.mean(tiles[np.where(areas_interpolated == 0)], axis = (1, 2, 3))
+    #interpolated_mean = np.mean(tiles[np.where(areas_interpolated == 1)], axis = (1, 2, 3))
+
+   # print(f"The non-interpolated mean is {not_interpolated_mean} and the interpolated means is {interpolated_mean}")
                     
     print("Interpolated {} px".format(n_interp))
-    return tiles
+    return tiles, areas_interpolated
 
 
 

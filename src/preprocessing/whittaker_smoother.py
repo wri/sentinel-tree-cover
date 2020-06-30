@@ -4,7 +4,7 @@ import scipy
 from scipy.sparse.linalg import splu
 import multiprocessing
 
-def intialize_smoother(lmbd: int = 800) -> np.ndarray:
+def initialize_smoother(lmbd: int = 800) -> np.ndarray:
     diagonals = np.zeros(2*2+1)
     diagonals[2] = 1.
     for i in range(2):
@@ -19,7 +19,7 @@ def intialize_smoother(lmbd: int = 800) -> np.ndarray:
     splu_coef = splu(coefmat)
     return splu_coef
 
-splu_coef = intialize_smoother()
+splu_coef = initialize_smoother()
 
 def smooth(y: np.ndarray, splu_coef: np.ndarray = splu_coef) -> np.ndarray:
     ''' 
