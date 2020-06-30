@@ -77,6 +77,8 @@ The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m
 
 ![img3](references/readme/preprocessing-pipeline.png?raw=true)
 
+![img](references/screenshots/cloudinterpolation.png?raw=true)
+
 The current metrics are **95% accuracy, 94% recall** at 10m scale across 1100 plots distributed globally.
 
 # License
