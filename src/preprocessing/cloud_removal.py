@@ -7,6 +7,7 @@ from functools import reduce
 from skimage.transform import resize
 from tqdm import tnrange, tqdm_notebook
 import math
+from copy import deepcopy
 
 def adjust_interpolated_areas(array, interp):
     for time in range(array.shape[0]):
@@ -71,9 +72,9 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                     after = before if after >= tiles.shape[0] else after
                     before = after if before < 0 else before
 
-                    before_array = tiles[before, x:x+wsize, y:y+wsize, : ]
-                    after_array = tiles[after, x:x+wsize, y:y+wsize, : ]
-                    original_array = tiles[np.newaxis, date, x:x+wsize, y:y + wsize, :]
+                    before_array = deepcopy(tiles[before, x:x+wsize, y:y+wsize, : ])
+                    after_array = deepcopy(tiles[after, x:x+wsize, y:y+wsize, : ])
+                    #original_array = deepcopy(tiles[np.newaxis, date, x:x+wsize, y:y + wsize, :])
                     
                     n_days_before = abs(image_dates[date] - image_dates[before])
                     n_days_after = abs(image_dates[date] - image_dates[after])
