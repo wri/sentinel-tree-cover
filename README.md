@@ -65,10 +65,13 @@ This model uses a Fully Connected Architecture with:
 ## Data
 Restoration mapper uses Sentinel 1 and Sentinel 2 imagery. Biweekly composites of Sentinel 1 VV-VH imagery are fused with the nearest Sentinel 2 10- and 20-meter bands. These images are preprocessed by:
 *  Super-resolving 20m bands to 10m with DSen2
+![img](references/screenshots/supres.png?raw=true)
 *  Calculating cloud cover and cloud shadow masks
+![img](references/screenshots/cloudmask.png?raw=true)
 *  Removing steps with >20% cloud cover, and linearly interpolating to remove clouds and shadows from <20% cloud cover images
 ![img](references/screenshots/cloudinterpolation.png?raw=true)
 *  Applying Whittaker smoothing (lambda = 800) to each time series for each pixel for each band to reduce noise
+![img](references/screenshots/datasmooth.png?raw=true)
 *  Calculating vegetation indices, including EVI, BI, and MSAVI2
 
 # License
