@@ -11,7 +11,8 @@ Counting trees inside and outside the forest with image segmentation
 *  Identify agroforestry, riparian buffer zones, and crop buffer zones
 *  Generate GeoTIFFs for further spatial analysis or combination with other datasets
 
-This repository contains the source code for the project. The preprint of the publication is available [on arXiv](https://arxiv.org/abs/2005.08702).
+This repository contains the source code for the project. The preprint of the publication is available [on arXiv](https://arxiv.org/abs/2005.08702). The model achieves **95% accuracy** and **94% recall** at the 10m scale across 1100 2-hectare plots distributed globally.
+
 
 # Examples
 ![img](references/readme/example.png?raw=true)
@@ -62,24 +63,16 @@ This model uses a Fully Connected Architecture with:
 ![img4](references/readme/model.png?raw=true)
 
 ## Data
-The input images are 24 time series 16x16 Sentinel 2 pixels, interpolated to 10m with DSen2 and corrected for atmospheric deviations, with additional inputs of the slope derived from the Mapzen DEM and Sentinel-1 VV-VH. The specific pre-processing steps are:
-
-*  Download all L1C and L2A imagery for a 16x16 plot
-*  Download DEM imagery for a 180x180m region and calculate slope, clipping the border pixels
-*  Download Sentinel 1 imagery (VV-VH, gamma backscatter) and fuse to Sentinel 2
-*  Super-resolve 20m bands to 10m with DSen2
-*  Identify missing and outlier band values and correct by linearly interpolating betwen the nearest two "clean" time steps
-*  Calculate cloud cover probability with a 20% threshold, and identify shadows by band thresholding
-*  Select the imagery closest to a 15 day window that is clean, linearly interpolating when data is missing
-*  Apply 5-pixel median band filter to DEM
-*  Apply Whittaker smoothing (lambda = 800) to each time series for each pixel for each band
-*  Calculate EVI, BI, MSAVI2
-
-![img3](references/readme/preprocessing-pipeline.png?raw=true)
-
+Restoration mapper uses Sentinel 1 and Sentinel 2 imagery. Biweekly composites of Sentinel 1 VV-VH imagery are fused with the nearest Sentinel 2 10- and 20-meter bands. These images are preprocessed by:
+*  Super-resolving 20m bands to 10m with DSen2
+![img](references/screenshots/supres.png?raw=true)
+*  Calculating cloud cover and cloud shadow masks
+![img](references/screenshots/cloudmask.png?raw=true)
+*  Removing steps with >20% cloud cover, and linearly interpolating to remove clouds and shadows from <20% cloud cover images
 ![img](references/screenshots/cloudinterpolation.png?raw=true)
-
-The current metrics are **95% accuracy, 94% recall** at 10m scale across 1100 plots distributed globally.
+*  Applying Whittaker smoothing (lambda = 800) to each time series for each pixel for each band to reduce noise
+![img](references/screenshots/datasmooth.png?raw=true)
+*  Calculating vegetation indices, including EVI, BI, and MSAVI2
 
 # License
 
