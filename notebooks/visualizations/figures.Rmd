@@ -124,7 +124,7 @@ ggsave("../../references/pdf/bastin.pdf", bastin, "pdf", width = 8.75, height = 
 
 ```{r, fig.width=11, fig.height=7}
 library(ggalt)
-training_data = read.csv("../../data/latlongs/training_plots.csv")
+training_data = read.csv("../../data/latlongs/training.csv")
 
 training_plots = ggplot()+
   geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
@@ -140,7 +140,7 @@ training_plots = ggplot()+
              ylim=c(-58, 80))+
   theme(plot.margin=unit(c(0,0,0,0),"cm"))
 
-ggsave("../../references/pdf/train-plots.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in")
+#ggsave("../../references/pdf/train-plots.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in")
 ```
 
 ```{r, fig.width=11, fig.height=7}

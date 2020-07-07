@@ -32,15 +32,17 @@ class FileDownloader:
 
 
     def download(self, bucket):
-        prefix = "../data/old-s2/"
+        prefix = "../data/train-csv/"
         for file in self.files:
-            if 'test-s2' in file:
-                if ".npy" in file:
-                    id_npy = file[-13:]
-                    print(file, id_npy)
+            if 'train-csv' in file:
+                if ".csv" in file:
+                    #id_npy = file[-13:]
+                    filename = prefix + file.split("/")[-1]
+                    print(file, filename)
+                    #print(file, id_npy)
                     self.s3client.download_file(Bucket = bucket, 
                         Key = file,
-                        Filename = prefix + id_npy)
+                        Filename = prefix + file.split("/")[-1])
 
 if __name__ == "__main__":
 
