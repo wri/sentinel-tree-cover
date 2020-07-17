@@ -138,7 +138,8 @@ training_plots = ggplot()+
   coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
              xlim=c(-130, 167),
              ylim=c(-58, 80))+
-  theme(plot.margin=unit(c(0,0,0,0),"cm"))
+  theme(plot.margin=unit(c(0,0,0,0),"cm"))+
+  scalebar(location = "bottomleft", transform = TRUE, dist = 2000, model = "WGS84", dist_unit = "km", x.min = -130, x.max = 167, y.min = -58, y.max = 80, st.bottom = TRUE)
 
 #ggsave("../../references/pdf/train-plots.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in")
 ```
@@ -161,7 +162,7 @@ testing_plots = ggplot()+
              ylim=c(-58, 80))+
   theme(plot.margin=unit(c(0,0,0,0),"cm"))
 
-ggsave("../../references/pdf/test-plots.pdf", testing_plots, "pdf", width = 9.3, height = 4.5, units = "in")
+#ggsave("../../references/pdf/test-plots.pdf", testing_plots, "pdf", width = 9.3, height = #4.5, units = "in")
 ```
 
 ```{r}
@@ -190,6 +191,7 @@ data = read.csv("../../data/latlongs/landscapes.csv")
 
 
 ```{r, fig.width=5, fig.height=5}}
+library(ggsn)
 #geojson = "../../references/json/custom.geo.json"
 #map <- readOGR(geojson)
 #map.df <- fortify(map)
@@ -198,8 +200,8 @@ y <- seq(14.1, 15.1, 0.1)  #(6, 20)
 x <- seq(-88.7, -87.7, 0.1) #(-90, -80)
 
 # Ghana
-#y <- seq(7.4, 8.4, 0.1) #(-5, 5)
-#x <- seq(-1.2, -0.2, 0.1) #(-2, 12)
+y <- seq(7.4, 8.4, 0.1) #(-5, 5)
+x <- seq(-1.2, -0.2, 0.1) #(-2, 12)
 
 # Tanzania
 #x <- seq(36.7, 37.7, 0.1) # 30, 40
@@ -210,11 +212,14 @@ grid$latlong <- paste(grid$Var2, grid$Var1)
 local = ggplot()+
   geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.2)+
   geom_point(data = grid, aes(x = Var1, y = Var2), color = "blue3", size = 0.05)+
-  coord_cartesian(ylim = c(6, 20), xlim = c(-90, -80))+
+  coord_cartesian(ylim = c(-2, 12), xlim = c(-5, 5))+
+  scalebar(transform = TRUE, dist = 200, model = "WGS84", dist_unit = "km", location = "bottomleft", x.min = -5, x.max = 5, y.min = -2, y.max = 12, st.bottom = FALSE)+
   theme_bw()+
-  ggtitle("Honduras")+
+  ggtitle("Ghana")+
   xlab("")+
   ylab("")
+
+print(local)
 ```
 
 ```{r}

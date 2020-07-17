@@ -29,7 +29,6 @@ def calculate_epsg(points: Tuple[float, float]) -> int:
          epsg_code (int): integer form of associated UTM EPSG
     """
     lon, lat = points[0], points[1]
-    print(lon, lat)
     utm_band = str((math.floor((lon + 180) / 6 ) % 60) + 1)
     if len(utm_band) == 1:
         utm_band = '0'+utm_band
@@ -168,7 +167,7 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
         if len(info['image_idx']) == 1:
             step = img_bands[info['image_idx'][0]]
         if len(info['image_idx']) == 2:
-            step1 = img_bands[info['image_idx'][0]] * 0.5#info['image_ratio'][0]
+            step1 = img_bands[info['image_idx'][0]] * 0.5 #info['image_ratio'][0]
             step2 = img_bands[info['image_idx'][1]] * 0.5 #info['image_ratio'][1]
             step = step1 + step2
         keep_steps.append(step)

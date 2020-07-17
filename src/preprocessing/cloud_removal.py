@@ -50,9 +50,11 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     o_arr = 1 - c_arr
 
     c_probs = np.copy(probs) - np.min(probs, axis = 0)
+
     c_probs[np.where(c_probs >= 0.3)] = 1.
     c_probs[np.where(c_probs < 0.3)] = 0.
     
+    shadows = shadows - np.min(shadows, axis = 0)
     c_probs += shadows
     c_probs[np.where(c_probs >= 1.)] = 1.
     n_interp = 0
@@ -63,14 +65,23 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
         for y in range(0, tiles.shape[2] - (wsize - 1), 1):
             subs = c_probs[:, x:x + wsize, y:y+wsize]
             satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/20)
+            if len(satisfactory) == 0:
+                #print(f"There is a potential issue with the cloud removal at {x}, {y}")
+                satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/2)
             for date in range(0, tiles.shape[0]):
                 if np.sum(subs[date]) >= (wsize*wsize)/10:
                     n_interp += 1
                     before, after = calculate_proximal_steps(date, satisfactory)
                     before = date + before
                     after = date + after
-                    after = before if after >= tiles.shape[0] else after
+
+                    before = (before - 1) if before > (tiles.shape[0] -1) else before
+                    after = before if after > (tiles.shape[0] - 1) else after
                     before = after if before < 0 else before
+
+                    if after > (tiles.shape[0] - 1):
+                        print(f"There is an error, and after is {after} and before is {before}, \
+                         for {tiles.shape[0]} and {date}, {satisfactory}")
 
                     before_array = deepcopy(tiles[before, x:x+wsize, y:y+wsize, : ])
                     after_array = deepcopy(tiles[after, x:x+wsize, y:y+wsize, : ])

@@ -5,7 +5,7 @@ import datetime
 
 from src.downloading.utils import calculate_and_save_best_images
 from src.downloading.utils import calculate_proximal_steps
-from src.preprocessing.whittaker_smoother import intialize_smoother, smooth
+from src.preprocessing.whittaker_smoother import initialize_smoother, smooth
 from src.preprocessing.whittaker_smoother import unpacking_apply_along_axis, parallel_apply_along_axis
 from timeit import default_timer as timer
 
@@ -16,7 +16,7 @@ class TestSmoother(unittest.TestCase):
 
 	def test_time(self):
 		begin = timer()
-		coefmat = intialize_smoother()
+		coefmat = initialize_smoother()
 		x = parallel_apply_along_axis(smooth, 0, self.data)
 		x = np.reshape(x, (72, 10000))
 		end = timer()
