@@ -95,6 +95,56 @@ def calculate_area(bbx: list) -> int:
     print(hectares)
 
 
+def convertCoords(xy, src='', targ=''):
+
+    srcproj = osr.SpatialReference()
+    srcproj.ImportFromEPSG(src)
+    targproj = osr.SpatialReference()
+    if isinstance(targ, str):
+        targproj.ImportFromProj4(targ)
+    else:
+        targproj.ImportFromEPSG(targ)
+    transform = osr.CoordinateTransformation(srcproj, targproj)
+
+    pt = ogr.Geometry(ogr.wkbPoint)
+    pt.AddPoint(xy[0], xy[1])
+    pt.Transform(transform)
+    return([pt.GetX(), pt.GetY()])
+
+
+def convert_to_float(array):
+    return (array.astype(float) / 65535)
+
+
+def bounding_box(point, x_offset_max = 140, y_offset_max = 140, expansion = 10):
+
+    tl = point
+    
+    epsg = calculate_epsg(tl)
+    tl = convertCoords(tl, 4326, epsg)
+    
+    br = (tl[0], tl[1])
+    tl = ((tl[0] + (x_offset_max)), (tl[1] + (y_offset_max )))
+    distance1 = tl[0] - br[0]
+    distance2 = tl[1] - br[1]
+    
+    br = [a - expansion for a in br]
+    tl = [a + expansion for a in tl]
+    
+    after = [b - a for a,b in zip(br, tl)]
+    br = convertCoords(br, epsg, 4326)
+    tl = convertCoords(tl, epsg, 4326)
+    
+    min_x = tl[0] # original X offset - 10 meters
+    max_x = br[0] # original X offset + 10*GRID_SIZE meters
+    
+    min_y = tl[1] # original Y offset - 10 meters
+    max_y = br[1] # original Y offset + 10 meters + 140 meters
+    # (min_x, min_y), (max_x, max_y)
+    # (bl, tr)
+    return [(min_x, min_y), (max_x, max_y)]
+
+
 def calculate_and_save_best_images(img_bands: np.ndarray,
                                    image_dates: np.ndarray) -> (np.ndarray, int):
     """ Interpolate input data of (Time, X, Y, Band) to a constant

@@ -138,8 +138,8 @@ training_plots = ggplot()+
   coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
              xlim=c(-130, 167),
              ylim=c(-58, 80))+
-  theme(plot.margin=unit(c(0,0,0,0),"cm"))+
-  scalebar(location = "bottomleft", transform = TRUE, dist = 2000, model = "WGS84", dist_unit = "km", x.min = -130, x.max = 167, y.min = -58, y.max = 80, st.bottom = TRUE)
+  theme(plot.margin=unit(c(0,0,0,0),"cm"))#+
+  #scalebar(location = "bottomleft", transform = TRUE, dist = 2000, model = "WGS84", dist_unit = "km", x.min = -130, x.max = 167, y.min = -58, y.max = 80, st.bottom = TRUE)
 
 #ggsave("../../references/pdf/train-plots.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in")
 ```
