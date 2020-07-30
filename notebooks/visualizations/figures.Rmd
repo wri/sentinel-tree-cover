@@ -144,6 +144,35 @@ training_plots = ggplot()+
 #ggsave("../../references/pdf/train-plots.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in")
 ```
 
+# New training samples 
+```{r}
+library(ggalt)
+training_data = read.csv("../../data/latlongs/training.csv")
+new_data = read.csv("../../data/latlongs/new_sa_samples.csv")
+
+geojson = "../../references/json/custom.geo.json"
+map <- readOGR(geojson)
+map.df <- fortify(map)
+
+training_plots = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  geom_point(data = new_data, aes(x = longs, y = lats), color = "blue", size = 0.2)+
+  geom_point(data = training_data, aes(x = longs, y = lats), color = "red", size = 0.2)+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  theme_bw(base_size = 12)+
+  ggtitle("Training plots")+
+  xlab("")+
+  ylab("")+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+             xlim=c(-100, -80), # -100, -35, -40, 25
+             ylim=c(0, 25))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"))
+
+print(training_plots)
+```
+
+
 ```{r, fig.width=11, fig.height=7}
 library(ggalt)
 testing_data = read.csv("../../data/latlongs/testing_plots.csv")
@@ -228,5 +257,54 @@ library(ggmap)
 
 main +
     inset(ggplotGrob(honduras), xmin = -76.7, xmax = 0, ymin = 20, ymax = 50)
+```
+
+```{r}
+library(ggalt)
+library(plyr)
+geojson = "../../references/json/custom.geo.json"
+mapa <- readOGR(geojson)
+mapa@data$id <- rownames(mapa@data)
+mapa@data   <- join(mapa@data, data)
+mapa.df     <- fortify(mapa)
+mapa.df     <- join(mapa.df,mapa@data, by="id")
+
+mapa.df$name_long = as.character(mapa.df$name_long)
+mapa.df$name_long[mapa.df$name_long == 'Russian Federation'] = 'Russia'
+mapa.df$name_long[mapa.df$name_long == "Côte d'Ivoire"]  = 'Ivory Coast'
+mapa.df$name_long[mapa.df$name_long == 'Republic of Congo'] = 'Democratic Republic of the Congo'
+mapa.df$name_long[mapa.df$name_long == 'Lao PDR'] = 'Laos'
+mapa.df$name_long[mapa.df$name_long == 'Bosnia and Herzegovina']  = 'Bosnia-Herzegovina'
+mapa.df$name_long[mapa.df$name_long == 'Slovakia']  = 'Slovak Republic'
+mapa.df$name_long[mapa.df$name_long == 'Republic of Korea']  = 'South Korea'
+mapa.df$name_long[mapa.df$name_long == 'Dem. Rep. Korea']  = 'North Korea'
+```
+
+```{r}
+gdelt_data = read.table("../../references/gdelt-data.txt", sep = '\t' )
+colnames(gdelt_data) = c("source", "code", "country")
+gdelt_summarized = gdelt_data %>% dplyr::group_by(country) %>% dplyr::summarize(n = dplyr::n())
+colnames(gdelt_summarized) = c('name_long', 'count')
+gdelt_summarized = plyr::join(gdelt_summarized, mapa.df, by = 'name_long', type = 'full')
+```
+
+```{r}
+my_breaks <- round_any(exp(seq(log(10), log(10000), length = 7)), 5)
+my_breaks = c(5, 25, 125,  625, 3125, 15625)
+pl = ggplot()+
+  geom_polygon(data = gdelt_summarized, aes(x = long, y = lat, group = group, fill = count), colour = "black", size = 0.1)+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  theme_bw(base_size = 9)+
+  xlab("")+
+  ylab("")+
+  scale_fill_gradient(name = "Count", trans = "log", breaks = my_breaks, labels = my_breaks)+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+             xlim=c(-130, 167),
+             ylim=c(-58, 80))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"))+
+  ggtitle("GDELT sources by country")
+
+print(pl)
 ```
 
