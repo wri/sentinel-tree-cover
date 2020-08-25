@@ -4,22 +4,22 @@ import scipy
 from scipy.sparse.linalg import splu
 import multiprocessing
 
-def initialize_smoother(lmbd: int = 800) -> np.ndarray:
+def initialize_smoother(lmbd: int = 800, size = 72*3) -> np.ndarray:
     diagonals = np.zeros(2*2+1)
     diagonals[2] = 1.
     for i in range(2):
         diff = diagonals[:-1] - diagonals[1:]
         diagonals = diff
     offsets = np.arange(2+1)
-    shape = (70, 72)
-    E = sparse.eye(72, format = 'csc')
+    shape = (size-2, size)
+    E = sparse.eye(size, format = 'csc')
     D = scipy.sparse.diags(diagonals, offsets, shape)
     D = D.conj().T.dot(D) * lmbd
     coefmat = E + D
     splu_coef = splu(coefmat)
     return splu_coef
 
-splu_coef = initialize_smoother()
+splu_coef = initialize_smoother(size=72*3)
 
 def smooth(y: np.ndarray, splu_coef: np.ndarray = splu_coef) -> np.ndarray:
     ''' 
@@ -61,17 +61,17 @@ def parallel_apply_along_axis(func1d: 'function', axis: int,
     return np.concatenate(individual_results)
 
 
-def interpolate_array(x: np.ndarray, dim: int = 128, nbands: int = 14) -> np.ndarray:
+def interpolate_array(x: np.ndarray, dim: int = 128, nbands: int = 14, size = 72*3) -> np.ndarray:
     no_dem = np.delete(x, 10, -1)
-    no_dem = np.reshape(no_dem, (72, dim*dim*nbands))
+    no_dem = np.reshape(no_dem, (size, dim*dim*nbands))
     no_dem = parallel_apply_along_axis(smooth, 0, no_dem)
-    no_dem = np.reshape(no_dem, (72, dim, dim, nbands))
+    no_dem = np.reshape(no_dem, (size, dim, dim, nbands))
     
     
     x[:, :, :, :10] = no_dem[:, :, :, :10]
     x[:, :, :, 11:] = no_dem[:, :, :, 10:]
 
-    biweekly_dates = np.array([day for day in range(0, 360, 5)])
+    biweekly_dates = np.array([day for day in range(0, size*5, 5)])
     to_remove = np.argwhere(biweekly_dates % 15 != 0)
     x = np.delete(x, to_remove, 0)
     return x
