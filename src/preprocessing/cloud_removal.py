@@ -9,6 +9,52 @@ from tqdm import tnrange, tqdm_notebook
 import math
 from copy import deepcopy
 
+def hist_norm(source, template):
+    olddtype = source.dtype
+    oldshape = source.shape
+    source = source.ravel()
+    template = template.ravel()
+
+    '''
+    # convert the input to be 0 - 256
+    '''
+    if source.dtype != np.int:
+        source = np.trunc(source * 256).astype(int)
+        template = np.trunc(template * 256).astype(int)
+    '''
+        the np.unique funcitons should be fine as long as we only do it on the masked sections
+        # the np.cumsum functions are fine as well
+        # the np.interp is where i'm not sure! 
+    '''
+    s_values, bin_idx, s_counts = np.unique(source, return_inverse=True,
+                                            return_counts=True)
+    t_values, t_counts = np.unique(template, return_counts=True)
+
+    s_quantiles = np.cumsum(s_counts).astype(np.float64)
+    s_quantiles /= s_quantiles[-1]
+    t_quantiles = np.cumsum(t_counts).astype(np.float64)
+    t_quantiles /= t_quantiles[-1]
+    interp_t_values = np.interp(s_quantiles, t_quantiles, t_values)
+
+    return interp_t_values[bin_idx].reshape(oldshape)
+
+def adjust_interpolated_areas_new(array, interp):
+    for time in range(array.shape[0]):
+        for band in range(array.shape[-1]):
+            interp_i = interp[time, :, :, band]
+            array_i = array[time, :, :, band]
+            if np.sum(interp_i) > 0:
+                to_adjust = array_i[interp_i == 1]
+                target = array_i[interp_i == 0]
+                adjusted = hist_norm(to_adjust, array_i[interp_i == 0])
+                adjusted = adjusted.astype(np.float32) / 256
+                adjusted_idx = np.argwhere(interp_i.flatten() == 1).flatten()
+                array_i = array_i.flatten()
+                array_i[adjusted_idx] = adjusted
+                array_i = np.reshape(array_i, (646, 646))
+                array[time, :, :, band] = array_i
+    return array
+
 def adjust_interpolated_areas(array, interp):
     for time in range(array.shape[0]):
         for band in range(array.shape[-1]):

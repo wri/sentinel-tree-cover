@@ -113,7 +113,7 @@ def convertCoords(xy, src='', targ=''):
 
 
 def convert_to_float(array):
-    return (array.astype(float) / 65535)
+    return (array.astype(np.float32) / 65535)
 
 
 def bounding_box(point, x_offset_max = 140, y_offset_max = 140, expansion = 10):
@@ -299,6 +299,39 @@ def tile_window(h, w, tile_width=None, tile_height=None, window_size=100):
             x = x + wTile - remaindersX[i]
 
     return tiles
+
+
+def check_contains(coord: tuple, step_x: int, step_y:
+                   int, folder: str) -> bool:
+    """Given an input .geojson, identifies whether a given tile intersections
+       the geojson
+
+        Parameters:
+         coord (tuple):
+         step_x (int):
+         step_y (int):
+         folder (path):
+
+        Returns:
+         contains (bool)
+    """
+    contains = False
+    bbx, epsg = calculate_bbx_pyproj(coord, step_x, step_y, expansion = 80)
+    inproj = Proj('epsg:' + str(str(epsg)[5:]))
+    outproj = Proj('epsg:4326')
+    bottomleft = transform(inproj, outproj, bbx[0][0], bbx[0][1])
+    topright = transform(inproj, outproj, bbx[1][0], bbx[1][1])
+    
+    if os.path.exists(folder):
+            if any([x.endswith(".geojson") for x in os.listdir(folder)]):
+                geojson_path = folder + [x for x in os.listdir(folder) if x.endswith(".geojson")][0]
+    
+                bool_contains = pts_in_geojson(lats = [bottomleft[1], topright[1]], 
+                                                       longs = [bottomleft[0], topright[0]],
+                                                       geojson = geojson_path)
+                contains = bool_contains
+    return contains
+
 
 def hist_match(source, template):
     """

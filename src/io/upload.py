@@ -8,16 +8,21 @@ from botocore.errorfactory import ClientError
 import botocore
 import boto3.s3.transfer as s3transfer
 import argparse
+import re
+
+
 
 class FileUploader:
-	def __init__(self, stream = False):
+	def __init__(self, awskey, awssecret, stream = False, ):
 		self.total = 0
 		self.uploaded = 0
 		self.percent = 0
+		self.awskey = awskey
+		self.awssecret = awssecret
 		self.config = botocore.config.Config(max_pool_connections=20)
 		self.s3client = boto3.client('s3', config=self.config,
-			aws_access_key_id=AWSKEY,
-			aws_secret_access_key=AWSSECRET,
+			aws_access_key_id= self.awskey,
+			aws_secret_access_key= self.awssecret,
 		)
 		self.stream = stream
 
@@ -37,11 +42,11 @@ class FileUploader:
 		# check if the file exists
 		try:
 			 boto3.client('s3',
-						aws_access_key_id=AWSKEY,
-						aws_secret_access_key=AWSSECRET,
+						aws_access_key_id=self.awskey,
+						aws_secret_access_key=self.awssecret,
 					).head_object(Bucket=bucket, Key=key)
-			 print(f'removing {file}')
-			 os.remove(file)
+			 #print(f'removing {file}')
+			 #os.remove(file)
 
 		# if the file doesn't exist, upload it
 		except ClientError:
@@ -60,9 +65,41 @@ class FileUploader:
 						Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20),
 						Callback=self.upload_callback
 					)
-			print(f'removing {file}')
-			os.remove(file)
+			#print(f'removing {file}')
+			#os.remove(file)
 
+def get_folder_prefix(coordinates, params):
+    geolocation = rg.search((coordinates[0], coordinates[1]))
+    country = geolocation[-1]['cc']
+    regex = re.compile('[^a-zA-Z-]')
+   
+    country =  pc.country_alpha2_to_country_name(country)
+    country = country.replace(" ", "-").lower()
+    country = regex.sub('', country)
+    admin1 = geolocation[-1]['admin1'].replace(" ", "-").lower()
+    admin1 = regex.sub('', admin1)
+    name = geolocation[-1]['name'].replace(" ", "-").lower()
+    name = regex.sub('', name)
+    path = f'{params["bucket-prefix"]}/{country}/{admin1}/{name}/'
+    return path
+
+
+def save_file(obj, 
+              path,
+              params, 
+              save_bucket = True):
+    
+    hkl.dump(obj, params['prefix'] + path, mode = 'w', compression = 'gzip')
+    uploader = FileUploader(awskey = AWSKEY, awssecret = AWSSECRET)
+    key = params['bucket_prefix'] + path
+    if save_bucket:
+        uploader.upload(bucket = params['bucket'], key = key,
+                        file = params['prefix'] + path
+                       )
+
+
+
+'''
 if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser()
@@ -98,3 +135,4 @@ if __name__ == "__main__":
 		uploader.upload(bucket = args.bucket, # rm-guatemala
 						key = args.prefix + file,
 						file = base_path + file)
+'''

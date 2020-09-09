@@ -40,14 +40,22 @@ def msavi2(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     # (2 * NIR + 1 - sqrt((2*NIR + 1)^2 - 8*(NIR-RED)) / 2
     NIR = x[:, :, :, 3]
     RED = x[:, :, :, 2]
-    for i in range(x.shape[0]):
-        NIR_i = x[i, :, :, 3]
-        RED_i = x[i, :, :, 2]
-        under_sqrt = (2*NIR_i+1)**2 - 8*(NIR_i-RED_i)
-        under_sqrt = np.min(under_sqrt)
-        if under_sqrt <= 0:
-            print("MSAVI2 negative sqrt at: {}, {}".format(i, under_sqrt))
+    RED = np.clip(RED, 0, 1)
+    NIR = np.clip(NIR, 0, 1)
+    #for i in range(x.shape[0]): # if NIR is smalelr than red, then it works
+    #    NIR_i = x[i, :, :, 3]   # if nir is greater than red
+    #    RED_i = x[i, :, :, 2] # 2 * 0.99 + 1**2 = 8.88, -8*.99 - 0.01 = 7.92
+    #    under_sqrt = (2*NIR_i+1)**2 - 8*(NIR_i-RED_i) # NIR = 0.1, Red = 0.02 = 
+    #    under_sqrt = np.min(under_sqrt)
+    #    if under_sqrt <= 0:
+    #        location = np.argmin(under_sqrt.flatten())
+    #        print(NIR_i.flatten()[location])
+    #        print(RED_i.flatten()[location])
+    #        print(under_sqrt.flatten()[location])
+    #        print("MSAVI2 negative sqrt at: {}, {}".format(i, under_sqrt))
     msavis = (2 * NIR + 1 - np.sqrt( (2*NIR+1)**2 - 8*(NIR-RED) )) / 2
+    if np.sum(np.isnan(msavis) > 0):
+        print(f'There were {np.sum(np.isnan(msavis))} NA values introduced')
     if verbose:
         mins = np.min(msavis)
         maxs = np.max(msavis)
@@ -58,10 +66,18 @@ def msavi2(x: np.ndarray, verbose: bool = False) -> np.ndarray:
 
 def bi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     # (2 + 0 - 1) / (2 + 0 + 1)
-    BLUE = x[:, :, :, 0]
-    RED = x[:, :, :, 2]
-    GREEN = x[:, :, :, 1]
+    # This is still in the trained model, but the index is gibberish
+    # as it is based on Landsat bands, not sentinel bands
+    # https://www.geo.university/pages/spectral-indices-with-multispectral-satellite-data
+    # correct bare soil index is:
+    # (B11 + B4) - (B8 + B2) / (B11 + B4) + (B8 + B2)
+    # Landsat: (NIR + green - red) / (NIR + green + red)
+    # current: (BLUE + RED - GREEN) / (BLUE + RED + GREEN)
+    BLUE = np.clip(x[:, :, :, 0], 0, 1)
+    RED = np.clip(x[:, :, :, 2], 0, 1)
+    GREEN = np.clip(x[:, :, :, 1], 0, 1)
     bis = (BLUE + RED - GREEN) / (BLUE + RED + GREEN)
+    bis = np.clip(bis, -1.5, 1.5)
     if verbose:
         mins = np.min(bis)
         maxs = np.max(bis)
@@ -72,6 +88,7 @@ def bi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
 
 def si(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     # (1 - B2) * (1 - B3) * (1 - B4) ** 1/3
+    # This gets deleted before prediction, 
     BLUE = x[:, :, :, 0]
     RED = x[:, :, :, 2]
     GREEN = x[:, :, :, 1]

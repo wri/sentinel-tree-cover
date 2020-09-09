@@ -15,6 +15,7 @@ models/march-2/*
 models/*
 raw/*
 *.pem
+project-monitoring/*/*
 
 notebooks/.ipynb_checkpoints/*
 src/downloading/__pychache__/*
