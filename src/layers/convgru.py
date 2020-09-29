@@ -46,12 +46,12 @@ class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
       if self._pad_input:
         inputs_pad = tf.pad(inputs, [[0, 0], [1, 1], [1, 1] ,[0,0] ], 'REFLECT')
       y = tf.nn.convolution(inputs_pad, W, self._padding, data_format=self._data_format)
-      if self._sse:
-        W_1 = tf.get_variable("kernel_1", [1, 1, m, 1]) # [1, 1, C, 1]
-        y_1 = tf.nn.convolution(y, W_1, 'VALID')
-        y_1 = tf.nn.sigmoid(y_1)
-        print(y_1.shape)
-        y = y * y_1
+      #if self._sse:
+      #  W_1 = tf.get_variable("kernel_1", [1, 1, m, 1]) # [1, 1, C, 1]
+      #  y_1 = tf.nn.convolution(y, W_1, 'VALID')
+       # y_1 = tf.nn.sigmoid(y_1)
+       # print(y_1.shape)
+       # y = y * y_1
       if self._normalize:
         r, u = tf.split(y, 2, axis=self._feature_axis)
         r = tf.contrib.layers.layer_norm(r)
