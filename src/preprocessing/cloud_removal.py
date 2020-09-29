@@ -71,7 +71,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                              probs: np.ndarray, 
                              shadows: np.ndarray,
                              image_dates: List[int], 
-                             wsize: int = 25) -> np.ndarray:
+                             wsize: int = 35) -> np.ndarray:
     """ Interpolates clouds and shadows for each time step with 
         linear combination of proximal clean time steps for each
         region of specified window size
@@ -107,15 +107,15 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     
     areas_interpolated = np.zeros_like(tiles)
     
-    for x in range(0, tiles.shape[1] - (wsize - 1), 1):
-        for y in range(0, tiles.shape[2] - (wsize - 1), 1):
+    for x in range(0, tiles.shape[1] - (wsize - 1), 2):
+        for y in range(0, tiles.shape[2] - (wsize - 1), 2):
             subs = c_probs[:, x:x + wsize, y:y+wsize]
             satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/20)
             if len(satisfactory) == 0:
                 #print(f"There is a potential issue with the cloud removal at {x}, {y}")
                 satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/2)
             for date in range(0, tiles.shape[0]):
-                if np.sum(subs[date]) >= (wsize*wsize)/10:
+                if np.sum(subs[date]) >= (wsize*wsize)/20:
                     n_interp += 1
                     before, after = calculate_proximal_steps(date, satisfactory)
                     before = date + before
@@ -139,7 +139,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                     after_weight = 1 - before_weight
                     
                     candidate = before_weight*before_array + after_weight * after_array
-                    #candidate = candidate * c_arr + original_array[np.newaxis] * o_arr
+                    #candidate = candidate * c_arr + tiles[date, x:x+wsize, y:y+wsize, :] * o_arr
                     tiles[date, x:x+wsize, y:y+wsize, : ] = candidate 
                     areas_interpolated[date, x:x+wsize, y:y+wsize, : ] = 1.
 

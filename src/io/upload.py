@@ -9,6 +9,9 @@ import botocore
 import boto3.s3.transfer as s3transfer
 import argparse
 import re
+import reverse_geocoder as rg
+import pycountry
+import pycountry_convert as pc
 
 
 
