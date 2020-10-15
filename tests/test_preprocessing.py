@@ -9,6 +9,7 @@ from src.preprocessing.whittaker_smoother import initialize_smoother, smooth
 from src.preprocessing.whittaker_smoother import unpacking_apply_along_axis, parallel_apply_along_axis
 from timeit import default_timer as timer
 
+'''
 class TestSmoother(unittest.TestCase):
 
 	def setUp(self):
@@ -26,7 +27,7 @@ class TestSmoother(unittest.TestCase):
 		self.assertTrue((end - begin) <= 0.5)
 		self.assertTrue(x.shape[0] == 72)
 		self.assertTrue(x.shape[1] == 10000)
-
+'''
 
 class TestTemporalMosaicing(unittest.TestCase):
 

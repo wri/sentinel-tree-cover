@@ -54,8 +54,6 @@ def msavi2(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     #        print(under_sqrt.flatten()[location])
     #        print("MSAVI2 negative sqrt at: {}, {}".format(i, under_sqrt))
     msavis = (2 * NIR + 1 - np.sqrt( (2*NIR+1)**2 - 8*(NIR-RED) )) / 2
-    if np.sum(np.isnan(msavis) > 0):
-        print(f'There were {np.sum(np.isnan(msavis))} NA values introduced')
     if verbose:
         mins = np.min(msavis)
         maxs = np.max(msavis)

@@ -48,8 +48,9 @@ RUN chmod +x ./run_test.sh &&\
 
 EXPOSE 8888:8888
 
-CMD ["jupyter", "notebook", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root", "--NotebookApp.token='restorationmapper'"]
+CMD ["jupyter", "notebook", "--port=8888", "--no-browser", "--ip='*'", "--allow-root", "--NotebookApp.token='', --NotebookApp.password=''"]
 
 # docker build -t johnbrandtwri/restoration_mapper .
 # docker run -p 8888:8888 johnbrandtwri/restoration_mapper
 # docker push johnbrandtwri/restoration_mapper
+# docker run -p 8888:8888 johnbrandtwri/restoration_mapper --entrypoint "jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token='' --NotebookApp.password=''"

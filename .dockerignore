@@ -6,6 +6,7 @@ models/*
 references/*
 raw/*
 docs/*
+project-monitoring/*
 
 *.pem
 gcloud-key.json

@@ -18,6 +18,44 @@ from skimage.transform import resize
 from pyproj import Proj, transform
 from typing import List, Any, Tuple
 
+def calculate_bbx_pyproj(coord: Tuple[float, float],
+                         step_x: int, step_y: int,
+                         expansion: int, multiplier: int = 1.) -> (Tuple[float, float], 'CRS'):
+    ''' Calculates the four corners of a bounding box
+        [bottom left, top right] as well as the UTM EPSG using Pyproj
+        
+        Note: The input for this function is (x, y), not (lat, long)
+        
+        Parameters:
+         coord (tuple): Initial (long, lat) coord
+         step_x (int): X tile number of a 6300x6300 meter tile
+         step_y (int): Y tile number of a 6300x6300 meter tile
+         expansion (int): Typically 10 meters - the size of the border for the predictions
+         multiplier (int): Currently deprecated
+         
+        Returns:
+         coords (tuple):
+         CRS (int):
+    '''
+    
+    inproj = Proj('epsg:4326')
+    outproj_code = calculate_epsg(coord)
+    outproj = Proj('epsg:' + str(outproj_code))
+    
+    
+    
+    coord_utm =  transform(inproj, outproj, coord[1], coord[0])
+    coord_utm_bottom_left = (coord_utm[0] + step_x*6300 - expansion,
+                             coord_utm[1] + step_y*6300 - expansion)
+    
+    coord_utm_top_right = (coord_utm[0] + (step_x+multiplier) * 6300 + expansion,
+                           coord_utm[1] + (step_y+multiplier) * 6300 + expansion)
+
+    zone = str(outproj_code)[3:]
+    direction = 'N' if coord[1] >= 0 else 'S'
+    utm_epsg = "UTM_" + zone + direction
+    return (coord_utm_bottom_left, coord_utm_top_right), CRS[utm_epsg]
+
 
 def calculate_epsg(points: Tuple[float, float]) -> int:
     """ Calculates the UTM EPSG of an input WGS 84 lon, lat

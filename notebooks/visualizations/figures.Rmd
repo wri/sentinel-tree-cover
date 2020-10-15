@@ -81,6 +81,7 @@ ggplot(data = df, aes(x = Countries, y = Correlations, fill=Model))+
 ```
 
 ```{r}
+extrafont::loadfonts(device="pdf")
 library(dplyr)
 library(tidyr)
 library(rgdal)
@@ -110,7 +111,7 @@ bastin <- ggplot()+
   #ylim(-54, 85)+
   #xlim(-173, 180)+
   theme_bw()+
-  ggtitle("Global tree cover plots from Bastin et al. 2017")+
+  #ggtitle("Global tree cover plots from Bastin et al. 2017")+
   xlab("")+
   ylab("")+
   coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
@@ -131,17 +132,29 @@ training_plots = ggplot()+
   geom_point(data = training_data, aes(x = longs, y = lats), color = "red", size = 0.25)+
   #ylim(-54, 85)+
   #xlim(-173, 180)+
-  theme_bw(base_size = 12)+
-  ggtitle("Training plots")+
+  theme_bw(base_size = 15)+
+  #ggtitle("Training plots")+
   xlab("")+
   ylab("")+
   coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
              xlim=c(-130, 167),
              ylim=c(-58, 80))+
-  theme(plot.margin=unit(c(0,0,0,0),"cm"))#+
+  scale_y_continuous(breaks= c(-50, -25, 0, 25, 50, 75),
+                   labels = c("-50", "-25", "0", "25", "50", "75"))+
+  scale_x_continuous(breaks= c(-150, -100, -50, 0, 50, 100, 150),
+                   labels = c("-150", "-100", "-50", "0", "50", "100", "150"))+
+  xlab("Longitude (°)")+
+  ylab("Latitude (°)")+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        text = element_text(size=15,family="Times"),
+        axis.line = element_line(color = 'black', size = 0.25))
+       # axis.text.x = element_text(c("-50°", "-25°", "0°", "25°", "50°", "75°")))#+
   #scalebar(location = "bottomleft", transform = TRUE, dist = 2000, model = "WGS84", dist_unit = "km", x.min = -130, x.max = 167, y.min = -58, y.max = 80, st.bottom = TRUE)
 
-#ggsave("../../references/pdf/train-plots.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in")
+ggsave("../../references/highquality/figure1.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in", dpi = 600)
 ```
 
 # New training samples 
@@ -175,23 +188,36 @@ print(training_plots)
 
 ```{r, fig.width=11, fig.height=7}
 library(ggalt)
-testing_data = read.csv("../../data/latlongs/testing_plots.csv")
+testing_data = read.csv("../../data/latlongs/test_bastin.csv")
 
 testing_plots = ggplot()+
   geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
   #ylim(-54, 85)+
   #xlim(-173, 180)+
   geom_point(data = testing_data, aes(x = longs, y = lats), color = "blue3", size = 0.25)+
-  theme_bw(base_size = 9)+
+  theme_bw(base_size = 15)+
   xlab("")+
   ylab("")+
-  ggtitle("Testing plots - global pixel accuracy")+
+  #ggtitle("Global tree cover plots from Bastin et al. 2017")+
+  #ggtitle("Testing plots - global pixel accuracy")+
   coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
              xlim=c(-130, 167),
              ylim=c(-58, 80))+
-  theme(plot.margin=unit(c(0,0,0,0),"cm"))
+  xlab("Longitude (°)")+
+  ylab("Latitude (°)")+
+  scale_y_continuous(breaks= c(-50, -25, 0, 25, 50, 75),
+                   labels = c("-50", "-25", "0", "25", "50", "75"))+
+  scale_x_continuous(breaks= c(-150, -100, -50, 0, 50, 100, 150),
+                   labels = c("-150", "-100", "-50", "0", "50", "100", "150"))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        text = element_text(size=15,family="Times"),
+        axis.line = element_line(color = 'black', size = 0.25))
 
-#ggsave("../../references/pdf/test-plots.pdf", testing_plots, "pdf", width = 9.3, height = #4.5, units = "in")
+
+ggsave("../../references/highquality/figure7.pdf", testing_plots, "pdf", width = 9.3, dpi = 600, height = 4.5, units = "in")
 ```
 
 ```{r}
@@ -221,32 +247,57 @@ data = read.csv("../../data/latlongs/landscapes.csv")
 
 ```{r, fig.width=5, fig.height=5}}
 library(ggsn)
-#geojson = "../../references/json/custom.geo.json"
-#map <- readOGR(geojson)
-#map.df <- fortify(map)
+geojson = "../../references/json/custom.geo.json"
+map <- readOGR(geojson)
+map.df <- fortify(map)
 # Honduras
-y <- seq(14.1, 15.1, 0.1)  #(6, 20)
+y <- seq(14.1, 15.1, 0.1)  #(6, 20) #14 x 10
 x <- seq(-88.7, -87.7, 0.1) #(-90, -80)
 
 # Ghana
-y <- seq(7.4, 8.4, 0.1) #(-5, 5)
-x <- seq(-1.2, -0.2, 0.1) #(-2, 12)
+y <- seq(7.4, 8.4, 0.1) #(-5, 5) # 10 x 14
+x <- seq(-1.2, -0.2, 0.1) #(-2, 12) 
 
 # Tanzania
-#x <- seq(36.7, 37.7, 0.1) # 30, 40
-#y <- seq(-6.2, -5.2, 0.1) @ -10, 4
+x <- seq(36.7, 37.7, 0.1) # 30, 40 # 10 x 14
+y <- seq(-6.2, -5.2, 0.1) # -10, 4
 
 grid <- expand.grid(x,y)
 grid$latlong <- paste(grid$Var2, grid$Var1)
 local = ggplot()+
   geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.2)+
   geom_point(data = grid, aes(x = Var1, y = Var2), color = "blue3", size = 0.05)+
-  coord_cartesian(ylim = c(-2, 12), xlim = c(-5, 5))+
-  scalebar(transform = TRUE, dist = 200, model = "WGS84", dist_unit = "km", location = "bottomleft", x.min = -5, x.max = 5, y.min = -2, y.max = 12, st.bottom = FALSE)+
-  theme_bw()+
-  ggtitle("Ghana")+
-  xlab("")+
-  ylab("")
+  xlab("Longitude (°)")+
+  ylab("Latitude (°)")+
+  # GHANA
+  #coord_cartesian(ylim = c(-2, 12), xlim = c(-5, 5))+ # Ghana
+  #scalebar(transform = TRUE, dist = 200, model = "WGS84", dist_unit = "km", location = "bottomleft", x.min = -5, x.max = 5, y.min = -2, y.max = 12, st.bottom = FALSE, family = "Times")+ # Ghana
+  #scale_x_continuous(breaks= c(-5.0, -2.5, 0, 2.5, 5.0), # ghana, 4.2 x 6
+  #                 labels = c("-5.0", "-2.5", "0.0", "2.5", "5.0"))+
+  #scale_y_continuous(breaks= c(0, 4, 8, 12),
+  #                 labels = c("0.0", "4.0", "8.0", "12.0"))+
+  # HONDURAS
+  #coord_cartesian(ylim = c(6, 20), xlim = c(-90, -80))+
+  #scalebar(transform = TRUE, dist = 200, model = "WGS84", dist_unit = "km", location = "bottomleft", x.min = -90, x.max = -80, y.min = 6, y.max = 20, st.bottom = FALSE, family = "Times")+
+  #scale_x_continuous(breaks= c(-90.0, -87.5, -85.0, -82.5, -80.0), # honduras, 4.2 x 6
+  #                 labels = c("-90.0", "-87.5", "-85.0", "-82.5", "-80.0"))+
+  #scale_y_continuous(breaks= c(10, 15, 20),
+  #                 labels = c("10.0", "15.0", "20.0"))+
+  # TANZANIA
+  coord_cartesian(xlim = c(30, 40), ylim = c(-10, 4))+
+  scalebar(transform = TRUE, dist = 200, model = "WGS84", dist_unit = "km", location = "bottomleft", y.min = -10, y.max = 4, x.min = 30, x.max = 40, st.bottom = FALSE, family = "Times")+
+  scale_x_continuous(breaks= c(30.0, 32.5, 35.0, 37.5, 40.0), # honduras, 4.2 x 6
+                   labels = c("30.0", "32.5", "35.0", "37.5", "40.0"))+
+  scale_y_continuous(breaks= c(-10, -5, 0),
+                   labels = c("-10.0", "-5.0", "0.0"))+
+  theme_bw(base_size = 12)+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        text = element_text(size=12,family="Times"),
+        axis.line = element_line(color = 'black', size = 0.25))+
+  ggtitle(expression('('~italic(c)~')'))
 
 print(local)
 ```
