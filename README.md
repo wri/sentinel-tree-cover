@@ -3,7 +3,7 @@ Counting trees inside and outside the forest with image segmentation
 
 # Description
 
-[Restoration Mapper](https://restorationmapper.org) is an online tool to create wall-to-wall maps of tree presence using open source artificial intelligence and open source satellite imagery. The Restoration Mapper approach enables monitoring stakeholders to:
+[Restoration Mapper](https://restorationmapper.org) is an online tool to create wall-to-wall maps of tree presence using open source artificial intelligence and open source satellite imagery. The approach enables monitoring stakeholders to:
 *  Rapidly assess tree density in non-forested landscapes
 *  Establish wall-to-wall baseline data
 *  Measure yearly change in tree density without conducting follow-up mapathons
@@ -77,7 +77,7 @@ Restoration mapper uses Sentinel 1 and Sentinel 2 imagery. Biweekly composites o
 
 # License
 
-Restoration mapper is released under the GNU General Public License v3.0.
+The code is released under the GNU General Public License v3.0.
 
 # Project Organization
 ------------
