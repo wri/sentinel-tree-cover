@@ -16,6 +16,7 @@ models/*
 raw/*
 *.pem
 project-monitoring/*/*
+notebooks/development/data/*
 
 notebooks/.ipynb_checkpoints/*
 src/downloading/__pychache__/*

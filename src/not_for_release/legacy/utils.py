@@ -4,6 +4,21 @@ from tflearn.layers.conv import global_avg_pool
 import itertools
 from tensorflow.python.keras.layers import Conv2D, Lambda, Dense, Multiply, Add
 
+def reject_outliers(data, m = 4):
+    d = data - np.median(data, axis = (0))
+    mdev = np.median(data, axis = 0)
+    s = d / mdev
+    n_changed = 0
+    for x in tnrange(data.shape[1]):
+        for y in range(data.shape[2]):
+            for band in range(data.shape[3]):
+                to_correct = np.where(s[:, x, y, band] > m) 
+                data[to_correct, x, y, band] = mdev[x, y, band]
+                n_changed += len(to_correct[0])
+    print(f"Rejected {n_changed} outliers")
+    return data
+    
+
 def convertCoords(xy, src='', targ=''):
     """ Converts coords from one EPSG to another
 
