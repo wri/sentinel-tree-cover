@@ -260,3 +260,97 @@ def mcm_shadow_mask(arr: np.ndarray, c_probs: np.ndarray) -> np.ndarray:
                             shadows_new[time, x_idx, y_idx] = 1.
     shadows_new = resize(shadows_new, (shadows.shape[0], imsize, imsize), order = 0)
     return shadows_new
+
+
+def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
+    """ Removes clouds that may have been missed by s2cloudless
+        by looking at a temporal change outside of IQR
+        
+        Parameters:
+         img (arr): 
+    
+        Returns:
+         to_remove (arr): 
+    """
+    iqr = np.percentile(img[..., 0].flatten(), 75) - np.percentile(img[..., 0].flatten(), 25)
+    thresh_t = np.percentile(img[..., 0].flatten(), 75) + iqr*1.75
+    thresh_b = np.percentile(img[..., 0].flatten(), 25) - iqr*1.75
+    outlier_percs = []
+    for step in range(img.shape[0]):
+        bottom = len(np.argwhere(img[step, ..., 0].flatten() > thresh_t))
+        top = len(np.argwhere(img[step, ..., 0].flatten() < thresh_b))
+        p = 100 * ((bottom + top) / (img.shape[1]*img.shape[2]))
+        outlier_percs.append(p)
+    to_remove = np.argwhere(np.array(outlier_percs) > 25)
+    return to_remove
+
+
+def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
+    """ Calculates the timesteps to remove based upon cloud cover and missing data
+        
+        Parameters:
+         clouds (arr):
+    
+        Returns:
+         to_remove (arr): 
+    """
+    
+    def _check_month(month, thresh):
+        month_idx = np.argwhere(np.logical_and(dates >= starting[month],
+                                               dates < starting[month + 1]))
+        cloud_month = cloud_percent[month_idx]
+        month_good_idx = np.argwhere(cloud_month < thresh)
+        if len(month_good_idx) > 0:
+            month_good_dates = np.unique(dates[month_idx[month_good_idx]].flatten())
+            min_distances = []
+            for x in month_good_dates:
+                clean_dates = dates[np.argwhere(cloud_percent < 0.15)].flatten()
+                distances = x - clean_dates
+                distances = np.delete(distances, month_idx.flatten())
+                if np.min(distances) < 0:
+                    lower_distance = abs(np.max(distances[np.argwhere(distances < 0)]))
+                else: 
+                    lower_distance = 0
+                if np.max(distances) > 0:
+                    upper_distance = np.min(distances[np.argwhere(distances > 0)])
+                else:
+                    upper_distance = 0
+                min_distances.append(np.max([lower_distance, upper_distance]))
+            min_distance = np.min(min_distances)
+        else:
+            month_good_dates = np.empty((0, 0))
+            min_distance = 365
+        return month_good_dates, min_distance
+    
+    good_steps = np.empty((0, ))
+    month_days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 80]
+    starting = np.cumsum(month_days)
+    starting[0] = -30
+    
+    n_cloud_px = np.sum(clouds > 0.25, axis = (1, 2))
+    cloud_percent = n_cloud_px / (clouds.shape[1]**2)
+    thresh = [0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.10, 0.15]
+    thresh_dist = [30, 30, 60, 60, 100, 100, 100, 100]
+    for month in range(0, 12):
+        finished = False
+        for x in range(len(thresh)):
+            if not finished:
+                month_good_dates, min_distance = _check_month(month, thresh[x])
+                if month == 0 and len(month_good_dates > 4):
+                        month_good_dates = month_good_dates[-4:]
+                if month == 11 and len(month_good_dates > 4):
+                    month_good_dates = month_good_dates[:4]    
+                if (min_distance < thresh_dist[x] or thresh[x] == 0.15):
+                    finished = True
+                    print(f"{month}, Good steps: {month_good_dates},"
+                         f" min dist of {min_distance}, and {thresh[x]} thresh")
+                    good_steps = np.concatenate([good_steps, month_good_dates.flatten()])
+                    
+    good_steps_idx = [i for i, val in enumerate(dates) if val in good_steps]
+    cloud_steps = np.array([x for x in range(dates.shape[0]) if x not in good_steps_idx])
+    print(cloud_steps)
+    if len(cloud_steps > 0):
+        print(cloud_percent[cloud_steps])
+    to_remove = cloud_steps
+    data_filter = good_steps_idx
+    return to_remove, good_steps_idx

@@ -29,8 +29,6 @@ class Smoother:
         ''' 
         Apply whittaker smoothing to a 1-dimensional array, returning a 1-dimensional array
         '''
-        print(self.splu_coef.shape)
-        print(y.shape)
         return self.splu_coef.solve(np.array(y))
 
 

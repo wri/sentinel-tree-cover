@@ -4,6 +4,80 @@ from tflearn.layers.conv import global_avg_pool
 import itertools
 from tensorflow.python.keras.layers import Conv2D, Lambda, Dense, Multiply, Add
 
+INPUT_FOLDER = "/".join(OUTPUT_FOLDER.split("/")[:-2]) + "/"
+def process_multiple_years(coord: tuple,
+                       step_x: int,
+                       step_y: int,
+                       path: str = INPUT_FOLDER) -> None:
+    '''Wrapper function to interpolate clouds and temporal gaps, superresolve tiles,
+       calculate relevant indices, and save analysis-ready data to the output folder
+       
+       Parameters:
+        coord (tuple)
+        step_x (int):
+        step_y (int):
+        folder (str):
+
+       Returns:
+        None
+    '''
+
+    idx = str(step_y) + "_" + str(step_x)
+    x_vals, y_vals = make_folder_names(step_x, step_y)
+    
+    d2017 = hkl.load(f"{path}/2017/interim/dates_{idx}.hkl")
+    d2018 = hkl.load(f"{path}/2018/interim/dates_{idx}.hkl")
+    d2019 = hkl.load(f"{path}/2019/interim/dates_{idx}.hkl")
+    
+    x2017 = hkl.load(f"{path}/2017/interim/{idx}.hkl").astype(np.float32)
+    x2018 = hkl.load(f"{path}/2018/interim/{idx}.hkl").astype(np.float32)
+    x2019 = hkl.load(f"{path}/2019/interim/{idx}.hkl").astype(np.float32)
+  
+    s1_all = np.empty((72, 646, 646, 2))
+    s1_2017 = hkl.load(f"{path}/2017/raw/s1/{idx}.hkl")
+    s1_all[:24] = s1_2017
+    s1_2018 = hkl.load(f"{path}2018/raw/s1/{idx}.hkl")
+    s1_all[24:48] = s1_2018
+    s1_2019 = hkl.load(f"{path}2019/raw/s1/{idx}.hkl")
+    s1_all[48:] = s1_2019
+    
+
+    index = 0
+    tiles = tile_window(IMSIZE, IMSIZE, window_size = 142)
+    for t in tiles:
+        start_x, start_y = t[0], t[1]
+        end_x = start_x + t[2]
+        end_y = start_y + t[3]
+        s2017 = x2017[:, start_x:end_x, start_y:end_y, :]
+        s2018 = x2018[:, start_x:end_x, start_y:end_y, :]
+        s2019 = x2019[:, start_x:end_x, start_y:end_y, :]
+        s2017, _  = calculate_and_save_best_images(s2017, d2017)
+        s2018, _ = calculate_and_save_best_images(s2018, d2018)
+        s2019, _ = calculate_and_save_best_images(s2019, d2019)
+        subtile = np.empty((72*3, 142, 142, 15))
+        subtile[:72] = s2017
+        subtile[72:144] = s2018
+        subtile[144:] = s2019
+        print(np.sum(np.isnan(subtile), axis = (1, 2, 3)))
+        out_17 = f"{path}/2017/processed/{y_vals[index]}/{x_vals[index]}.hkl"
+        out_18 = f"{path}/2018/processed/{y_vals[index]}/{x_vals[index]}.hkl"
+        out_19 = f"{path}/2019/processed/{y_vals[index]}/{x_vals[index]}.hkl"
+        
+        index += 1
+        print(f"{index}: The output file is {out_17}")
+        subtile = interpolate_array(subtile, dim = 142)
+        subtile = np.concatenate([subtile, s1_all[:, start_x:end_x, start_y:end_y, :]], axis = -1)
+        for folder in [out_17, out_18, out_19]:
+            output_folder = "/".join(folder.split("/")[:-1])
+            if not os.path.exists(os.path.realpath(output_folder)):
+                os.makedirs(os.path.realpath(output_folder))
+        subtile = to_int32(subtile)
+        assert subtile.shape[1] == 142, f"subtile shape is {subtile.shape}"
+        
+        hkl.dump(subtile[:24], out_17, mode='w', compression='gzip')
+        hkl.dump(subtile[24:48], out_18, mode='w', compression='gzip')
+        hkl.dump(subtile[48:], out_19, mode='w', compression='gzip')
+
 def reject_outliers(data, m = 4):
     d = data - np.median(data, axis = (0))
     mdev = np.median(data, axis = 0)
