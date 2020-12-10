@@ -336,14 +336,23 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
         for x in range(len(thresh)):
             if not finished:
                 month_good_dates, min_distance = _check_month(month, thresh[x])
-                if month == 0 and len(month_good_dates > 4):
-                        month_good_dates = month_good_dates[-4:]
-                if month == 11 and len(month_good_dates > 4):
-                    month_good_dates = month_good_dates[:4]    
+                # Put a cap of 4 images per month
+                # Keep the first, last, middle, and the other one which has the lowest cloud cover
+                # Max dates possible is 6, so you are either removing 1 or 2 of steps X in [1, X, X, X, X, 6]
+                # keep = 0, (4, or 5)
+                # if len(dates) == 5:
+                #     potential_keep = 3
+                if month == 0 and len(month_good_dates > 3):
+                        month_good_dates = month_good_dates[-3:]
+                if month == 11 and len(month_good_dates > 3):
+                    month_good_dates = month_good_dates[:3]    
                 if (min_distance < thresh_dist[x] or thresh[x] == 0.15):
                     finished = True
-                    print(f"{month}, Good steps: {month_good_dates},"
-                         f" min dist of {min_distance}, and {thresh[x]} thresh")
+                    if len(month_good_dates) == 6:
+                        month_good_dates = [val for i, val in enumerate(month_good_dates) if i in [0, 2, 3, 5]]
+                        month_good_dates = np.array(month_good_dates)
+                    print(f"{month}, Dates: {month_good_dates},"
+                         f" Min dist: {min_distance}, thresh: {thresh[x]}")
                     good_steps = np.concatenate([good_steps, month_good_dates.flatten()])
                     
     good_steps_idx = [i for i, val in enumerate(dates) if val in good_steps]
