@@ -8,6 +8,7 @@ from skimage.transform import resize
 from tqdm import tnrange, tqdm_notebook
 import math
 from copy import deepcopy
+import time
 
 def hist_norm(source, template):
     olddtype = source.dtype
@@ -168,6 +169,7 @@ def mcm_shadow_mask(arr: np.ndarray, c_probs: np.ndarray) -> np.ndarray:
          shadows_new (arr): cloud mask after Candra et al. 2020 and cloud matching 
          shadows_original (arr): cloud mask after Candra et al. 2020
     """
+    import time
     def _rank_array(arr):
         order = arr.argsort()
         ranks = order.argsort()
@@ -194,21 +196,19 @@ def mcm_shadow_mask(arr: np.ndarray, c_probs: np.ndarray) -> np.ndarray:
     shadows = np.zeros((arr.shape[0], size, size))  
     
     # Candra et al. 2020
-    for time in tnrange(arr.shape[0]):
-        for x in range(arr.shape[1]):
-            for y in range(arr.shape[2]):
-                ti_slice = arr[time, x, y]
-                ri_slice = ri[x, y]
-                deltab2 = ti_slice[0] - ri_slice[0]
-                deltab8a = ti_slice[1] - ri_slice[1]
-                deltab11 = ti_slice[2] - ri_slice[2]
-                if deltab2 < 0.10: #(1000/65535):
-                    if deltab8a < -0.04: #(-400/65535):
-                        if deltab11 < -0.04: #(-400/65535):
-                            if ti_slice[0] < 0.095: #(950/65535):
-                                shadows[time, x, y] = 1.
-                                                       
-                            
+
+    start = time.time()
+    ri = np.tile(ri[np.newaxis], (arr.shape[0], 1, 1, 1))
+    deltab2 = (arr[..., 0] - ri[..., 0]) < 0.10
+    deltab8a = (arr[..., 1] - ri[..., 1]) < -0.04
+    deltab11 = (arr[..., 2] - ri[..., 2]) < -0.04
+    ti0 = arr[..., 0] < 0.095
+
+    shadows = (deltab2 * deltab11 * deltab8a * ti0)
+    shadows = shadows * 1
+    end = time.time()
+    print(f"Calculating shadows the new way took {end - start}")
+    
     # Remove shadows if cannot coreference a cloud
     shadow_large = np.reshape(shadows, (shadows.shape[0], size // 8, 8, size // 8, 8))
     shadow_large = np.sum(shadow_large, axis = (2, 4))
@@ -234,7 +234,7 @@ def mcm_shadow_mask(arr: np.ndarray, c_probs: np.ndarray) -> np.ndarray:
                     shadow_large[time, x, y] = 0.
                     
     shadow_large = resize(shadow_large, (shadow_large.shape[0], size, size), order = 0)
-    shadows *= shadow_large
+    shadows = np.float32(shadows) * np.float32(shadow_large)
     
     # Go through and aggregate the shadow map to an 80m grid
     # and extend it one grid size around any positive ID
