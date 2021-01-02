@@ -13,6 +13,10 @@ Counting trees inside and outside the forest with image segmentation
 
 This repository contains the source code for the project. The preprint of the publication is available [on arXiv](https://arxiv.org/abs/2005.08702). The model achieves **95% accuracy** and **94% recall** at the 10m scale across 1100 2-hectare plots distributed globally.
 
+# Citation
+John Brandt & Fred Stolle (2021) A global method to identify trees outside of closed-canopy forests with medium-resolution satellite imagery, International Journal of Remote Sensing, 42:5, 1713-1737, DOI: 10.1080/01431161.2020.1841324
+
+
 
 # Examples
 ![img](references/screenshots/demo.gif?raw=true)
@@ -53,19 +57,17 @@ The project requires an API key for [Sentinel-hub](http://sentinel-hub.com/), st
 ## Model
 This model uses a Fully Connected Architecture with:
 *  [Convolutional GRU](https://papers.nips.cc/paper/5955-convolutional-lstm-network-a-machine-learning-approach-for-precipitation-nowcasting.pdf) encoder with [layer normalization](https://arxiv.org/abs/1607.06450)
-*  [Feature pyramid attention](https://arxiv.org/abs/1805.10180) between encoder and decoder
 *  Concurrent spatial and channel squeeze excitation [decoder](https://arxiv.org/abs/1803.02579)
 *  [AdaBound](https://arxiv.org/abs/1902.09843) optimizer
 *  Binary cross entropy, weighted by effective number of samples, and boundary loss
-*  Hypercolumns to facilitate pixel-level accuracy
 *  DropBlock and Zoneout for generalization
 *  Smoothed image predictions across moving windows
 *  Heavy use of skip connections to facilitate smooth loss functions
 
-![img4](references/readme/model.png?raw=true)
+![img4](references/readme/new_model.png?raw=true)
 
 ## Data
-Restoration mapper uses Sentinel 1 and Sentinel 2 imagery. Biweekly composites of Sentinel 1 VV-VH imagery are fused with the nearest Sentinel 2 10- and 20-meter bands. These images are preprocessed by:
+Restoration mapper uses Sentinel 1 and Sentinel 2 imagery. Monthly composites of Sentinel 1 VV-VH imagery are fused with the nearest Sentinel 2 10- and 20-meter bands. These images are preprocessed by:
 *  Super-resolving 20m bands to 10m with DSen2
 ![img](references/screenshots/supres.png?raw=true)
 *  Calculating cloud cover and cloud shadow masks
