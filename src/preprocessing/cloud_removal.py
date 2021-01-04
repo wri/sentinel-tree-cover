@@ -10,7 +10,10 @@ import math
 from copy import deepcopy
 import time
 
-def hist_norm(source, template):
+def hist_norm(source: np.ndarray, template: np.ndarray) ->np.ndarray:
+    '''
+    Aligns the histograms of two input numpy arrays
+    '''
     olddtype = source.dtype
     oldshape = source.shape
     source = source.ravel()
@@ -39,7 +42,12 @@ def hist_norm(source, template):
 
     return interp_t_values[bin_idx].reshape(oldshape)
 
-def adjust_interpolated_areas_new(array, interp):
+def adjust_interpolated_areas_new(array: np.ndarray, 
+                                  interp: np.ndarray) -> np.ndarray:
+    '''
+    Aligns the histograms of the interpolated areas of an array with the 
+    histograms of the non-interpolated areas
+    '''
     for time in range(array.shape[0]):
         for band in range(array.shape[-1]):
             interp_i = interp[time, :, :, band]
@@ -56,10 +64,11 @@ def adjust_interpolated_areas_new(array, interp):
                 array[time, :, :, band] = array_i
     return array
 
-def adjust_interpolated_areas(array, interp):
+def adjust_interpolated_areas(array: np.ndarray, 
+                              interp: np.ndarray) -> np.ndarray:
     for time in range(array.shape[0]):
         for band in range(array.shape[-1]):
-            interp_i = interp[time, :, :, band]
+            interp_i = interp[time]
             array_i = array[time, :, :, band]
             if np.sum(interp_i) > 0:
                 adj = (np.median(array_i[np.where(interp_i == 0)]) - 
@@ -106,7 +115,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     c_probs[np.where(c_probs >= 1.)] = 1.
     n_interp = 0
     
-    areas_interpolated = np.zeros_like(tiles)
+    areas_interpolated = np.zeros((tiles.shape[0], tiles.shape[1], tiles.shape[2]))
     
     for x in range(0, tiles.shape[1] - (wsize - 1), 2):
         for y in range(0, tiles.shape[2] - (wsize - 1), 2):
@@ -142,7 +151,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                     candidate = before_weight*before_array + after_weight * after_array
                     #candidate = candidate * c_arr + tiles[date, x:x+wsize, y:y+wsize, :] * o_arr
                     tiles[date, x:x+wsize, y:y+wsize, : ] = candidate 
-                    areas_interpolated[date, x:x+wsize, y:y+wsize, : ] = 1.
+                    areas_interpolated[date, x:x+wsize, y:y+wsize] = 1.
 
     tiles = adjust_interpolated_areas(tiles, areas_interpolated)
 
@@ -156,7 +165,8 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
 
 
 
-def mcm_shadow_mask(arr: np.ndarray, c_probs: np.ndarray) -> np.ndarray:
+def mcm_shadow_mask(arr: np.ndarray, 
+                    c_probs: np.ndarray) -> np.ndarray:
     """ Calculates the multitemporal shadow mask for Sentinel-2 using
         the methods from Candra et al. 2020 on L1C images and matching
         outputs to the s2cloudless cloud probabilities

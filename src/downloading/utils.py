@@ -104,6 +104,8 @@ def calculate_epsg(points: Tuple[float, float]) -> int:
     
 
 def PolygonArea(corners: Tuple[float, float]) -> float:
+    """ Calculates the area in meters squared of an input bounding box
+    """
     n = len(corners) # of corners
     area = 0.0
     for i in range(n):
@@ -139,26 +141,6 @@ def offset_y(coord: Tuple[float, float], offset: int) -> tuple:
     return coord_utm
 
 
-def calculate_area(bbx: list) -> int:
-    '''
-    Calculates the area in ha of a [(min_x, min_y), (max_x, max_y)] bbx
-    '''
-
-    #epsg = calculate_epsg(bbx[0])
-    
-    #mins = convertCoords(bbx[0], 4326, epsg)
-    #maxs = convertCoords(bbx[1], 4326, epsg)
-    mins = bbx[0]
-    maxs = bbx[1]
-    area = PolygonArea([(mins[0], mins[1]), # BL
-                        (mins[0], maxs[1]), # BR
-                        (maxs[0], mins[1]), # TL
-                        (maxs[0], mins[1]) # TR
-                        ])
-    hectares = math.floor(area / 1e4)
-    print(hectares)
-
-
 def convertCoords(xy, src='', targ=''):
 
     srcproj = osr.SpatialReference()
@@ -176,11 +158,10 @@ def convertCoords(xy, src='', targ=''):
     return([pt.GetX(), pt.GetY()])
 
 
-def convert_to_float(array):
-    return (array.astype(np.float32) / 65535)
-
-
-def bounding_box(point, x_offset_max = 140, y_offset_max = 140, expansion = 10):
+def bounding_box(point: Tuple[float, float],
+                 x_offset_max: int = 140, 
+                 y_offset_max: int = 140,
+                 expansion: int = 10) -> Tuple[float, float]:
 
     tl = point
     
@@ -322,7 +303,13 @@ def calculate_proximal_steps(date: int, satisfactory: list) -> (int, int):
     return arg_before, arg_after
 
 
-def tile_window(h, w, tile_width=None, tile_height=None, window_size=100):
+def tile_window(h: int, w: int, tile_width: int=None,
+                tile_height: int=None, 
+                window_size: int=100) -> List:
+    """Calculates overlapping tiles of tile_width x tile_height
+    for an input h x w array
+    """
+
     np.seterr(divide='ignore', invalid='ignore')
 
     if not tile_width:
@@ -401,7 +388,7 @@ def check_contains(coord: tuple, step_x: int, step_y:
     return contains
 
 
-def hist_match(source, template):
+def hist_match(source: np.ndarray, template: np.ndarray) -> np.ndarray:
     """
     Adjust the pixel values of a grayscale image such that its histogram
     matches that of a target image

@@ -12,31 +12,46 @@ def tile_images(arr: np.ndarray) -> list:
 
     # Normal
     images = []
-    for x_offset, cval in enumerate([x for x in range(0, 140, 14)]):
-        for y_offset, rval in enumerate([x for x in range(0, 140, 14)]):
-            base_id = 0
-            subs = arr[:, cval:cval+16, rval:rval+16]
+    for x_offset, cval in enumerate([x for x in range(1, 140, 14)]):
+        for y_offset, rval in enumerate([x for x in range(1, 140, 14)]):
+            min_x = np.max([cval - 1, 0])
+            max_x = np.min([cval + 15, 142])
+            min_y = np.max([rval - 1, 0])
+            max_y = np.min([rval + 15, 142])
+            subs = arr[:, min_x:max_x, min_y:max_y]
             images.append(subs)
             
     # Upright        
-    for x_offset, cval in enumerate([x for x in range(7,  140-7, 14)]):
-        for y_offset, rval in enumerate([x for x in range(7, 140-7, 14)]):
+    for x_offset, cval in enumerate([x for x in range(8,  142-8, 14)]):
+        for y_offset, rval in enumerate([x for x in range(8, 142-8, 14)]):
             base_id = 9*9
-            subs = arr[:, cval:cval+16, rval:rval+16]
+            min_x = np.max([cval - 1, 0])
+            max_x = np.min([cval + 15, 142])
+            min_y = np.max([rval - 1, 0])
+            max_y = np.min([rval + 15, 142])
+            subs = arr[:, min_x:max_x, min_y:max_y]
             images.append(subs)
             
     # Right
-    for x_offset, cval in enumerate([x for x in range(7, 140-7, 14)]):
-        for y_offset, rval in enumerate([x for x in range(0, 140, 14)]):
+    for x_offset, cval in enumerate([x for x in range(8, 142-8, 14)]):
+        for y_offset, rval in enumerate([x for x in range(1, 140, 14)]):
             base_id = (9*9)+(8*8)
-            subs = arr[:, cval:cval+16, rval:rval+16]
+            min_x = np.max([cval - 1, 0])
+            max_x = np.min([cval + 15, 142])
+            min_y = np.max([rval - 1, 0])
+            max_y = np.min([rval + 15, 142])
+            subs = arr[:, min_x:max_x, min_y:max_y]
             images.append(subs)
 
             
     # Up
-    for x_offset, cval in enumerate([x for x in range(0, 140-7, 14)]):
-        for y_offset, rval in enumerate([x for x in range(7, 140-7, 14)]):
+    for x_offset, cval in enumerate([x for x in range(1, 142-8, 14)]):
+        for y_offset, rval in enumerate([x for x in range(8, 142-8, 14)]):
             base_id = (9*9)+(8*8)+(9*8)
-            subs = arr[:, cval:cval+16, rval:rval+16]
+            min_x = np.max([cval - 1, 0])
+            max_x = np.min([cval + 15, 142])
+            min_y = np.max([rval - 1, 0])
+            max_y = np.min([rval + 15, 142])
+            subs = arr[:, min_x:max_x, min_y:max_y]
             images.append(subs)
     return images

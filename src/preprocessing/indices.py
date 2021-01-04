@@ -1,9 +1,16 @@
 import numpy as np
 
 def ndvi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
-    # (B8 - B4)/(B8 + B4)
-    NIR = x[:, :, :, 3]
-    RED = x[:, :, :, 2]
+    '''
+    Calculates the normalized difference vegetation index
+    (B8 - B4)/(B8 + B4)
+    '''
+
+    BLUE = x[..., 0]
+    GREEN = x[..., 1]
+    RED = x[..., 2]
+    NIR = x[..., 3]
+
     ndvis = (NIR-RED) / (NIR+RED)
     if verbose:
         mins = np.min(ndvis)
@@ -14,19 +21,29 @@ def ndvi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     return x
 
 def evi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
-    # 2.5 x (08 - 04) / (08 + 6 * 04 - 7.5 * 02 + 1)
-    NIR = x[:, :, :, 3]
-    RED = x[:, :, :, 2]
-    BLUE = x[:, :, :, 0]
+    '''
+    Calculates the enhanced vegetation index
+    2.5 x (08 - 04) / (08 + 6 * 04 - 7.5 * 02 + 1)
+    '''
+
+    BLUE = x[..., 0]
+    GREEN = x[..., 1]
+    RED = x[..., 2]
+    NIR = x[..., 3]
     evis = 2.5 * ( (NIR-RED) / (NIR + (6*RED) - (7.5*BLUE) + 1))
     evis = np.clip(evis, -1.5, 1.5)
     x = np.concatenate([x, evis[:, :, :, np.newaxis]], axis = -1)
     return x
     
 def savi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
-    # (1.5) * ((08 - 04)/ (08 + 04 + 0.5))
-    NIR = x[:, :, :, 3]
-    RED = x[:, :, :, 2]
+    '''
+    Calculates the soil-adjusted vegetation index
+    (1.5) * ((08 - 04)/ (08 + 04 + 0.5))
+    '''
+    BLUE = x[..., 0]
+    GREEN = x[..., 1]
+    RED = x[..., 2]
+    NIR = x[..., 3]
     savis = 1.5 * ( (NIR-RED) / (NIR+RED +0.5))
     if verbose:
         mins = np.min(savis)
@@ -37,22 +54,15 @@ def savi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     return x
 
 def msavi2(x: np.ndarray, verbose: bool = False) -> np.ndarray:
-    # (2 * NIR + 1 - sqrt((2*NIR + 1)^2 - 8*(NIR-RED)) / 2
-    NIR = x[:, :, :, 3]
-    RED = x[:, :, :, 2]
-    RED = np.clip(RED, 0, 1)
-    NIR = np.clip(NIR, 0, 1)
-    #for i in range(x.shape[0]): # if NIR is smalelr than red, then it works
-    #    NIR_i = x[i, :, :, 3]   # if nir is greater than red
-    #    RED_i = x[i, :, :, 2] # 2 * 0.99 + 1**2 = 8.88, -8*.99 - 0.01 = 7.92
-    #    under_sqrt = (2*NIR_i+1)**2 - 8*(NIR_i-RED_i) # NIR = 0.1, Red = 0.02 = 
-    #    under_sqrt = np.min(under_sqrt)
-    #    if under_sqrt <= 0:
-    #        location = np.argmin(under_sqrt.flatten())
-    #        print(NIR_i.flatten()[location])
-    #        print(RED_i.flatten()[location])
-    #        print(under_sqrt.flatten()[location])
-    #        print("MSAVI2 negative sqrt at: {}, {}".format(i, under_sqrt))
+    '''
+    Calculates the modified soil-adjusted vegetation index 2
+    (2 * NIR + 1 - sqrt((2*NIR + 1)^2 - 8*(NIR-RED)) / 2
+    '''
+    BLUE = x[..., 0]
+    GREEN = x[..., 1]
+    RED = np.clip(x[..., 2], 0, 1)
+    NIR = np.clip(x[..., 3], 0, 1)
+
     msavis = (2 * NIR + 1 - np.sqrt( (2*NIR+1)**2 - 8*(NIR-RED) )) / 2
     if verbose:
         mins = np.min(msavis)
@@ -71,11 +81,22 @@ def bi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     # (B11 + B4) - (B8 + B2) / (B11 + B4) + (B8 + B2)
     # Landsat: (NIR + green - red) / (NIR + green + red)
     # current: (BLUE + RED - GREEN) / (BLUE + RED + GREEN)
+
+
+    B11 = np.clip(x[..., 8], 0, 1)
+    B4 = np.clip(x[..., 2], 0, 1)
+    B8 = np.clip(x[..., 3], 0, 1)
+    B2 = np.clip(x[..., 0], 0, 1)
+    bis = ((B11 + B4) - (B8 + B2)) / ((B11 + B4) + (B8 + B2))
+
+    '''
+    # old
     BLUE = np.clip(x[:, :, :, 0], 0, 1)
     RED = np.clip(x[:, :, :, 2], 0, 1)
     GREEN = np.clip(x[:, :, :, 1], 0, 1)
     bis = (BLUE + RED - GREEN) / (BLUE + RED + GREEN)
     bis = np.clip(bis, -1.5, 1.5)
+    '''
     if verbose:
         mins = np.min(bis)
         maxs = np.max(bis)

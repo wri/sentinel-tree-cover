@@ -1,4 +1,6 @@
 import numpy as np
+from math import sqrt
+
 def slopePython(inBlock, outBlock, inXSize, inYSize, zScale=1):
 
     """ Calculate slope using Python.
@@ -87,8 +89,6 @@ def slopePythonPlane(inBlock, outBlock, inXSize, inYSize, A_mat, z_vec, winSize=
             outBlock[0,y,x] = slopeDeg
    
     return outBlock
-
-from math import sqrt
 
 def calcSlope(inBlock, inXSize, inYSize, fitPlane=False, zScale=1, winSize=3, minSlope=None):
     """ Calculates slope for a block of data
