@@ -1,6 +1,28 @@
 import tensorflow as tf
 from tensorflow.initializers import orthogonal
 
+def group_norm(x, scope, G=8, esp=1e-5):
+    with tf.variable_scope('{}_norm'.format(scope)):
+        # normalize
+        # transpose: [bs, h, w, c] to [bs, c, h, w] following the paper
+        x = tf.transpose(x, [0, 3, 1, 2])
+        N, C, H, W = x.get_shape().as_list()
+        G = min(G, C)
+        x = tf.reshape(x, [-1, G, C // G, H, W])
+        mean, var = tf.nn.moments(x, [2, 3, 4], keep_dims=True)
+        x = (x - mean) / tf.sqrt(var + esp)
+        # per channel gamma and beta
+        zeros = lambda: tf.zeros([C], dtype=tf.float32)
+        ones = lambda: tf.ones([C], dtype=tf.float32)
+        gamma = tf.Variable(initial_value = ones, dtype=tf.float32, name=f'gamma_{scope}')
+        beta = tf.Variable(initial_value = zeros, dtype=tf.float32, name=f'beta_{scope}')
+        gamma = tf.reshape(gamma, [1, C, 1, 1])
+        beta = tf.reshape(beta, [1, C, 1, 1])
+
+        output = tf.reshape(x, [-1, C, H, W]) * gamma + beta
+        # tranpose: [bs, c, h, w, c] to [bs, h, w, c] following the paper
+        output = tf.transpose(output, [0, 2, 3, 1])
+    return output
 
 class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
   """A GRU cell with convolutions instead of multiplications."""
@@ -54,12 +76,14 @@ class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
        # y = y * y_1
       if self._normalize:
         r, u = tf.split(y, 2, axis=self._feature_axis)
-        r = tf.contrib.layers.layer_norm(r)
-        u = tf.contrib.layers.layer_norm(u)
+        r = group_norm(r, "gates_r", G = 6, esp = 1e-5)
+        u = group_norm(u, "gates_u", G = 6, esp = 1e-5)
+        #r = tf.contrib.layers.layer_norm(r)
+        #u = tf.contrib.layers.layer_norm(u)
       else:
         y += tf.get_variable('bias', [m], initializer=tf.ones_initializer())
         r, u = tf.split(y, 2, axis=self._feature_axis)
-      r, u = tf.sigmoid(r), tf.sigmoid(u)
+    r, u = tf.sigmoid(r), tf.sigmoid(u)
 
     with tf.variable_scope('candidate'):
       inputs = tf.concat([x, r * h], axis=self._feature_axis)
@@ -69,16 +93,18 @@ class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
         inputs_pad = tf.pad(inputs, [[0, 0], [1, 1], [1, 1] ,[0,0] ], 'REFLECT') #
       W = tf.get_variable('kernel', self._kernel + [n, m]) # [3, 3, C, 2C]
       y = tf.nn.convolution(inputs_pad, W, self._padding, data_format=self._data_format)
+        # This is the one we want though
       if self._sse:
         W_1 = tf.get_variable("kernel_1", [1, 1, m, 1]) #[1, 1, C, 1]
         y_1 = tf.nn.convolution(y, W_1, 'VALID')
         y_1 = tf.nn.sigmoid(y_1)
         y = y * y_1
       if self._normalize:
-        y = tf.contrib.layers.layer_norm(y)
+        #y = tf.contrib.layers.layer_norm(y)
+         y = group_norm(y, "candidate_y", G = 6, esp = 1e-5)
       else:
         y += tf.get_variable('bias', [m], initializer=tf.zeros_initializer())
-      h = u * h + (1 - u) * self._activation(y)
+    h = u * h + (1 - u) * self._activation(y)
 
     return h, h
 

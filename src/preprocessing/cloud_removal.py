@@ -71,9 +71,16 @@ def adjust_interpolated_areas(array: np.ndarray,
             interp_i = interp[time]
             array_i = array[time, :, :, band]
             if np.sum(interp_i) > 0:
-                adj = (np.median(array_i[np.where(interp_i == 0)]) - 
-                      (np.median(array_i[np.where(interp_i == 1)])))
-                array_i[np.where(interp_i == 1)] += adj
+                adj = (np.median(array_i[interp_i == 0]) -  # 0.2
+                      (np.median(array_i[interp_i == 1]))) # 0.
+                if adj < 0:
+                    adj = np.max([adj, -0.05])
+                if adj > 0:
+                    adj = np.min([adj, 0.05])
+                if abs(adj) == 0.05:
+                    print(f'Adj {adj}')
+
+                array_i[interp_i == 1] += adj # - 0.1
                 array[time, :, :, band] = array_i
     return array
 
@@ -81,7 +88,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                              probs: np.ndarray, 
                              shadows: np.ndarray,
                              image_dates: List[int], 
-                             wsize: int = 35) -> np.ndarray:
+                             wsize: int = 40) -> np.ndarray:
     """ Interpolates clouds and shadows for each time step with 
         linear combination of proximal clean time steps for each
         region of specified window size
@@ -105,28 +112,32 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     c_arr = np.reshape(_fspecial_gauss(wsize, ((wsize/2) - 1 ) / 2), (1, wsize, wsize, 1))
     o_arr = 1 - c_arr
 
-    c_probs = np.copy(probs) - np.min(probs, axis = 0)
-
+    print(np.sum(probs))
+    median_probs = np.percentile(probs, 66, axis = 0)
+    median_probs[median_probs < 0.10] = 0.
+    c_probs = np.copy(probs) - median_probs
+    print(np.sum(c_probs))
     c_probs[np.where(c_probs >= 0.3)] = 1.
     c_probs[np.where(c_probs < 0.3)] = 0.
     
-    shadows = shadows - np.min(shadows, axis = 0)
+    initial_shadows = np.sum(shadows)
+    shadows = shadows - np.percentile(shadows, 50, axis = 0)
+    after_shadows = np.sum(shadows)
+    print(f"Changed {after_shadows - initial_shadows}, {np.max(shadows), np.max(c_probs)}")
     c_probs += shadows
     c_probs[np.where(c_probs >= 1.)] = 1.
-    n_interp = 0
     
     areas_interpolated = np.zeros((tiles.shape[0], tiles.shape[1], tiles.shape[2]))
     
-    for x in range(0, tiles.shape[1] - (wsize - 1), 2):
-        for y in range(0, tiles.shape[2] - (wsize - 1), 2):
+    for x in range(0, tiles.shape[1] - (wsize - 2), 3):
+        for y in range(0, tiles.shape[2] - (wsize - 2), 3):
             subs = c_probs[:, x:x + wsize, y:y+wsize]
             satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/20)
             if len(satisfactory) == 0:
-                #print(f"There is a potential issue with the cloud removal at {x}, {y}")
+                print(f"There is a potential issue with the cloud removal at {x}, {y}")
                 satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/2)
             for date in range(0, tiles.shape[0]):
-                if np.sum(subs[date]) >= (wsize*wsize)/20:
-                    n_interp += 1
+                if np.sum(subs[date]) >= (wsize*wsize)/ 20:
                     before, after = calculate_proximal_steps(date, satisfactory)
                     before = date + before
                     after = date + after
@@ -145,8 +156,9 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                     
                     n_days_before = abs(image_dates[date] - image_dates[before])
                     n_days_after = abs(image_dates[date] - image_dates[after])
-                    before_weight = 1 - n_days_before / (n_days_before + n_days_after)
+                    before_weight = 1 - ( n_days_before / (n_days_before + n_days_after) )
                     after_weight = 1 - before_weight
+
                     
                     candidate = before_weight*before_array + after_weight * after_array
                     #candidate = candidate * c_arr + tiles[date, x:x+wsize, y:y+wsize, :] * o_arr
@@ -160,7 +172,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
 
    # print(f"The non-interpolated mean is {not_interpolated_mean} and the interpolated means is {interpolated_mean}")
                     
-    print("Interpolated {} px".format(n_interp))
+    print(f"Interpolated {np.sum(areas_interpolated)} px, {np.sum(areas_interpolated) / (632 * 632 * tiles.shape[0])}%")
     return tiles, areas_interpolated
 
 
@@ -315,14 +327,16 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
             min_distances = []
             for x in month_good_dates:
                 clean_dates = dates[np.argwhere(cloud_percent < 0.15)].flatten()
+                clean_dates = clean_dates[np.argwhere(np.logical_or(clean_dates < starting[month],
+                                               clean_dates >= starting[month + 1]))]
                 distances = x - clean_dates
-                distances = np.delete(distances, month_idx.flatten())
+                distances = distances.flatten()
                 if np.min(distances) < 0:
-                    lower_distance = abs(np.max(distances[np.argwhere(distances < 0)]))
+                    lower_distance = abs(np.max(distances[distances < 0]))
                 else: 
                     lower_distance = 0
                 if np.max(distances) > 0:
-                    upper_distance = np.min(distances[np.argwhere(distances > 0)])
+                    upper_distance = np.min(distances[distances > 0])
                 else:
                     upper_distance = 0
                 min_distances.append(np.max([lower_distance, upper_distance]))
