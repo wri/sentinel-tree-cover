@@ -211,47 +211,67 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
     
     selected_images = {}
     for i in biweekly_dates:
-        distances = [abs(date - i) for date in satisfactory_dates]
-        closest = np.min(distances)
-        closest_id = np.argmin(distances)
-        # If there is imagery within 8 days, select it
+        distances = np.array([(date - i) for date in satisfactory_dates])
+        # Number of days prior and after the selected date of the nearest clean imagery
+        closest = np.min(abs(distances))
+        closest_id = np.argmin(abs(distances))
+        # If there is imagery within 10 days, select it
         if closest <= 10:
             date = satisfactory_dates[closest_id]
             image_idx = int(np.argwhere(np.array(image_dates) == date)[0])
             selected_images[i] = {'image_date': [date], 'image_ratio': [1], 'image_idx': [image_idx]}
-        # If there is not imagery within 8 days, look for the closest above and below imagery
         else:
-            distances = np.array([(date - i) for date in satisfactory_dates])
-            # Number of days above and below the selected date of the nearest clean imagery
-            above = distances[np.where(distances < 0)][-3:]
-            below = distances[np.where(distances > 0)][:3]
-            if len(above) == 0:
-                above = below
-            if len(below) == 0:
-                below = above
-            if np.max(abs(above)) > 240: # If date is the last date, occassionally argmax would set above to - number
-                above = below
-            if np.max(abs(below)) > 240:
-                below = above
-            if above[0] != below[0]: # check this
-                below_ratio = np.min(above) / (np.min(above) - np.max(below))
-                above_ratio = 1 - below_ratio
+            # If there is not imagery within 10 days, look for the closest above and below imagery
+            prior = distances[np.where(distances < 0)][-3:]
+            after = distances[np.where(distances > 0)][:3]
+            after_flag = 0
+            prior_flag = 0
+            prior_mult = 1
+            if len(prior) == 0:
+                if np.min(satisfactory_dates) >= 70: # this doesn't quite work because its an iterative
+                    #print(f"No previous image: {i}, using last first 3 images: {i + distances[-3:]}")
+                    prior = distances[-3:]
+                    prior_flag = 365
+                    prior_mult = -1
+                else:
+                    prior = after
+            if len(after) == 0:
+                if np.max(satisfactory_dates) <= 295:
+                    # check if the date is after 275
+                    #print(f"No after image: {i}, using the first 3 images: {i + distances[:3]}")
+                    after = distances[:3]
+                    after_flag = 365
+                else:
+                    after = prior
+            if prior[0] != after[0]: # check this
+                # example, prior
+                # date = 35
+                # prior = -300, (335) 
+                # the wrapped prior is (-1 * (300)) + 365 = 65
+                # example, after_flag,
+                # date = 305
+                # after = 270 (35)
+                # the wrapped after is abs(270) - (365) = 95
+                prior_abs = (prior_mult * abs(np.mean(prior))) + prior_flag
+                after_abs = abs(abs(np.mean(after)) - after_flag)
+                # (20 / (20 + 80)) = 0.2
+                after_ratio = prior_abs / (prior_abs + after_abs)
+                assert after_ratio <= 1.
+                prior_ratio = 1 - after_ratio
             else:
-                above_ratio = below_ratio = 0.5
+                prior_ratio = after_ratio = 0.5
+                    
+                # Extract the image date and imagery index for the prior and after values
+            prior_dates = i + prior
+            prior_images_idx = [i for i, val in enumerate(image_dates) if val in prior_dates]
+            after_dates = i + after
+            after_images_idx = [i for i, val in enumerate(image_dates) if val in after_dates]
                 
-            # Extract the image date and imagery index for the above and below values
-            above_dates = i + above
-            above_images_idx = [i for i, val in enumerate(image_dates) if val in above_dates]
-            below_dates = i + below
-            below_images_idx = [i for i, val in enumerate(image_dates) if val in below_dates]
-            print(above_images_idx, below_images_idx)
-            
-            selected_images[i] = {'image_date': [above_dates, below_dates], 
-                                  'image_ratio': [above_ratio, below_ratio],
-                                  'image_idx': [above_images_idx, below_images_idx]}
+            selected_images[i] = {'image_date': [prior_dates, after_dates], 
+                                  'image_ratio': [prior_ratio, after_ratio],
+                                  'image_idx': [prior_images_idx, after_images_idx]}
                             
     max_distance = 0
-    
     for i in sorted(selected_images.keys()):
         #print(i, selected_images[i])
         if len(selected_images[i]['image_date']) == 2:
@@ -261,10 +281,10 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
                 max_distance = dist
     
     print("Maximum time distance: {}".format(max_distance))
-    if max_distance > 150:
+    if max_distance >= 300:
         for i in sorted(selected_images.keys()):
             print(i, selected_images[i])
-        
+
     keep_steps = []
     for i in sorted(selected_images.keys()):
         info = selected_images[i]
@@ -273,10 +293,9 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
         if len(info['image_idx']) == 2:
             step1 = img_bands[info['image_idx'][0]]
             step2 = img_bands[info['image_idx'][1]]
-            step = np.concatenate([step1, step2], axis = 0)
-            step = np.median(step, axis = 0)
-            #step2 = np.median(step2, axis = 0) * 0.5
-            #step = step1 + step2
+            step1 = np.median(step1, axis = 0) * info['image_ratio'][0]
+            step2 = np.median(step2, axis = 0) * info['image_ratio'][1]
+            step = step1 + step2
         keep_steps.append(step)
         
     keep_steps = np.stack(keep_steps)

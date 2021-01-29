@@ -20,17 +20,16 @@ def tile_images(arr: np.ndarray) -> list:
             max_y = np.min([rval + 19, 142])
             subs = arr[:, min_x:max_x, min_y:max_y]
             if x_offset == 0:
-                subs = np.pad(subs, ((0, 0), (0, 4), (0, 0), (0, 0)), 'reflect')
-            if x_offset == 9:
                 subs = np.pad(subs, ((0, 0), (4, 0), (0, 0), (0, 0)), 'reflect')
+            if x_offset == 9:
+                subs = np.pad(subs, ((0, 0), (0, 4), (0, 0), (0, 0)), 'reflect')
             if y_offset == 0:
                 subs = np.pad(subs, ((0, 0), (0, 0), (4, 0), (0, 0)), 'reflect')
             if y_offset == 9:
                 subs = np.pad(subs, ((0, 0), (0, 0), (0, 4), (0, 0)), 'reflect')
-            print(subs.shape)
             images.append(subs)
             
-    # Upright        
+    # Upright  
     for x_offset, cval in enumerate([x for x in range(8,  142-8, 14)]):
         for y_offset, rval in enumerate([x for x in range(8, 142-8, 14)]):
             base_id = 9*9
@@ -39,15 +38,12 @@ def tile_images(arr: np.ndarray) -> list:
             min_y = np.max([rval - 5, 0])
             max_y = np.min([rval + 19, 142])
             subs = arr[:, min_x:max_x, min_y:max_y]
-            if x_offset == 0:
-                subs = np.pad(subs, ((0, 0), (0, 4), (0, 0), (0, 0)), 'reflect')
             if x_offset == 9:
-                subs = np.pad(subs, ((0, 0), (4, 0), (0, 0), (0, 0)), 'reflect')
-            if y_offset == 0:
-                subs = np.pad(subs, ((0, 0), (0, 0), (4, 0), (0, 0)), 'reflect')
+                subs = np.pad(subs, ((0, 0), (0, 4), (0, 0), (0, 0)), 'reflect')
             if y_offset == 9:
                 subs = np.pad(subs, ((0, 0), (0, 0), (0, 4), (0, 0)), 'reflect')
-            print(subs.shape)
+            if (subs.shape[2] != 24) or (subs.shape[1] != 24):
+                print(subs.shape, min_x, max_x, min_y, max_y, x_offset)
             images.append(subs)
             
     # Right
@@ -58,15 +54,12 @@ def tile_images(arr: np.ndarray) -> list:
             min_y = np.max([rval - 5, 0])
             max_y = np.min([rval + 19, 142])
             subs = arr[:, min_x:max_x, min_y:max_y]
-            if x_offset == 0:
-                subs = np.pad(subs, ((0, 0), (0, 4), (0, 0), (0, 0)), 'reflect')
-            if x_offset == 9:
-                subs = np.pad(subs, ((0, 0), (4, 0), (0, 0), (0, 0)), 'reflect')
             if y_offset == 0:
                 subs = np.pad(subs, ((0, 0), (0, 0), (4, 0), (0, 0)), 'reflect')
             if y_offset == 9:
                 subs = np.pad(subs, ((0, 0), (0, 0), (0, 4), (0, 0)), 'reflect')
-            print(subs.shape)
+            if (subs.shape[2] != 24) or (subs.shape[1] != 24):
+                print(subs.shape, x_offset, y_offset)
             images.append(subs)
 
             
@@ -79,13 +72,12 @@ def tile_images(arr: np.ndarray) -> list:
             max_y = np.min([rval + 19, 142])
             subs = arr[:, min_x:max_x, min_y:max_y]
             if x_offset == 0:
-                subs = np.pad(subs, ((0, 0), (0, 4), (0, 0), (0, 0)), 'reflect')
-            if x_offset == 9:
                 subs = np.pad(subs, ((0, 0), (4, 0), (0, 0), (0, 0)), 'reflect')
-            if y_offset == 0:
-                subs = np.pad(subs, ((0, 0), (0, 0), (4, 0), (0, 0)), 'reflect')
+            if x_offset == 9:
+                subs = np.pad(subs, ((0, 0), (0, 4), (0, 0), (0, 0)), 'reflect')
             if y_offset == 9:
-                subs = np.pad(subs, ((0, 0), (0, 0), (0, 4), (0, 0)), 'reflect')
-            print(subs.shape)
+                subs = np.pad(subs, ((0, 0), (0, 0), (4, 0), (0, 0)), 'reflect')
+            if (subs.shape[2] != 24) or (subs.shape[1] != 24):
+                print(subs.shape, x_offset, y_offset)
             images.append(subs)
     return images

@@ -125,11 +125,11 @@ ggsave("../../references/pdf/bastin.pdf", bastin, "pdf", width = 8.75, height = 
 
 ```{r, fig.width=11, fig.height=7}
 library(ggalt)
-training_data = read.csv("../../data/latlongs/training.csv")
+training_data = read.csv("../../tile_data/processed/train_plot_ids.csv")
 
 training_plots = ggplot()+
   geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
-  geom_point(data = training_data, aes(x = longs, y = lats), color = "red", size = 0.25)+
+  geom_point(data = training_data, aes(x = long, y = lat), color = "red", size = 0.005)+
   #ylim(-54, 85)+
   #xlim(-173, 180)+
   theme_bw(base_size = 15)+
@@ -154,14 +154,13 @@ training_plots = ggplot()+
        # axis.text.x = element_text(c("-50°", "-25°", "0°", "25°", "50°", "75°")))#+
   #scalebar(location = "bottomleft", transform = TRUE, dist = 2000, model = "WGS84", dist_unit = "km", x.min = -130, x.max = 167, y.min = -58, y.max = 80, st.bottom = TRUE)
 
-ggsave("../../references/highquality/figure1.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in", dpi = 600)
+ggsave("../../references/highquality/figure1_new.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in", dpi = 600)
 ```
 
 # New training samples 
 ```{r}
 library(ggalt)
-training_data = read.csv("../../data/latlongs/training.csv")
-new_data = read.csv("../../data/latlongs/new_sa_samples.csv")
+training_data = read.csv("../../tile_data/processed/training_plot_ids.csv")
 
 geojson = "../../references/json/custom.geo.json"
 map <- readOGR(geojson)
@@ -226,7 +225,7 @@ geojson = "../../references/json/custom.geo.json"
 map <- readOGR(geojson)
 map.df <- fortify(map)
 
-data = read.csv("../../data/latlongs/landscapes.csv")
+data = read.csv("../../project-monitoring/database.csv")
 
  ggplot()+
   geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+

@@ -88,7 +88,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                              probs: np.ndarray, 
                              shadows: np.ndarray,
                              image_dates: List[int], 
-                             wsize: int = 40) -> np.ndarray:
+                             wsize: int = 28) -> np.ndarray:
     """ Interpolates clouds and shadows for each time step with 
         linear combination of proximal clean time steps for each
         region of specified window size
@@ -112,18 +112,19 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     c_arr = np.reshape(_fspecial_gauss(wsize, ((wsize/2) - 1 ) / 2), (1, wsize, wsize, 1))
     o_arr = 1 - c_arr
 
-    print(np.sum(probs))
+
+    # Subtract the median cloud binary mask, to remove pixels
+    #  that are always clouds (false positive)
     median_probs = np.percentile(probs, 66, axis = 0)
     median_probs[median_probs < 0.10] = 0.
     c_probs = np.copy(probs) - median_probs
-    print(np.sum(c_probs))
     c_probs[np.where(c_probs >= 0.3)] = 1.
     c_probs[np.where(c_probs < 0.3)] = 0.
     
     initial_shadows = np.sum(shadows)
-    shadows = shadows - np.percentile(shadows, 50, axis = 0)
     after_shadows = np.sum(shadows)
-    print(f"Changed {after_shadows - initial_shadows}, {np.max(shadows), np.max(c_probs)}")
+    if shadows.shape[1] != c_probs.shape[1]:
+        shadows = shadows[:, 1:-1, 1:-1]
     c_probs += shadows
     c_probs[np.where(c_probs >= 1.)] = 1.
     
@@ -132,12 +133,12 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     for x in range(0, tiles.shape[1] - (wsize - 2), 3):
         for y in range(0, tiles.shape[2] - (wsize - 2), 3):
             subs = c_probs[:, x:x + wsize, y:y+wsize]
-            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/20)
+            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/ 20)
             if len(satisfactory) == 0:
                 print(f"There is a potential issue with the cloud removal at {x}, {y}")
                 satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/2)
             for date in range(0, tiles.shape[0]):
-                if np.sum(subs[date]) >= (wsize*wsize)/ 20:
+                if np.sum(subs[date]) >= (wsize*wsize) / 20:
                     before, after = calculate_proximal_steps(date, satisfactory)
                     before = date + before
                     after = date + after
@@ -152,7 +153,6 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
 
                     before_array = deepcopy(tiles[before, x:x+wsize, y:y+wsize, : ])
                     after_array = deepcopy(tiles[after, x:x+wsize, y:y+wsize, : ])
-                    #original_array = deepcopy(tiles[np.newaxis, date, x:x+wsize, y:y + wsize, :])
                     
                     n_days_before = abs(image_dates[date] - image_dates[before])
                     n_days_after = abs(image_dates[date] - image_dates[after])
@@ -161,18 +161,13 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
 
                     
                     candidate = before_weight*before_array + after_weight * after_array
-                    #candidate = candidate * c_arr + tiles[date, x:x+wsize, y:y+wsize, :] * o_arr
                     tiles[date, x:x+wsize, y:y+wsize, : ] = candidate 
                     areas_interpolated[date, x:x+wsize, y:y+wsize] = 1.
 
     tiles = adjust_interpolated_areas(tiles, areas_interpolated)
-
-    #not_interpoted_mean = np.mean(tiles[np.where(areas_interpolated == 0)], axis = (1, 2, 3))
-    #interpolated_mean = np.mean(tiles[np.where(areas_interpolated == 1)], axis = (1, 2, 3))
-
-   # print(f"The non-interpolated mean is {not_interpolated_mean} and the interpolated means is {interpolated_mean}")
                     
-    print(f"Interpolated {np.sum(areas_interpolated)} px, {np.sum(areas_interpolated) / (632 * 632 * tiles.shape[0])}%")
+    print(f"Interpolated {np.sum(areas_interpolated)} px"
+          f" {np.sum(areas_interpolated) / (632 * 632 * tiles.shape[0])}%")
     return tiles, areas_interpolated
 
 
@@ -182,106 +177,104 @@ def mcm_shadow_mask(arr: np.ndarray,
     """ Calculates the multitemporal shadow mask for Sentinel-2 using
         the methods from Candra et al. 2020 on L1C images and matching
         outputs to the s2cloudless cloud probabilities
-
         Parameters:
          arr (arr): (Time, X, Y, Band) array of L1C data scaled from [0, 1]
          c_probs (arr): (Time, X, Y) array of S2cloudless cloud probabilities
-    
         Returns:
          shadows_new (arr): cloud mask after Candra et al. 2020 and cloud matching 
          shadows_original (arr): cloud mask after Candra et al. 2020
     """
     import time
-    def _rank_array(arr):
-        order = arr.argsort()
-        ranks = order.argsort()
-        return ranks
-    
     imsize = arr.shape[1]
     if imsize % 8 == 0:
         size = imsize
     else:
         size = imsize + (8 - (imsize % 8))
-    
+
     arr = resize(arr, (arr.shape[0], size, size, arr.shape[-1]), order = 0)
     c_probs = resize(c_probs, (c_probs.shape[0], size, size), order = 0)
-    
-    mean_c_probs = np.mean(c_probs, axis = (1, 2))
-    cloudy_steps = np.argwhere(mean_c_probs > 0.25)
-    images_clean = np.delete(arr, cloudy_steps, 0)
-    cloud_ranks = _rank_array(mean_c_probs)
-    diffs = abs(np.sum(arr - np.mean(images_clean, axis = 0), axis = (1, 2, 3)))
-    diff_ranks = _rank_array(diffs)
-    overall_rank = diff_ranks + cloud_ranks
-    reference_idx = np.argmin(overall_rank)
-    ri = arr[reference_idx]
-    shadows = np.zeros((arr.shape[0], size, size))  
-    
-    # Candra et al. 2020
 
-    start = time.time()
-    ri = np.tile(ri[np.newaxis], (arr.shape[0], 1, 1, 1))
-    deltab2 = (arr[..., 0] - ri[..., 0]) < 0.10
-    deltab8a = (arr[..., 1] - ri[..., 1]) < -0.04
-    deltab11 = (arr[..., 2] - ri[..., 2]) < -0.04
-    ti0 = arr[..., 0] < 0.095
+    # Create empty arrays for shadows, clouds
+    shadows = np.empty_like(arr)[..., 0]
+    clouds = np.empty_like(shadows)
 
-    shadows = (deltab2 * deltab11 * deltab8a * ti0)
-    shadows = shadows * 1
-    end = time.time()
-    print(f"Calculating shadows the new way took {end - start}")
-    
-    # Remove shadows if cannot coreference a cloud
+    # Iterate through time steps, develop local reference images
+    # and calculate cloud/shadow based on Candra et al. 2020
+    for time in range(arr.shape[0]):
+        lower = np.max([0, time - 3])
+        upper = np.min([arr.shape[0], time + 4])
+        ri = np.median(arr[lower:upper], axis = 0)
+
+        deltab2 = (arr[time, ..., 0] - ri[..., 0]) > 0.10
+        deltab8a = (arr[time, ..., 3] - ri[..., 3]) < -0.06
+        deltab11 = (arr[time, ..., 5] - ri[..., 5]) < -0.06
+        deltab3 = (arr[time, ..., 1] - ri[..., 1]) > 0.08
+        deltab4 = (arr[time, ..., 2] - ri[..., 2]) > 0.08
+        ti0 = (arr[time, ..., 0] < 0.095)
+        ti10 = arr[time, ..., 4] > 0.01
+        clouds_i = (deltab2 * deltab3 * deltab4) + ti10
+        clouds_i = clouds_i * 1
+        clouds_i[clouds_i > 1] = 1.
+
+        shadows_i = ((1 - clouds_i) * deltab11 * deltab8a * ti0)
+        shadows_i = shadows_i * 1
+
+        clouds[time] = clouds_i
+        shadows[time] = shadows_i
+
+    # Iterate through clouds, shadows, remove cloud/shadow where
+    # The same px is positive in subsequent time steps (likely FP)
+    clouds_new = np.copy(clouds)
+    for time in range(1, clouds.shape[-1], 1):
+        moving_sums = np.sum(clouds[time - 1:time + 2], axis = (0))
+        moving_sums = moving_sums >= 3
+        clouds_new[time - 1:time + 2, moving_sums] = 0.
+    clouds = clouds_new
+
+    # Remove shadows if multiple time steps are shadows
+    shadows_new = np.copy(shadows)
+    for time in range(1, shadows.shape[-1], 1):
+        moving_sums = np.sum(shadows[time - 1:time + 1], axis = 0)
+        moving_sums = moving_sums >= 2
+        shadows_new[time - 1:time + 1, moving_sums] = 0.
+    shadows = shadows_new
+
+    # Iterate through shadow steps, and remove shadows if cannot coreference cloud (FP)
     shadow_large = np.reshape(shadows, (shadows.shape[0], size // 8, 8, size // 8, 8))
     shadow_large = np.sum(shadow_large, axis = (2, 4))
-
+    shadow_large[shadow_large < 48] = 0.
+    shadow_large[shadow_large > 1] = 1.
+    shadows = resize(np.float64(shadow_large), (shadows.shape[0], size, size), order = 0)
+    
+    shadow_large = np.reshape(shadows, (shadows.shape[0], size // 8, 8, size // 8, 8))
+    shadow_large = np.sum(shadow_large, axis = (2, 4))
     cloud_large = np.copy(c_probs)
-    cloud_large[np.where(c_probs > 0.33)] = 1.
-    cloud_large[np.where(c_probs < 0.33)] = 0.
+    cloud_large[np.where(c_probs >= 0.3)] = 1.
+    cloud_large[np.where(c_probs < 0.3)] = 0.
     cloud_large = np.reshape(cloud_large, (shadows.shape[0], size // 8, 8, size // 8, 8))
     cloud_large = np.sum(cloud_large, axis = (2, 4))
     for time in tnrange(shadow_large.shape[0]):
         for x in range(shadow_large.shape[1]):
-            x_low = np.max([x - 8, 0])
-            x_high = np.min([x + 8, shadow_large.shape[1] - 2])
+            x_low = np.max([x - 10, 0])
+            x_high = np.min([x + 10, shadow_large.shape[1] - 2])
             for y in range(shadow_large.shape[2]):
-                y_low = np.max([y - 8, 0])
-                y_high = np.min([y + 8, shadow_large.shape[1] - 2])
+                y_low = np.max([y - 10, 0])
+                y_high = np.min([y + 10, shadow_large.shape[1] - 2])
                 if shadow_large[time, x, y] < 8:
                     shadow_large[time, x, y] = 0.
                 if shadow_large[time, x, y] >= 8:
                     shadow_large[time, x, y] = 1.
                 c_prob_window = cloud_large[time, x_low:x_high, y_low:y_high]
-                if np.max(c_prob_window) < 16:
+                if np.max(c_prob_window) < 8:
                     shadow_large[time, x, y] = 0.
-                    
     shadow_large = resize(shadow_large, (shadow_large.shape[0], size, size), order = 0)
     shadows = np.float32(shadows) * np.float32(shadow_large)
-    
-    # Go through and aggregate the shadow map to an 80m grid
-    # and extend it one grid size around any positive ID
-    shadows = np.reshape(shadows, (shadows.shape[0], size // 8, 8, size // 8, 8))
-    shadows = np.sum(shadows, axis = (2, 4))
-    shadows[np.where(shadows < 12)] = 0.
-    shadows[np.where(shadows >= 12)] = 1.
-    shadows = resize(shadows, (shadows.shape[0], size, size), order = 0)
-    shadows = np.reshape(shadows, (shadows.shape[0], size//4, 4, size//4, 4))
-    shadows = np.max(shadows, (2, 4))
-    
-    shadows_new = np.zeros_like(shadows)
-    for time in range(shadows.shape[0]):
-        for x in range(shadows.shape[1]):
-            for y in range(shadows.shape[2]):
-                if shadows[time, x, y] == 1:
-                    min_x = np.max([x - 1, 0])
-                    max_x = np.min([x + 2, size//4 - 1])
-                    min_y = np.max([y - 1, 0])
-                    max_y = np.min([y + 2, size//4 - 1])
-                    for x_idx in range(min_x, max_x):
-                        for y_idx in range(min_y, max_y):
-                            shadows_new[time, x_idx, y_idx] = 1.
-    shadows_new = resize(shadows_new, (shadows.shape[0], imsize, imsize), order = 0)
-    return shadows_new
+
+    # Combine cloud and shadow
+    shadows = shadows + clouds
+    shadows[shadows > 1] = 1.
+    np.save("shadows_out.npy", shadows)
+    return shadows
 
 
 def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
@@ -294,16 +287,73 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
         Returns:
          to_remove (arr): 
     """
-    iqr = np.percentile(img[..., 0].flatten(), 75) - np.percentile(img[..., 0].flatten(), 25)
-    thresh_t = np.percentile(img[..., 0].flatten(), 75) + iqr*1.75
-    thresh_b = np.percentile(img[..., 0].flatten(), 25) - iqr*1.75
-    outlier_percs = []
-    for step in range(img.shape[0]):
-        bottom = len(np.argwhere(img[step, ..., 0].flatten() > thresh_t))
-        top = len(np.argwhere(img[step, ..., 0].flatten() < thresh_b))
-        p = 100 * ((bottom + top) / (img.shape[1]*img.shape[2]))
-        outlier_percs.append(p)
-    to_remove = np.argwhere(np.array(outlier_percs) > 25)
+
+
+    # Implement mcm_shadow_mask based on available L2A bands
+    shadows = np.empty_like(img)[..., 0]
+    clouds = np.empty_like(shadows)
+
+    for time in range(img.shape[0]):
+
+        lower = np.max([0, time - 3])
+        upper = np.min([img.shape[0], time + 4])
+        ri = np.median(img[lower:upper], axis = 0)
+
+        deltab2 = (img[time, ..., 0] - ri[..., 0]) > 0.10
+        deltab8a = (img[time, ..., 7] - ri[..., 7]) < -0.05
+        deltab11 = (img[time, ..., 8] - ri[..., 8]) < -0.05
+        deltab3 = (img[time, ..., 1] - ri[..., 1]) > 0.08
+        deltab4 = (img[time, ..., 2] - ri[..., 2]) > 0.08
+        ti0 = (img[time, ..., 0] < 0.095)
+        clouds_i = (deltab2 * deltab3 * deltab4)
+        clouds_i = clouds_i * 1
+
+        shadows_i = ((1 - clouds_i) * deltab11 * deltab8a * ti0)
+        shadows_i = shadows_i * 1
+
+        if np.mean(clouds_i) > 0.1:
+            print(f"Missed cloud {time}: {np.mean(clouds_i)}")
+        if np.mean(shadows_i) > 0.1:
+            print(f"Missed shadow {time}: {np.mean(shadows_i)}")
+
+        clouds[time] = clouds_i
+        shadows[time] = shadows_i
+
+    clouds_new = np.copy(clouds)
+    for time in range(1, clouds.shape[-1], 1):
+        moving_sums = np.sum(clouds[time - 1:time + 2], axis = (0))
+        moving_sums = moving_sums >= 3
+        clouds_new[time - 1:time + 2, moving_sums] = 0.
+    clouds = clouds_new
+
+    shadows_new = np.copy(shadows)
+    for time in range(1, shadows.shape[-1], 1):
+        moving_sums = np.sum(shadows[time - 1:time + 1], axis = 0)
+        moving_sums = moving_sums >= 2
+        shadows_new[time - 1:time + 1, moving_sums] = 0.
+    shadows = shadows_new
+
+    clouds = clouds + shadows
+    clouds[clouds > 1] = 1.
+    clouds = np.mean(clouds, axis = (1, 2))
+    clouds[clouds < 0.05] = 0.
+
+    to_remove = np.argwhere(clouds > 0.2)
+
+    delete_to_remove = []
+    if len(to_remove) > 2:
+        for i in range(1, len(to_remove) - 1):
+            if to_remove[i - 1] == to_remove[i] - 1:
+                if to_remove[i + 1] == to_remove[i] + 1:
+                    delete_to_remove.append(i)
+                    delete_to_remove.append(i - 1)
+                    delete_to_remove.append(i + 1)
+
+    if len(delete_to_remove) > 0:
+        delete_to_remove = list(set(delete_to_remove))
+        print(f"Removing: {delete_to_remove}")
+        to_remove = np.delete(to_remove, delete_to_remove)
+
     return to_remove
 
 
@@ -381,9 +431,9 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
                     
     good_steps_idx = [i for i, val in enumerate(dates) if val in good_steps]
     cloud_steps = np.array([x for x in range(dates.shape[0]) if x not in good_steps_idx])
-    print(cloud_steps)
-    if len(cloud_steps > 0):
-        print(cloud_percent[cloud_steps])
+
     to_remove = cloud_steps
     data_filter = good_steps_idx
+
+    print(f"Utilizing {len(good_steps_idx)}/{dates.shape[0]} steps")
     return to_remove, good_steps_idx
