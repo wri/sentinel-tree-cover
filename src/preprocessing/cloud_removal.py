@@ -77,8 +77,6 @@ def adjust_interpolated_areas(array: np.ndarray,
                     adj = np.max([adj, -0.05])
                 if adj > 0:
                     adj = np.min([adj, 0.05])
-                if abs(adj) == 0.05:
-                    print(f'Adj {adj}')
 
                 array_i[interp_i == 1] += adj # - 0.1
                 array[time, :, :, band] = array_i
@@ -185,33 +183,36 @@ def mcm_shadow_mask(arr: np.ndarray,
          shadows_original (arr): cloud mask after Candra et al. 2020
     """
     import time
-    imsize = arr.shape[1]
-    if imsize % 8 == 0:
-        size = imsize
-    else:
-        size = imsize + (8 - (imsize % 8))
 
-    arr = resize(arr, (arr.shape[0], size, size, arr.shape[-1]), order = 0)
-    c_probs = resize(c_probs, (c_probs.shape[0], size, size), order = 0)
+    imsize = arr.shape[1]
+
+    if imsize % 8 != 0:
+        pad_amt = 1 #int((imsize % 8) // 2)
+
+        arr = np.pad(arr, ((0, 0), (pad_amt, pad_amt), (pad_amt, pad_amt), (0, 0)))
+        c_probs = np.pad(c_probs, ((0, 0), (pad_amt, pad_amt), (pad_amt, pad_amt)))
+
+    assert arr.dtype == np.uint16
+    assert arr.shape[1] == c_probs.shape[1]
+    size = arr.shape[1]
 
     # Create empty arrays for shadows, clouds
     shadows = np.empty_like(arr)[..., 0]
     clouds = np.empty_like(shadows)
-
     # Iterate through time steps, develop local reference images
     # and calculate cloud/shadow based on Candra et al. 2020
     for time in range(arr.shape[0]):
         lower = np.max([0, time - 3])
         upper = np.min([arr.shape[0], time + 4])
-        ri = np.median(arr[lower:upper], axis = 0)
+        ri = np.median(arr[lower:upper], axis = 0).astype(np.float32)
 
-        deltab2 = (arr[time, ..., 0] - ri[..., 0]) > 0.10
-        deltab8a = (arr[time, ..., 3] - ri[..., 3]) < -0.06
-        deltab11 = (arr[time, ..., 5] - ri[..., 5]) < -0.06
-        deltab3 = (arr[time, ..., 1] - ri[..., 1]) > 0.08
-        deltab4 = (arr[time, ..., 2] - ri[..., 2]) > 0.08
-        ti0 = (arr[time, ..., 0] < 0.095)
-        ti10 = arr[time, ..., 4] > 0.01
+        deltab2 = (arr[time, ..., 0] - ri[..., 0]) > int(0.10 * 65535)
+        deltab8a = (arr[time, ..., 3] - ri[..., 3]) < int(-0.06 * 65535)
+        deltab11 = (arr[time, ..., 5] - ri[..., 5]) < int(-0.06 * 65535)
+        deltab3 = (arr[time, ..., 1] - ri[..., 1]) > int(0.08 * 65535)
+        deltab4 = (arr[time, ..., 2] - ri[..., 2]) > int(0.08 * 65535)
+        ti0 = arr[time, ..., 0] < int(0.095 * 65535)
+        ti10 = arr[time, ..., 4] > int(0.01 * 65535)
         clouds_i = (deltab2 * deltab3 * deltab4) + ti10
         clouds_i = clouds_i * 1
         clouds_i[clouds_i > 1] = 1.
@@ -236,15 +237,20 @@ def mcm_shadow_mask(arr: np.ndarray,
     for time in range(1, shadows.shape[-1], 1):
         moving_sums = np.sum(shadows[time - 1:time + 1], axis = 0)
         moving_sums = moving_sums >= 2
+        if np.sum(moving_sums > 0):
+        	print(f"Removing {np.sum(moving_sums)}, time {time}")
         shadows_new[time - 1:time + 1, moving_sums] = 0.
     shadows = shadows_new
+    print(np.sum(shadows), np.sum(clouds))
 
+    # Removed below as the above cleaning steps should suffice
     # Iterate through shadow steps, and remove shadows if cannot coreference cloud (FP)
+    '''
     shadow_large = np.reshape(shadows, (shadows.shape[0], size // 8, 8, size // 8, 8))
     shadow_large = np.sum(shadow_large, axis = (2, 4))
     shadow_large[shadow_large < 48] = 0.
     shadow_large[shadow_large > 1] = 1.
-    shadows = resize(np.float64(shadow_large), (shadows.shape[0], size, size), order = 0)
+    shadows = resize(np.float32(shadow_large), (shadows.shape[0], size, size), order = 0)
     
     shadow_large = np.reshape(shadows, (shadows.shape[0], size // 8, 8, size // 8, 8))
     shadow_large = np.sum(shadow_large, axis = (2, 4))
@@ -269,6 +275,7 @@ def mcm_shadow_mask(arr: np.ndarray,
                     shadow_large[time, x, y] = 0.
     shadow_large = resize(shadow_large, (shadow_large.shape[0], size, size), order = 0)
     shadows = np.float32(shadows) * np.float32(shadow_large)
+    '''
 
     # Combine cloud and shadow
     shadows = shadows + clouds
@@ -416,17 +423,21 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
                 # keep = 0, (4, or 5)
                 # if len(dates) == 5:
                 #     potential_keep = 3
-                if month == 0 and len(month_good_dates > 3):
+                if month == 0 and len(month_good_dates) > 3:
                         month_good_dates = month_good_dates[-3:]
-                if month == 11 and len(month_good_dates > 3):
-                    month_good_dates = month_good_dates[:3]    
+                if month == 11 and len(month_good_dates) > 3:
+                    month_good_dates = month_good_dates[:3]  
+                if len(month_good_dates) > 3:
+                    month_good_dates = np.array([month_good_dates[0],
+                                        month_good_dates[1],
+                                        month_good_dates[-1]]).flatten()
                 if (min_distance < thresh_dist[x] or thresh[x] == 0.15):
                     finished = True
                     if len(month_good_dates) == 6:
                         month_good_dates = [val for i, val in enumerate(month_good_dates) if i in [0, 2, 3, 5]]
                         month_good_dates = np.array(month_good_dates)
-                    print(f"{month}, Dates: {month_good_dates},"
-                         f" Min dist: {min_distance}, thresh: {thresh[x]}")
+                    print(f"{month + 1}, Dates: {month_good_dates},"
+                         f" Dist: {min_distance}, Thresh: {thresh[x]}")
                     good_steps = np.concatenate([good_steps, month_good_dates.flatten()])
                     
     good_steps_idx = [i for i, val in enumerate(dates) if val in good_steps]
