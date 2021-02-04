@@ -12,11 +12,6 @@ def ndvi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     NIR = x[..., 3]
 
     ndvis = (NIR-RED) / (NIR+RED)
-    if verbose:
-        mins = np.min(ndvis)
-        maxs = np.max(ndvis)
-        if mins < -1 or maxs > 1:
-            print("ndvis error: {}, {}".format(mins, maxs))
     x = np.concatenate([x, ndvis[:, :, :, np.newaxis]], axis = -1)
     return x
 
