@@ -33,21 +33,16 @@ class Smoother:
 
 
     def interpolate_array(self, x) -> np.ndarray:
-        no_dem = np.delete(x, 10, -1)
-        no_dem = np.reshape(no_dem, (self.size, self.dim*self.dim*self.nbands))
-        no_dem = self.smooth(no_dem)
-        no_dem = np.reshape(no_dem, (self.size, self.dim, self.dim, self.nbands))
-        
-        
-        x[:, :, :, :10] = no_dem[:, :, :, :10]
-        x[:, :, :, 11:] = no_dem[:, :, :, 10:]
+        x = np.reshape(x, (self.size, self.dim*self.dim*self.nbands))
+        x = self.smooth(x)
+        x = np.reshape(x, (self.size, self.dim, self.dim, self.nbands))
 
         #biweekly_dates = np.array([day for day in range(0, self.size*5, 5)])
         #to_remove = np.argwhere(biweekly_dates % 15 != 0)
         #x = np.delete(x, to_remove, 0)'
 
         # instead np.median of zip(range(0, 72, 6), range(6, 72, 6))
-        monthly = np.empty((12, self.dim, self.dim, self.nbands + 1))
+        monthly = np.empty((12, self.dim, self.dim, self.nbands))
         index = 0
         for start, end in zip(range(0, self.size + 6, self.size // 12), #0, 72, 6
                               range(self.size // 12, self.size + 6, self.size // 12)): # 6, 72, 6
@@ -117,14 +112,14 @@ def parallel_apply_along_axis(func1d: 'function', axis: int,
 
 
 def interpolate_array(x: np.ndarray, dim: int = 128, nbands: int = 14, size = 72*3) -> np.ndarray:
-    no_dem = np.delete(x, 10, -1)
-    no_dem = np.reshape(no_dem, (size, dim*dim*nbands))
-    no_dem = parallel_apply_along_axis(smooth, 0, no_dem)
-    no_dem = np.reshape(no_dem, (size, dim, dim, nbands))
+    #no_dem = np.delete(x, 10, -1)
+    x = np.reshape(x, (size, dim*dim*nbands))
+    x = parallel_apply_along_axis(smooth, 0, x)
+    x = np.reshape(x, (size, dim, dim, nbands))
     
     
-    x[:, :, :, :10] = no_dem[:, :, :, :10]
-    x[:, :, :, 11:] = no_dem[:, :, :, 10:]
+    #x[:, :, :, :10] = no_dem[:, :, :, :10]
+    #x[:, :, :, 11:] = no_dem[:, :, :, 10:]
 
     biweekly_dates = np.array([day for day in range(0, size*5, 5)])
     to_remove = np.argwhere(biweekly_dates % 15 != 0)

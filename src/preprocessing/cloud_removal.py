@@ -243,40 +243,6 @@ def mcm_shadow_mask(arr: np.ndarray,
     shadows = shadows_new
     print(np.sum(shadows), np.sum(clouds))
 
-    # Removed below as the above cleaning steps should suffice
-    # Iterate through shadow steps, and remove shadows if cannot coreference cloud (FP)
-    '''
-    shadow_large = np.reshape(shadows, (shadows.shape[0], size // 8, 8, size // 8, 8))
-    shadow_large = np.sum(shadow_large, axis = (2, 4))
-    shadow_large[shadow_large < 48] = 0.
-    shadow_large[shadow_large > 1] = 1.
-    shadows = resize(np.float32(shadow_large), (shadows.shape[0], size, size), order = 0)
-    
-    shadow_large = np.reshape(shadows, (shadows.shape[0], size // 8, 8, size // 8, 8))
-    shadow_large = np.sum(shadow_large, axis = (2, 4))
-    cloud_large = np.copy(c_probs)
-    cloud_large[np.where(c_probs >= 0.3)] = 1.
-    cloud_large[np.where(c_probs < 0.3)] = 0.
-    cloud_large = np.reshape(cloud_large, (shadows.shape[0], size // 8, 8, size // 8, 8))
-    cloud_large = np.sum(cloud_large, axis = (2, 4))
-    for time in tnrange(shadow_large.shape[0]):
-        for x in range(shadow_large.shape[1]):
-            x_low = np.max([x - 10, 0])
-            x_high = np.min([x + 10, shadow_large.shape[1] - 2])
-            for y in range(shadow_large.shape[2]):
-                y_low = np.max([y - 10, 0])
-                y_high = np.min([y + 10, shadow_large.shape[1] - 2])
-                if shadow_large[time, x, y] < 8:
-                    shadow_large[time, x, y] = 0.
-                if shadow_large[time, x, y] >= 8:
-                    shadow_large[time, x, y] = 1.
-                c_prob_window = cloud_large[time, x_low:x_high, y_low:y_high]
-                if np.max(c_prob_window) < 8:
-                    shadow_large[time, x, y] = 0.
-    shadow_large = resize(shadow_large, (shadow_large.shape[0], size, size), order = 0)
-    shadows = np.float32(shadows) * np.float32(shadow_large)
-    '''
-
     # Combine cloud and shadow
     shadows = shadows + clouds
     shadows[shadows > 1] = 1.
@@ -383,7 +349,7 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
             month_good_dates = np.unique(dates[month_idx[month_good_idx]].flatten())
             min_distances = []
             for x in month_good_dates:
-                clean_dates = dates[np.argwhere(cloud_percent < 0.15)].flatten()
+                clean_dates = dates[np.argwhere(cloud_percent < 0.20)].flatten()
                 clean_dates = clean_dates[np.argwhere(np.logical_or(clean_dates < starting[month],
                                                clean_dates >= starting[month + 1]))]
                 distances = x - clean_dates
@@ -410,8 +376,8 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
     
     n_cloud_px = np.sum(clouds > 0.25, axis = (1, 2))
     cloud_percent = n_cloud_px / (clouds.shape[1]**2)
-    thresh = [0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.10, 0.15]
-    thresh_dist = [30, 30, 60, 60, 100, 100, 100, 100]
+    thresh = [0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.10, 0.15, 0.20]
+    thresh_dist = [30, 30, 60, 60, 100, 100, 100, 100, 150]
     for month in range(0, 12):
         finished = False
         for x in range(len(thresh)):
@@ -431,7 +397,7 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
                     month_good_dates = np.array([month_good_dates[0],
                                         month_good_dates[1],
                                         month_good_dates[-1]]).flatten()
-                if (min_distance < thresh_dist[x] or thresh[x] == 0.15):
+                if (min_distance < thresh_dist[x] or thresh[x] == 0.20):
                     finished = True
                     if len(month_good_dates) == 6:
                         month_good_dates = [val for i, val in enumerate(month_good_dates) if i in [0, 2, 3, 5]]
@@ -448,3 +414,42 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
 
     print(f"Utilizing {len(good_steps_idx)}/{dates.shape[0]} steps")
     return to_remove, good_steps_idx
+
+
+def subset_contiguous_sunny_dates(dates):
+    """
+    For plots that have at least 24 image dates
+    identifies 3-month windows where each month has at least three clean
+    image dates, and removes one image per month within the window.
+    Used to limit the number of images needed in low-cloud regions from
+    a max of 36 to a max of 24-30.
+    """
+    begin = [-60, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
+    end = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 390]
+    n_per_month = []
+    months_to_adjust = []
+    indices_to_rm = []
+    
+    if len(dates) >= 22:
+        for x, y in zip(begin, end):
+            indices_month = np.argwhere(np.logical_and(
+                dates >= x, dates < y)).flatten()
+            n_per_month.append(len(indices_month))
+
+        for x in range(11):
+            three_m_sum = np.sum(n_per_month[x:x+3])
+            if three_m_sum >= 7:
+                months_to_adjust.append([x, x+1, x+2])
+
+        months_to_adjust = [item for sublist in months_to_adjust for item in sublist]
+        months_to_adjust = list(set(months_to_adjust))
+
+
+        if len(months_to_adjust) > 0:
+            for month in months_to_adjust:
+                indices_month = np.argwhere(np.logical_and(
+                    dates >= begin[month], dates < end[month])).flatten()
+                if len(indices_month) == 3:
+                    indices_to_rm.append(indices_month[1])
+        print(f"Removing {len(indices_to_rm)} sunny dates")
+    return indices_to_rm
