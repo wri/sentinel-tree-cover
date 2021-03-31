@@ -4,6 +4,7 @@ import unittest
 import datetime
 from src.preprocessing.indices import ndvi, evi, savi, msavi2, bi, si
 
+
 class TestIndices(unittest.TestCase):
 
     def setUp(self):
