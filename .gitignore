@@ -25,3 +25,7 @@ notebooks/*-checkpoint.ipynb
 notebooks/.ipynb_checkpoints/*
 src/downloading/__pychache__/*
 
+data_diffs.csv
+*.tif
+*.vrt
+*.pyc

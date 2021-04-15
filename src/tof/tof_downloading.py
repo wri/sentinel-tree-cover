@@ -2,6 +2,8 @@ import sys
 sys.path.append('../')
 from src.preprocessing.cloud_removal import mcm_shadow_mask
 from src.preprocessing.slope import calcSlope
+from src.downloading.utils import calculate_and_save_best_images
+
 
 from sentinelhub import WmsRequest, WcsRequest, MimeType, CRS, BBox, constants, DataSource, CustomUrlParam
 from typing import Tuple, List
@@ -12,6 +14,18 @@ from scipy.ndimage import median_filter
 import reverse_geocoder as rg
 import pycountry
 import pycountry_convert as pc
+from functools import wraps
+from time import time
+
+def timing(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = time()
+        result = f(*args, **kw)
+        te = time()
+        print(f'{f.__name__}, {np.around(te-ts, 2)}')
+        return result
+    return wrap
 
 def extract_dates(date_dict: dict, year: int) -> List:
     """ Transforms a SentinelHub date dictionary to a
@@ -28,6 +42,50 @@ def extract_dates(date_dict: dict, year: int) -> List:
         if date.year == year + 1:
             dates.append(365 + starting_days[(date.month-1)]+date.day)
     return dates
+
+
+def to_int16(array: np.array) -> np.array:
+    '''Converts a float32 array to uint16, reducing storage costs by three-fold'''
+    assert np.min(array) >= 0, np.min(array)
+    assert np.max(array) <= 1, np.max(array)
+    
+    array = np.clip(array, 0, 1)
+    array = np.trunc(array * 65535)
+    assert np.min(array >= 0)
+    assert np.max(array <= 65535)
+    
+    return array.astype(np.uint16)
+
+def to_float32(array: np.array) -> np.array:
+    """Converts an int_x array to float32"""
+    print(f'The original max value is {np.max(array)}')
+    if not isinstance(array.flat[0], np.floating):
+        assert np.max(array) > 1
+        array = np.float32(array) / 65535.
+    assert np.max(array) <= 1
+    assert array.dtype == np.float32
+    return array
+
+def process_sentinel_1_tile(sentinel1: np.ndarray, dates: np.ndarray) -> np.ndarray:
+    """Converts a (?, X, Y, 2) Sentinel 1 array to (12, X, Y, 2)
+
+        Parameters:
+         sentinel1 (np.array):
+         dates (np.array):
+
+        Returns:
+         s1 (np.array)
+    """
+    s1, _ = calculate_and_save_best_images(sentinel1, dates)
+    monthly = np.empty((12, sentinel1.shape[1], sentinel1.shape[2], 2))
+    index = 0
+    for start, end in zip(range(0, 72 + 6, 72 // 12), #0, 72, 6
+                          range(72 // 12, 72 + 6, 72 // 12)): # 6, 72, 6
+        monthly[index] = np.median(s1[start:end], axis = 0)
+        index += 1
+        
+    return monthly
+
 
 def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
                 imsize: int,
@@ -71,16 +129,12 @@ def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
     
     cloud_img = np.array(cloud_request.get_data())
     cloud_img = cloud_img.repeat(16,axis=1).repeat(16,axis=2).astype(np.uint8)
-    print(f"The original cloud size is {cloud_img.shape}")
-    print(np.max(cloud_img))
-    print(np.mean(cloud_img))
-
+    print(f"Clouds: {cloud_img.shape}")
     
     # Identify steps with at least 20% cloud cover
     n_cloud_px = np.sum(cloud_img > int(0.33 * 255), axis = (1, 2))
     cloud_steps = np.argwhere(n_cloud_px > (cloud_img.shape[1]*cloud_img.shape[2] * 0.20))
     clean_steps = [x for x in range(cloud_img.shape[0]) if x not in cloud_steps]
-    print(f"There are {len(clean_steps)} clean steps")
     cloud_img = np.delete(cloud_img, cloud_steps, 0)
     
     # Align cloud and shadow imagery dates
@@ -159,7 +213,7 @@ def download_dem(bbox: List[Tuple[float, float]],
     return dem_image
 
 
-def identify_dates_to_download(dates):
+def identify_dates_to_download(dates: list) -> list:
     """ Identify the S1 dates to download"""
     days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
     starting_days = np.cumsum(days_per_month)
@@ -172,6 +226,32 @@ def identify_dates_to_download(dates):
         if len(s1_month) > 0:
             dates_to_download.append(s1_month[0])
     return dates_to_download
+
+
+def make_overlapping_windows(tiles: np.ndarray) -> np.ndarray:
+    """ Takes the A x B window IDs (n, 4)for an
+     X by Y rectangle and enures that the windows are the right
+     size (e.g. square, 150 x 150) for running predictions on """
+    tiles2 = np.copy(tiles)
+    n_x = np.sum(tiles2[:, 0] == 0)
+    n_y = np.sum(tiles2[:, 1] == 0)
+
+    tiles2[:n_x, 2] += 5
+    tiles2[-n_x:, 2] += 5
+    to_adjust = np.full((tiles.shape[0]), 10).astype(np.uint16)
+    
+    for i in range(len(to_adjust)):
+        if (i % n_y == 0) or ((i + 1) % n_y == 0):
+            to_adjust[i] -= 5
+    tiles2 = tiles2.astype(np.int64)
+    tiles2[:, 3] += to_adjust
+    tiles2[n_x:-n_x, 2] += 10
+    tiles2[n_x:, 0] -= 5
+    tiles2[:, 1] -=5
+    
+    tiles2[tiles2 < 0] = 0.
+
+    return tiles2
 
 def download_sentinel_1(bbox: List[Tuple[float, float]],
                         api_key,
@@ -222,7 +302,6 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
     if len(image_request.download_list) > 3:
         try:
             s1 = np.array(image_request.get_data(data_filter = data_filter))
-            print(f'The original s1 max value is {np.max(s1)}')
             if not isinstance(s1.flat[0], np.floating):
                 assert np.max(s1) > 1
                 s1 = np.float32(s1) / 65535.
@@ -339,17 +418,12 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
     
     # Convert 20m bands to np.float32, ensure correct dimensions
     if not isinstance(img_20.flat[0], np.floating):
-        print(f"Converting S2, 20m to float32, with {np.max(img_20)} max and"
-              f" {len(np.unique(img_20))} unique values")
         assert np.max(img_20) > 1
         img_20 = np.float32(img_20) / 65535.
         assert np.max(img_20) <= 1
         assert img_20.dtype == np.float32
     
     print(f"Original 20 meter bands size: {img_20.shape}, using {round(s2_20_usage, 1)} PU")
-    #if img_20.shape[2]*img_20.shape[2] != 323*323:
-    #    print(f"Reshaping: {img_20.shape}")
-    #    img_20 = resize(img_20, (img_20.shape[0], 323, 323, img_20.shape[-1]), order = 0)
 
     # Download 10 meter bands
     image_request = WcsRequest(
@@ -374,10 +448,6 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
         assert np.max(img_10) <= 1
         assert img_10.dtype == np.float32
 
-    #if img_10.shape[2]*img_10.shape[1] != IMSIZE*IMSIZE:
-    #    print(f"Reshaping: {img_10.shape}")
-    #    img_10 = resize(img_10, (img_10.shape[0], IMSIZE, IMSIZE, img_10.shape[-1]), order = 0)
-    
     # Ensure output is within correct range
     img_10 = np.clip(img_10, 0, 1)
     img_20 = np.clip(img_20, 0, 1)
