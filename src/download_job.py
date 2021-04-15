@@ -45,8 +45,6 @@ from tof.tof_downloading import to_int16, to_float32
 from downloading.upload import FileUploader
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-
 sess = tf.Session()
 K.set_session(sess)
 
@@ -170,7 +168,6 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key) -> None:
     print(f"Downloading {x, y} tile to {folder}, with a"
           f" bounding box of {bbx}")
     
-    
     if not (os.path.exists(clouds_file)):# or processed):
         print(f"Downloading {clouds_file}")
 
@@ -228,9 +225,6 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key) -> None:
         hkl.dump(to_int16(s2_10), s2_10_file, mode='w', compression='gzip')
         hkl.dump(to_int16(s2_20), s2_20_file, mode='w', compression='gzip')
         hkl.dump(s2_dates, s2_dates_file, mode='w', compression='gzip')
-        
-        s210_arr = to_int16(s2_10[0, ..., 0])
-        s220_arr = to_int16(s2_20[0, ..., 0])
             
     if not (os.path.exists(s1_file)):
         print(f"Downloading {s1_file}")
@@ -251,9 +245,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key) -> None:
         s1 = tof_downloading.process_sentinel_1_tile(s1, s1_dates)
         hkl.dump(to_int16(s1), s1_file, mode='w', compression='gzip')
         hkl.dump(s1_dates, s1_dates_file, mode='w', compression='gzip')
-        
-        s1_arr = to_int16(s1[0, ..., 0])
-        
+                
     if not os.path.exists(dem_file):
         print(f'Downloading {dem_file}')
         dem = tof_downloading.download_dem(dem_bbx, api_key = API_KEY)
@@ -284,6 +276,7 @@ def id_missing_px(sentinel2: np.ndarray, thresh: int = 11) -> np.ndarray:
         print(f"The missing image bands (0) are: {missing_images_0}")
         print(f"The missing image bands (1.0) are: {missing_images_p}")
     return missing_images
+
 
 def process_tile(x: int, y: int, data: pd.DataFrame) -> np.ndarray:
     """
@@ -327,7 +320,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame) -> np.ndarray:
     clean_steps_file = f'{folder}raw/clouds/clean_steps_{tile_idx}.hkl'
     dem_file = f'{folder}raw/misc/dem_{tile_idx}.hkl'
     
-    
     clouds = hkl.load(clouds_file)
     shadows = hkl.load(shadows_file)
     s1 = hkl.load(s1_file)
@@ -335,7 +327,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame) -> np.ndarray:
     s2_20 = to_float32(hkl.load(s2_20_file))
     dem = hkl.load(dem_file)
     image_dates = hkl.load(s2_dates_file)
-    
     
     width = s2_10.shape[1]
     height = s2_20.shape[2] * 2
@@ -377,11 +368,9 @@ def process_tile(x: int, y: int, data: pd.DataFrame) -> np.ndarray:
         pad_amt =  abs(height - dem.shape[1])
         dem = dem[:, :-pad_amt]
         
-        
     print(f'Clouds: {clouds.shape}, \nShadows: {shadows.shape} \n'
           f'S1: {s1.shape} \nS2: {s2_10.shape}, {s2_20.shape} \nDEM: {dem.shape}')
             
-  
     sentinel2 = np.empty((s2_10.shape[0], width, height, 10))
     sentinel2[..., :4] = s2_10
     for band in range(6):
@@ -458,7 +447,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         y = y[:-2]
     
     s2 = interpolate_na_vals(s2)
-    
     tiles_folder = tile_window(s1.shape[2], s1.shape[1], window_size = 140)
     tiles_array = tof_downloading.make_overlapping_windows(tiles_folder)
     
@@ -531,7 +519,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         output_folder = "/".join(output.split("/")[:-1])
         if not os.path.exists(os.path.realpath(output_folder)):
             os.makedirs(os.path.realpath(output_folder))
-            
         
         subtile = np.clip(subtile, 0, 1)
         subtile = to_int16(subtile)
@@ -541,6 +528,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         if len(dates_tile) < 5:
             subtile = np.zeros_like(subtile)
         hkl.dump(subtile, output, mode='w', compression='gzip')
+
 
 def upload_raw_processed_s3(path_to_tile, x, y):
     '''
@@ -570,6 +558,29 @@ def upload_raw_processed_s3(path_to_tile, x, y):
             key = f'2020/processed/{x}/{y}/' + internal_folder + file
             uploader.upload(bucket = 'tof-output', key = key, file = _file)
             os.remove(_file)
+
+
+def file_in_local_or_s3(file, key, apikey, apisecret, bucket):
+    """
+    Checks to see if a file/key pair exists locally or on s3 or neither
+    """
+
+    exists = False
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket)
+    objs = list(bucket.objects.filter(Prefix=key))
+    
+    if len(objs) > 0:
+        print(f"The s3 resource s3://{bucket}/{key} exists")
+        exists = True
+
+    if not exists:
+        print(f"The s3 resource s3://{bucket}/{key} does not exist")
+        if os.path.isdir(file):
+            files = [x for x in os.listdir(file) if '.tif' in x]
+            exists = True if len(files) > 0 else False
+            print(f"The local path {file} contains {files}")
+    return exists
      
 
 if __name__ == '__main__':
@@ -624,15 +635,15 @@ if __name__ == '__main__':
         if ".0" in y:
             y = y[:-2]
 
+        # Check to see whether the tile exists locally or on s3
         path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/'
-        #! TODO 
-        # need to check also the s3 bucket for the tile here! 
-        # need to check if there is a .hkl file in path_to_tile + ... if there is not a .tif
-        if not os.path.isdir(path_to_tile):
-            processed = False
-        else:
-            files = [x for x in os.listdir(path_to_tile) if '.tif' in x]
-            processed = False if len(files) == 0 else True
+        s3_path_to_tile = f'2020/tiles/{str(x)}/{str(y)}/'
+        processed = file_in_local_or_s3(path_to_tile,
+                                        s3_path_to_tile, 
+                                        AWSKEY, AWSSECRET, 
+                                        args.s3_bucket)
+        
+        # If the tile does not exist, go ahead and download/process/upload it
         if not processed:
             time1 = time.time()
             download_tile(x = x, y = y, data = data, api_key = API_KEY)
@@ -644,5 +655,3 @@ if __name__ == '__main__':
             print(f"Finished in {np.around(time2 - time1, 1)} seconds")
         else:
             print(f'Skipping {x}, {y} as it is done')
-
-
