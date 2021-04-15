@@ -1,8 +1,7 @@
 .git
 .cache
-data/
+data/*
 tile_data/*
-models/*
 references/*
 raw/*
 docs/*
@@ -10,3 +9,4 @@ project-monitoring/*
 
 *.pem
 gcloud-key.json
+*.ipynb

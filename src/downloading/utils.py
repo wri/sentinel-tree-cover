@@ -280,10 +280,9 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
             if dist > max_distance:
                 max_distance = dist
     
-    print("Maximum time distance: {}".format(max_distance))
-    if max_distance >= 300:
-        for i in sorted(selected_images.keys()):
-            print(i, selected_images[i])
+    
+    if max_distance >= 150:
+        print(f"Warning, Maximum time distance is {max_distance}")
 
     keep_steps = []
     for i in sorted(selected_images.keys()):
