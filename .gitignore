@@ -21,6 +21,7 @@ notebooks/*.npy
 project-monitoring/*/*
 notebooks/development/data/*
 notebooks/*-checkpoint.ipynb
+*.pb
 
 notebooks/.ipynb_checkpoints/*
 src/downloading/__pychache__/*

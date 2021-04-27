@@ -246,7 +246,6 @@ def mcm_shadow_mask(arr: np.ndarray,
     # Combine cloud and shadow
     shadows = shadows + clouds
     shadows[shadows > 1] = 1.
-    np.save("shadows_out.npy", shadows)
     return shadows
 
 
