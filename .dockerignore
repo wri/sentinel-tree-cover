@@ -6,6 +6,8 @@ references/*
 raw/*
 docs/*
 project-monitoring/*
+dockerfiles/*
+notebooks/*
 
 *.pem
 gcloud-key.json
