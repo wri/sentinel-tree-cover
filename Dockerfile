@@ -10,19 +10,11 @@ RUN apt-get update -y && apt-get install --no-install-recommends -y -q \
     ca-certificates gcc libffi-dev wget unzip git openssh-client gnupg curl \
     python3-dev python3-setuptools
 
-# Trick to let tensorflow-gpu work on CPU
-#RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
-#    echo "/usr/local/cuda/lib64/stubs" >> /etc/ld.so.conf.d/cuda-11-0.conf && \
-#    ldconfig
-
 RUN pip install --upgrade pip &&\
 	mkdir src temp
-	
-COPY ./run_test.sh ./run_test.sh
-
 
 WORKDIR src/
-COPY . .
+COPY ./requirements.txt ./requirements.txt
 
 RUN pip install -r requirements.txt
 
@@ -36,12 +28,10 @@ RUN add-apt-repository ppa:ubuntugis/ppa && apt-get update &&\
 # RUN chmod +x ./run_test.sh &&\
 #  	./run_test.sh
 
-ENTRYPOINT ["python","src/download_job.py"]
+COPY . .
 
+ENTRYPOINT ["python", "-u", "src/download_job.py"]
 
-
-
-# docker build -t tof_download
-# docker run -p 8888:8888 johnbrandtwri/restoration_mapper
-# docker push johnbrandtwri/restoration_mapper
-# docker run -p 8888:8888 johnbrandtwri/restoration_mapper --entrypoint "jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+# docker build -t tof_download .
+# docker run -e PYTHONUNBUFFERED=1 tof_download:latest --country “Rwanda” --db_path “src/processing_area.csv” --model_path “models/supres/“ --yaml_path “config.yaml” --local_path “temp/“ --ul_flag True
+# docker run -it --entrypoint /bin/bash <image> # runs to open shell

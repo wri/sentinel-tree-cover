@@ -1,10 +1,8 @@
 import pandas as pd
 import numpy as np
 from random import shuffle
-#from osgeo import ogr, osr
 from sentinelhub import WmsRequest, WcsRequest, MimeType, CRS, BBox, constants
 import logging
-#from collections import Counter
 import datetime
 import os
 import yaml
@@ -13,19 +11,16 @@ import scipy.sparse as sparse
 from scipy.sparse.linalg import splu
 from skimage.transform import resize
 from sentinelhub import CustomUrlParam
-#from time import time as timer
 import multiprocessing
 import math
 import reverse_geocoder as rg
 import pycountry
 import pycountry_convert as pc
 import hickle as hkl
-#from shapely.geometry import Point, Polygon
 import geopandas
 from tqdm import tnrange, tqdm_notebook
 import boto3
 from pyproj import Proj, transform
-#from timeit import default_timer as timer
 from typing import Tuple, List
 import warnings
 from scipy.ndimage import median_filter
@@ -45,7 +40,7 @@ from tof.tof_downloading import to_int16, to_float32
 from downloading.upload import FileUploader
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-sess = tf.Session()
+sess = tf.compat.v1.Session()
 K.set_session(sess)
 
 
@@ -467,7 +462,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         interp_tile = np.sum(interp_tile, axis = (1, 2))
         
         dates_tile = np.copy(dates)
-        to_remove = np.argwhere(interp_tile > ((150*150) / 6.67)).flatten()
+        to_remove = np.argwhere(interp_tile > ((150*150) / 5)).flatten()
         if len(to_remove) > 0:
             dates_tile = np.delete(dates_tile, to_remove)
             subset = np.delete(subset, to_remove, 0)
@@ -522,12 +517,16 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         
         subtile = np.clip(subtile, 0, 1)
         subtile = to_int16(subtile)
-        print(f"Writing {output}")
+
         assert subtile.shape[1] >= 145, f"subtile shape is {subtile.shape}"
         assert subtile.shape[0] == 12, f"subtile shape is {subtile.shape}"
         if len(dates_tile) < 5:
             subtile = np.zeros_like(subtile)
+        time1 = time.time()
         hkl.dump(subtile, output, mode='w', compression='gzip')
+        time2 = time.time()
+        timing = np.around(time2 - time1, 2)
+        print(f"Writing {output}: in {timing} seconds")
 
 
 def upload_raw_processed_s3(path_to_tile, x, y):
@@ -566,7 +565,8 @@ def file_in_local_or_s3(file, key, apikey, apisecret, bucket):
     """
 
     exists = False
-    s3 = boto3.resource('s3')
+    s3 = boto3.resource('s3', aws_access_key_id=apikey,
+         aws_secret_access_key= apisecret)
     bucket = s3.Bucket(bucket)
     objs = list(bucket.objects.filter(Prefix=key))
     
@@ -593,14 +593,26 @@ if __name__ == '__main__':
     parser.add_argument("--ul_flag", dest = "ul_flag", default = False)
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
     parser.add_argument("--yaml_path", dest = "yaml_path", default = "../config.yaml")
+    parser.add_argument("--n_tiles", dest = "n_tiles", default = None)
     args = parser.parse_args()
 
+    print(f'Country: {args.country} \n'
+          f'Local path: {args.local_path} \n'
+          f'Model path: {args.model_path} \n'
+          f'DB path: {args.db_path} \n'
+          f'S3 Bucket: {args.s3_bucket} \n'
+          f'YAML path: {args.yaml_path} \n'
+          f'Current dir: {os.getcwd()} \n'
+          f'N tiles to download: {args.n_tiles} \n')
+
+    print(f"loading API key from {args.yaml_path}")
     if os.path.exists(args.yaml_path):
         with open(args.yaml_path, 'r') as stream:
             key = (yaml.safe_load(stream))
             API_KEY = key['key']
             AWSKEY = key['awskey']
             AWSSECRET = key['awssecret']
+        print("Successfully loaded keys")
     else:
         print("Error: No API key")
         API_KEY = "none"
@@ -613,12 +625,14 @@ if __name__ == '__main__':
     data = data.sample(frac=1).reset_index(drop=True)
 
     print(f"There are {len(data)} tiles for {args.country}")
-    model = tf.train.import_meta_graph(args.model_path + 'model.meta')
+    model = tf.compat.v1.train.import_meta_graph(args.model_path + 'model.meta')
     model.restore(sess, tf.train.latest_checkpoint(args.model_path))
 
-    logits = tf.get_default_graph().get_tensor_by_name("Add_6:0")
-    inp = tf.get_default_graph().get_tensor_by_name("Placeholder:0")
-    inp_bilinear = tf.get_default_graph().get_tensor_by_name("Placeholder_1:0")
+    logits = tf.compat.v1.get_default_graph().get_tensor_by_name("Add_6:0")
+    inp = tf.compat.v1.get_default_graph().get_tensor_by_name("Placeholder:0")
+    inp_bilinear = tf.compat.v1.get_default_graph().get_tensor_by_name("Placeholder_1:0")
+
+    n = 0
 
     for index, row in data.iterrows():
         year = 2020
@@ -626,14 +640,10 @@ if __name__ == '__main__':
         dates_sentinel_1 = (f'{str(year)}-01-01' , f'{str(year)}-12-31')
         days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
         starting_days = np.cumsum(days_per_month)
-        x = row['X_tile']
-        y = row['Y_tile']
-        x = str(int(x))
-        y = str(int(y))
-        if ".0" in x:
-            x = x[:-2]
-        if ".0" in y:
-            y = y[:-2]
+        x = str(int(row['X_tile']))
+        y = str(int(row['Y_tile']))
+        x = x[:-2] if ".0" in x else x
+        y = y[:-2] if ".0" in y else y
 
         # Check to see whether the tile exists locally or on s3
         path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/'
@@ -645,13 +655,23 @@ if __name__ == '__main__':
         
         # If the tile does not exist, go ahead and download/process/upload it
         if not processed:
-            time1 = time.time()
-            download_tile(x = x, y = y, data = data, api_key = API_KEY)
-            s2, dates, interp, s1 = process_tile(x = x, y = y, data = data)
-            process_subtiles(x, y, s2, dates, interp, s1)
-            if args.ul_flag:
-                upload_raw_processed_s3(path_to_tile, x, y)
-            time2 = time.time()
-            print(f"Finished in {np.around(time2 - time1, 1)} seconds")
+            if args.n_tiles:
+                below = n <= int(args.n_tiles)
+            else:
+                below = True
+            if below:
+                try:
+                    time1 = time.time()
+                    download_tile(x = x, y = y, data = data, api_key = API_KEY)
+                    s2, dates, interp, s1 = process_tile(x = x, y = y, data = data)
+                    process_subtiles(x, y, s2, dates, interp, s1)
+                    if args.ul_flag:
+                        upload_raw_processed_s3(path_to_tile, x, y)
+                    time2 = time.time()
+                    print(f"Finished {n} in {np.around(time2 - time1, 1)} seconds")
+                    n += 1
+                except:
+                    print(f"Ran into an error, skipping {x}/{y}/")
+                    continue
         else:
             print(f'Skipping {x}, {y} as it is done')
