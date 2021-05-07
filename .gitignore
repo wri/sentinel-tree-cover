@@ -22,10 +22,9 @@ project-monitoring/*/*
 notebooks/development/data/*
 notebooks/*-checkpoint.ipynb
 *.pb
-
-notebooks/.ipynb_checkpoints/*
+**/*.ipynb_checkpoints/
 src/downloading/__pychache__/*
-
+*-checkpoint.ipynb
 data_diffs.csv
 *.tif
 *.vrt

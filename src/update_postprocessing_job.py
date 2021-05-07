@@ -1,5 +1,5 @@
 from preprocessing.indices import evi, bi, msavi2, grndvi
-from downloading.upload import FileUploader
+from downloading.io import FileUploader
 
 import numpy as np 
 import os

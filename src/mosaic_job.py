@@ -2,7 +2,7 @@ import os
 from osgeo import gdal
 from glob import glob
 import pandas as pd
-from downloading.upload import FileUploader
+from downloading.io import FileUploader
 import yaml
 
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     gdal.BuildVRT(f'{str(args.country)}.vrt', tifs)
     ds = gdal.Open(f'{str(args.country)}.vrt')
-    translateoptions = gdal.TranslateOptions(gdal.ParseCommandLine("-ot Byte -co COMPRESS=LZW"))
+    translateoptions = gdal.TranslateOptions(gdal.ParseCommandLine("-ot Byte -co COMPRESS=LZW -a_nodata 255"))
     ds = gdal.Translate(f'{str(args.country)}.tif', ds, options=translateoptions)
 
     uploader = FileUploader(awskey = AWSKEY, awssecret = AWSSECRET)

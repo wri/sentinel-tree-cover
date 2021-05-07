@@ -76,8 +76,8 @@ class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
        # y = y * y_1
       if self._normalize:
         r, u = tf.split(y, 2, axis=self._feature_axis)
-        r = group_norm(r, "gates_r", G = 6, esp = 1e-5)
-        u = group_norm(u, "gates_u", G = 6, esp = 1e-5)
+        r = group_norm(r, "gates_r", G = 4, esp = 1e-5)
+        u = group_norm(u, "gates_u", G = 4, esp = 1e-5)
         #r = tf.contrib.layers.layer_norm(r)
         #u = tf.contrib.layers.layer_norm(u)
       else:
@@ -101,7 +101,7 @@ class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
         y = y * y_1
       if self._normalize:
         #y = tf.contrib.layers.layer_norm(y)
-         y = group_norm(y, "candidate_y", G = 6, esp = 1e-5)
+         y = group_norm(y, "candidate_y", G = 4, esp = 1e-5)
       else:
         y += tf.get_variable('bias', [m], initializer=tf.zeros_initializer())
     h = u * h + (1 - u) * self._activation(y)

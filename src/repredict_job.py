@@ -289,7 +289,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame) -> np.ndarray:
     shadows = hkl.load(shadows_file)
     s1 = hkl.load(s1_file)
 
-    # The S1 data here needs to be bilinearly upsampled as it is in training time! 
     s1 = s1.reshape((s1.shape[0], s1.shape[1] // 2, 2, s1.shape[2] // 2, 2, 2))
     s1 = np.mean(s1, (2, 4))
     s1 = resize(s1, (s1.shape[0], s1.shape[1] * 2, s1.shape[2] * 2, 2), order = 1)
@@ -619,9 +618,6 @@ def predict_subtile(x, sess) -> np.ndarray:
         lengths = np.full((batch_x.shape[0]), 12)
         preds = sess.run(predict_logits,
                               feed_dict={predict_inp:batch_x, 
-                                         #clipping_params['rmax']: 5,
-                                         #clipping_params['rmin']: 0,
-                                         #clipping_params['dmax']: 3,
                                          predict_length:lengths})
         stacked = np.full((140, 140, 4), 255.)
 
@@ -692,15 +688,16 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
                     if current_predictions.shape[0] > 0:
                         # Require colocation. Here we can have a lower threshold as
                         # the likelihood of false positives is much higher
-                        current_predictions[(current_predictions - existing_predictions) > 50] = np.min([current_predictions, existing_predictions])
-                        existing_predictions[(existing_predictions - current_predictions) > 50] = np.min([current_predictions, existing_predictions])
+                        current_predictions[(current_predictions - existing_predictions) > 75] = np.min([current_predictions, existing_predictions])
+                        existing_predictions[(existing_predictions - current_predictions) > 75] = np.min([current_predictions, existing_predictions])
                         existing_predictions = (current_predictions + existing_predictions) / 2
          
                     predictions_tile[predictions_tile == 0] = prediction[predictions_tile == 0]
                 else:
-                    predictions[(x_tile): (x_tile+140),
+                    predictions[ (x_tile ): (x_tile+140),
                            y_tile:y_tile + 140] = prediction
-                
+    
+    # This removes areas that are noisy 
     original_preds = np.copy(predictions)
     for x_i in range(0, predictions.shape[0] - 3):
         for y_i in range(0, predictions.shape[1] - 3):
@@ -721,9 +718,9 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
                         window[2, :] = 0
                         window[:, 0] = 0
                         window[:, 2] = 0
+                        
     predictions = original_preds 
-
-    predictions[predictions <= .25*100] = 0.        
+    predictions[predictions <= .25*100] = 0.     
     predictions = np.around(predictions / 20, 0) * 20
     predictions[predictions > 100] = 255.
     return predictions
@@ -806,16 +803,6 @@ if __name__ == '__main__':
         raise Exception(f"The model path {args.predict_model_path} does not exist")
 
     # Normalization mins and maxes for the prediction input
-    #min_all = [0.012558175020981156, 0.025696192874036773, 0.015518425268940261, 0.04415960936903945,
-    #           0.040497444113832305, 0.04643320363164721, 0.04924086366063935, 0.04289311055161364, 
-    #           0.027450980392156862, 0.019760433356221865, 0.0, 0.5432562150454495, 0.2969113383797463,
-    #            -0.03326967745787883, -0.4014989586557378, -0.023132966289995487, -0.4960341058778109]
-
-    #max_all = [0.21116960402838178, 0.30730144197756926, 0.4478065156023499, 0.5342488746471351,
-    ##           0.4942702372777905, 0.5072556649118791, 0.5294422827496758, 0.5418631265735866, 0.6813458457312886,
-    #           0.6285648889906157, 0.4208438239108873, 0.9480767549203932, 0.8130214090572532, 0.7444347421954634,
-    #           0.3268904303046983, 0.6872429594867983, 0.7129084148772861]
-
     min_all = [0.006607156481269551, 0.0162050812542916, 0.010055695429922943, 0.013351644159609368, 0.01965362020294499, 0.014251926451514458, 0.015289539940489814, 0.011993591210803388, 0.008239871824216068, 0.006576638437476158, 0.0, 0.0, 0.0, -0.14089041542883884, -0.4973007582496804, -0.09727903335259765, -0.7193163251773491]
     max_all = [0.26909261463349116, 0.3739681086442359, 0.5171129930571451, 0.6027161058976119, 0.5649805447470817, 0.5746852826733806, 0.5933623254749371, 0.6034790569924467, 0.7471885252155337, 0.6999771114671549, 0.5081406881818875, 0.9483111607060141, 0.6728625967127161, 0.8176895380653232, 0.3576770175739082, 0.7545675799120575, 0.7602480781910504]
 
@@ -826,6 +813,7 @@ if __name__ == '__main__':
     max_all = np.broadcast_to(max_all, (13, 150, 150, 17))
     midrange = (max_all + min_all) / 2
     rng = max_all - min_all
+
 
     # For generating the subtile mosaicing
     SIZE = 10
@@ -854,7 +842,7 @@ if __name__ == '__main__':
                                         args.s3_bucket)
         
         # If the tile does not exist, go ahead and download/process/upload it
-        if not processed:
+        if processed:
             if args.n_tiles:
                 below = n <= int(args.n_tiles)
             else:
@@ -862,7 +850,7 @@ if __name__ == '__main__':
             if below:
                 bbx = None
                 time1 = time.time()
-                bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY)
+                #bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY)
                 s2, dates, interp, s1 = process_tile(x = x, y = y, data = data)
                 process_subtiles(x, y, s2, dates, interp, s1, predict_sess)
                 predictions = load_mosaic_predictions(path_to_tile + "processed/")
@@ -879,11 +867,7 @@ if __name__ == '__main__':
                     bbx = make_bbox(initial_bbx, expansion = 300/30)
 
                 file = write_tif(predictions, bbx, x, y, path_to_tile)
-                key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_POST.tif'
-                uploader.upload(bucket = args.s3_bucket, key = key, file = file)
-
-                if args.ul_flag:
-                    upload_raw_processed_s3(path_to_tile, x, y)
+                key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_231k.tif'
                 time2 = time.time()
                 print(f"Finished {n} in {np.around(time2 - time1, 1)} seconds")
                 n += 1
@@ -908,17 +892,19 @@ if __name__ == '__main__':
                                             s3_path_to_tile, 
                                             AWSKEY, AWSSECRET, 
                                             args.s3_bucket)
-            
+            print(f"Not processed: {processed}")
             # If the tile does not exist, go ahead and download/process/upload it
             if not processed:
                 if args.n_tiles:
                     below = n <= int(args.n_tiles)
                 else:
                     below = True
+                print(below)
                 if below:
                     try:
                         time1 = time.time()
-                        bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY)
+                        #bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY)
+                        print("Processing tile")
                         s2, dates, interp, s1 = process_tile(x = x, y = y, data = data)
                         process_subtiles(x, y, s2, dates, interp, s1, predict_sess)
                         predictions = load_mosaic_predictions(path_to_tile + "processed/")
@@ -934,11 +920,7 @@ if __name__ == '__main__':
                             bbx = make_bbox(initial_bbx, expansion = 300/30)
 
                         file = write_tif(predictions, bbx, x, y, path_to_tile)
-                        key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_POST.tif'
-                        uploader.upload(bucket = args.s3_bucket, key = key, file = file)
-                        if args.ul_flag:
-                            upload_raw_processed_s3(path_to_tile, x, y)
-                        time2 = time.time()
+                        key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_231k.tif'
                         print(f"Finished {n} in {np.around(time2 - time1, 1)} seconds")
                         n += 1
                     except Exception as e:

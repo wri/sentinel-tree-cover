@@ -17,6 +17,7 @@ import pycountry_convert as pc
 from functools import wraps
 from time import time
 
+
 def timing(f):
     @wraps(f)
     def wrap(*args, **kw):
@@ -26,6 +27,7 @@ def timing(f):
         print(f'{f.__name__}, {np.around(te-ts, 2)}')
         return result
     return wrap
+
 
 def extract_dates(date_dict: dict, year: int) -> List:
     """ Transforms a SentinelHub date dictionary to a
@@ -56,6 +58,7 @@ def to_int16(array: np.array) -> np.array:
     
     return array.astype(np.uint16)
 
+
 def to_float32(array: np.array) -> np.array:
     """Converts an int_x array to float32"""
     print(f'The original max value is {np.max(array)}')
@@ -65,6 +68,7 @@ def to_float32(array: np.array) -> np.array:
     assert np.max(array) <= 1
     assert array.dtype == np.float32
     return array
+
 
 def process_sentinel_1_tile(sentinel1: np.ndarray, dates: np.ndarray) -> np.ndarray:
     """Converts a (?, X, Y, 2) Sentinel 1 array to (12, X, Y, 2)
@@ -83,7 +87,6 @@ def process_sentinel_1_tile(sentinel1: np.ndarray, dates: np.ndarray) -> np.ndar
                           range(72 // 12, 72 + 6, 72 // 12)): # 6, 72, 6
         monthly[index] = np.median(s1[start:end], axis = 0)
         index += 1
-        
     return monthly
 
 
@@ -171,7 +174,6 @@ def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
     return cloud_img, shadows, clean_steps, np.array(cloud_dates), shadow_img
 
 
-
 def download_dem(bbox: List[Tuple[float, float]],
                  api_key: str) -> np.ndarray:
     """ Downloads the DEM layer from Sentinel hub
@@ -250,8 +252,8 @@ def make_overlapping_windows(tiles: np.ndarray) -> np.ndarray:
     tiles2[:, 1] -=5
     
     tiles2[tiles2 < 0] = 0.
-
     return tiles2
+
 
 def download_sentinel_1(bbox: List[Tuple[float, float]],
                         api_key,
@@ -299,7 +301,7 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
     data_filter = steps_to_download   
     
     # If the correct orbit is selected, download imagery
-    if len(image_request.download_list) > 3:
+    if len(image_request.download_list) >= 5 and len(steps_to_download) >= 5:
         try:
             s1 = np.array(image_request.get_data(data_filter = data_filter))
             if not isinstance(s1.flat[0], np.floating):

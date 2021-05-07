@@ -182,7 +182,7 @@ def write_tif(arr: np.ndarray, point: list, x: int, y: int,
 	          out_folder: str) -> str:
     #! TODO: Documentation
     
-    file = out_folder + f"{str(x)}X{str(y)}Y_POST.tif"
+    file = out_folder + f"{str(x)}X{str(y)}Y_231k.tif"
 
     west, east = point[0], point[2]
     north, south = point[3], point[1]
