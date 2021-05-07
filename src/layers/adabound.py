@@ -52,8 +52,8 @@ class AdaBoundOptimizer(optimizer.Optimizer):
 
         graph = None if context.executing_eagerly() else ops.get_default_graph()
         create_new = self._get_non_slot_variable("beta1_power", graph) is None
-        if not create_new and context.in_graph_mode():
-            create_new = (self._get_non_slot_variable("beta1_power", graph).graph is not first_var.graph)
+        #if not create_new and context.in_graph_mode():
+        #    create_new = (self._get_non_slot_variable("beta1_power", graph).graph is not first_var.graph)
 
         if create_new:
             self._create_non_slot_variable(initial_value=self._beta1,
