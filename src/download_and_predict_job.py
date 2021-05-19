@@ -143,8 +143,9 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key) -> None:
     if not (os.path.exists(clouds_file)):
         print(f"Downloading {clouds_file}")
         cloud_probs, shadows, _, image_dates, _ = tof_downloading.identify_clouds(bbox = bbx,
-                                                            dates = dates, imsize = 600,
-                                                            api_key = api_key, year = 2020)
+                                                            dates = dates,
+                                                            api_key = api_key, 
+                                                            year = 2020)
 
         to_remove, _ = cloud_removal.calculate_cloud_steps(cloud_probs, image_dates)
 
@@ -197,7 +198,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key) -> None:
             
     if not (os.path.exists(s1_file)):
         print(f"Downloading {s1_file}")
-        s1_layer = tof_downloading.identify_s1_layer((data['X'][0], data['Y'][0]))
+        s1_layer = tof_downloading.identify_s1_layer((data['Y'][0], data['X'][0]))
         s1, s1_dates = tof_downloading.download_sentinel_1(bbx,
                                            layer = s1_layer,
                                            api_key = api_key,
@@ -463,23 +464,19 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         output = f"{path}{str(folder_y)}/{str(folder_x)}.npy"
         s1_subtile = s1[:, start_x:end_x, start_y:end_y, :]
         
-        if subtile.shape[2] == 145: 
-            pad_u, pad_d = 0, 0
-            if start_y == 0:
-                pad_u = 5
-            else:
-                pad_d = 5
+        if subtile.shape[2] == 147: 
+            pad_u = 7 if start_y == 0 else 0
+            pad_d = 7 if start_y != 0 else 0
+
             subtile = np.pad(subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
-        if subtile.shape[1] == 145:
-            pad_l, pad_r = 0, 0
-            if start_x == 0:
-                pad_l = 5
-            else:
-                pad_r = 5
+        if subtile.shape[1] == 147:
+            pad_l = 7 if start_x == 0 else 0
+            pad_r = 7 if start_x != 0 else 0
+   
             subtile = np.pad(subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
-        
+
         dem = subtile[..., -1]
         sm = Smoother(lmbd = 800, size = subtile.shape[0], nbands = 10, dim = subtile.shape[1])
         subtile = sm.interpolate_array(subtile[..., :-1])
@@ -494,7 +491,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             os.makedirs(os.path.realpath(output_folder))
         
         subtile = np.clip(subtile, 0, 1)
-        #subtile = to_int16(subtile)
+
         assert subtile.shape[1] >= 145, f"subtile shape is {subtile.shape}"
         assert subtile.shape[0] == 12, f"subtile shape is {subtile.shape}"
 
@@ -505,7 +502,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         # from the POV of the model
 
         gap_between_years = False
-        if dates_tile[0] >= 135 or dates_tile[-1] <= 230:
+        if dates_tile[0] >= 150 or dates_tile[-1] <= 215:
             gap_between_years = True
 
         if len(dates_tile) < 4 or gap_between_years:
@@ -514,50 +511,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         preds = predict_subtile(subtile, sess)
         np.save(output, preds)
         print(f"Writing {output}")
-
-
-def make_smooth_predicts():
-    """ Generates a guassian filter to
-        mosaic the tiled predictions with
-        
-        Parameters:
-         None
-    
-        Returns:
-         upright (np.ndarray): (X, Y) array between (0, 1) to 
-            multiply the upright-shifted predictions by
-         normal (np.ndarray): (X, Y) array between (0, 1) to 
-            multiply the non-shifted predictions by
-    """
-
-    def _fspecial_gauss(size: int, sigma: float)-> np.ndarray:
-
-        """Function to mimic the 'fspecial' gaussian MATLAB function
-        """
-
-        x, y = np.mgrid[-size//2 + 1:size//2 + 1, -size//2 + 1:size//2 + 1]
-        g = np.exp(-((x**2 + y**2)/(2.0*sigma**2)))
-        return g
-
-    arr = _fspecial_gauss(14, 4.5)[:7, :7]
-    SIZE = 10
-    SIZE_N = SIZE*SIZE
-    SIZE_UR = (SIZE - 1) * (SIZE - 1)
-
-    arr = np.concatenate([arr, np.flip(arr, 0)], 0)
-    base_filter = np.concatenate([arr, np.flip(arr, 1)], 1)
-    normal = np.tile(base_filter, (SIZE, SIZE))
-    normal[:, 0:7] = 1.
-    normal[:, -7:] = 1.
-    normal[0:7, :] = 1.
-    normal[-7:, :] = 1.
-    upright = np.tile(base_filter, (SIZE - 1, SIZE - 1))
-    upright = np.pad(upright, (7, 7), 'constant', constant_values = 0)
-
-    sums = (upright + normal)
-    upright /= sums
-    normal /= sums
-    return upright, normal
 
 
 def convert_to_db(x: np.ndarray, min_db: int) -> np.ndarray:
@@ -586,7 +539,6 @@ def predict_subtile(x, sess) -> np.ndarray:
         - Mosaics predictions
         - Returns predictions for subtile
     """
-    upright, normal = make_smooth_predicts()
     
     if np.sum(x) > 0:
         if not isinstance(x.flat[0], np.floating):
@@ -614,23 +566,25 @@ def predict_subtile(x, sess) -> np.ndarray:
         x = np.clip(x, min_all, max_all)
         x = (x - midrange) / (rng / 2)
         
-        x = tile_images(x)
-        batch_x = np.stack(x)
+        #x = tile_images(x)
+        #batch_x = np.stack(x)
+        batch_x = x[np.newaxis]
         lengths = np.full((batch_x.shape[0]), 12)
         preds = sess.run(predict_logits,
                               feed_dict={predict_inp:batch_x, 
-                                         #clipping_params['rmax']: 5,
-                                         #clipping_params['rmin']: 0,
-                                         #clipping_params['dmax']: 3,
                                          predict_length:lengths})
+        stacked = preds.squeeze()
+        stacked = stacked[1:-1, 1:-1]
+        """
         stacked = np.full((140, 140, 4), 255.)
-
         stacked[:90, :90, 0] = preds[0].squeeze()
         stacked[-90:, :90, 1] = preds[2].squeeze()
         stacked[:90, -90:, 2] = preds[1].squeeze()
         stacked[-90:, -90:, 3] = preds[3].squeeze()
         stacked[stacked == 255] = np.nan
         stacked = np.nanmean(stacked, axis = -1).astype(np.float32)
+        """
+        
     else:
         stacked = np.full((140, 140), 255)
     
@@ -652,12 +606,11 @@ def tile_images(arr: np.ndarray) -> list:
     for x_offset, cval in enumerate([x for x in range(0, 70, 50)]):
         for y_offset, rval in enumerate([x for x in range(0, 70, 50)]):
             min_x = np.max([cval - 0, 0])
-            max_x = np.min([cval + 100, 150])
+            max_x = np.min([cval + 104, 154])
             min_y = np.max([rval - 0, 0])
-            max_y = np.min([rval + 100, 150])
+            max_y = np.min([rval + 104, 154])
             subs = arr[:, min_x:max_x, min_y:max_y]
             images.append(subs)
-
     return images
 
 
@@ -733,10 +686,10 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
-    parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tof/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/master-80/')
+    parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/master-154/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
-    parser.add_argument("--db_path", dest = "db_path", default = "../notebooks/processing_area.csv")
+    parser.add_argument("--db_path", dest = "db_path", default = "processing_area_may_18.csv")
     parser.add_argument("--ul_flag", dest = "ul_flag", default = False)
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
     parser.add_argument("--yaml_path", dest = "yaml_path", default = "../config.yaml")
@@ -806,24 +759,13 @@ if __name__ == '__main__':
         raise Exception(f"The model path {args.predict_model_path} does not exist")
 
     # Normalization mins and maxes for the prediction input
-    #min_all = [0.012558175020981156, 0.025696192874036773, 0.015518425268940261, 0.04415960936903945,
-    #           0.040497444113832305, 0.04643320363164721, 0.04924086366063935, 0.04289311055161364, 
-    #           0.027450980392156862, 0.019760433356221865, 0.0, 0.5432562150454495, 0.2969113383797463,
-    #            -0.03326967745787883, -0.4014989586557378, -0.023132966289995487, -0.4960341058778109]
-
-    #max_all = [0.21116960402838178, 0.30730144197756926, 0.4478065156023499, 0.5342488746471351,
-    ##           0.4942702372777905, 0.5072556649118791, 0.5294422827496758, 0.5418631265735866, 0.6813458457312886,
-    #           0.6285648889906157, 0.4208438239108873, 0.9480767549203932, 0.8130214090572532, 0.7444347421954634,
-    #           0.3268904303046983, 0.6872429594867983, 0.7129084148772861]
-
-    min_all = [0.006607156481269551, 0.0162050812542916, 0.010055695429922943, 0.013351644159609368, 0.01965362020294499, 0.014251926451514458, 0.015289539940489814, 0.011993591210803388, 0.008239871824216068, 0.006576638437476158, 0.0, 0.0, 0.0, -0.14089041542883884, -0.4973007582496804, -0.09727903335259765, -0.7193163251773491]
-    max_all = [0.26909261463349116, 0.3739681086442359, 0.5171129930571451, 0.6027161058976119, 0.5649805447470817, 0.5746852826733806, 0.5933623254749371, 0.6034790569924467, 0.7471885252155337, 0.6999771114671549, 0.5081406881818875, 0.9483111607060141, 0.6728625967127161, 0.8176895380653232, 0.3576770175739082, 0.7545675799120575, 0.7602480781910504]
-
+    min_all = [0.006576638437476157, 0.0162050812542916, 0.010040436408026246, 0.013351644159609368, 0.01965362020294499, 0.014229037918669413, 0.015289539940489814, 0.011993591210803388, 0.008239871824216068, 0.006546120393682765, 0.0, 0.0, 0.0, -0.1409399364817101, -0.4973397113668104, -0.09731556326714398, -0.7193834232943873]
+    max_all = [0.2691233691920348, 0.3740291447318227, 0.5171435111009385, 0.6027466239414053, 0.5650263218127718, 0.5747005416952773, 0.5933928435187305, 0.6034943160143434, 0.7472037842374304, 0.7000076295109483, 0.509269855802243, 0.948334642387533, 0.6729257769285485, 0.8177635298774327, 0.35768999002433816, 0.7545951919107605, 0.7602693339366691]
 
     min_all = np.array(min_all)
     max_all = np.array(max_all)
-    min_all = np.broadcast_to(min_all, (13, 150, 150, 17))
-    max_all = np.broadcast_to(max_all, (13, 150, 150, 17))
+    min_all = np.broadcast_to(min_all, (13, 154, 154, 17))
+    max_all = np.broadcast_to(max_all, (13, 154, 154, 17))
     midrange = (max_all + min_all) / 2
     rng = max_all - min_all
 

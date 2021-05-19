@@ -8,7 +8,7 @@ import yaml
 
 if __name__ == '__main__':
     import argparse
-    data = pd.read_csv("../notebooks/processing_area.csv")
+    data = pd.read_csv("processing_area_may_18.csv")
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--yaml_path", dest = "yaml_path", default = "../config.yaml")
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     for index, row in data.iterrows():
         x = str(int(row['X_tile']))
         y = str(int(row['Y_tile']))
-        dir_i = f"../project-monitoring/tof/{x}/{y}"
+        dir_i = f"../project-monitoring/tiles/{x}/{y}"
         if os.path.exists(dir_i):
             files = [file for file in os.listdir(dir_i)  if os.path.splitext(file)[-1] == '.tif']
             for file in files:
