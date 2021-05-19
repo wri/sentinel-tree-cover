@@ -3,8 +3,6 @@ sys.path.append('../')
 from src.preprocessing.cloud_removal import mcm_shadow_mask
 from src.preprocessing.slope import calcSlope
 from src.downloading.utils import calculate_and_save_best_images
-
-
 from sentinelhub import WmsRequest, WcsRequest, MimeType, CRS, BBox, constants, DataSource, CustomUrlParam
 from typing import Tuple, List
 import numpy as np
@@ -91,7 +89,6 @@ def process_sentinel_1_tile(sentinel1: np.ndarray, dates: np.ndarray) -> np.ndar
 
 
 def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
-                imsize: int,
                 api_key: str,
                 year: int) -> (np.ndarray, np.ndarray, np.ndarray):
     """ Downloads and calculates cloud cover and shadow
@@ -230,7 +227,7 @@ def identify_dates_to_download(dates: list) -> list:
     return dates_to_download
 
 
-def make_overlapping_windows(tiles: np.ndarray) -> np.ndarray:
+def make_overlapping_windows(tiles: np.ndarray, diff = 7) -> np.ndarray:
     """ Takes the A x B window IDs (n, 4)for an
      X by Y rectangle and enures that the windows are the right
      size (e.g. square, 150 x 150) for running predictions on """
@@ -238,21 +235,40 @@ def make_overlapping_windows(tiles: np.ndarray) -> np.ndarray:
     n_x = np.sum(tiles2[:, 0] == 0)
     n_y = np.sum(tiles2[:, 1] == 0)
 
-    tiles2[:n_x, 2] += 5
-    tiles2[-n_x:, 2] += 5
-    to_adjust = np.full((tiles.shape[0]), 10).astype(np.uint16)
+    tiles2[:n_x, 2] += diff
+    tiles2[-n_x:, 2] += diff
+    to_adjust = np.full((tiles.shape[0]), diff * 2).astype(np.uint16)
     
     for i in range(len(to_adjust)):
         if (i % n_y == 0) or ((i + 1) % n_y == 0):
-            to_adjust[i] -= 5
+            to_adjust[i] -= diff
     tiles2 = tiles2.astype(np.int64)
     tiles2[:, 3] += to_adjust
-    tiles2[n_x:-n_x, 2] += 10
-    tiles2[n_x:, 0] -= 5
-    tiles2[:, 1] -=5
+    tiles2[n_x:-n_x, 2] += (diff * 2)
+    tiles2[n_x:, 0] -= diff
+    tiles2[:, 1] -= diff
     
     tiles2[tiles2 < 0] = 0.
     return tiles2
+
+
+def redownload_sentinel_1(dates, layer, bbox, source, api_key, data_filter):
+    """Worker function to redownload individual time steps if the
+    preceding time step had null values, likely the case in areas with
+    both ascending and descending orbits"""
+
+    image_request = WcsRequest(
+            layer=layer, bbox=bbox,
+            time=dates,
+            image_format = MimeType.TIFF_d16,
+            data_source=source, maxcc=1.0,
+            resx='20m', resy='20m',
+            instance_id=api_key,
+            custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+                                constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
+            time_difference=datetime.timedelta(hours=72),
+        )
+    return np.array(image_request.get_data(data_filter = data_filter))
 
 
 def download_sentinel_1(bbox: List[Tuple[float, float]],
@@ -281,6 +297,7 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
     # Identify the S1 orbit, imagery dates
     source = DataSource.SENTINEL1_IW_DES if layer == "SENT_DESC" else DataSource.SENTINEL1_IW_ASC
     box = BBox(bbox, crs = CRS.WGS84)
+
     image_request = WcsRequest(
             layer=layer, bbox=box,
             time=dates,
@@ -296,14 +313,14 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
     s1_dates_dict = [x for x in image_request.get_dates()]
     s1_dates = extract_dates(s1_dates_dict, year)
     dates_to_download = identify_dates_to_download(s1_dates)
+
     steps_to_download = [i for i, val in enumerate(s1_dates) if val in dates_to_download]
     print(f"The following dates will be downloaded: {dates_to_download}")
-    data_filter = steps_to_download   
     
     # If the correct orbit is selected, download imagery
     if len(image_request.download_list) >= 5 and len(steps_to_download) >= 5:
         try:
-            s1 = np.array(image_request.get_data(data_filter = data_filter))
+            s1 = np.array(image_request.get_data(data_filter = steps_to_download))
             if not isinstance(s1.flat[0], np.floating):
                 assert np.max(s1) > 1
                 s1 = np.float32(s1) / 65535.
@@ -318,25 +335,40 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
 
             image_dates_dict = [x for x in image_request.get_dates()]
             image_dates = extract_dates(image_dates_dict, year)
-            image_dates = [val for idx, val in enumerate(image_dates) if idx in data_filter]
+            image_dates = [val for idx, val in enumerate(image_dates) if idx in steps_to_download]
             image_dates = np.array(image_dates)
 
-            s1c = np.copy(s1)
-            s1c[np.where(s1c < 1.)] = 0
-            s1c[np.where(s1c >= 1.)] = 1.
-            n_pix_oob = np.sum(s1c, axis = (1, 2, 3))
-            to_remove = np.argwhere(n_pix_oob > (height*2*width*2)/20)
-            s1 = np.delete(s1, to_remove, 0)
-            image_dates = np.delete(image_dates, to_remove)
+            n_pix_oob = np.sum(s1 >= 1, axis = (1, 2, 3))
+            print(f"N_oob: {n_pix_oob}")
+            to_remove = np.argwhere(n_pix_oob > (height*width)/5)
             
-            s1_med = np.median(s1, axis = 0)
-            s1_med = np.tile(s1_med[np.newaxis, ...], (s1.shape[0], 1, 1, 1,))
-            s1[s1 == 1] = s1_med[s1 == 1]        
+            if len(to_remove) > 0:
+                for index in to_remove:
+
+                    index = index[0]
+                    step = steps_to_download[index]
+                    new_step = step + 1
+
+                    print(f'Redownloading {new_step} because {step} had '
+                          f'{n_pix_oob[index]} missing or null values')
+                    new_s1 = redownload_sentinel_1(dates, layer, box, source, api_key, [new_step])
+                    new_s1 = np.float32(new_s1) / 65535.
+                    print(f"The new step has {np.sum(new_s1 >= 1)} and is {new_s1.shape}")
+                    s1[index] = new_s1
+                    image_dates[index] = image_dates[index] + 5
+
+            n_pix_oob = np.sum(s1 >= 1, axis = (1, 2, 3))
+            print(f"N_oob: {n_pix_oob}")
+            to_remove = np.argwhere(n_pix_oob > (height*width)/5)
+
+            if len(to_remove) > 0:
+                np.delete(s1, to_remove, 0)
+                np.delete(image_dates, to_remove)
+            
             s1 = np.clip(s1, 0, 1)
             s1 = s1.repeat(2,axis=1).repeat(2,axis=2)
-            
-            #s1 = resize(s1, (s1.shape[0], 646, 646, s1.shape[-1]), order = 0)
             return s1, image_dates
+
         except:
             return np.empty((0,)), np.empty((0,))
     else: 
@@ -360,6 +392,7 @@ def identify_s1_layer(coords: Tuple[float, float]) -> str:
     country = results[-1]['cc']
     try:
         continent_name = pc.country_alpha2_to_continent_code(country)
+        print(continent_name, country)
     except:
         continent_name = 'AF'
     layer = None
@@ -379,7 +412,7 @@ def identify_s1_layer(coords: Tuple[float, float]) -> str:
         layer = "SENT_DESC"
     if not layer:
         layer = "SENT"
-    print(f"The continent is: {continent_name}, and the sentinel 1 orbit is {layer}")
+    print(f"Country: {country}, continent: {continent_name}, orbit: {layer}")
     return layer
 
 
