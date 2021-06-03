@@ -39,7 +39,7 @@ from preprocessing.whittaker_smoother import Smoother
 from tof import tof_downloading
 from tof.tof_downloading import to_int16, to_float32
 from downloading.io import FileUploader,  get_folder_prefix, make_output_and_temp_folders, upload_raw_processed_s3
-from downloading.io import file_in_local_or_s3, write_tif, make_subtiles
+from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder, download_file
 from models import utils
 from preprocessing.indices import evi, bi, msavi2, grndvi
 
@@ -420,9 +420,25 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     # The tiles_folder references the folder names (w/o boundaries)
     # While the tiles_array references the arrays themselves (w/ boudnaries)
-    tiles_folder = tile_window(s1.shape[2], s1.shape[1], window_size = 140)
-    tiles_array = tof_downloading.make_overlapping_windows(tiles_folder)
-    
+    #tiles_folder = tile_window(s1.shape[2], s1.shape[1], window_size = 140)
+    tiles_folder_x = np.hstack([np.arange(0, s1.shape[1] - 140, 60), np.array(s1.shape[1] - 140)])
+    tiles_folder_y = np.hstack([np.arange(0, s1.shape[2] - 140, 60), np.array(s1.shape[2] - 140)])
+
+    def cartesian(*arrays):
+        mesh = np.meshgrid(*arrays)  # standard numpy meshgrid
+        dim = len(mesh)  # number of dimensions
+        elements = mesh[0].size  # number of elements, any index will do
+        flat = np.concatenate(mesh).ravel()  # flatten the whole meshgrid
+        reshape = np.reshape(flat, (dim, elements)).T  # reshape and transpose
+        return reshape
+
+    windows = cartesian(tiles_folder_x, tiles_folder_y)
+    win_sizes = np.full_like(windows, 140)
+    tiles_folder = np.hstack([windows, win_sizes])
+    tiles_folder = np.sort(tiles_folder, axis = 0)
+    tiles_folder[:, 1] = np.tile(np.unique(tiles_folder[:, 1]), int(len(tiles_folder[:, 1]) / len(np.unique(tiles_folder[:, 1]))))
+
+    tiles_array = tof_downloading.make_overlapping_windows(tiles_folder)    
     
     make_subtiles(f'{args.local_path}{str(x)}/{str(y)}/processed/',
                   tiles_folder)
@@ -470,15 +486,17 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         output = f"{path}{str(folder_y)}/{str(folder_x)}.npy"
         s1_subtile = s1[:, start_x:end_x, start_y:end_y, :]
         
-        if subtile.shape[2] == 147: 
-            pad_u = 7 if start_y == 0 else 0
-            pad_d = 7 if start_y != 0 else 0
+        if subtile.shape[2] == 147:
+            pad_amt = 154 - subtile.shape[2]
+            pad_u = pad_amt if start_y == 0 else 0
+            pad_d = pad_amt if start_y != 0 else 0
 
             subtile = np.pad(subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
-        if subtile.shape[1] == 147:
-            pad_l = 7 if start_x == 0 else 0
-            pad_r = 7 if start_x != 0 else 0
+        if subtile.shape[1] < 154:
+            pad_amt = 154 - subtile.shape[1]
+            pad_l = pad_amt if start_x == 0 else 0
+            pad_r = pad_amt if start_x != 0 else 0
    
             subtile = np.pad(subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
@@ -516,10 +534,8 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
                 # Then run the median prediction
                 print("Predicting with median")
                 preds = predict_gap(subtile, gap_sess)
-                #subtile = np.zeros_like(subtile)
-
-            # Otherwise run the non-median prediction
             else:
+                # Otherwise run the non-median prediction
                 print("Predicting with time series")
                 preds = predict_subtile(subtile, sess)
         np.save(output, preds)
@@ -634,44 +650,46 @@ def predict_gap(x, sess) -> np.ndarray:
     return stacked
 
 
+def fspecial_gauss(size, sigma):
+    """Function to mimic the 'fspecial' gaussian MATLAB function
+    """
+    x, y = np.mgrid[-size//2 + 1:size//2 + 1, -size//2 + 1:size//2 + 1]
+    g = np.exp(-((x**2 + y**2)/(2.0*sigma**2)))
+    return g
+
+
 def load_mosaic_predictions(out_folder: str) -> np.ndarray:
     """
     Loads the .npy subtile files in an output folder and mosaics the overlapping predictions
     to return a single .npy file of tree cover for the 6x6 km tile
-
     Additionally, applies post-processing threshold rules and implements no-data flag of 255
     """
     x_tiles = [int(x) for x in os.listdir(out_folder) if '.DS' not in x]
     max_x = np.max(x_tiles) + 140
-
     for x_tile in x_tiles:
         y_tiles = [int(y[:-4]) for y in os.listdir(out_folder + str(x_tile) + "/") if '.DS' not in y]
         max_y = np.max(y_tiles) + 140
-
-    predictions = np.full((max_x, max_y), 0, dtype = np.uint8)
-    x_tiles = [int(x) for x in os.listdir(out_folder) if '.DS' not in x]
+    predictions = np.full((max_x, max_y, len(x_tiles) * len(y_tiles)), np.nan, dtype = np.float32)
+    mults = np.full((max_x, max_y, len(x_tiles) * len(y_tiles)), 0, dtype = np.float32)
+    i = 0
     for x_tile in x_tiles:
         y_tiles = [int(y[:-4]) for y in os.listdir(out_folder + str(x_tile) + "/") if '.DS' not in y]
         for y_tile in y_tiles:
             output_file = out_folder + str(x_tile) + "/" + str(y_tile) + ".npy"
             if os.path.exists(output_file):
                 prediction = np.load(output_file)
-                prediction = (prediction * 100).T.astype(np.uint8)
-                predictions_tile = predictions[x_tile: x_tile+140, y_tile:y_tile + 140]
+                if np.sum(prediction) > 0:
+                    prediction = (prediction * 100).T.astype(np.float32)
+                    predictions[x_tile: x_tile+140, y_tile:y_tile + 140, i] = prediction
+                    mults[x_tile: x_tile+140, y_tile:y_tile + 140, i] = fspecial_gauss(140, 20)
+                i += 1
 
-                if np.max(prediction) <= 100:
-                    existing_predictions = predictions_tile[np.logical_and(predictions_tile != 0, predictions_tile <= 100)] 
-                    current_predictions = prediction[np.logical_and(predictions_tile != 0, predictions_tile <= 100)]
-                    if current_predictions.shape[0] > 0:
-                        # Require colocation. Here we can have a lower threshold as
-                        # the likelihood of false positives is much higher
-                        #current_predictions[(current_predictions - existing_predictions) > 50] = np.min([current_predictions, existing_predictions])
-                        #existing_predictions[(existing_predictions - current_predictions) > 50] = np.min([current_predictions, existing_predictions])
-                        existing_predictions = (current_predictions + existing_predictions) / 2
-         
-                    predictions_tile[predictions_tile == 0] = prediction[predictions_tile == 0]
-                else:
-                    predictions_tile[predictions_tile == 0] = prediction[predictions_tile == 0]
+    predictions = predictions.astype(np.float32)
+    mults = mults / np.sum(mults, axis = -1)[..., np.newaxis]
+    predictions[predictions == 255] = np.nan
+    predictions = np.nansum(predictions * mults, axis = -1)
+    predictions[np.isnan(predictions)] = 255.
+    predictions = predictions.astype(np.uint8)
                 
     original_preds = np.copy(predictions)
     for x_i in range(0, predictions.shape[0] - 3):
@@ -709,6 +727,7 @@ if __name__ == '__main__':
     parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/master-154/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/master-gap/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
+    parser.add_argument("--db_path_s3", dest = "db_path_s3", default = "2020/databases/redo-ghana.csv")
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_may_18.csv")
     parser.add_argument("--ul_flag", dest = "ul_flag", default = False)
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
@@ -725,6 +744,7 @@ if __name__ == '__main__':
           f'Gap model path: {args.gap_model_path} \n'
           f'Superrresolve model path: {args.superresolve_model_path} \n'
           f'DB path: {args.db_path} \n'
+          f'DB path S3: {args.db_path_s3} \n'
           f'S3 Bucket: {args.s3_bucket} \n'
           f'YAML path: {args.yaml_path} \n'
           f'Current dir: {os.getcwd()} \n'
@@ -733,7 +753,9 @@ if __name__ == '__main__':
           f'X: {args.x} \n'
           f'Y: {args.y} \n')
 
+
     args.year = int(args.year)
+    
 
     if os.path.exists(args.yaml_path):
         with open(args.yaml_path, 'r') as stream:
@@ -746,6 +768,17 @@ if __name__ == '__main__':
     else:
         raise Exception(f"The API keys do not exist in {args.yaml_path}")
 
+    #try:
+    fname = download_file(bucket = "tof-output",
+               apikey = AWSKEY,
+               apisecret = AWSSECRET,
+               local_file = args.db_path,
+               s3_file = args.db_path_s3)
+
+    args.db_path = args.db_path + fname
+    #except:
+    #    raise Exception(f"The database does not exist at {args.db_path_s3}")
+
     if os.path.exists(args.db_path):
         data = pd.read_csv(args.db_path)
         data = data[data['country'] == args.country]
@@ -754,6 +787,8 @@ if __name__ == '__main__':
         print(f"There are {len(data)} tiles for {args.country}")
     else:
         raise Exception(f"The database does not exist at {args.db_path}")
+
+
 
     # Lots of code here to load two tensorflow graphs at once
     superresolve_graph_def = tf.compat.v1.GraphDef()
@@ -822,6 +857,7 @@ if __name__ == '__main__':
         # Check to see whether the tile exists locally or on s3
         path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/'
         s3_path_to_tile = f'2020/tiles/{str(x)}/{str(y)}/'
+        s3_path_to_raw = f'2020/raw/{str(x)}/{str(y)}/'
         processed = file_in_local_or_s3(path_to_tile,
                                         s3_path_to_tile, 
                                         AWSKEY, AWSSECRET, 
@@ -837,7 +873,12 @@ if __name__ == '__main__':
             if below:
                 bbx = None
                 time1 = time.time()
-                bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY, year = args.year)
+                download_folder(bucket = "tof-output",
+                   apikey = AWSKEY,
+                   apisecret = AWSSECRET,
+                   local_dir = path_to_tile,
+                   s3_folder = s3_path_to_raw)
+
                 s2, dates, interp, s1 = process_tile(x = x, y = y, data = data)
                 process_subtiles(x, y, s2, dates, interp, s1, predict_sess, gap_sess)
                 predictions = load_mosaic_predictions(path_to_tile + "processed/")
@@ -879,24 +920,26 @@ if __name__ == '__main__':
             # Check to see whether the tile exists locally or on s3
             path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/'
             s3_path_to_tile = f'2020/tiles/{str(x)}/{str(y)}/'
+            s3_path_to_raw = f'2020/raw/{str(x)}/{str(y)}/'
             processed = file_in_local_or_s3(path_to_tile,
                                             s3_path_to_tile, 
                                             AWSKEY, AWSSECRET, 
                                             args.s3_bucket)
             
             # If the tile does not exist, go ahead and download/process/upload it
-            if not processed:
+            if processed:
                 if args.n_tiles:
                     below = n <= int(args.n_tiles)
                 else:
                     below = True
                 if below:
                     try:
-                        ##dt = plt.imread(f"{path_to_tile}/{str(x)}X{str(y)}Y_v1.tif")
-                        #print(np.sum(dt == 255) / (150 * 150))
-                        #if np.sum(dt == 255) > (100*100*10):
                         time1 = time.time()
-                        bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY, year = args.year)
+                        download_folder(bucket = "tof-output",
+                           apikey = AWSKEY,
+                           apisecret = AWSSECRET,
+                           local_dir = path_to_tile,
+                           s3_folder = s3_path_to_raw)
                         s2, dates, interp, s1 = process_tile(x = x, y = y, data = data)
                         process_subtiles(x, y, s2, dates, interp, s1, predict_sess, gap_sess)
                         predictions = load_mosaic_predictions(path_to_tile + "processed/")

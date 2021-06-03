@@ -14,65 +14,75 @@ import pycountry_convert as pc
 import rasterio
 from rasterio.transform import from_origin
 import numpy as np
+from glob import glob
 
 
 class FileUploader:
-	def __init__(self, awskey, awssecret, stream = False, ):
-		self.total = 0
-		self.uploaded = 0
-		self.percent = 0
-		self.awskey = awskey
-		self.awssecret = awssecret
-		self.config = botocore.config.Config(max_pool_connections=20)
-		self.s3client = boto3.client('s3', config=self.config,
-			aws_access_key_id= self.awskey,
-			aws_secret_access_key= self.awssecret,
-		)
-		self.stream = stream
+    def __init__(self, awskey, awssecret, stream = False, overwrite = False):
+        self.total = 0
+        self.uploaded = 0
+        self.percent = 0
+        self.awskey = awskey
+        self.awssecret = awssecret
+        self.config = botocore.config.Config(max_pool_connections=20)
+        self.s3client = boto3.client('s3', config=self.config,
+            aws_access_key_id= self.awskey,
+            aws_secret_access_key= self.awssecret,
+        )
+        self.stream = stream
+        self.overwrite = overwrite
 
-	def upload_callback(self, size):
-		if self.total == 0:
-			return
-		self.uploaded += size
-		percent = int(self.uploaded / self.total * 100)
-		if percent > self.percent and percent % 5 == 0:
-			print("{} %".format(int(self.uploaded / self.total * 100)))
-			self.percent = percent
+    def upload_callback(self, size):
+        if self.total == 0:
+            return
+        self.uploaded += size
+        percent = int(self.uploaded / self.total * 100)
+        if percent > self.percent and percent % 5 == 0:
+            print("{} %".format(int(self.uploaded / self.total * 100)))
+            self.percent = percent
 
-	def upload(self, bucket, key, file):
-		self.total = os.stat(file).st_size
+    def upload(self, bucket, key, file):
+        self.total = os.stat(file).st_size
 
+        # check if the file exists
+        if self.overwrite:
+            print(f'uploading {file} to {bucket} as {key}')
+            self.s3client.upload_file(
+                            file, bucket, key, 
+                            Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20),
+                            Callback=self.upload_callback,
+                            ExtraArgs={'ACL':'bucket-owner-full-control'}
+                        )
+        else:
+            try:
+                boto3.client('s3',
+                            aws_access_key_id=self.awskey,
+                            aws_secret_access_key=self.awssecret,
+                        ).head_object(Bucket=bucket, Key=key)
+                 #print(f'removing {file}')
+                 #os.remove(file)
 
-		# check if the file exists
-		try:
-			 boto3.client('s3',
-						aws_access_key_id=self.awskey,
-						aws_secret_access_key=self.awssecret,
-					).head_object(Bucket=bucket, Key=key)
-			 #print(f'removing {file}')
-			 #os.remove(file)
-
-		# if the file doesn't exist, upload it
-		except ClientError:
-			print(f'uploading {file} to {bucket} as {key}')
-			if self.stream:
-				with open(file, 'rb') as data:
-					self.s3client.upload_fileobj(
-						file, bucket, key, 
-						Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20), 
-						Callback=self.upload_callback,
-						ExtraArgs={'ACL':'bucket-owner-full-control'}
-					)
-				
-			else:
-				 self.s3client.upload_file(
-						file, bucket, key, 
-						Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20),
-						Callback=self.upload_callback,
-						ExtraArgs={'ACL':'bucket-owner-full-control'}
-					)
-			#print(f'removing {file}')
-			#os.remove(file)
+            # if the file doesn't exist, upload it
+            except ClientError:
+                print(f'uploading {file} to {bucket} as {key}')
+                if self.stream:
+                    with open(file, 'rb') as data:
+                        self.s3client.upload_fileobj(
+                            file, bucket, key, 
+                            Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20), 
+                            Callback=self.upload_callback,
+                            ExtraArgs={'ACL':'bucket-owner-full-control'}
+                        )
+                    
+                else:
+                     self.s3client.upload_file(
+                            file, bucket, key, 
+                            Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20),
+                            Callback=self.upload_callback,
+                            ExtraArgs={'ACL':'bucket-owner-full-control'}
+                        )
+                #print(f'removing {file}')
+                #os.remove(file)
 
 def get_folder_prefix(coordinates, params):
     geolocation = rg.search((coordinates[0], coordinates[1]))
@@ -179,10 +189,10 @@ def file_in_local_or_s3(file, key, apikey, apisecret, bucket):
 
 
 def write_tif(arr: np.ndarray, point: list, x: int, y: int,
-	          out_folder: str) -> str:
+              out_folder: str) -> str:
     #! TODO: Documentation
     
-    file = out_folder + f"{str(x)}X{str(y)}Y_231k.tif"
+    file = out_folder + f"{str(x)}X{str(y)}Y_POST.tif"
 
     west, east = point[0], point[2]
     north, south = point[3], point[1]
@@ -202,6 +212,51 @@ def write_tif(arr: np.ndarray, point: list, x: int, y: int,
     new_dataset.write(arr, 1)
     new_dataset.close()
     return file
+
+
+def download_folder(s3_folder, local_dir, apikey, apisecret, bucket):
+    """
+    Checks to see if a file/key pair exists locally or on s3 or neither
+    """
+
+   
+    s3 = boto3.resource('s3', aws_access_key_id=apikey,
+         aws_secret_access_key= apisecret)
+    bucket = s3.Bucket(bucket)
+
+    for obj in bucket.objects.filter(Prefix=s3_folder):
+        print(obj)
+        target = obj.key if local_dir is None \
+            else os.path.join(local_dir, os.path.relpath(obj.key, s3_folder))
+        if not os.path.exists(os.path.dirname(target)):
+            os.makedirs(os.path.dirname(target))
+        if obj.key[-1] == '/':
+            continue
+        bucket.download_file(obj.key, target)
+
+
+def download_file(s3_file, local_file, apikey, apisecret, bucket):
+    """
+    Checks to see if a file/key pair exists locally or on s3 or neither
+    """
+
+   
+    s3 = boto3.resource('s3', aws_access_key_id=apikey,
+         aws_secret_access_key= apisecret)
+    bucket = s3.Bucket(bucket)
+
+    print(f"Starting download of {s3_file} to {local_file}")
+
+    for obj in bucket.objects.filter(Prefix=s3_file):
+        target = obj.key if local_file is None \
+            else os.path.join(local_file, os.path.relpath(obj.key, s3_file))
+        if not os.path.exists(os.path.dirname(target)):
+            os.makedirs(os.path.dirname(target))
+        
+        file_name = s3_file.split("/")[-1]
+        print(f"Downloaded {s3_file} to {local_file + file_name}")
+        bucket.download_file(obj.key, target[:-1] + file_name)
+    return file_name
 
 
 def make_subtiles(folder: str, tiles) -> None:

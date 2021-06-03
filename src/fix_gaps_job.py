@@ -30,6 +30,7 @@ import tensorflow as tf
 from glob import glob
 import rasterio
 from rasterio.transform import from_origin
+import matplotlib.pyplot as plt 
 
 from preprocessing import slope
 from preprocessing import indices
@@ -355,7 +356,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame) -> np.ndarray:
             sentinel2[time, ..., band + 4] = resize(s2_20[time,..., band], (width, height), 1)
 
     # Identifies missing imagery (either in sentinel acquisition, or induced in preprocessing)
-    missing_px = id_missing_px(sentinel2, 10)
+    missing_px = id_missing_px(sentinel2, 3)
     if len(missing_px) > 0:
         print(f"Removing {missing_px} dates due to missing data")
         clouds = np.delete(clouds, missing_px, axis = 0)
@@ -446,25 +447,20 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subset = np.delete(subset, to_remove, 0)
             print(f"Removing {to_remove} interp, leaving {len(dates_tile)} / {len(dates)}")
 
-        missing_px = id_missing_px(subset, 100)
+        missing_px = id_missing_px(subset)
         if len(missing_px) > 0:
             dates_tile = np.delete(dates_tile, missing_px)
             subset = np.delete(subset, missing_px, 0)
-            print(f"Removing {len(missing_px)} missing images, leaving {len(dates_tile)} / {len(dates)}")
 
         to_remove = cloud_removal.remove_missed_clouds(subset)
         if len(to_remove) > 0:
             subset = np.delete(subset, to_remove, axis = 0)
             dates_tile = np.delete(dates_tile, to_remove)
-            print(f"Removing {to_remove} missed clouds, leaving {len(dates_tile)} / {len(dates)}")
-        no_images = False
         try:
-            subtile, max_distance = calculate_and_save_best_images(subset, dates_tile)
+            subtile, _ = calculate_and_save_best_images(subset, dates_tile)
         except:
             # If there are no images for the tile, just make them zeros
             # So that they will be picked up by the no-data flag
-            print("Skipping because of no images")
-            no_images = True
             subtile = np.zeros((72, end_x-start_x, end_y - start_y, 11))
             dates_tile = [0,]
         output = f"{path}{str(folder_y)}/{str(folder_x)}.npy"
@@ -504,24 +500,17 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         # If the first image is after June 15 or the last image is before July 15
         # Then we cannot make predictions... although we try to "wrap around" and linearly
         gap_between_years = False
-        
-        if no_images:
-            preds = np.full((140, 140), 255)
+        if dates_tile[0] >= 185 or dates_tile[-1] <= 185:
+            gap_between_years = True
+
+        if len(dates_tile) < 3 or gap_between_years:
+            # Then run the median prediction
+            preds = predict_gap(subtile, gap_sess)
+            #subtile = np.zeros_like(subtile)
+
+        # Otherwise run the non-median prediction
         else:
-            print(f"The max distance is {max_distance}")
-            if dates_tile[0] >= 185 or dates_tile[-1] <= 185 or max_distance > 360:
-                gap_between_years = True
-
-            if len(dates_tile) < 3 or gap_between_years:
-                # Then run the median prediction
-                print("Predicting with median")
-                preds = predict_gap(subtile, gap_sess)
-                #subtile = np.zeros_like(subtile)
-
-            # Otherwise run the non-median prediction
-            else:
-                print("Predicting with time series")
-                preds = predict_subtile(subtile, sess)
+            preds = predict_subtile(subtile, sess)
         np.save(output, preds)
         print(f"Writing {output}")
 
@@ -616,14 +605,12 @@ def predict_gap(x, sess) -> np.ndarray:
     indices[..., 3] = grndvi(x)
 
     x = np.concatenate([x, indices], axis = -1)
-    
-    filtered = median_filter(x[0, :, :, 10], size = 5)
-    x[:, :, :, 10] = np.stack([filtered] * x.shape[0])
-    
-    x = np.clip(x, min_all[:-1], max_all[:-1])
-    x = (x - midrange[:-1]) / (rng[:-1] / 2)
-
     x = np.median(x, axis = 0)
+
+    filtered = median_filter(x[..., 10], size = 5)
+    x[..., 10] = filtered
+    x = np.clip(x, min_all[0], max_all[0])
+    x = (x - midrange[0]) / (rng[0] / 2)
     batch_x = x[np.newaxis]
     lengths = np.full((batch_x.shape[0]), 12)
     preds = sess.run(gap_logits,
@@ -665,8 +652,8 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
                     if current_predictions.shape[0] > 0:
                         # Require colocation. Here we can have a lower threshold as
                         # the likelihood of false positives is much higher
-                        #current_predictions[(current_predictions - existing_predictions) > 50] = np.min([current_predictions, existing_predictions])
-                        #existing_predictions[(existing_predictions - current_predictions) > 50] = np.min([current_predictions, existing_predictions])
+                        current_predictions[(current_predictions - existing_predictions) > 50] = np.min([current_predictions, existing_predictions])
+                        existing_predictions[(existing_predictions - current_predictions) > 50] = np.min([current_predictions, existing_predictions])
                         existing_predictions = (current_predictions + existing_predictions) / 2
          
                     predictions_tile[predictions_tile == 0] = prediction[predictions_tile == 0]
@@ -808,12 +795,20 @@ if __name__ == '__main__':
     n = 0
 
     # If downloading an individually indexed tile, go ahead and execute this code block
-    if args.x and args.y:
-        print(f"Downloading an individual tile: {args.x}X{args.y}Y")
-        x = args.x
-        y = args.y
 
-        
+    s3client = boto3.client('s3',
+        aws_access_key_id= AWSKEY,
+        aws_secret_access_key= AWSSECRET,
+    )
+    
+    # If the tile does not exist, go ahead and download/process/upload it
+    for index, row in data.iterrows():
+        x = str(int(row['X_tile']))
+        y = str(int(row['Y_tile']))
+        x = x[:-2] if ".0" in x else x
+        y = y[:-2] if ".0" in y else y
+        bbx = None
+        year = args.year
         dates = (f'{str(args.year - 1)}-11-15' , f'{str(args.year + 1)}-02-15')
         dates_sentinel_1 = (f'{str(args.year)}-01-01' , f'{str(args.year)}-12-31')
         days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
@@ -826,75 +821,48 @@ if __name__ == '__main__':
                                         s3_path_to_tile, 
                                         AWSKEY, AWSSECRET, 
                                         args.s3_bucket)
+
         
         # If the tile does not exist, go ahead and download/process/upload it
-
         if processed:
+            
+
             if args.n_tiles:
                 below = n <= int(args.n_tiles)
             else:
                 below = True
             if below:
-                bbx = None
-                time1 = time.time()
-                bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY, year = args.year)
-                s2, dates, interp, s1 = process_tile(x = x, y = y, data = data)
-                process_subtiles(x, y, s2, dates, interp, s1, predict_sess, gap_sess)
-                predictions = load_mosaic_predictions(path_to_tile + "processed/")
-                if not bbx:
-                    data = data[data['Y_tile'] == int(y)]
-                    data = data[data['X_tile'] == int(x)]
-                    data = data.reset_index(drop = True)
-                    x = str(int(x))
-                    y = str(int(y))
-                    x = x[:-2] if ".0" in x else x
-                    y = y[:-2] if ".0" in y else y
+                try:
+                    v1_file = f"../project-monitoring/tof-output/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_v1.tif"
+                    post_file = f"../project-monitoring/tof-output/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_POST.tif"
+                    v1_exists = os.path.exists(v1_file)
+                    post_exists = os.path.exists(post_file)
+                    n_miss_v1 = None
+                    n_miss_post = None
+                    skip = False
+                    if v1_exists:
+                        v1 = plt.imread(v1_file)
+                        n_miss_v1 = np.sum(v1 == 255) / (140 * 140)
+                        if n_miss_v1 < 0.2:
+                            skip = True
+                        print(f"There are: {n_miss_v1} missing files in the v1 file, skip: {skip}")
+                        missing = n_miss_v1
+                    if post_exists:
+                        post = plt.imread(post_file)
+                        n_miss_post = np.sum(post == 255) / (140 * 140)
+                        if n_miss_post < 0.2:
+                            skip = True
+                        print(f"There are: {n_miss_post} missing files in the post file, skip: {skip}")
+                        missing = n_miss_post
                         
-                    initial_bbx = [data['X'][0], data['Y'][0], data['X'][0], data['Y'][0]]
-                    bbx = make_bbox(initial_bbx, expansion = 300/30)
+                    if v1_exists and post_exists:
+                        print(f"There are: {n_miss_v1} missing files in the v1 file")
+                        print(f"There are: {n_miss_post} missing files in the post file")
+                        missing = np.min([n_miss_post, n_miss_v1])
+                        print(f"The minimum is: {missing}")
 
-                file = write_tif(predictions, bbx, x, y, path_to_tile)
-                key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_POST.tif'
-                uploader.upload(bucket = args.s3_bucket, key = key, file = file)
-
-                if args.ul_flag:
-                    upload_raw_processed_s3(path_to_tile, x, y, uploader)
-                time2 = time.time()
-                print(f"Finished {n} in {np.around(time2 - time1, 1)} seconds")
-                n += 1
-    # If downloading all tiles for a country, go ahead and execute this code block
-    else:
-        for index, row in data.iterrows():
-            x = str(int(row['X_tile']))
-            y = str(int(row['Y_tile']))
-            x = x[:-2] if ".0" in x else x
-            y = y[:-2] if ".0" in y else y
-            bbx = None
-            year = args.year
-            dates = (f'{str(args.year - 1)}-11-15' , f'{str(args.year + 1)}-02-15')
-            dates_sentinel_1 = (f'{str(args.year)}-01-01' , f'{str(args.year)}-12-31')
-            days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
-            starting_days = np.cumsum(days_per_month)
-
-            # Check to see whether the tile exists locally or on s3
-            path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/'
-            s3_path_to_tile = f'2020/tiles/{str(x)}/{str(y)}/'
-            processed = file_in_local_or_s3(path_to_tile,
-                                            s3_path_to_tile, 
-                                            AWSKEY, AWSSECRET, 
-                                            args.s3_bucket)
-            
-            # If the tile does not exist, go ahead and download/process/upload it
-            if not processed:
-                if args.n_tiles:
-                    below = n <= int(args.n_tiles)
-                else:
-                    below = True
-                if below:
-                    try:
-                        ##dt = plt.imread(f"{path_to_tile}/{str(x)}X{str(y)}Y_v1.tif")
-                        #print(np.sum(dt == 255) / (150 * 150))
-                        #if np.sum(dt == 255) > (100*100*10):
+                    print(missing)
+                    if missing > 0 or skip == False:
                         time1 = time.time()
                         bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY, year = args.year)
                         s2, dates, interp, s1 = process_tile(x = x, y = y, data = data)
@@ -919,8 +887,9 @@ if __name__ == '__main__':
                         time2 = time.time()
                         print(f"Finished {n} in {np.around(time2 - time1, 1)} seconds")
                         n += 1
-                    except Exception as e:
-                        print(f"Ran into {str(e)} error, skipping {x}/{y}/")
-                        continue
-            else:
-                print(f'Skipping {x}, {y} as it is done')
+                        # Delete the data 
+                except Exception as e:
+                    print(f"Ran into {str(e)} error, skipping {x}/{y}/")
+                    continue
+        else:
+            print(f'Skipping {x}, {y} as it is done')

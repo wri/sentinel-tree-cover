@@ -12,3 +12,5 @@ notebooks/*
 *.pem
 gcloud-key.json
 *.ipynb
+*.tiff
+*.tif
