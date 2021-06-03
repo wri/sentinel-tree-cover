@@ -31,17 +31,18 @@ if __name__ == '__main__':
     for index, row in data.iterrows():
         x = str(int(row['X_tile']))
         y = str(int(row['Y_tile']))
-        dir_i = f"../project-monitoring/tiles/{x}/{y}"
+        dir_i = f"../project-monitoring/tof-output/{x}/{y}"
         if os.path.exists(dir_i):
             files = [file for file in os.listdir(dir_i)  if os.path.splitext(file)[-1] == '.tif']
+            if len(files) > 1:
+                files = [x for x in files if "_POST" in x]
             for file in files:
                 tifs.append(os.path.join(dir_i, file))
 
 
     print(f'There are {len(tifs)} / {len(data)} tiles processed')
-    print(tifs)
-
-    gdal.BuildVRT(f'{str(args.country)}.vrt', tifs)
+    
+    gdal.BuildVRT(f'{str(args.country)}.vrt', tifs, options=gdal.BuildVRTOptions(srcNodata=255, VRTNodata=255))
     ds = gdal.Open(f'{str(args.country)}.vrt')
     translateoptions = gdal.TranslateOptions(gdal.ParseCommandLine("-ot Byte -co COMPRESS=LZW -a_nodata 255"))
     ds = gdal.Translate(f'{str(args.country)}.tif', ds, options=translateoptions)
