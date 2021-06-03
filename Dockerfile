@@ -14,7 +14,7 @@ RUN pip install --upgrade pip &&\
 	mkdir src temp
 
 WORKDIR src/
-COPY ./requirements.txt ./requirements.txt
+COPY . .
 
 RUN pip install -r requirements.txt
 
@@ -30,8 +30,7 @@ RUN add-apt-repository ppa:ubuntugis/ppa && apt-get update &&\
 
 COPY . .
 
-ENTRYPOINT ["python", "-u", "src/download_job.py"]
+ENTRYPOINT ["python", "-u", "src/download_and_predict_job.py"]
 
 # docker build -t tof_download .
-# docker run -e PYTHONUNBUFFERED=1 tof_download:latest --country “Rwanda” --db_path “src/processing_area.csv” --model_path “models/supres/“ --yaml_path “config.yaml” --local_path “temp/“ --ul_flag True
-# docker run -it --entrypoint /bin/bash <image> # runs to open shell
+# docker run -it --entrypoint /bin/bash tof_download:latest <image> # runs to open shell
