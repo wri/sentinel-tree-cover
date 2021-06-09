@@ -3,15 +3,16 @@ Counting trees inside and outside the forest with image segmentation
 
 # Description
 
-[Restoration Mapper](https://restorationmapper.org) is an online tool to create wall-to-wall maps of tree presence using open source artificial intelligence and open source satellite imagery. The approach enables monitoring stakeholders to:
-*  Rapidly assess tree density in non-forested landscapes
-*  Establish wall-to-wall baseline data
-*  Measure yearly change in tree density without conducting follow-up mapathons
-*  Generate maps relevant to land use planning
-*  Identify agroforestry, riparian buffer zones, and crop buffer zones
-*  Generate GeoTIFFs for further spatial analysis or combination with other datasets
+[Restoration Mapper](https://restorationmapper.org) maps tree extent at the ten-meter scale using open source artificial intelligence and open source satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems. 
 
-This repository contains the source code for the project. The preprint of the publication is available [on arXiv](https://arxiv.org/abs/2005.08702). The model achieves **95% accuracy** and **94% recall** at the 10m scale across 1100 2-hectare plots distributed globally.
+This repository contains the source code for the project. A full description of the methodology can be found [on arXiv](https://arxiv.org/abs/2005.08702). The data product specifications can be accessed on the wiki page.
+*  [Background](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#background)
+*  [Data Extent](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#data-extent)
+*  [Methodology](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#methodology)
+*  [Validation and Analysis](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#validation-and-analysis) | [Jupyter Notebook](https://github.com/wri/restoration-mapper/blob/master/notebooks/analysis/validation-analysis.ipynb)
+*  [Definitions](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#definitions)
+*  [Limitations](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#limitations)
+
 
 # Citation
 John Brandt & Fred Stolle (2021) A global method to identify trees outside of closed-canopy forests with medium-resolution satellite imagery, International Journal of Remote Sensing, 42:5, 1713-1737, DOI: 10.1080/01431161.2020.1841324
