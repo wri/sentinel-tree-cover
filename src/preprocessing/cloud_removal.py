@@ -116,8 +116,8 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     median_probs = np.percentile(probs, 66, axis = 0)
     median_probs[median_probs < 0.10] = 0.
     c_probs = np.copy(probs) - median_probs
-    c_probs[np.where(c_probs >= 0.3)] = 1.
-    c_probs[np.where(c_probs < 0.3)] = 0.
+    c_probs[np.where(c_probs >= 0.5)] = 1.
+    c_probs[np.where(c_probs < 0.5)] = 0.
     
     initial_shadows = np.sum(shadows)
     after_shadows = np.sum(shadows)
@@ -136,7 +136,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                 print("Using fewer than required images")
                 satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) <= (wsize*wsize) / 4)
             for date in range(0, tiles.shape[0]):
-                if np.sum(subs[date]) >= (wsize*wsize) / 5:
+                if np.sum(subs[date]) >= (wsize*wsize) / 4:
                     before, after = calculate_proximal_steps(date, satisfactory)
                     before = date + before
                     after = date + after
@@ -310,7 +310,7 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
     clouds = np.mean(clouds, axis = (1, 2))
     clouds[clouds < 0.05] = 0.
 
-    to_remove = np.argwhere(clouds > 0.2)
+    to_remove = np.argwhere(clouds > 0.30)
 
     delete_to_remove = []
     if len(to_remove) > 2:
@@ -348,7 +348,7 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
             month_good_dates = np.unique(dates[month_idx[month_good_idx]].flatten())
             min_distances = []
             for x in month_good_dates:
-                clean_dates = dates[np.argwhere(cloud_percent < 0.20)].flatten()
+                clean_dates = dates[np.argwhere(cloud_percent <= 0.20)].flatten()
                 clean_dates = clean_dates[np.argwhere(np.logical_or(clean_dates < starting[month],
                                                clean_dates >= starting[month + 1]))]
                 distances = x - clean_dates
@@ -373,10 +373,10 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
     starting = np.cumsum(month_days)
     starting[0] = -30
     
-    n_cloud_px = np.sum(clouds > 0.25, axis = (1, 2))
+    n_cloud_px = np.sum(clouds > 0.50, axis = (1, 2))
     cloud_percent = n_cloud_px / (clouds.shape[1]**2)
-    thresh = [0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.10, 0.15, 0.20]
-    thresh_dist = [30, 30, 60, 60, 100, 100, 100, 100, 150]
+    thresh = [0.01, 0.02, 0.05, 0.10, 0.15, 0.15, 0.20, 0.25, 0.30]
+    thresh_dist = [30, 30, 60, 60, 100, 100, 100, 125, 150]
     for month in range(0, 12):
         finished = False
         for x in range(len(thresh)):
@@ -396,7 +396,7 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
                     month_good_dates = np.array([month_good_dates[0],
                                         month_good_dates[1],
                                         month_good_dates[-1]]).flatten()
-                if (min_distance < thresh_dist[x] or thresh[x] == 0.20):
+                if (min_distance < thresh_dist[x] or thresh[x] == 0.30):
                     finished = True
                     if len(month_good_dates) == 6:
                         month_good_dates = [val for i, val in enumerate(month_good_dates) if i in [0, 2, 3, 5]]
