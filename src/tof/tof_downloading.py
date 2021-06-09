@@ -132,8 +132,8 @@ def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
     print(f"Clouds: {cloud_img.shape}")
     
     # Identify steps with at least 20% cloud cover
-    n_cloud_px = np.sum(cloud_img > int(0.33 * 255), axis = (1, 2))
-    cloud_steps = np.argwhere(n_cloud_px > (cloud_img.shape[1]*cloud_img.shape[2] * 0.20))
+    n_cloud_px = np.sum(cloud_img > int(0.5 * 255), axis = (1, 2))
+    cloud_steps = np.argwhere(n_cloud_px > (cloud_img.shape[1]*cloud_img.shape[2] * 0.30))
     clean_steps = [x for x in range(cloud_img.shape[0]) if x not in cloud_steps]
     cloud_img = np.delete(cloud_img, cloud_steps, 0)
     

@@ -421,8 +421,8 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     # The tiles_folder references the folder names (w/o boundaries)
     # While the tiles_array references the arrays themselves (w/ boudnaries)
     #tiles_folder = tile_window(s1.shape[2], s1.shape[1], window_size = 140)
-    tiles_folder_x = np.hstack([np.arange(0, s1.shape[1] - 140, 60), np.array(s1.shape[1] - 140)])
-    tiles_folder_y = np.hstack([np.arange(0, s1.shape[2] - 140, 60), np.array(s1.shape[2] - 140)])
+    tiles_folder_x = np.hstack([np.arange(0, s1.shape[1] - 140, 50), np.array(s1.shape[1] - 140)])
+    tiles_folder_y = np.hstack([np.arange(0, s1.shape[2] - 140, 50), np.array(s1.shape[2] - 140)])
 
     def cartesian(*arrays):
         mesh = np.meshgrid(*arrays)  # standard numpy meshgrid
@@ -727,7 +727,7 @@ if __name__ == '__main__':
     parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/master-154/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/master-gap/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
-    parser.add_argument("--db_path_s3", dest = "db_path_s3", default = "2020/databases/redo-ghana.csv")
+    parser.add_argument("--db_path_s3", dest = "db_path_s3", default = "2020/databases/redo-cameroon.csv")
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_may_18.csv")
     parser.add_argument("--ul_flag", dest = "ul_flag", default = False)
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
@@ -883,15 +883,15 @@ if __name__ == '__main__':
                 process_subtiles(x, y, s2, dates, interp, s1, predict_sess, gap_sess)
                 predictions = load_mosaic_predictions(path_to_tile + "processed/")
                 if not bbx:
-                    data = data[data['Y_tile'] == int(y)]
-                    data = data[data['X_tile'] == int(x)]
-                    data = data.reset_index(drop = True)
+                    datat = data[data['Y_tile'] == int(y)]
+                    datat = datat[datat['X_tile'] == int(x)]
+                    datat = datat.reset_index(drop = True)
                     x = str(int(x))
                     y = str(int(y))
                     x = x[:-2] if ".0" in x else x
                     y = y[:-2] if ".0" in y else y
                         
-                    initial_bbx = [data['X'][0], data['Y'][0], data['X'][0], data['Y'][0]]
+                    initial_bbx = [datat['X'][0], datat['Y'][0], datat['X'][0], datat['Y'][0]]
                     bbx = make_bbox(initial_bbx, expansion = 300/30)
 
                 file = write_tif(predictions, bbx, x, y, path_to_tile)
@@ -944,14 +944,15 @@ if __name__ == '__main__':
                         process_subtiles(x, y, s2, dates, interp, s1, predict_sess, gap_sess)
                         predictions = load_mosaic_predictions(path_to_tile + "processed/")
                         if not bbx:
-                            data = data[data['Y_tile'] == int(y)]
-                            data = data[data['X_tile'] == int(x)]
-                            data = data.reset_index(drop = True)
+                            datat = data[data['Y_tile'] == int(y)]
+                            datat = datat[datat['X_tile'] == int(x)]
+                            datat = datat.reset_index(drop = True)
                             x = str(int(x))
                             y = str(int(y))
                             x = x[:-2] if ".0" in x else x
                             y = y[:-2] if ".0" in y else y
-                            initial_bbx = [data['X'][0], data['Y'][0], data['X'][0], data['Y'][0]]
+                                
+                            initial_bbx = [datat['X'][0], datat['Y'][0], datat['X'][0], datat['Y'][0]]
                             bbx = make_bbox(initial_bbx, expansion = 300/30)
 
                         file = write_tif(predictions, bbx, x, y, path_to_tile)

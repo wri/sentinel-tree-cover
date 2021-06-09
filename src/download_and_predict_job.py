@@ -717,6 +717,7 @@ if __name__ == '__main__':
     parser.add_argument("--n_tiles", dest = "n_tiles", default = None)
     parser.add_argument("--x", dest = "x", default = None)
     parser.add_argument("--y", dest = "y", default = None)
+    parser.add_argument("--reprocess", dest = "reprocess", default = False)
     args = parser.parse_args()
 
     print(f'Country: {args.country} \n'
@@ -731,7 +732,9 @@ if __name__ == '__main__':
           f'N tiles to download: {args.n_tiles} \n'
           f'Year: {args.year} \n'
           f'X: {args.x} \n'
-          f'Y: {args.y} \n')
+          f'Y: {args.y} \n',
+          f'Y: {args.reprocess} \n',
+          )
 
     args.year = int(args.year)
 
@@ -885,7 +888,7 @@ if __name__ == '__main__':
                                             args.s3_bucket)
             
             # If the tile does not exist, go ahead and download/process/upload it
-            if not processed:
+            if not processed or args.reprocess:
                 if args.n_tiles:
                     below = n <= int(args.n_tiles)
                 else:
