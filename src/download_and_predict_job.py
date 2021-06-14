@@ -355,7 +355,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame) -> np.ndarray:
             sentinel2[time, ..., band + 4] = resize(s2_20[time,..., band], (width, height), 1)
 
     # Identifies missing imagery (either in sentinel acquisition, or induced in preprocessing)
-    missing_px = id_missing_px(sentinel2, 10)
+    missing_px = id_missing_px(sentinel2, 5)
     if len(missing_px) > 0:
         print(f"Removing {missing_px} dates due to missing data")
         clouds = np.delete(clouds, missing_px, axis = 0)
@@ -732,8 +732,8 @@ if __name__ == '__main__':
           f'N tiles to download: {args.n_tiles} \n'
           f'Year: {args.year} \n'
           f'X: {args.x} \n'
-          f'Y: {args.y} \n',
-          f'Y: {args.reprocess} \n',
+          f'Y: {args.y} \n'
+          f'Reprocess: {args.reprocess} \n'
           )
 
     args.year = int(args.year)
