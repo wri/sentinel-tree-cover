@@ -3,7 +3,7 @@ Counting trees inside and outside the forest with image segmentation
 
 # Description
 
-[Restoration Mapper](https://restorationmapper.org) maps tree extent at the ten-meter scale using open source artificial intelligence and open source satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems. 
+This project maps tree extent at the ten-meter scale using open source artificial intelligence and open source satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems. 
 
 This repository contains the source code for the project. A full description of the methodology can be found [on arXiv](https://arxiv.org/abs/2005.08702). The data product specifications can be accessed on the wiki page.
 *  [Background](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#background)
