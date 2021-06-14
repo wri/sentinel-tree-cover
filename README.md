@@ -1,4 +1,4 @@
-Counting trees inside and outside the forest with image segmentation
+Mapping tree cover and extent with Sentinel-1 and 2
 ==============================
 
 # Description
