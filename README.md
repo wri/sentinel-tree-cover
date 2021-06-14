@@ -31,10 +31,9 @@ See a time series map of gain detection [here](https://cdn.knightlab.com/libs/ju
 
 ## With Docker
 
-Running the following Docker commands will download the container image and load the `notebooks/` folder.
 ```
-docker pull johnbrandtwri/restoration_mapper:latest
-docker run -p 8888:8888 johnbrandtwri/restoration_mapper
+docker build -t sentinel_tree_cover .
+docker run -it --entrypoint /bin/bash sentinel_tree_cover:latest 
 ```
 
 ## Without docker
@@ -42,7 +41,6 @@ docker run -p 8888:8888 johnbrandtwri/restoration_mapper
 *  Install dependencies `pip3 install -r requirements.txt`
 *  Install GDAL (different process for different operating systems, see https://gdal.org)
 *  Download model `python3 src/models/download_model.py`
-*  Optional: Download test data `python3 src/models/download_data.py`
 *  Start Jupyter notebook and navigate to `notebooks/` folder
 
 # Usage
@@ -68,7 +66,7 @@ This model uses a Fully Connected Architecture with:
 ![img4](references/readme/new_model.png?raw=true)
 
 ## Data
-Restoration mapper uses Sentinel 1 and Sentinel 2 imagery. Monthly composites of Sentinel 1 VV-VH imagery are fused with the nearest Sentinel 2 10- and 20-meter bands. These images are preprocessed by:
+This project uses Sentinel 1 and Sentinel 2 imagery. Monthly composites of Sentinel 1 VV-VH imagery are fused with the nearest Sentinel 2 10- and 20-meter bands. These images are preprocessed by:
 *  Super-resolving 20m bands to 10m with DSen2
 ![img](references/screenshots/supres.png?raw=true)
 *  Calculating cloud cover and cloud shadow masks
