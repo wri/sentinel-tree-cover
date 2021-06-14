@@ -364,8 +364,23 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
                 min_distances.append(np.max([lower_distance, upper_distance]))
             min_distance = np.min(min_distances)
         else:
+            month_good_dates = starting[month] + 15
+            clean_dates = dates[np.argwhere(cloud_percent <= 0.20)].flatten()
+            clean_dates = clean_dates[np.argwhere(np.logical_or(clean_dates < starting[month],
+                                           clean_dates >= starting[month + 1]))]
+            distances = month_good_dates - clean_dates
+            distances = distances.flatten()
+            if np.min(distances) < 0:
+                lower_distance = abs(np.max(distances[distances < 0]))
+            else: 
+                lower_distance = 0
+            if np.max(distances) > 0:
+                upper_distance = np.min(distances[distances > 0])
+            else:
+                upper_distance = 0
+            min_distance = np.max([lower_distance, upper_distance])
             month_good_dates = np.empty((0, 0))
-            min_distance = 365
+            #min_distance = 365
         return month_good_dates, min_distance
     
     good_steps = np.empty((0, ))
