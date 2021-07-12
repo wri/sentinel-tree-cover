@@ -421,8 +421,8 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     # The tiles_folder references the folder names (w/o boundaries)
     # While the tiles_array references the arrays themselves (w/ boudnaries)
     #tiles_folder = tile_window(s1.shape[2], s1.shape[1], window_size = 140)
-    tiles_folder_x = np.hstack([np.arange(0, s1.shape[1] - 140, 50), np.array(s1.shape[1] - 140)])
-    tiles_folder_y = np.hstack([np.arange(0, s1.shape[2] - 140, 50), np.array(s1.shape[2] - 140)])
+    tiles_folder_x = np.hstack([np.arange(0, s1.shape[1] - 140, 80), np.array(s1.shape[1] - 140)])
+    tiles_folder_y = np.hstack([np.arange(0, s1.shape[2] - 140, 80), np.array(s1.shape[2] - 140)])
 
     def cartesian(*arrays):
         mesh = np.meshgrid(*arrays)  # standard numpy meshgrid
@@ -724,11 +724,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/master-154/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/swa-154/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/master-gap/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path_s3", dest = "db_path_s3", default = "2020/databases/redo-cameroon.csv")
-    parser.add_argument("--db_path", dest = "db_path", default = "processing_area_may_18.csv")
+    parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
     parser.add_argument("--ul_flag", dest = "ul_flag", default = False)
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
     parser.add_argument("--yaml_path", dest = "yaml_path", default = "../config.yaml")

@@ -46,7 +46,7 @@ class FileUploader:
 
         # check if the file exists
         if self.overwrite:
-            print(f'uploading {file} to {bucket} as {key}')
+            #print(f'uploading {file} to {bucket} as {key}')
             self.s3client.upload_file(
                             file, bucket, key, 
                             Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20),
@@ -84,6 +84,7 @@ class FileUploader:
                 #print(f'removing {file}')
                 #os.remove(file)
 
+
 def get_folder_prefix(coordinates, params):
     geolocation = rg.search((coordinates[0], coordinates[1]))
     country = geolocation[-1]['cc']
@@ -112,6 +113,7 @@ def save_file(obj,
         uploader.upload(bucket = params['bucket'], key = key,
                         file = params['prefix'] + path
                        )
+
 
 def make_output_and_temp_folders(output_folder: str) -> None:
     """Makes necessary folder structures for input/output of raw/processed data
@@ -207,6 +209,7 @@ def write_tif(arr: np.ndarray, point: list, x: int, y: int,
     new_dataset = rasterio.open(file, 'w', driver = 'GTiff',
                                height = arr.shape[0], width = arr.shape[1], count = 1,
                                dtype = "uint8",
+                               compress = 'lzw',
                                crs = '+proj=longlat +datum=WGS84 +no_defs',
                                transform=transform)
     new_dataset.write(arr, 1)

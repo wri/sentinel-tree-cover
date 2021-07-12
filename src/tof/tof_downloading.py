@@ -117,11 +117,11 @@ def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
         time_difference=datetime.timedelta(hours=72),
     )
 
-    # Download 80 x 80 meter bands for shadow masking, 0 - 65535
+    # Download 160 x 160 meter bands for shadow masking, 0 - 65535
     shadow_request = WcsRequest(
         layer='SHADOW',
         bbox=box, time=dates,
-        resx='80m', resy='80m',
+        resx='160m', resy='160m',
         image_format = MimeType.TIFF_d16,
         maxcc=0.75, instance_id=api_key,
         custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
@@ -147,7 +147,7 @@ def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
 
     shadow_img = np.array(shadow_request.get_data(data_filter = shadow_steps))
     shadow_pus = (shadow_img.shape[1]*shadow_img.shape[2])/(512*512) * shadow_img.shape[0] * (6 / 3)
-    shadow_img = shadow_img.repeat(8,axis=1).repeat(8,axis=2)
+    shadow_img = shadow_img.repeat(16,axis=1).repeat(16,axis=2)
 
     # Make sure that the cloud_img and the shadow_img are the same shape
     # using the cloud_img as reference
@@ -190,12 +190,14 @@ def download_dem(bbox: List[Tuple[float, float]],
         layer='DEM',
         bbox=box, 
         resx='10m', resy='10m',
-        image_format = MimeType.TIFF_d32f,
+        image_format = MimeType.TIFF_d16,
         maxcc=0.75, instance_id=api_key,
         custom_url_params = {CustomUrlParam.SHOWLOGO: False,
                             constants.CustomUrlParam.UPSAMPLING: 'NEAREST'})
 
     dem_image = dem_request.get_data()[0]
+    dem_image = dem_image - 12000
+    dem_image = dem_image.astype(np.float32)
     width = dem_image.shape[0]
     height = dem_image.shape[1]
     
@@ -208,7 +210,7 @@ def download_dem(bbox: List[Tuple[float, float]],
 
     dem_image = dem_image[1:width-1, 1:height-1, :]
     dem_image = dem_image.squeeze()
-    print(f"DEM used {round(((width*height)/(512*512))*2, 1)} processing units")
+    print(f"DEM used {round(((width*height)/(512*512))*1/3, 1)} processing units")
     return dem_image
 
 

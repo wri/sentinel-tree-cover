@@ -1,11 +1,15 @@
 import numpy as np
 
-def grndvi(array):
-    nir = np.clip(array[..., 3], 0, 1)
-    green = np.clip(array[..., 1], 0, 1)
-    red = np.clip(array[..., 2], 0, 1)
+def grndvi(x: np.ndarray) -> np.ndarray:
+    '''
+    Calculates the green normalized vegetation difference index
+    '''
+    nir = np.clip(x[..., 3], 0, 1)
+    green = np.clip(x[..., 1], 0, 1)
+    red = np.clip(x[..., 2], 0, 1)
     denominator = (nir+(green+red)) + 1e-5
     return (nir-(green+red)) / denominator
+
 
 def evi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     '''
@@ -21,6 +25,7 @@ def evi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     evis = np.clip(evis, -1.5, 1.5)
     return evis
 
+
 def msavi2(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     '''
     Calculates the modified soil-adjusted vegetation index 2
@@ -33,6 +38,7 @@ def msavi2(x: np.ndarray, verbose: bool = False) -> np.ndarray:
 
     msavis = (2 * NIR + 1 - np.sqrt( (2*NIR+1)**2 - 8*(NIR-RED) )) / 2
     return msavis
+
 
 def bi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     B11 = np.clip(x[..., 8], 0, 1)

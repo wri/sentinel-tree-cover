@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 sys.path.append('../')
-from src.downloading.utils import calculate_proximal_steps
+from src.downloading.utils import calculate_proximal_steps, calculate_proximal_steps_two
 from typing import List, Any, Tuple
 from functools import reduce
 from skimage.transform import resize
@@ -86,7 +86,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                              probs: np.ndarray, 
                              shadows: np.ndarray,
                              image_dates: List[int], 
-                             wsize: int = 20) -> np.ndarray:
+                             wsize: int = 32) -> np.ndarray:
     """ Interpolates clouds and shadows for each time step with 
         linear combination of proximal clean time steps for each
         region of specified window size
@@ -107,15 +107,17 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
         g = np.exp(-((x**2 + y**2)/(2.0*sigma**2)))
         return g
 
-    c_arr = np.reshape(_fspecial_gauss(wsize, ((wsize/2) - 1 ) / 2), (1, wsize, wsize, 1))
-    o_arr = 1 - c_arr
+    c_arr = np.full((1, wsize,wsize, 1), 0.5)
+    c_arr[:, 1:wsize-1, 1:wsize-1, :] += 0.25
+    c_arr[:, 2:wsize-2, 2:wsize-2, :] += 0.25
+    o_arr = np.ones((1, wsize, wsize, 1)) - c_arr
 
 
     # Subtract the median cloud binary mask, to remove pixels
     #  that are always clouds (false positive)
-    median_probs = np.percentile(probs, 66, axis = 0)
-    median_probs[median_probs < 0.10] = 0.
-    c_probs = np.copy(probs) - median_probs
+    #median_probs = np.percentile(probs, 66, axis = 0)
+    #median_probs[median_probs < 0.10] = 0.
+    c_probs = np.copy(probs)# - median_probs
     c_probs[np.where(c_probs >= 0.5)] = 1.
     c_probs[np.where(c_probs < 0.5)] = 0.
     
@@ -127,40 +129,61 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     c_probs[np.where(c_probs >= 1.)] = 1.
     
     areas_interpolated = np.zeros((tiles.shape[0], tiles.shape[1], tiles.shape[2]))
-    
-    for x in range(0, tiles.shape[1] - (wsize - 2), 3):
-        for y in range(0, tiles.shape[2] - (wsize - 2), 3):
+    x_range = [x for x in range(0, tiles.shape[1] - (wsize), 8)] + [tiles.shape[1] - wsize]
+    y_range = [x for x in range(0, tiles.shape[2] - (wsize), 8)] + [tiles.shape[2] - wsize]
+    for x in x_range:
+        for y in y_range:
             subs = c_probs[:, x:x + wsize, y:y+wsize]
-            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize)/ 10)
+            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) == 0)
             if len(satisfactory) == 0:
-                print("Using fewer than required images")
-                satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) <= (wsize*wsize) / 4)
-            for date in range(0, tiles.shape[0]):
-                if np.sum(subs[date]) >= (wsize*wsize) / 4:
-                    before, after = calculate_proximal_steps(date, satisfactory)
-                    before = date + before
-                    after = date + after
+                print("Using median here because there might only be cloudy images")
+                areas_interpolated[:, x:x+wsize, y:y+wsize] = 1.
+                median_retile = np.median(tiles[:, x:x+wsize, y:y+wsize, : ], axis = 0)
+                median_retile = np.broadcast_to(median_retile, (tiles.shape[0], wsize, wsize, tiles.shape[-1]))
+                tiles[:, x:x+wsize, y:y+wsize, : ] = median_retile
+            if len(satisfactory) > 0:
+                for date in range(0, tiles.shape[0]):
+                    if np.sum(subs[date]) >= 40:
+                        #before, after = calculate_proximal_steps(date, satisfactory)
+                        before2, after2 = calculate_proximal_steps_two(date, satisfactory)
 
-                    before = (before - 1) if before > (tiles.shape[0] -1) else before
-                    after = before if after > (tiles.shape[0] - 1) else after
-                    before = after if before < 0 else before
+                        before = date + before2
+                        after = date + after2
+                        before = np.concatenate([before.flatten(), after.flatten()], axis = 0)
+                        before[before < 0] = 0.
+                        before[before > tiles.shape[0] - 1] = tiles.shape[0] - 1
+                        #print(date, before)
+                        candidate = np.median(tiles[before, x:x+wsize, y:y+wsize, :], axis = 0)
+                        """
+                        before = date + before
+                        after = date + after
 
-                    if after > (tiles.shape[0] - 1):
-                        print(f"There is an error, and after is {after} and before is {before}, \
-                         for {tiles.shape[0]} and {date}, {satisfactory}")
+                        before = (before - 1) if before > (tiles.shape[0] -1) else before
+                        after = before if after > (tiles.shape[0] - 1) else after
+                        before = after if before < 0 else before
+                        after = tiles.shape[0] - 1 if after > (tiles.shape[0] - 1) else after
+                        before = tiles.shape[0] - 1 if before > (tiles.shape[0] - 1) else before
 
-                    before_array = deepcopy(tiles[before, x:x+wsize, y:y+wsize, : ])
-                    after_array = deepcopy(tiles[after, x:x+wsize, y:y+wsize, : ])
-                    
-                    n_days_before = abs(image_dates[date] - image_dates[before])
-                    n_days_after = abs(image_dates[date] - image_dates[after])
-                    before_weight = 1 - ( n_days_before / (n_days_before + n_days_after) )
-                    after_weight = 1 - before_weight
-
-                    
-                    candidate = before_weight*before_array + after_weight * after_array
-                    tiles[date, x:x+wsize, y:y+wsize, : ] = candidate 
-                    areas_interpolated[date, x:x+wsize, y:y+wsize] = 1.
+                        before_array = deepcopy(tiles[before, x:x+wsize, y:y+wsize, : ])
+                        after_array = deepcopy(tiles[after, x:x+wsize, y:y+wsize, : ])
+                        
+                        n_days_before = abs(image_dates[date] - image_dates[before])
+                        n_days_after = abs(image_dates[date] - image_dates[after])
+                        try:
+                            #before_weight = 1 - ( n_days_before / (n_days_before + n_days_after) )
+                            #after_weight = 1 - before_weight
+                            #print(before_weight, after_weight)
+                            before_weight = 0.5
+                            after_weight = 0.5
+                        except:
+                            before_weight = 0.5
+                            after_weight = 0.5
+                        
+                        
+                        candidate = before_weight*before_array + after_weight * after_array
+                        """
+                        tiles[date, x:x+wsize, y:y+wsize, : ] = candidate 
+                        areas_interpolated[date, x:x+wsize, y:y+wsize] = 1.
 
     tiles = adjust_interpolated_areas(tiles, areas_interpolated)
                     
@@ -429,41 +452,119 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
     print(f"Utilizing {len(good_steps_idx)}/{dates.shape[0]} steps")
     return to_remove, good_steps_idx
 
+def print_dates(dates, probs):
+    month_days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 80]
+    starting = np.cumsum(month_days)
+    starting[0] = -30
+    
+    for month in range(0, 12):
+        month_idx = np.argwhere(np.logical_and(dates >= starting[month],
+                                               dates < starting[month + 1]))
+        month_dates = dates[month_idx]
+        month_dates = [item for sublist in month_dates for item in sublist]
+        month_probs = probs[month_idx]
+        month_probs = [item for sublist in month_probs for item in sublist]
+        month_probs = [round(x, 2) for x in month_probs]
 
-def subset_contiguous_sunny_dates(dates):
+        print(f"{month + 1}, Dates: {month_dates}, Probs: {month_probs}")
+
+
+def subset_contiguous_sunny_dates(dates, probs):
     """
     For plots that have at least 24 image dates
     identifies 3-month windows where each month has at least three clean
     image dates, and removes one image per month within the window.
     Used to limit the number of images needed in low-cloud regions from
-    a max of 36 to a max of 24-30.
+    a max of 36 to a max of 24.
     """
     begin = [-60, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
     end = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 390]
     n_per_month = []
     months_to_adjust = []
+    months_to_adjust_again = []
     indices_to_rm = []
     
-    if len(dates) >= 22:
+    if len(dates) >= 15:
         for x, y in zip(begin, end):
             indices_month = np.argwhere(np.logical_and(
                 dates >= x, dates < y)).flatten()
             n_per_month.append(len(indices_month))
 
+        # Convert 3 image months to 2 in 3 month windows with at least 5 / 9 possible images
         for x in range(11):
+            # This will only go from 3 images to 2 images
             three_m_sum = np.sum(n_per_month[x:x+3])
-            if three_m_sum >= 7:
-                months_to_adjust.append([x, x+1, x+2])
+            # If at least 5/9 images and a minimum of 1:
+            if three_m_sum >= 5 and np.min(n_per_month[x:x+3]) >= 1:
+                # Add the months to be adjusted
+                months_to_adjust += [x, x+1, x+2]
 
-        months_to_adjust = [item for sublist in months_to_adjust for item in sublist]
         months_to_adjust = list(set(months_to_adjust))
 
+        # Jan - Mar, Mar - May, May - Jul, Jul - Sep, Sep - Nov, Oct - Dec
+        # This will sometimes take 3 images down to 1 image
+        for x in [0, 2, 4, 6, 8, 10]:
+            three_m_sum = np.sum(n_per_month[x:x+3])
+            # For windows that are 2, 2, 2 to 3, 3, 3
+            if three_m_sum >= 6 and np.min(n_per_month[x:x+3]) >= 1: 
+                # Prefer to adjust the middle month if possible
+                if n_per_month[x + 1] == 3: # 3, 3, 3 or 2, 3, 2
+                    months_to_adjust_again.append(x + 1)
+                elif n_per_month[x] == 3: # 3, 2, 2 
+                    months_to_adjust_again.append(x)
+                elif n_per_month[x + 1] == 2: # 2, 2, 2 or 2, 2, 3
+                    months_to_adjust_again.append(x + 1)
+                elif n_per_month[x + 2] == 3: # 2, 2, 3
+                    months_to_adjust_again.append(x + 2)
 
         if len(months_to_adjust) > 0:
             for month in months_to_adjust:
                 indices_month = np.argwhere(np.logical_and(
                     dates >= begin[month], dates < end[month])).flatten()
-                if len(indices_month) == 3:
-                    indices_to_rm.append(indices_month[1])
+                if np.max(probs[indices_month]) > 0.05:
+                    cloudiest_idx = np.argmax(probs[indices_month].flatten())
+                else:
+                    cloudiest_idx = 1
+                # Remove the cloudiest image of the 3
+                if len(indices_month) >= 3:
+                    indices_to_rm.append(indices_month[cloudiest_idx])
+
         print(f"Removing {len(indices_to_rm)} sunny dates")
+        n_remaining = len(dates) - len(indices_to_rm)
+
+        if len(months_to_adjust_again) > 0 and n_remaining >= 18:
+            for month in months_to_adjust_again:
+                indices_month = np.argwhere(np.logical_and(
+                    dates >= begin[month], dates < end[month])).flatten()
+                indices_month = [x for x in indices_month if x not in indices_to_rm]
+                if np.max(probs[indices_month]) > 0.05:
+                    cloudiest_idx = np.argmax(probs[indices_month].flatten())
+                else:
+                    cloudiest_idx = 1
+                # Remove the cloudiest image of the 3
+                if len(indices_month) >= 2:
+                    indices_to_rm.append(indices_month[cloudiest_idx])
+
+        if len(np.argwhere(probs > 0.75)) > 0:
+            to_rm = [int(x) for x in np.argwhere(probs > 0.75)]
+            print(f"Removing: {dates[to_rm]} missed cloudy dates")
+            indices_to_rm.extend(to_rm)
+
+        n_remaining = len(dates) - len(indices_to_rm)
+        if n_remaining > 14:
+            probs[indices_to_rm] = 0.
+            if np.max(probs) > 0.3:
+                len_to_rm = n_remaining - 17 if n_remaining > 17 else 1
+            else:
+                len_to_rm = n_remaining - 18 if n_remaining > 18 else 1
+            max_cloud = np.argpartition(probs, -len_to_rm)[-len_to_rm:]
+            print(f"Removing cloudiest dates: {max_cloud}, {probs[max_cloud]}")
+            indices_to_rm.extend(max_cloud)
+        elif np.max(probs) >= 0.5:
+            max_cloud = np.argmax(probs)
+            print(f"Removing cloudiest date: {max_cloud}, {probs[max_cloud]}")
+            indices_to_rm.extend(max_cloud)
+
+
+        print(f"Removing {len(indices_to_rm)} sunny/cloudy dates")
     return indices_to_rm

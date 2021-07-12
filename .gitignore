@@ -30,4 +30,6 @@ data_diffs.csv
 *.vrt
 *.pyc
 *.npy
+notebooks/*/*.csv
+*.qml
 
