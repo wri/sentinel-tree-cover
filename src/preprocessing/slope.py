@@ -90,6 +90,7 @@ def slopePythonPlane(inBlock, outBlock, inXSize, inYSize, A_mat, z_vec, winSize=
    
     return outBlock
 
+
 def calcSlope(inBlock, inXSize, inYSize, fitPlane=False, zScale=1, winSize=3, minSlope=None):
     """ Calculates slope for a block of data
         Arrays are provided giving the size for each pixel.

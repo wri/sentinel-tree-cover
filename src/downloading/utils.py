@@ -279,10 +279,6 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
                     np.max(selected_images[i]['image_date'][0]))
             if dist > max_distance:
                 max_distance = dist
-    
-    
-    if max_distance >= 150:
-        print(f"Warning, Maximum time distance is {max_distance}")
 
     keep_steps = []
     for i in sorted(selected_images.keys()):
@@ -327,6 +323,43 @@ def calculate_proximal_steps(date: int, satisfactory: list) -> (int, int):
     if not arg_before:
         arg_before = arg_after
     return arg_before, arg_after
+
+def calculate_proximal_steps_two(date: int, satisfactory: list) -> (int, int):
+    """Returns proximal steps that are cloud and shadow free
+
+         Parameters:
+          date (int): current time step
+          satisfactory (list): time steps with no clouds or shadows
+
+         Returns:
+          arg_before (str): index of the prior clean image
+          arg_after (int): index of the next clean image
+    """
+    arg_before, arg_after = [], []
+    if date > 0:
+        idx_before = satisfactory - date
+        arg_before = np.array(np.where(idx_before < 0, idx_before, -np.inf).flatten())
+        if np.sum(arg_before > -np.inf) > 2:
+            arg_before = np.argpartition(arg_before, -2)[-2:]
+        else:
+            arg_before = arg_before.argmax()
+        arg_before = list(idx_before[arg_before])
+    if date < np.max(satisfactory):
+        idx_after = satisfactory - date
+        arg_after = np.array(np.where(idx_after > 0, idx_after, np.inf).flatten())
+        if np.sum(arg_after < np.inf) > 2:
+            arg_after = np.argpartition(arg_after, 2)[:2]
+        else:
+            arg_after = arg_after.argmin()
+        arg_after = list(idx_after[arg_after])
+    if len(arg_after) == 0 and len(arg_before) == 0:
+        arg_after = date
+        arg_before = date
+    elif len(arg_after) == 0:
+        arg_after = arg_before
+    elif len(arg_before) == 0:
+        arg_before = arg_after
+    return np.array(arg_before), np.array(arg_after)
 
 
 def tile_window(h: int, w: int, tile_width: int=None,
