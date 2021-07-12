@@ -395,6 +395,21 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
     print(f"Utilizing {len(good_steps_idx)}/{dates.shape[0]} steps")
     return to_remove, good_steps_idx
 
+def print_dates(dates, probs):
+    month_days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 80]
+    starting = np.cumsum(month_days)
+    starting[0] = -30
+    
+    for month in range(0, 12):
+        month_idx = np.argwhere(np.logical_and(dates >= starting[month],
+                                               dates < starting[month + 1]))
+        month_dates = dates[month_idx]
+        month_dates = [item for sublist in month_dates for item in sublist]
+        month_probs = probs[month_idx]
+        month_probs = [item for sublist in month_probs for item in sublist]
+        month_probs = [round(x, 2) for x in month_probs]
+
+        print(f"{month + 1}, Dates: {month_dates}, Probs: {month_probs}")
 
 def print_dates(dates, probs):
     month_days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 80]

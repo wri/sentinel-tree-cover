@@ -242,6 +242,12 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
                                                             dates = dates,
                                                             api_key = api_key,
                                                             year = year)
+        cloud_shadows = np.mean(cloud_probs, axis = (1, 2)) + np.mean(shadows, axis = (1, 2))
+        to_remove = [int(x) for x in np.argwhere(cloud_shadows > 0.75)]
+        if len(to_remove) > 0:
+            image_dates = np.delete(image_dates, to_remove)
+            cloud_probs = np.delete(cloud_probs, to_remove, 0)
+            shadows = np.delete(shadows, to_remove, 0)
 
         # Remove contiguous dates that are sunny, to reduce IO needs
         cloud_percent = np.mean(cloud_probs > 0.4, axis = (1, 2))

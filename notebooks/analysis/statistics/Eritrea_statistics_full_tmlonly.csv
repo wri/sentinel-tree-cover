@@ -1,0 +1,1201 @@
+country,admin,esa_id,esa_class,esa_sampled_ha,esa_total_ha,tree_cover_class,tof_ha,tof_mean
+Eritrea,Anseba,10,"Cropland, rainfed",89934.01,91365.73,0-9,57165,16.389999389648438
+Eritrea,Anseba,10,"Cropland, rainfed",89934.01,91365.73,10-19,23238,16.389999389648438
+Eritrea,Anseba,10,"Cropland, rainfed",89934.01,91365.73,20-29,12716,16.389999389648438
+Eritrea,Anseba,10,"Cropland, rainfed",89934.01,91365.73,30-39,7659,16.389999389648438
+Eritrea,Anseba,10,"Cropland, rainfed",89934.01,91365.73,40-49,4781,16.389999389648438
+Eritrea,Anseba,10,"Cropland, rainfed",89934.01,91365.73,50-59,2938,16.389999389648438
+Eritrea,Anseba,10,"Cropland, rainfed",89934.01,91365.73,60-69,1756,16.389999389648438
+Eritrea,Anseba,10,"Cropland, rainfed",89934.01,91365.73,70-79,1004,16.389999389648438
+Eritrea,Anseba,10,"Cropland, rainfed",89934.01,91365.73,80-89,435,16.389999389648438
+Eritrea,Anseba,10,"Cropland, rainfed",89934.01,91365.73,90-99,123,16.389999389648438
+Eritrea,Anseba,11,"Cropland, rainfed",2750.13,2783.35,0-9,2782,9.619999885559082
+Eritrea,Anseba,11,"Cropland, rainfed",2750.13,2783.35,10-19,555,9.619999885559082
+Eritrea,Anseba,11,"Cropland, rainfed",2750.13,2783.35,20-29,223,9.619999885559082
+Eritrea,Anseba,11,"Cropland, rainfed",2750.13,2783.35,30-39,105,9.619999885559082
+Eritrea,Anseba,11,"Cropland, rainfed",2750.13,2783.35,40-49,45,9.619999885559082
+Eritrea,Anseba,11,"Cropland, rainfed",2750.13,2783.35,50-59,30,9.619999885559082
+Eritrea,Anseba,11,"Cropland, rainfed",2750.13,2783.35,60-69,17,9.619999885559082
+Eritrea,Anseba,11,"Cropland, rainfed",2750.13,2783.35,70-79,4,9.619999885559082
+Eritrea,Anseba,11,"Cropland, rainfed",2750.13,2783.35,80-89,3,9.619999885559082
+Eritrea,Anseba,11,"Cropland, rainfed",2750.13,2783.35,90-99,0,9.619999885559082
+Eritrea,Anseba,20,"Cropland, irrigated or post-flooding",9455.24,9980.55,0-9,7601,14.15999984741211
+Eritrea,Anseba,20,"Cropland, irrigated or post-flooding",9455.24,9980.55,10-19,2151,14.15999984741211
+Eritrea,Anseba,20,"Cropland, irrigated or post-flooding",9455.24,9980.55,20-29,1099,14.15999984741211
+Eritrea,Anseba,20,"Cropland, irrigated or post-flooding",9455.24,9980.55,30-39,626,14.15999984741211
+Eritrea,Anseba,20,"Cropland, irrigated or post-flooding",9455.24,9980.55,40-49,400,14.15999984741211
+Eritrea,Anseba,20,"Cropland, irrigated or post-flooding",9455.24,9980.55,50-59,252,14.15999984741211
+Eritrea,Anseba,20,"Cropland, irrigated or post-flooding",9455.24,9980.55,60-69,164,14.15999984741211
+Eritrea,Anseba,20,"Cropland, irrigated or post-flooding",9455.24,9980.55,70-79,84,14.15999984741211
+Eritrea,Anseba,20,"Cropland, irrigated or post-flooding",9455.24,9980.55,80-89,59,14.15999984741211
+Eritrea,Anseba,20,"Cropland, irrigated or post-flooding",9455.24,9980.55,90-99,56,14.15999984741211
+Eritrea,Anseba,30,Mosaic cropland / natural vegetation,51176.33,53074.12,0-9,36289,16.34000015258789
+Eritrea,Anseba,30,Mosaic cropland / natural vegetation,51176.33,53074.12,10-19,12066,16.34000015258789
+Eritrea,Anseba,30,Mosaic cropland / natural vegetation,51176.33,53074.12,20-29,6350,16.34000015258789
+Eritrea,Anseba,30,Mosaic cropland / natural vegetation,51176.33,53074.12,30-39,3763,16.34000015258789
+Eritrea,Anseba,30,Mosaic cropland / natural vegetation,51176.33,53074.12,40-49,2607,16.34000015258789
+Eritrea,Anseba,30,Mosaic cropland / natural vegetation,51176.33,53074.12,50-59,1818,16.34000015258789
+Eritrea,Anseba,30,Mosaic cropland / natural vegetation,51176.33,53074.12,60-69,1287,16.34000015258789
+Eritrea,Anseba,30,Mosaic cropland / natural vegetation,51176.33,53074.12,70-79,811,16.34000015258789
+Eritrea,Anseba,30,Mosaic cropland / natural vegetation,51176.33,53074.12,80-89,583,16.34000015258789
+Eritrea,Anseba,30,Mosaic cropland / natural vegetation,51176.33,53074.12,90-99,173,16.34000015258789
+Eritrea,Anseba,40,Mosaic natural vegetation / cropland,122118.84,135588.52,0-9,89721,14.65999984741211
+Eritrea,Anseba,40,Mosaic natural vegetation / cropland,122118.84,135588.52,10-19,29165,14.65999984741211
+Eritrea,Anseba,40,Mosaic natural vegetation / cropland,122118.84,135588.52,20-29,14762,14.65999984741211
+Eritrea,Anseba,40,Mosaic natural vegetation / cropland,122118.84,135588.52,30-39,8487,14.65999984741211
+Eritrea,Anseba,40,Mosaic natural vegetation / cropland,122118.84,135588.52,40-49,5140,14.65999984741211
+Eritrea,Anseba,40,Mosaic natural vegetation / cropland,122118.84,135588.52,50-59,3355,14.65999984741211
+Eritrea,Anseba,40,Mosaic natural vegetation / cropland,122118.84,135588.52,60-69,2157,14.65999984741211
+Eritrea,Anseba,40,Mosaic natural vegetation / cropland,122118.84,135588.52,70-79,1323,14.65999984741211
+Eritrea,Anseba,40,Mosaic natural vegetation / cropland,122118.84,135588.52,80-89,696,14.65999984741211
+Eritrea,Anseba,40,Mosaic natural vegetation / cropland,122118.84,135588.52,90-99,216,14.65999984741211
+Eritrea,Anseba,50,"Tree cover, broadleaved, evergreen",0.0,819.71,0-9,0,
+Eritrea,Anseba,50,"Tree cover, broadleaved, evergreen",0.0,819.71,10-19,0,
+Eritrea,Anseba,50,"Tree cover, broadleaved, evergreen",0.0,819.71,20-29,0,
+Eritrea,Anseba,50,"Tree cover, broadleaved, evergreen",0.0,819.71,30-39,0,
+Eritrea,Anseba,50,"Tree cover, broadleaved, evergreen",0.0,819.71,40-49,0,
+Eritrea,Anseba,50,"Tree cover, broadleaved, evergreen",0.0,819.71,50-59,0,
+Eritrea,Anseba,50,"Tree cover, broadleaved, evergreen",0.0,819.71,60-69,0,
+Eritrea,Anseba,50,"Tree cover, broadleaved, evergreen",0.0,819.71,70-79,0,
+Eritrea,Anseba,50,"Tree cover, broadleaved, evergreen",0.0,819.71,80-89,0,
+Eritrea,Anseba,50,"Tree cover, broadleaved, evergreen",0.0,819.71,90-99,0,
+Eritrea,Anseba,62,"Tree cover, broadleaved, deciduous",203.12,203.12,0-9,70,42.209999084472656
+Eritrea,Anseba,62,"Tree cover, broadleaved, deciduous",203.12,203.12,10-19,30,42.209999084472656
+Eritrea,Anseba,62,"Tree cover, broadleaved, deciduous",203.12,203.12,20-29,17,42.209999084472656
+Eritrea,Anseba,62,"Tree cover, broadleaved, deciduous",203.12,203.12,30-39,14,42.209999084472656
+Eritrea,Anseba,62,"Tree cover, broadleaved, deciduous",203.12,203.12,40-49,24,42.209999084472656
+Eritrea,Anseba,62,"Tree cover, broadleaved, deciduous",203.12,203.12,50-59,43,42.209999084472656
+Eritrea,Anseba,62,"Tree cover, broadleaved, deciduous",203.12,203.12,60-69,26,42.209999084472656
+Eritrea,Anseba,62,"Tree cover, broadleaved, deciduous",203.12,203.12,70-79,23,42.209999084472656
+Eritrea,Anseba,62,"Tree cover, broadleaved, deciduous",203.12,203.12,80-89,39,42.209999084472656
+Eritrea,Anseba,62,"Tree cover, broadleaved, deciduous",203.12,203.12,90-99,3,42.209999084472656
+Eritrea,Anseba,70,"Tree cover, needleleaved, evergreen",3408.9,3459.42,0-9,1050,46.43000030517578
+Eritrea,Anseba,70,"Tree cover, needleleaved, evergreen",3408.9,3459.42,10-19,359,46.43000030517578
+Eritrea,Anseba,70,"Tree cover, needleleaved, evergreen",3408.9,3459.42,20-29,228,46.43000030517578
+Eritrea,Anseba,70,"Tree cover, needleleaved, evergreen",3408.9,3459.42,30-39,212,46.43000030517578
+Eritrea,Anseba,70,"Tree cover, needleleaved, evergreen",3408.9,3459.42,40-49,246,46.43000030517578
+Eritrea,Anseba,70,"Tree cover, needleleaved, evergreen",3408.9,3459.42,50-59,269,46.43000030517578
+Eritrea,Anseba,70,"Tree cover, needleleaved, evergreen",3408.9,3459.42,60-69,306,46.43000030517578
+Eritrea,Anseba,70,"Tree cover, needleleaved, evergreen",3408.9,3459.42,70-79,413,46.43000030517578
+Eritrea,Anseba,70,"Tree cover, needleleaved, evergreen",3408.9,3459.42,80-89,595,46.43000030517578
+Eritrea,Anseba,70,"Tree cover, needleleaved, evergreen",3408.9,3459.42,90-99,417,46.43000030517578
+Eritrea,Anseba,90,"Tree cover, mixed leaf type",0.0,1283.82,0-9,0,
+Eritrea,Anseba,90,"Tree cover, mixed leaf type",0.0,1283.82,10-19,0,
+Eritrea,Anseba,90,"Tree cover, mixed leaf type",0.0,1283.82,20-29,0,
+Eritrea,Anseba,90,"Tree cover, mixed leaf type",0.0,1283.82,30-39,0,
+Eritrea,Anseba,90,"Tree cover, mixed leaf type",0.0,1283.82,40-49,0,
+Eritrea,Anseba,90,"Tree cover, mixed leaf type",0.0,1283.82,50-59,0,
+Eritrea,Anseba,90,"Tree cover, mixed leaf type",0.0,1283.82,60-69,0,
+Eritrea,Anseba,90,"Tree cover, mixed leaf type",0.0,1283.82,70-79,0,
+Eritrea,Anseba,90,"Tree cover, mixed leaf type",0.0,1283.82,80-89,0,
+Eritrea,Anseba,90,"Tree cover, mixed leaf type",0.0,1283.82,90-99,0,
+Eritrea,Anseba,100,Mosaic tree and shrub / herbaceous cover,49725.03,50829.78,0-9,42135,12.300000190734863
+Eritrea,Anseba,100,Mosaic tree and shrub / herbaceous cover,49725.03,50829.78,10-19,10940,12.300000190734863
+Eritrea,Anseba,100,Mosaic tree and shrub / herbaceous cover,49725.03,50829.78,20-29,5156,12.300000190734863
+Eritrea,Anseba,100,Mosaic tree and shrub / herbaceous cover,49725.03,50829.78,30-39,2813,12.300000190734863
+Eritrea,Anseba,100,Mosaic tree and shrub / herbaceous cover,49725.03,50829.78,40-49,1536,12.300000190734863
+Eritrea,Anseba,100,Mosaic tree and shrub / herbaceous cover,49725.03,50829.78,50-59,962,12.300000190734863
+Eritrea,Anseba,100,Mosaic tree and shrub / herbaceous cover,49725.03,50829.78,60-69,555,12.300000190734863
+Eritrea,Anseba,100,Mosaic tree and shrub / herbaceous cover,49725.03,50829.78,70-79,355,12.300000190734863
+Eritrea,Anseba,100,Mosaic tree and shrub / herbaceous cover,49725.03,50829.78,80-89,183,12.300000190734863
+Eritrea,Anseba,100,Mosaic tree and shrub / herbaceous cover,49725.03,50829.78,90-99,18,12.300000190734863
+Eritrea,Anseba,110,Mosaic herbaceous cover / tree and shrub,65532.27,114172.86,0-9,65829,8.899999618530273
+Eritrea,Anseba,110,Mosaic herbaceous cover / tree and shrub,65532.27,114172.86,10-19,13026,8.899999618530273
+Eritrea,Anseba,110,Mosaic herbaceous cover / tree and shrub,65532.27,114172.86,20-29,4697,8.899999618530273
+Eritrea,Anseba,110,Mosaic herbaceous cover / tree and shrub,65532.27,114172.86,30-39,1990,8.899999618530273
+Eritrea,Anseba,110,Mosaic herbaceous cover / tree and shrub,65532.27,114172.86,40-49,946,8.899999618530273
+Eritrea,Anseba,110,Mosaic herbaceous cover / tree and shrub,65532.27,114172.86,50-59,399,8.899999618530273
+Eritrea,Anseba,110,Mosaic herbaceous cover / tree and shrub,65532.27,114172.86,60-69,183,8.899999618530273
+Eritrea,Anseba,110,Mosaic herbaceous cover / tree and shrub,65532.27,114172.86,70-79,63,8.899999618530273
+Eritrea,Anseba,110,Mosaic herbaceous cover / tree and shrub,65532.27,114172.86,80-89,16,8.899999618530273
+Eritrea,Anseba,110,Mosaic herbaceous cover / tree and shrub,65532.27,114172.86,90-99,3,8.899999618530273
+Eritrea,Anseba,120,Shrubland,125937.34,156583.71,0-9,86106,17.030000686645508
+Eritrea,Anseba,120,Shrubland,125937.34,156583.71,10-19,24802,17.030000686645508
+Eritrea,Anseba,120,Shrubland,125937.34,156583.71,20-29,12841,17.030000686645508
+Eritrea,Anseba,120,Shrubland,125937.34,156583.71,30-39,8548,17.030000686645508
+Eritrea,Anseba,120,Shrubland,125937.34,156583.71,40-49,5927,17.030000686645508
+Eritrea,Anseba,120,Shrubland,125937.34,156583.71,50-59,4474,17.030000686645508
+Eritrea,Anseba,120,Shrubland,125937.34,156583.71,60-69,3236,17.030000686645508
+Eritrea,Anseba,120,Shrubland,125937.34,156583.71,70-79,2761,17.030000686645508
+Eritrea,Anseba,120,Shrubland,125937.34,156583.71,80-89,2116,17.030000686645508
+Eritrea,Anseba,120,Shrubland,125937.34,156583.71,90-99,678,17.030000686645508
+Eritrea,Anseba,122,Shrubland,36.9,36.9,0-9,23,26.139999389648438
+Eritrea,Anseba,122,Shrubland,36.9,36.9,10-19,10,26.139999389648438
+Eritrea,Anseba,122,Shrubland,36.9,36.9,20-29,2,26.139999389648438
+Eritrea,Anseba,122,Shrubland,36.9,36.9,30-39,4,26.139999389648438
+Eritrea,Anseba,122,Shrubland,36.9,36.9,40-49,2,26.139999389648438
+Eritrea,Anseba,122,Shrubland,36.9,36.9,50-59,8,26.139999389648438
+Eritrea,Anseba,122,Shrubland,36.9,36.9,60-69,4,26.139999389648438
+Eritrea,Anseba,122,Shrubland,36.9,36.9,70-79,2,26.139999389648438
+Eritrea,Anseba,122,Shrubland,36.9,36.9,80-89,1,26.139999389648438
+Eritrea,Anseba,122,Shrubland,36.9,36.9,90-99,0,26.139999389648438
+Eritrea,Anseba,130,Grassland,131670.03,380515.35,0-9,113555,9.09000015258789
+Eritrea,Anseba,130,Grassland,131670.03,380515.35,10-19,22606,9.09000015258789
+Eritrea,Anseba,130,Grassland,131670.03,380515.35,20-29,8231,9.09000015258789
+Eritrea,Anseba,130,Grassland,131670.03,380515.35,30-39,3543,9.09000015258789
+Eritrea,Anseba,130,Grassland,131670.03,380515.35,40-49,1660,9.09000015258789
+Eritrea,Anseba,130,Grassland,131670.03,380515.35,50-59,756,9.09000015258789
+Eritrea,Anseba,130,Grassland,131670.03,380515.35,60-69,386,9.09000015258789
+Eritrea,Anseba,130,Grassland,131670.03,380515.35,70-79,153,9.09000015258789
+Eritrea,Anseba,130,Grassland,131670.03,380515.35,80-89,91,9.09000015258789
+Eritrea,Anseba,130,Grassland,131670.03,380515.35,90-99,60,9.09000015258789
+Eritrea,Anseba,150,Sparse vegetation,6373.86,236093.61,0-9,7678,5.980000019073486
+Eritrea,Anseba,150,Sparse vegetation,6373.86,236093.61,10-19,661,5.980000019073486
+Eritrea,Anseba,150,Sparse vegetation,6373.86,236093.61,20-29,162,5.980000019073486
+Eritrea,Anseba,150,Sparse vegetation,6373.86,236093.61,30-39,62,5.980000019073486
+Eritrea,Anseba,150,Sparse vegetation,6373.86,236093.61,40-49,15,5.980000019073486
+Eritrea,Anseba,150,Sparse vegetation,6373.86,236093.61,50-59,9,5.980000019073486
+Eritrea,Anseba,150,Sparse vegetation,6373.86,236093.61,60-69,3,5.980000019073486
+Eritrea,Anseba,150,Sparse vegetation,6373.86,236093.61,70-79,2,5.980000019073486
+Eritrea,Anseba,150,Sparse vegetation,6373.86,236093.61,80-89,2,5.980000019073486
+Eritrea,Anseba,150,Sparse vegetation,6373.86,236093.61,90-99,0,5.980000019073486
+Eritrea,Anseba,152,Sparse vegetation,0.0,119.71,0-9,0,
+Eritrea,Anseba,152,Sparse vegetation,0.0,119.71,10-19,0,
+Eritrea,Anseba,152,Sparse vegetation,0.0,119.71,20-29,0,
+Eritrea,Anseba,152,Sparse vegetation,0.0,119.71,30-39,0,
+Eritrea,Anseba,152,Sparse vegetation,0.0,119.71,40-49,0,
+Eritrea,Anseba,152,Sparse vegetation,0.0,119.71,50-59,0,
+Eritrea,Anseba,152,Sparse vegetation,0.0,119.71,60-69,0,
+Eritrea,Anseba,152,Sparse vegetation,0.0,119.71,70-79,0,
+Eritrea,Anseba,152,Sparse vegetation,0.0,119.71,80-89,0,
+Eritrea,Anseba,152,Sparse vegetation,0.0,119.71,90-99,0,
+Eritrea,Anseba,153,Sparse vegetation,0.0,55.51,0-9,0,
+Eritrea,Anseba,153,Sparse vegetation,0.0,55.51,10-19,0,
+Eritrea,Anseba,153,Sparse vegetation,0.0,55.51,20-29,0,
+Eritrea,Anseba,153,Sparse vegetation,0.0,55.51,30-39,0,
+Eritrea,Anseba,153,Sparse vegetation,0.0,55.51,40-49,0,
+Eritrea,Anseba,153,Sparse vegetation,0.0,55.51,50-59,0,
+Eritrea,Anseba,153,Sparse vegetation,0.0,55.51,60-69,0,
+Eritrea,Anseba,153,Sparse vegetation,0.0,55.51,70-79,0,
+Eritrea,Anseba,153,Sparse vegetation,0.0,55.51,80-89,0,
+Eritrea,Anseba,153,Sparse vegetation,0.0,55.51,90-99,0,
+Eritrea,Anseba,170,"Tree cover, flooded, saline water",229.82,321.32,0-9,268,8.729999542236328
+Eritrea,Anseba,170,"Tree cover, flooded, saline water",229.82,321.32,10-19,34,8.729999542236328
+Eritrea,Anseba,170,"Tree cover, flooded, saline water",229.82,321.32,20-29,10,8.729999542236328
+Eritrea,Anseba,170,"Tree cover, flooded, saline water",229.82,321.32,30-39,5,8.729999542236328
+Eritrea,Anseba,170,"Tree cover, flooded, saline water",229.82,321.32,40-49,5,8.729999542236328
+Eritrea,Anseba,170,"Tree cover, flooded, saline water",229.82,321.32,50-59,6,8.729999542236328
+Eritrea,Anseba,170,"Tree cover, flooded, saline water",229.82,321.32,60-69,3,8.729999542236328
+Eritrea,Anseba,170,"Tree cover, flooded, saline water",229.82,321.32,70-79,0,8.729999542236328
+Eritrea,Anseba,170,"Tree cover, flooded, saline water",229.82,321.32,80-89,0,8.729999542236328
+Eritrea,Anseba,170,"Tree cover, flooded, saline water",229.82,321.32,90-99,0,8.729999542236328
+Eritrea,Anseba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",137.41,137.41,0-9,32,28.219999313354492
+Eritrea,Anseba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",137.41,137.41,10-19,49,28.219999313354492
+Eritrea,Anseba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",137.41,137.41,20-29,34,28.219999313354492
+Eritrea,Anseba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",137.41,137.41,30-39,20,28.219999313354492
+Eritrea,Anseba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",137.41,137.41,40-49,22,28.219999313354492
+Eritrea,Anseba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",137.41,137.41,50-59,16,28.219999313354492
+Eritrea,Anseba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",137.41,137.41,60-69,8,28.219999313354492
+Eritrea,Anseba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",137.41,137.41,70-79,4,28.219999313354492
+Eritrea,Anseba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",137.41,137.41,80-89,2,28.219999313354492
+Eritrea,Anseba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",137.41,137.41,90-99,0,28.219999313354492
+Eritrea,Anseba,190,Urban areas,2529.59,2953.96,0-9,2124,18.049999237060547
+Eritrea,Anseba,190,Urban areas,2529.59,2953.96,10-19,505,18.049999237060547
+Eritrea,Anseba,190,Urban areas,2529.59,2953.96,20-29,188,18.049999237060547
+Eritrea,Anseba,190,Urban areas,2529.59,2953.96,30-39,111,18.049999237060547
+Eritrea,Anseba,190,Urban areas,2529.59,2953.96,40-49,77,18.049999237060547
+Eritrea,Anseba,190,Urban areas,2529.59,2953.96,50-59,60,18.049999237060547
+Eritrea,Anseba,190,Urban areas,2529.59,2953.96,60-69,50,18.049999237060547
+Eritrea,Anseba,190,Urban areas,2529.59,2953.96,70-79,32,18.049999237060547
+Eritrea,Anseba,190,Urban areas,2529.59,2953.96,80-89,37,18.049999237060547
+Eritrea,Anseba,190,Urban areas,2529.59,2953.96,90-99,208,18.049999237060547
+Eritrea,Anseba,200,Bare areas,5567.94,901243.23,0-9,6558,5.590000152587891
+Eritrea,Anseba,200,Bare areas,5567.94,901243.23,10-19,427,5.590000152587891
+Eritrea,Anseba,200,Bare areas,5567.94,901243.23,20-29,109,5.590000152587891
+Eritrea,Anseba,200,Bare areas,5567.94,901243.23,30-39,48,5.590000152587891
+Eritrea,Anseba,200,Bare areas,5567.94,901243.23,40-49,12,5.590000152587891
+Eritrea,Anseba,200,Bare areas,5567.94,901243.23,50-59,1,5.590000152587891
+Eritrea,Anseba,200,Bare areas,5567.94,901243.23,60-69,0,5.590000152587891
+Eritrea,Anseba,200,Bare areas,5567.94,901243.23,70-79,1,5.590000152587891
+Eritrea,Anseba,200,Bare areas,5567.94,901243.23,80-89,0,5.590000152587891
+Eritrea,Anseba,200,Bare areas,5567.94,901243.23,90-99,0,5.590000152587891
+Eritrea,Anseba,201,Bare areas,2905.2,27133.32,0-9,3783,5.550000190734863
+Eritrea,Anseba,201,Bare areas,2905.2,27133.32,10-19,146,5.550000190734863
+Eritrea,Anseba,201,Bare areas,2905.2,27133.32,20-29,30,5.550000190734863
+Eritrea,Anseba,201,Bare areas,2905.2,27133.32,30-39,13,5.550000190734863
+Eritrea,Anseba,201,Bare areas,2905.2,27133.32,40-49,14,5.550000190734863
+Eritrea,Anseba,201,Bare areas,2905.2,27133.32,50-59,17,5.550000190734863
+Eritrea,Anseba,201,Bare areas,2905.2,27133.32,60-69,8,5.550000190734863
+Eritrea,Anseba,201,Bare areas,2905.2,27133.32,70-79,2,5.550000190734863
+Eritrea,Anseba,201,Bare areas,2905.2,27133.32,80-89,2,5.550000190734863
+Eritrea,Anseba,201,Bare areas,2905.2,27133.32,90-99,0,5.550000190734863
+Eritrea,Anseba,255,No Data (flag),1301.78,2685832.39,0-9,2399,14.010000228881836
+Eritrea,Anseba,255,No Data (flag),1301.78,2685832.39,10-19,485,14.010000228881836
+Eritrea,Anseba,255,No Data (flag),1301.78,2685832.39,20-29,239,14.010000228881836
+Eritrea,Anseba,255,No Data (flag),1301.78,2685832.39,30-39,128,14.010000228881836
+Eritrea,Anseba,255,No Data (flag),1301.78,2685832.39,40-49,100,14.010000228881836
+Eritrea,Anseba,255,No Data (flag),1301.78,2685832.39,50-59,64,14.010000228881836
+Eritrea,Anseba,255,No Data (flag),1301.78,2685832.39,60-69,44,14.010000228881836
+Eritrea,Anseba,255,No Data (flag),1301.78,2685832.39,70-79,25,14.010000228881836
+Eritrea,Anseba,255,No Data (flag),1301.78,2685832.39,80-89,42,14.010000228881836
+Eritrea,Anseba,255,No Data (flag),1301.78,2685832.39,90-99,56,14.010000228881836
+Eritrea,Debub,10,"Cropland, rainfed",193879.7,248253.49,0-9,161538,12.210000038146973
+Eritrea,Debub,10,"Cropland, rainfed",193879.7,248253.49,10-19,31962,12.210000038146973
+Eritrea,Debub,10,"Cropland, rainfed",193879.7,248253.49,20-29,15259,12.210000038146973
+Eritrea,Debub,10,"Cropland, rainfed",193879.7,248253.49,30-39,9234,12.210000038146973
+Eritrea,Debub,10,"Cropland, rainfed",193879.7,248253.49,40-49,6087,12.210000038146973
+Eritrea,Debub,10,"Cropland, rainfed",193879.7,248253.49,50-59,4090,12.210000038146973
+Eritrea,Debub,10,"Cropland, rainfed",193879.7,248253.49,60-69,2815,12.210000038146973
+Eritrea,Debub,10,"Cropland, rainfed",193879.7,248253.49,70-79,1765,12.210000038146973
+Eritrea,Debub,10,"Cropland, rainfed",193879.7,248253.49,80-89,1055,12.210000038146973
+Eritrea,Debub,10,"Cropland, rainfed",193879.7,248253.49,90-99,209,12.210000038146973
+Eritrea,Debub,11,"Cropland, rainfed",5727.43,6747.24,0-9,5642,10.59000015258789
+Eritrea,Debub,11,"Cropland, rainfed",5727.43,6747.24,10-19,1095,10.59000015258789
+Eritrea,Debub,11,"Cropland, rainfed",5727.43,6747.24,20-29,506,10.59000015258789
+Eritrea,Debub,11,"Cropland, rainfed",5727.43,6747.24,30-39,317,10.59000015258789
+Eritrea,Debub,11,"Cropland, rainfed",5727.43,6747.24,40-49,184,10.59000015258789
+Eritrea,Debub,11,"Cropland, rainfed",5727.43,6747.24,50-59,91,10.59000015258789
+Eritrea,Debub,11,"Cropland, rainfed",5727.43,6747.24,60-69,38,10.59000015258789
+Eritrea,Debub,11,"Cropland, rainfed",5727.43,6747.24,70-79,18,10.59000015258789
+Eritrea,Debub,11,"Cropland, rainfed",5727.43,6747.24,80-89,7,10.59000015258789
+Eritrea,Debub,11,"Cropland, rainfed",5727.43,6747.24,90-99,1,10.59000015258789
+Eritrea,Debub,20,"Cropland, irrigated or post-flooding",11210.57,12464.39,0-9,10674,10.010000228881836
+Eritrea,Debub,20,"Cropland, irrigated or post-flooding",11210.57,12464.39,10-19,1803,10.010000228881836
+Eritrea,Debub,20,"Cropland, irrigated or post-flooding",11210.57,12464.39,20-29,820,10.010000228881836
+Eritrea,Debub,20,"Cropland, irrigated or post-flooding",11210.57,12464.39,30-39,511,10.010000228881836
+Eritrea,Debub,20,"Cropland, irrigated or post-flooding",11210.57,12464.39,40-49,262,10.010000228881836
+Eritrea,Debub,20,"Cropland, irrigated or post-flooding",11210.57,12464.39,50-59,147,10.010000228881836
+Eritrea,Debub,20,"Cropland, irrigated or post-flooding",11210.57,12464.39,60-69,65,10.010000228881836
+Eritrea,Debub,20,"Cropland, irrigated or post-flooding",11210.57,12464.39,70-79,45,10.010000228881836
+Eritrea,Debub,20,"Cropland, irrigated or post-flooding",11210.57,12464.39,80-89,16,10.010000228881836
+Eritrea,Debub,20,"Cropland, irrigated or post-flooding",11210.57,12464.39,90-99,4,10.010000228881836
+Eritrea,Debub,30,Mosaic cropland / natural vegetation,125677.57,153813.76,0-9,105461,13.869999885559082
+Eritrea,Debub,30,Mosaic cropland / natural vegetation,125677.57,153813.76,10-19,22096,13.869999885559082
+Eritrea,Debub,30,Mosaic cropland / natural vegetation,125677.57,153813.76,20-29,11124,13.869999885559082
+Eritrea,Debub,30,Mosaic cropland / natural vegetation,125677.57,153813.76,30-39,7037,13.869999885559082
+Eritrea,Debub,30,Mosaic cropland / natural vegetation,125677.57,153813.76,40-49,4960,13.869999885559082
+Eritrea,Debub,30,Mosaic cropland / natural vegetation,125677.57,153813.76,50-59,3613,13.869999885559082
+Eritrea,Debub,30,Mosaic cropland / natural vegetation,125677.57,153813.76,60-69,2692,13.869999885559082
+Eritrea,Debub,30,Mosaic cropland / natural vegetation,125677.57,153813.76,70-79,1894,13.869999885559082
+Eritrea,Debub,30,Mosaic cropland / natural vegetation,125677.57,153813.76,80-89,1334,13.869999885559082
+Eritrea,Debub,30,Mosaic cropland / natural vegetation,125677.57,153813.76,90-99,292,13.869999885559082
+Eritrea,Debub,40,Mosaic natural vegetation / cropland,138623.3,179337.24,0-9,97740,17.079999923706055
+Eritrea,Debub,40,Mosaic natural vegetation / cropland,138623.3,179337.24,10-19,28948,17.079999923706055
+Eritrea,Debub,40,Mosaic natural vegetation / cropland,138623.3,179337.24,20-29,16251,17.079999923706055
+Eritrea,Debub,40,Mosaic natural vegetation / cropland,138623.3,179337.24,30-39,10937,17.079999923706055
+Eritrea,Debub,40,Mosaic natural vegetation / cropland,138623.3,179337.24,40-49,7745,17.079999923706055
+Eritrea,Debub,40,Mosaic natural vegetation / cropland,138623.3,179337.24,50-59,5693,17.079999923706055
+Eritrea,Debub,40,Mosaic natural vegetation / cropland,138623.3,179337.24,60-69,4123,17.079999923706055
+Eritrea,Debub,40,Mosaic natural vegetation / cropland,138623.3,179337.24,70-79,2743,17.079999923706055
+Eritrea,Debub,40,Mosaic natural vegetation / cropland,138623.3,179337.24,80-89,1709,17.079999923706055
+Eritrea,Debub,40,Mosaic natural vegetation / cropland,138623.3,179337.24,90-99,474,17.079999923706055
+Eritrea,Debub,50,"Tree cover, broadleaved, evergreen",82.81,118.81,0-9,14,40.310001373291016
+Eritrea,Debub,50,"Tree cover, broadleaved, evergreen",82.81,118.81,10-19,15,40.310001373291016
+Eritrea,Debub,50,"Tree cover, broadleaved, evergreen",82.81,118.81,20-29,13,40.310001373291016
+Eritrea,Debub,50,"Tree cover, broadleaved, evergreen",82.81,118.81,30-39,13,40.310001373291016
+Eritrea,Debub,50,"Tree cover, broadleaved, evergreen",82.81,118.81,40-49,11,40.310001373291016
+Eritrea,Debub,50,"Tree cover, broadleaved, evergreen",82.81,118.81,50-59,14,40.310001373291016
+Eritrea,Debub,50,"Tree cover, broadleaved, evergreen",82.81,118.81,60-69,17,40.310001373291016
+Eritrea,Debub,50,"Tree cover, broadleaved, evergreen",82.81,118.81,70-79,6,40.310001373291016
+Eritrea,Debub,50,"Tree cover, broadleaved, evergreen",82.81,118.81,80-89,6,40.310001373291016
+Eritrea,Debub,50,"Tree cover, broadleaved, evergreen",82.81,118.81,90-99,0,40.310001373291016
+Eritrea,Debub,62,"Tree cover, broadleaved, deciduous",399.32,568.25,0-9,269,24.239999771118164
+Eritrea,Debub,62,"Tree cover, broadleaved, deciduous",399.32,568.25,10-19,66,24.239999771118164
+Eritrea,Debub,62,"Tree cover, broadleaved, deciduous",399.32,568.25,20-29,61,24.239999771118164
+Eritrea,Debub,62,"Tree cover, broadleaved, deciduous",399.32,568.25,30-39,23,24.239999771118164
+Eritrea,Debub,62,"Tree cover, broadleaved, deciduous",399.32,568.25,40-49,35,24.239999771118164
+Eritrea,Debub,62,"Tree cover, broadleaved, deciduous",399.32,568.25,50-59,34,24.239999771118164
+Eritrea,Debub,62,"Tree cover, broadleaved, deciduous",399.32,568.25,60-69,24,24.239999771118164
+Eritrea,Debub,62,"Tree cover, broadleaved, deciduous",399.32,568.25,70-79,24,24.239999771118164
+Eritrea,Debub,62,"Tree cover, broadleaved, deciduous",399.32,568.25,80-89,15,24.239999771118164
+Eritrea,Debub,62,"Tree cover, broadleaved, deciduous",399.32,568.25,90-99,10,24.239999771118164
+Eritrea,Debub,70,"Tree cover, needleleaved, evergreen",2466.95,2670.03,0-9,1734,19.790000915527344
+Eritrea,Debub,70,"Tree cover, needleleaved, evergreen",2466.95,2670.03,10-19,483,19.790000915527344
+Eritrea,Debub,70,"Tree cover, needleleaved, evergreen",2466.95,2670.03,20-29,268,19.790000915527344
+Eritrea,Debub,70,"Tree cover, needleleaved, evergreen",2466.95,2670.03,30-39,193,19.790000915527344
+Eritrea,Debub,70,"Tree cover, needleleaved, evergreen",2466.95,2670.03,40-49,140,19.790000915527344
+Eritrea,Debub,70,"Tree cover, needleleaved, evergreen",2466.95,2670.03,50-59,111,19.790000915527344
+Eritrea,Debub,70,"Tree cover, needleleaved, evergreen",2466.95,2670.03,60-69,93,19.790000915527344
+Eritrea,Debub,70,"Tree cover, needleleaved, evergreen",2466.95,2670.03,70-79,80,19.790000915527344
+Eritrea,Debub,70,"Tree cover, needleleaved, evergreen",2466.95,2670.03,80-89,91,19.790000915527344
+Eritrea,Debub,70,"Tree cover, needleleaved, evergreen",2466.95,2670.03,90-99,31,19.790000915527344
+Eritrea,Debub,100,Mosaic tree and shrub / herbaceous cover,54188.45,60323.04,0-9,41941,14.779999732971191
+Eritrea,Debub,100,Mosaic tree and shrub / herbaceous cover,54188.45,60323.04,10-19,11972,14.779999732971191
+Eritrea,Debub,100,Mosaic tree and shrub / herbaceous cover,54188.45,60323.04,20-29,6241,14.779999732971191
+Eritrea,Debub,100,Mosaic tree and shrub / herbaceous cover,54188.45,60323.04,30-39,3917,14.779999732971191
+Eritrea,Debub,100,Mosaic tree and shrub / herbaceous cover,54188.45,60323.04,40-49,2654,14.779999732971191
+Eritrea,Debub,100,Mosaic tree and shrub / herbaceous cover,54188.45,60323.04,50-59,1674,14.779999732971191
+Eritrea,Debub,100,Mosaic tree and shrub / herbaceous cover,54188.45,60323.04,60-69,1105,14.779999732971191
+Eritrea,Debub,100,Mosaic tree and shrub / herbaceous cover,54188.45,60323.04,70-79,700,14.779999732971191
+Eritrea,Debub,100,Mosaic tree and shrub / herbaceous cover,54188.45,60323.04,80-89,340,14.779999732971191
+Eritrea,Debub,100,Mosaic tree and shrub / herbaceous cover,54188.45,60323.04,90-99,92,14.779999732971191
+Eritrea,Debub,110,Mosaic herbaceous cover / tree and shrub,33404.6,41447.84,0-9,28555,13.3100004196167
+Eritrea,Debub,110,Mosaic herbaceous cover / tree and shrub,33404.6,41447.84,10-19,7180,13.3100004196167
+Eritrea,Debub,110,Mosaic herbaceous cover / tree and shrub,33404.6,41447.84,20-29,3578,13.3100004196167
+Eritrea,Debub,110,Mosaic herbaceous cover / tree and shrub,33404.6,41447.84,30-39,2332,13.3100004196167
+Eritrea,Debub,110,Mosaic herbaceous cover / tree and shrub,33404.6,41447.84,40-49,1388,13.3100004196167
+Eritrea,Debub,110,Mosaic herbaceous cover / tree and shrub,33404.6,41447.84,50-59,949,13.3100004196167
+Eritrea,Debub,110,Mosaic herbaceous cover / tree and shrub,33404.6,41447.84,60-69,521,13.3100004196167
+Eritrea,Debub,110,Mosaic herbaceous cover / tree and shrub,33404.6,41447.84,70-79,289,13.3100004196167
+Eritrea,Debub,110,Mosaic herbaceous cover / tree and shrub,33404.6,41447.84,80-89,151,13.3100004196167
+Eritrea,Debub,110,Mosaic herbaceous cover / tree and shrub,33404.6,41447.84,90-99,25,13.3100004196167
+Eritrea,Debub,120,Shrubland,136078.55,177901.26,0-9,73254,23.889999389648438
+Eritrea,Debub,120,Shrubland,136078.55,177901.26,10-19,25457,23.889999389648438
+Eritrea,Debub,120,Shrubland,136078.55,177901.26,20-29,15759,23.889999389648438
+Eritrea,Debub,120,Shrubland,136078.55,177901.26,30-39,11614,23.889999389648438
+Eritrea,Debub,120,Shrubland,136078.55,177901.26,40-49,9403,23.889999389648438
+Eritrea,Debub,120,Shrubland,136078.55,177901.26,50-59,7909,23.889999389648438
+Eritrea,Debub,120,Shrubland,136078.55,177901.26,60-69,6807,23.889999389648438
+Eritrea,Debub,120,Shrubland,136078.55,177901.26,70-79,5920,23.889999389648438
+Eritrea,Debub,120,Shrubland,136078.55,177901.26,80-89,5273,23.889999389648438
+Eritrea,Debub,120,Shrubland,136078.55,177901.26,90-99,1857,23.889999389648438
+Eritrea,Debub,122,Shrubland,91.2,387.04,0-9,51,38.38999938964844
+Eritrea,Debub,122,Shrubland,91.2,387.04,10-19,11,38.38999938964844
+Eritrea,Debub,122,Shrubland,91.2,387.04,20-29,10,38.38999938964844
+Eritrea,Debub,122,Shrubland,91.2,387.04,30-39,3,38.38999938964844
+Eritrea,Debub,122,Shrubland,91.2,387.04,40-49,9,38.38999938964844
+Eritrea,Debub,122,Shrubland,91.2,387.04,50-59,8,38.38999938964844
+Eritrea,Debub,122,Shrubland,91.2,387.04,60-69,11,38.38999938964844
+Eritrea,Debub,122,Shrubland,91.2,387.04,70-79,12,38.38999938964844
+Eritrea,Debub,122,Shrubland,91.2,387.04,80-89,18,38.38999938964844
+Eritrea,Debub,122,Shrubland,91.2,387.04,90-99,6,38.38999938964844
+Eritrea,Debub,130,Grassland,35853.49,43625.99,0-9,33942,9.84000015258789
+Eritrea,Debub,130,Grassland,35853.49,43625.99,10-19,6151,9.84000015258789
+Eritrea,Debub,130,Grassland,35853.49,43625.99,20-29,2628,9.84000015258789
+Eritrea,Debub,130,Grassland,35853.49,43625.99,30-39,1372,9.84000015258789
+Eritrea,Debub,130,Grassland,35853.49,43625.99,40-49,778,9.84000015258789
+Eritrea,Debub,130,Grassland,35853.49,43625.99,50-59,433,9.84000015258789
+Eritrea,Debub,130,Grassland,35853.49,43625.99,60-69,218,9.84000015258789
+Eritrea,Debub,130,Grassland,35853.49,43625.99,70-79,124,9.84000015258789
+Eritrea,Debub,130,Grassland,35853.49,43625.99,80-89,43,9.84000015258789
+Eritrea,Debub,130,Grassland,35853.49,43625.99,90-99,5,9.84000015258789
+Eritrea,Debub,150,Sparse vegetation,0.0,28.21,0-9,0,
+Eritrea,Debub,150,Sparse vegetation,0.0,28.21,10-19,0,
+Eritrea,Debub,150,Sparse vegetation,0.0,28.21,20-29,0,
+Eritrea,Debub,150,Sparse vegetation,0.0,28.21,30-39,0,
+Eritrea,Debub,150,Sparse vegetation,0.0,28.21,40-49,0,
+Eritrea,Debub,150,Sparse vegetation,0.0,28.21,50-59,0,
+Eritrea,Debub,150,Sparse vegetation,0.0,28.21,60-69,0,
+Eritrea,Debub,150,Sparse vegetation,0.0,28.21,70-79,0,
+Eritrea,Debub,150,Sparse vegetation,0.0,28.21,80-89,0,
+Eritrea,Debub,150,Sparse vegetation,0.0,28.21,90-99,0,
+Eritrea,Debub,170,"Tree cover, flooded, saline water",239.73,488.47,0-9,225,12.619999885559082
+Eritrea,Debub,170,"Tree cover, flooded, saline water",239.73,488.47,10-19,46,12.619999885559082
+Eritrea,Debub,170,"Tree cover, flooded, saline water",239.73,488.47,20-29,27,12.619999885559082
+Eritrea,Debub,170,"Tree cover, flooded, saline water",239.73,488.47,30-39,16,12.619999885559082
+Eritrea,Debub,170,"Tree cover, flooded, saline water",239.73,488.47,40-49,9,12.619999885559082
+Eritrea,Debub,170,"Tree cover, flooded, saline water",239.73,488.47,50-59,9,12.619999885559082
+Eritrea,Debub,170,"Tree cover, flooded, saline water",239.73,488.47,60-69,5,12.619999885559082
+Eritrea,Debub,170,"Tree cover, flooded, saline water",239.73,488.47,70-79,1,12.619999885559082
+Eritrea,Debub,170,"Tree cover, flooded, saline water",239.73,488.47,80-89,0,12.619999885559082
+Eritrea,Debub,170,"Tree cover, flooded, saline water",239.73,488.47,90-99,0,12.619999885559082
+Eritrea,Debub,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.3,18.3,0-9,28,4.070000171661377
+Eritrea,Debub,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.3,18.3,10-19,0,4.070000171661377
+Eritrea,Debub,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.3,18.3,20-29,0,4.070000171661377
+Eritrea,Debub,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.3,18.3,30-39,0,4.070000171661377
+Eritrea,Debub,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.3,18.3,40-49,0,4.070000171661377
+Eritrea,Debub,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.3,18.3,50-59,0,4.070000171661377
+Eritrea,Debub,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.3,18.3,60-69,0,4.070000171661377
+Eritrea,Debub,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.3,18.3,70-79,0,4.070000171661377
+Eritrea,Debub,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.3,18.3,80-89,0,4.070000171661377
+Eritrea,Debub,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.3,18.3,90-99,0,4.070000171661377
+Eritrea,Debub,190,Urban areas,2292.57,2723.41,0-9,2759,7.5
+Eritrea,Debub,190,Urban areas,2292.57,2723.41,10-19,223,7.5
+Eritrea,Debub,190,Urban areas,2292.57,2723.41,20-29,96,7.5
+Eritrea,Debub,190,Urban areas,2292.57,2723.41,30-39,54,7.5
+Eritrea,Debub,190,Urban areas,2292.57,2723.41,40-49,32,7.5
+Eritrea,Debub,190,Urban areas,2292.57,2723.41,50-59,15,7.5
+Eritrea,Debub,190,Urban areas,2292.57,2723.41,60-69,12,7.5
+Eritrea,Debub,190,Urban areas,2292.57,2723.41,70-79,12,7.5
+Eritrea,Debub,190,Urban areas,2292.57,2723.41,80-89,1,7.5
+Eritrea,Debub,190,Urban areas,2292.57,2723.41,90-99,5,7.5
+Eritrea,Debub,200,Bare areas,27.91,413.14,0-9,39,4.360000133514404
+Eritrea,Debub,200,Bare areas,27.91,413.14,10-19,1,4.360000133514404
+Eritrea,Debub,200,Bare areas,27.91,413.14,20-29,0,4.360000133514404
+Eritrea,Debub,200,Bare areas,27.91,413.14,30-39,0,4.360000133514404
+Eritrea,Debub,200,Bare areas,27.91,413.14,40-49,0,4.360000133514404
+Eritrea,Debub,200,Bare areas,27.91,413.14,50-59,0,4.360000133514404
+Eritrea,Debub,200,Bare areas,27.91,413.14,60-69,0,4.360000133514404
+Eritrea,Debub,200,Bare areas,27.91,413.14,70-79,0,4.360000133514404
+Eritrea,Debub,200,Bare areas,27.91,413.14,80-89,0,4.360000133514404
+Eritrea,Debub,200,Bare areas,27.91,413.14,90-99,0,4.360000133514404
+Eritrea,Debub,201,Bare areas,2726.93,13207.35,0-9,2239,14.630000114440918
+Eritrea,Debub,201,Bare areas,2726.93,13207.35,10-19,518,14.630000114440918
+Eritrea,Debub,201,Bare areas,2726.93,13207.35,20-29,288,14.630000114440918
+Eritrea,Debub,201,Bare areas,2726.93,13207.35,30-39,182,14.630000114440918
+Eritrea,Debub,201,Bare areas,2726.93,13207.35,40-49,153,14.630000114440918
+Eritrea,Debub,201,Bare areas,2726.93,13207.35,50-59,87,14.630000114440918
+Eritrea,Debub,201,Bare areas,2726.93,13207.35,60-69,73,14.630000114440918
+Eritrea,Debub,201,Bare areas,2726.93,13207.35,70-79,41,14.630000114440918
+Eritrea,Debub,201,Bare areas,2726.93,13207.35,80-89,13,14.630000114440918
+Eritrea,Debub,201,Bare areas,2726.93,13207.35,90-99,6,14.630000114440918
+Eritrea,Debub,210,Water bodies,100.21,118.51,0-9,114,10.289999961853027
+Eritrea,Debub,210,Water bodies,100.21,118.51,10-19,14,10.289999961853027
+Eritrea,Debub,210,Water bodies,100.21,118.51,20-29,7,10.289999961853027
+Eritrea,Debub,210,Water bodies,100.21,118.51,30-39,6,10.289999961853027
+Eritrea,Debub,210,Water bodies,100.21,118.51,40-49,1,10.289999961853027
+Eritrea,Debub,210,Water bodies,100.21,118.51,50-59,2,10.289999961853027
+Eritrea,Debub,210,Water bodies,100.21,118.51,60-69,2,10.289999961853027
+Eritrea,Debub,210,Water bodies,100.21,118.51,70-79,2,10.289999961853027
+Eritrea,Debub,210,Water bodies,100.21,118.51,80-89,0,10.289999961853027
+Eritrea,Debub,210,Water bodies,100.21,118.51,90-99,0,10.289999961853027
+Eritrea,Debub,255,No Data (flag),1053.79,574673.95,0-9,1673,17.290000915527344
+Eritrea,Debub,255,No Data (flag),1053.79,574673.95,10-19,318,17.290000915527344
+Eritrea,Debub,255,No Data (flag),1053.79,574673.95,20-29,179,17.290000915527344
+Eritrea,Debub,255,No Data (flag),1053.79,574673.95,30-39,134,17.290000915527344
+Eritrea,Debub,255,No Data (flag),1053.79,574673.95,40-49,110,17.290000915527344
+Eritrea,Debub,255,No Data (flag),1053.79,574673.95,50-59,76,17.290000915527344
+Eritrea,Debub,255,No Data (flag),1053.79,574673.95,60-69,67,17.290000915527344
+Eritrea,Debub,255,No Data (flag),1053.79,574673.95,70-79,62,17.290000915527344
+Eritrea,Debub,255,No Data (flag),1053.79,574673.95,80-89,43,17.290000915527344
+Eritrea,Debub,255,No Data (flag),1053.79,574673.95,90-99,36,17.290000915527344
+Eritrea,Semenawi Keyih Bahri,10,"Cropland, rainfed",15422.67,17584.87,0-9,14591,9.710000038146973
+Eritrea,Semenawi Keyih Bahri,10,"Cropland, rainfed",15422.67,17584.87,10-19,2688,9.710000038146973
+Eritrea,Semenawi Keyih Bahri,10,"Cropland, rainfed",15422.67,17584.87,20-29,1048,9.710000038146973
+Eritrea,Semenawi Keyih Bahri,10,"Cropland, rainfed",15422.67,17584.87,30-39,524,9.710000038146973
+Eritrea,Semenawi Keyih Bahri,10,"Cropland, rainfed",15422.67,17584.87,40-49,271,9.710000038146973
+Eritrea,Semenawi Keyih Bahri,10,"Cropland, rainfed",15422.67,17584.87,50-59,155,9.710000038146973
+Eritrea,Semenawi Keyih Bahri,10,"Cropland, rainfed",15422.67,17584.87,60-69,93,9.710000038146973
+Eritrea,Semenawi Keyih Bahri,10,"Cropland, rainfed",15422.67,17584.87,70-79,56,9.710000038146973
+Eritrea,Semenawi Keyih Bahri,10,"Cropland, rainfed",15422.67,17584.87,80-89,44,9.710000038146973
+Eritrea,Semenawi Keyih Bahri,10,"Cropland, rainfed",15422.67,17584.87,90-99,21,9.710000038146973
+Eritrea,Semenawi Keyih Bahri,11,"Cropland, rainfed",414.66,616.88,0-9,457,7.03000020980835
+Eritrea,Semenawi Keyih Bahri,11,"Cropland, rainfed",414.66,616.88,10-19,50,7.03000020980835
+Eritrea,Semenawi Keyih Bahri,11,"Cropland, rainfed",414.66,616.88,20-29,26,7.03000020980835
+Eritrea,Semenawi Keyih Bahri,11,"Cropland, rainfed",414.66,616.88,30-39,4,7.03000020980835
+Eritrea,Semenawi Keyih Bahri,11,"Cropland, rainfed",414.66,616.88,40-49,3,7.03000020980835
+Eritrea,Semenawi Keyih Bahri,11,"Cropland, rainfed",414.66,616.88,50-59,0,7.03000020980835
+Eritrea,Semenawi Keyih Bahri,11,"Cropland, rainfed",414.66,616.88,60-69,0,7.03000020980835
+Eritrea,Semenawi Keyih Bahri,11,"Cropland, rainfed",414.66,616.88,70-79,0,7.03000020980835
+Eritrea,Semenawi Keyih Bahri,11,"Cropland, rainfed",414.66,616.88,80-89,0,7.03000020980835
+Eritrea,Semenawi Keyih Bahri,11,"Cropland, rainfed",414.66,616.88,90-99,0,7.03000020980835
+Eritrea,Semenawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",18605.71,24514.66,0-9,19941,6.349999904632568
+Eritrea,Semenawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",18605.71,24514.66,10-19,1204,6.349999904632568
+Eritrea,Semenawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",18605.71,24514.66,20-29,497,6.349999904632568
+Eritrea,Semenawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",18605.71,24514.66,30-39,228,6.349999904632568
+Eritrea,Semenawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",18605.71,24514.66,40-49,128,6.349999904632568
+Eritrea,Semenawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",18605.71,24514.66,50-59,64,6.349999904632568
+Eritrea,Semenawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",18605.71,24514.66,60-69,49,6.349999904632568
+Eritrea,Semenawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",18605.71,24514.66,70-79,27,6.349999904632568
+Eritrea,Semenawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",18605.71,24514.66,80-89,30,6.349999904632568
+Eritrea,Semenawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",18605.71,24514.66,90-99,17,6.349999904632568
+Eritrea,Semenawi Keyih Bahri,30,Mosaic cropland / natural vegetation,14324.64,16393.62,0-9,12312,13.220000267028809
+Eritrea,Semenawi Keyih Bahri,30,Mosaic cropland / natural vegetation,14324.64,16393.62,10-19,2745,13.220000267028809
+Eritrea,Semenawi Keyih Bahri,30,Mosaic cropland / natural vegetation,14324.64,16393.62,20-29,1485,13.220000267028809
+Eritrea,Semenawi Keyih Bahri,30,Mosaic cropland / natural vegetation,14324.64,16393.62,30-39,810,13.220000267028809
+Eritrea,Semenawi Keyih Bahri,30,Mosaic cropland / natural vegetation,14324.64,16393.62,40-49,564,13.220000267028809
+Eritrea,Semenawi Keyih Bahri,30,Mosaic cropland / natural vegetation,14324.64,16393.62,50-59,391,13.220000267028809
+Eritrea,Semenawi Keyih Bahri,30,Mosaic cropland / natural vegetation,14324.64,16393.62,60-69,267,13.220000267028809
+Eritrea,Semenawi Keyih Bahri,30,Mosaic cropland / natural vegetation,14324.64,16393.62,70-79,150,13.220000267028809
+Eritrea,Semenawi Keyih Bahri,30,Mosaic cropland / natural vegetation,14324.64,16393.62,80-89,80,13.220000267028809
+Eritrea,Semenawi Keyih Bahri,30,Mosaic cropland / natural vegetation,14324.64,16393.62,90-99,26,13.220000267028809
+Eritrea,Semenawi Keyih Bahri,40,Mosaic natural vegetation / cropland,88947.57,116081.7,0-9,86617,8.390000343322754
+Eritrea,Semenawi Keyih Bahri,40,Mosaic natural vegetation / cropland,88947.57,116081.7,10-19,13938,8.390000343322754
+Eritrea,Semenawi Keyih Bahri,40,Mosaic natural vegetation / cropland,88947.57,116081.7,20-29,4653,8.390000343322754
+Eritrea,Semenawi Keyih Bahri,40,Mosaic natural vegetation / cropland,88947.57,116081.7,30-39,1944,8.390000343322754
+Eritrea,Semenawi Keyih Bahri,40,Mosaic natural vegetation / cropland,88947.57,116081.7,40-49,809,8.390000343322754
+Eritrea,Semenawi Keyih Bahri,40,Mosaic natural vegetation / cropland,88947.57,116081.7,50-59,402,8.390000343322754
+Eritrea,Semenawi Keyih Bahri,40,Mosaic natural vegetation / cropland,88947.57,116081.7,60-69,227,8.390000343322754
+Eritrea,Semenawi Keyih Bahri,40,Mosaic natural vegetation / cropland,88947.57,116081.7,70-79,148,8.390000343322754
+Eritrea,Semenawi Keyih Bahri,40,Mosaic natural vegetation / cropland,88947.57,116081.7,80-89,180,8.390000343322754
+Eritrea,Semenawi Keyih Bahri,40,Mosaic natural vegetation / cropland,88947.57,116081.7,90-99,188,8.390000343322754
+Eritrea,Semenawi Keyih Bahri,62,"Tree cover, broadleaved, deciduous",36.6,36.6,0-9,10,37.34000015258789
+Eritrea,Semenawi Keyih Bahri,62,"Tree cover, broadleaved, deciduous",36.6,36.6,10-19,8,37.34000015258789
+Eritrea,Semenawi Keyih Bahri,62,"Tree cover, broadleaved, deciduous",36.6,36.6,20-29,9,37.34000015258789
+Eritrea,Semenawi Keyih Bahri,62,"Tree cover, broadleaved, deciduous",36.6,36.6,30-39,5,37.34000015258789
+Eritrea,Semenawi Keyih Bahri,62,"Tree cover, broadleaved, deciduous",36.6,36.6,40-49,3,37.34000015258789
+Eritrea,Semenawi Keyih Bahri,62,"Tree cover, broadleaved, deciduous",36.6,36.6,50-59,5,37.34000015258789
+Eritrea,Semenawi Keyih Bahri,62,"Tree cover, broadleaved, deciduous",36.6,36.6,60-69,3,37.34000015258789
+Eritrea,Semenawi Keyih Bahri,62,"Tree cover, broadleaved, deciduous",36.6,36.6,70-79,3,37.34000015258789
+Eritrea,Semenawi Keyih Bahri,62,"Tree cover, broadleaved, deciduous",36.6,36.6,80-89,5,37.34000015258789
+Eritrea,Semenawi Keyih Bahri,62,"Tree cover, broadleaved, deciduous",36.6,36.6,90-99,1,37.34000015258789
+Eritrea,Semenawi Keyih Bahri,70,"Tree cover, needleleaved, evergreen",12198.22,35662.68,0-9,6410,33.2400016784668
+Eritrea,Semenawi Keyih Bahri,70,"Tree cover, needleleaved, evergreen",12198.22,35662.68,10-19,1448,33.2400016784668
+Eritrea,Semenawi Keyih Bahri,70,"Tree cover, needleleaved, evergreen",12198.22,35662.68,20-29,912,33.2400016784668
+Eritrea,Semenawi Keyih Bahri,70,"Tree cover, needleleaved, evergreen",12198.22,35662.68,30-39,726,33.2400016784668
+Eritrea,Semenawi Keyih Bahri,70,"Tree cover, needleleaved, evergreen",12198.22,35662.68,40-49,679,33.2400016784668
+Eritrea,Semenawi Keyih Bahri,70,"Tree cover, needleleaved, evergreen",12198.22,35662.68,50-59,731,33.2400016784668
+Eritrea,Semenawi Keyih Bahri,70,"Tree cover, needleleaved, evergreen",12198.22,35662.68,60-69,765,33.2400016784668
+Eritrea,Semenawi Keyih Bahri,70,"Tree cover, needleleaved, evergreen",12198.22,35662.68,70-79,957,33.2400016784668
+Eritrea,Semenawi Keyih Bahri,70,"Tree cover, needleleaved, evergreen",12198.22,35662.68,80-89,1219,33.2400016784668
+Eritrea,Semenawi Keyih Bahri,70,"Tree cover, needleleaved, evergreen",12198.22,35662.68,90-99,1085,33.2400016784668
+Eritrea,Semenawi Keyih Bahri,90,"Tree cover, mixed leaf type",406.26,830.21,0-9,510,6.179999828338623
+Eritrea,Semenawi Keyih Bahri,90,"Tree cover, mixed leaf type",406.26,830.21,10-19,40,6.179999828338623
+Eritrea,Semenawi Keyih Bahri,90,"Tree cover, mixed leaf type",406.26,830.21,20-29,8,6.179999828338623
+Eritrea,Semenawi Keyih Bahri,90,"Tree cover, mixed leaf type",406.26,830.21,30-39,3,6.179999828338623
+Eritrea,Semenawi Keyih Bahri,90,"Tree cover, mixed leaf type",406.26,830.21,40-49,3,6.179999828338623
+Eritrea,Semenawi Keyih Bahri,90,"Tree cover, mixed leaf type",406.26,830.21,50-59,1,6.179999828338623
+Eritrea,Semenawi Keyih Bahri,90,"Tree cover, mixed leaf type",406.26,830.21,60-69,0,6.179999828338623
+Eritrea,Semenawi Keyih Bahri,90,"Tree cover, mixed leaf type",406.26,830.21,70-79,0,6.179999828338623
+Eritrea,Semenawi Keyih Bahri,90,"Tree cover, mixed leaf type",406.26,830.21,80-89,0,6.179999828338623
+Eritrea,Semenawi Keyih Bahri,90,"Tree cover, mixed leaf type",406.26,830.21,90-99,0,6.179999828338623
+Eritrea,Semenawi Keyih Bahri,100,Mosaic tree and shrub / herbaceous cover,24944.38,30753.85,0-9,23404,11.010000228881836
+Eritrea,Semenawi Keyih Bahri,100,Mosaic tree and shrub / herbaceous cover,24944.38,30753.85,10-19,4195,11.010000228881836
+Eritrea,Semenawi Keyih Bahri,100,Mosaic tree and shrub / herbaceous cover,24944.38,30753.85,20-29,1836,11.010000228881836
+Eritrea,Semenawi Keyih Bahri,100,Mosaic tree and shrub / herbaceous cover,24944.38,30753.85,30-39,992,11.010000228881836
+Eritrea,Semenawi Keyih Bahri,100,Mosaic tree and shrub / herbaceous cover,24944.38,30753.85,40-49,636,11.010000228881836
+Eritrea,Semenawi Keyih Bahri,100,Mosaic tree and shrub / herbaceous cover,24944.38,30753.85,50-59,350,11.010000228881836
+Eritrea,Semenawi Keyih Bahri,100,Mosaic tree and shrub / herbaceous cover,24944.38,30753.85,60-69,235,11.010000228881836
+Eritrea,Semenawi Keyih Bahri,100,Mosaic tree and shrub / herbaceous cover,24944.38,30753.85,70-79,205,11.010000228881836
+Eritrea,Semenawi Keyih Bahri,100,Mosaic tree and shrub / herbaceous cover,24944.38,30753.85,80-89,158,11.010000228881836
+Eritrea,Semenawi Keyih Bahri,100,Mosaic tree and shrub / herbaceous cover,24944.38,30753.85,90-99,82,11.010000228881836
+Eritrea,Semenawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,75760.63,132314.9,0-9,81356,7.789999961853027
+Eritrea,Semenawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,75760.63,132314.9,10-19,11049,7.789999961853027
+Eritrea,Semenawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,75760.63,132314.9,20-29,3804,7.789999961853027
+Eritrea,Semenawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,75760.63,132314.9,30-39,1702,7.789999961853027
+Eritrea,Semenawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,75760.63,132314.9,40-49,783,7.789999961853027
+Eritrea,Semenawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,75760.63,132314.9,50-59,411,7.789999961853027
+Eritrea,Semenawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,75760.63,132314.9,60-69,207,7.789999961853027
+Eritrea,Semenawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,75760.63,132314.9,70-79,101,7.789999961853027
+Eritrea,Semenawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,75760.63,132314.9,80-89,34,7.789999961853027
+Eritrea,Semenawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,75760.63,132314.9,90-99,5,7.789999961853027
+Eritrea,Semenawi Keyih Bahri,120,Shrubland,128835.73,334589.92,0-9,99920,14.779999732971191
+Eritrea,Semenawi Keyih Bahri,120,Shrubland,128835.73,334589.92,10-19,20013,14.779999732971191
+Eritrea,Semenawi Keyih Bahri,120,Shrubland,128835.73,334589.92,20-29,9342,14.779999732971191
+Eritrea,Semenawi Keyih Bahri,120,Shrubland,128835.73,334589.92,30-39,5769,14.779999732971191
+Eritrea,Semenawi Keyih Bahri,120,Shrubland,128835.73,334589.92,40-49,3979,14.779999732971191
+Eritrea,Semenawi Keyih Bahri,120,Shrubland,128835.73,334589.92,50-59,3001,14.779999732971191
+Eritrea,Semenawi Keyih Bahri,120,Shrubland,128835.73,334589.92,60-69,2627,14.779999732971191
+Eritrea,Semenawi Keyih Bahri,120,Shrubland,128835.73,334589.92,70-79,2296,14.779999732971191
+Eritrea,Semenawi Keyih Bahri,120,Shrubland,128835.73,334589.92,80-89,2296,14.779999732971191
+Eritrea,Semenawi Keyih Bahri,120,Shrubland,128835.73,334589.92,90-99,1523,14.779999732971191
+Eritrea,Semenawi Keyih Bahri,130,Grassland,70237.61,339425.2,0-9,71247,7.590000152587891
+Eritrea,Semenawi Keyih Bahri,130,Grassland,70237.61,339425.2,10-19,9126,7.590000152587891
+Eritrea,Semenawi Keyih Bahri,130,Grassland,70237.61,339425.2,20-29,3260,7.590000152587891
+Eritrea,Semenawi Keyih Bahri,130,Grassland,70237.61,339425.2,30-39,1435,7.590000152587891
+Eritrea,Semenawi Keyih Bahri,130,Grassland,70237.61,339425.2,40-49,696,7.590000152587891
+Eritrea,Semenawi Keyih Bahri,130,Grassland,70237.61,339425.2,50-59,289,7.590000152587891
+Eritrea,Semenawi Keyih Bahri,130,Grassland,70237.61,339425.2,60-69,168,7.590000152587891
+Eritrea,Semenawi Keyih Bahri,130,Grassland,70237.61,339425.2,70-79,68,7.590000152587891
+Eritrea,Semenawi Keyih Bahri,130,Grassland,70237.61,339425.2,80-89,18,7.590000152587891
+Eritrea,Semenawi Keyih Bahri,130,Grassland,70237.61,339425.2,90-99,3,7.590000152587891
+Eritrea,Semenawi Keyih Bahri,150,Sparse vegetation,23081.49,489296.78,0-9,27535,4.630000114440918
+Eritrea,Semenawi Keyih Bahri,150,Sparse vegetation,23081.49,489296.78,10-19,555,4.630000114440918
+Eritrea,Semenawi Keyih Bahri,150,Sparse vegetation,23081.49,489296.78,20-29,88,4.630000114440918
+Eritrea,Semenawi Keyih Bahri,150,Sparse vegetation,23081.49,489296.78,30-39,41,4.630000114440918
+Eritrea,Semenawi Keyih Bahri,150,Sparse vegetation,23081.49,489296.78,40-49,15,4.630000114440918
+Eritrea,Semenawi Keyih Bahri,150,Sparse vegetation,23081.49,489296.78,50-59,6,4.630000114440918
+Eritrea,Semenawi Keyih Bahri,150,Sparse vegetation,23081.49,489296.78,60-69,5,4.630000114440918
+Eritrea,Semenawi Keyih Bahri,150,Sparse vegetation,23081.49,489296.78,70-79,4,4.630000114440918
+Eritrea,Semenawi Keyih Bahri,150,Sparse vegetation,23081.49,489296.78,80-89,6,4.630000114440918
+Eritrea,Semenawi Keyih Bahri,150,Sparse vegetation,23081.49,489296.78,90-99,7,4.630000114440918
+Eritrea,Semenawi Keyih Bahri,152,Sparse vegetation,61.64,670.24,0-9,92,4.860000133514404
+Eritrea,Semenawi Keyih Bahri,152,Sparse vegetation,61.64,670.24,10-19,2,4.860000133514404
+Eritrea,Semenawi Keyih Bahri,152,Sparse vegetation,61.64,670.24,20-29,2,4.860000133514404
+Eritrea,Semenawi Keyih Bahri,152,Sparse vegetation,61.64,670.24,30-39,0,4.860000133514404
+Eritrea,Semenawi Keyih Bahri,152,Sparse vegetation,61.64,670.24,40-49,0,4.860000133514404
+Eritrea,Semenawi Keyih Bahri,152,Sparse vegetation,61.64,670.24,50-59,0,4.860000133514404
+Eritrea,Semenawi Keyih Bahri,152,Sparse vegetation,61.64,670.24,60-69,0,4.860000133514404
+Eritrea,Semenawi Keyih Bahri,152,Sparse vegetation,61.64,670.24,70-79,0,4.860000133514404
+Eritrea,Semenawi Keyih Bahri,152,Sparse vegetation,61.64,670.24,80-89,0,4.860000133514404
+Eritrea,Semenawi Keyih Bahri,152,Sparse vegetation,61.64,670.24,90-99,0,4.860000133514404
+Eritrea,Semenawi Keyih Bahri,153,Sparse vegetation,89.09,2443.09,0-9,144,4.0
+Eritrea,Semenawi Keyih Bahri,153,Sparse vegetation,89.09,2443.09,10-19,0,4.0
+Eritrea,Semenawi Keyih Bahri,153,Sparse vegetation,89.09,2443.09,20-29,0,4.0
+Eritrea,Semenawi Keyih Bahri,153,Sparse vegetation,89.09,2443.09,30-39,0,4.0
+Eritrea,Semenawi Keyih Bahri,153,Sparse vegetation,89.09,2443.09,40-49,0,4.0
+Eritrea,Semenawi Keyih Bahri,153,Sparse vegetation,89.09,2443.09,50-59,0,4.0
+Eritrea,Semenawi Keyih Bahri,153,Sparse vegetation,89.09,2443.09,60-69,0,4.0
+Eritrea,Semenawi Keyih Bahri,153,Sparse vegetation,89.09,2443.09,70-79,0,4.0
+Eritrea,Semenawi Keyih Bahri,153,Sparse vegetation,89.09,2443.09,80-89,0,4.0
+Eritrea,Semenawi Keyih Bahri,153,Sparse vegetation,89.09,2443.09,90-99,0,4.0
+Eritrea,Semenawi Keyih Bahri,170,"Tree cover, flooded, saline water",82.81,7297.54,0-9,69,13.270000457763672
+Eritrea,Semenawi Keyih Bahri,170,"Tree cover, flooded, saline water",82.81,7297.54,10-19,21,13.270000457763672
+Eritrea,Semenawi Keyih Bahri,170,"Tree cover, flooded, saline water",82.81,7297.54,20-29,8,13.270000457763672
+Eritrea,Semenawi Keyih Bahri,170,"Tree cover, flooded, saline water",82.81,7297.54,30-39,8,13.270000457763672
+Eritrea,Semenawi Keyih Bahri,170,"Tree cover, flooded, saline water",82.81,7297.54,40-49,4,13.270000457763672
+Eritrea,Semenawi Keyih Bahri,170,"Tree cover, flooded, saline water",82.81,7297.54,50-59,2,13.270000457763672
+Eritrea,Semenawi Keyih Bahri,170,"Tree cover, flooded, saline water",82.81,7297.54,60-69,0,13.270000457763672
+Eritrea,Semenawi Keyih Bahri,170,"Tree cover, flooded, saline water",82.81,7297.54,70-79,1,13.270000457763672
+Eritrea,Semenawi Keyih Bahri,170,"Tree cover, flooded, saline water",82.81,7297.54,80-89,0,13.270000457763672
+Eritrea,Semenawi Keyih Bahri,170,"Tree cover, flooded, saline water",82.81,7297.54,90-99,0,13.270000457763672
+Eritrea,Semenawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",64.21,16372.22,0-9,9,46.83000183105469
+Eritrea,Semenawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",64.21,16372.22,10-19,6,46.83000183105469
+Eritrea,Semenawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",64.21,16372.22,20-29,6,46.83000183105469
+Eritrea,Semenawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",64.21,16372.22,30-39,7,46.83000183105469
+Eritrea,Semenawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",64.21,16372.22,40-49,7,46.83000183105469
+Eritrea,Semenawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",64.21,16372.22,50-59,17,46.83000183105469
+Eritrea,Semenawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",64.21,16372.22,60-69,18,46.83000183105469
+Eritrea,Semenawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",64.21,16372.22,70-79,11,46.83000183105469
+Eritrea,Semenawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",64.21,16372.22,80-89,1,46.83000183105469
+Eritrea,Semenawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",64.21,16372.22,90-99,0,46.83000183105469
+Eritrea,Semenawi Keyih Bahri,190,Urban areas,5411.13,7037.62,0-9,6302,6.659999847412109
+Eritrea,Semenawi Keyih Bahri,190,Urban areas,5411.13,7037.62,10-19,172,6.659999847412109
+Eritrea,Semenawi Keyih Bahri,190,Urban areas,5411.13,7037.62,20-29,83,6.659999847412109
+Eritrea,Semenawi Keyih Bahri,190,Urban areas,5411.13,7037.62,30-39,84,6.659999847412109
+Eritrea,Semenawi Keyih Bahri,190,Urban areas,5411.13,7037.62,40-49,64,6.659999847412109
+Eritrea,Semenawi Keyih Bahri,190,Urban areas,5411.13,7037.62,50-59,49,6.659999847412109
+Eritrea,Semenawi Keyih Bahri,190,Urban areas,5411.13,7037.62,60-69,44,6.659999847412109
+Eritrea,Semenawi Keyih Bahri,190,Urban areas,5411.13,7037.62,70-79,23,6.659999847412109
+Eritrea,Semenawi Keyih Bahri,190,Urban areas,5411.13,7037.62,80-89,16,6.659999847412109
+Eritrea,Semenawi Keyih Bahri,190,Urban areas,5411.13,7037.62,90-99,4,6.659999847412109
+Eritrea,Semenawi Keyih Bahri,200,Bare areas,81563.84,1720884.04,0-9,88333,4.739999771118164
+Eritrea,Semenawi Keyih Bahri,200,Bare areas,81563.84,1720884.04,10-19,1882,4.739999771118164
+Eritrea,Semenawi Keyih Bahri,200,Bare areas,81563.84,1720884.04,20-29,443,4.739999771118164
+Eritrea,Semenawi Keyih Bahri,200,Bare areas,81563.84,1720884.04,30-39,160,4.739999771118164
+Eritrea,Semenawi Keyih Bahri,200,Bare areas,81563.84,1720884.04,40-49,113,4.739999771118164
+Eritrea,Semenawi Keyih Bahri,200,Bare areas,81563.84,1720884.04,50-59,47,4.739999771118164
+Eritrea,Semenawi Keyih Bahri,200,Bare areas,81563.84,1720884.04,60-69,39,4.739999771118164
+Eritrea,Semenawi Keyih Bahri,200,Bare areas,81563.84,1720884.04,70-79,22,4.739999771118164
+Eritrea,Semenawi Keyih Bahri,200,Bare areas,81563.84,1720884.04,80-89,13,4.739999771118164
+Eritrea,Semenawi Keyih Bahri,200,Bare areas,81563.84,1720884.04,90-99,13,4.739999771118164
+Eritrea,Semenawi Keyih Bahri,201,Bare areas,11944.48,110574.31,0-9,14483,5.849999904632568
+Eritrea,Semenawi Keyih Bahri,201,Bare areas,11944.48,110574.31,10-19,870,5.849999904632568
+Eritrea,Semenawi Keyih Bahri,201,Bare areas,11944.48,110574.31,20-29,325,5.849999904632568
+Eritrea,Semenawi Keyih Bahri,201,Bare areas,11944.48,110574.31,30-39,116,5.849999904632568
+Eritrea,Semenawi Keyih Bahri,201,Bare areas,11944.48,110574.31,40-49,51,5.849999904632568
+Eritrea,Semenawi Keyih Bahri,201,Bare areas,11944.48,110574.31,50-59,22,5.849999904632568
+Eritrea,Semenawi Keyih Bahri,201,Bare areas,11944.48,110574.31,60-69,15,5.849999904632568
+Eritrea,Semenawi Keyih Bahri,201,Bare areas,11944.48,110574.31,70-79,6,5.849999904632568
+Eritrea,Semenawi Keyih Bahri,201,Bare areas,11944.48,110574.31,80-89,4,5.849999904632568
+Eritrea,Semenawi Keyih Bahri,201,Bare areas,11944.48,110574.31,90-99,1,5.849999904632568
+Eritrea,Semenawi Keyih Bahri,202,Bare areas,0.31,7098.53,0-9,4,4.0
+Eritrea,Semenawi Keyih Bahri,202,Bare areas,0.31,7098.53,10-19,0,4.0
+Eritrea,Semenawi Keyih Bahri,202,Bare areas,0.31,7098.53,20-29,0,4.0
+Eritrea,Semenawi Keyih Bahri,202,Bare areas,0.31,7098.53,30-39,0,4.0
+Eritrea,Semenawi Keyih Bahri,202,Bare areas,0.31,7098.53,40-49,0,4.0
+Eritrea,Semenawi Keyih Bahri,202,Bare areas,0.31,7098.53,50-59,0,4.0
+Eritrea,Semenawi Keyih Bahri,202,Bare areas,0.31,7098.53,60-69,0,4.0
+Eritrea,Semenawi Keyih Bahri,202,Bare areas,0.31,7098.53,70-79,0,4.0
+Eritrea,Semenawi Keyih Bahri,202,Bare areas,0.31,7098.53,80-89,0,4.0
+Eritrea,Semenawi Keyih Bahri,202,Bare areas,0.31,7098.53,90-99,0,4.0
+Eritrea,Semenawi Keyih Bahri,210,Water bodies,5.58,17929.76,0-9,8,4.0
+Eritrea,Semenawi Keyih Bahri,210,Water bodies,5.58,17929.76,10-19,0,4.0
+Eritrea,Semenawi Keyih Bahri,210,Water bodies,5.58,17929.76,20-29,0,4.0
+Eritrea,Semenawi Keyih Bahri,210,Water bodies,5.58,17929.76,30-39,0,4.0
+Eritrea,Semenawi Keyih Bahri,210,Water bodies,5.58,17929.76,40-49,0,4.0
+Eritrea,Semenawi Keyih Bahri,210,Water bodies,5.58,17929.76,50-59,0,4.0
+Eritrea,Semenawi Keyih Bahri,210,Water bodies,5.58,17929.76,60-69,0,4.0
+Eritrea,Semenawi Keyih Bahri,210,Water bodies,5.58,17929.76,70-79,0,4.0
+Eritrea,Semenawi Keyih Bahri,210,Water bodies,5.58,17929.76,80-89,0,4.0
+Eritrea,Semenawi Keyih Bahri,210,Water bodies,5.58,17929.76,90-99,0,4.0
+Eritrea,Semenawi Keyih Bahri,255,No Data (flag),1148.21,9174622.65,0-9,2059,19.31999969482422
+Eritrea,Semenawi Keyih Bahri,255,No Data (flag),1148.21,9174622.65,10-19,367,19.31999969482422
+Eritrea,Semenawi Keyih Bahri,255,No Data (flag),1148.21,9174622.65,20-29,162,19.31999969482422
+Eritrea,Semenawi Keyih Bahri,255,No Data (flag),1148.21,9174622.65,30-39,117,19.31999969482422
+Eritrea,Semenawi Keyih Bahri,255,No Data (flag),1148.21,9174622.65,40-49,84,19.31999969482422
+Eritrea,Semenawi Keyih Bahri,255,No Data (flag),1148.21,9174622.65,50-59,83,19.31999969482422
+Eritrea,Semenawi Keyih Bahri,255,No Data (flag),1148.21,9174622.65,60-69,92,19.31999969482422
+Eritrea,Semenawi Keyih Bahri,255,No Data (flag),1148.21,9174622.65,70-79,84,19.31999969482422
+Eritrea,Semenawi Keyih Bahri,255,No Data (flag),1148.21,9174622.65,80-89,113,19.31999969482422
+Eritrea,Semenawi Keyih Bahri,255,No Data (flag),1148.21,9174622.65,90-99,107,19.31999969482422
+Eritrea,Gash Barka,10,"Cropland, rainfed",651046.03,675464.24,0-9,457266,16.469999313354492
+Eritrea,Gash Barka,10,"Cropland, rainfed",651046.03,675464.24,10-19,112778,16.469999313354492
+Eritrea,Gash Barka,10,"Cropland, rainfed",651046.03,675464.24,20-29,59766,16.469999313354492
+Eritrea,Gash Barka,10,"Cropland, rainfed",651046.03,675464.24,30-39,39301,16.469999313354492
+Eritrea,Gash Barka,10,"Cropland, rainfed",651046.03,675464.24,40-49,28139,16.469999313354492
+Eritrea,Gash Barka,10,"Cropland, rainfed",651046.03,675464.24,50-59,21105,16.469999313354492
+Eritrea,Gash Barka,10,"Cropland, rainfed",651046.03,675464.24,60-69,16816,16.469999313354492
+Eritrea,Gash Barka,10,"Cropland, rainfed",651046.03,675464.24,70-79,13485,16.469999313354492
+Eritrea,Gash Barka,10,"Cropland, rainfed",651046.03,675464.24,80-89,11020,16.469999313354492
+Eritrea,Gash Barka,10,"Cropland, rainfed",651046.03,675464.24,90-99,4215,16.469999313354492
+Eritrea,Gash Barka,11,"Cropland, rainfed",15498.63,16338.49,0-9,14701,13.600000381469727
+Eritrea,Gash Barka,11,"Cropland, rainfed",15498.63,16338.49,10-19,2584,13.600000381469727
+Eritrea,Gash Barka,11,"Cropland, rainfed",15498.63,16338.49,20-29,1231,13.600000381469727
+Eritrea,Gash Barka,11,"Cropland, rainfed",15498.63,16338.49,30-39,779,13.600000381469727
+Eritrea,Gash Barka,11,"Cropland, rainfed",15498.63,16338.49,40-49,524,13.600000381469727
+Eritrea,Gash Barka,11,"Cropland, rainfed",15498.63,16338.49,50-59,375,13.600000381469727
+Eritrea,Gash Barka,11,"Cropland, rainfed",15498.63,16338.49,60-69,322,13.600000381469727
+Eritrea,Gash Barka,11,"Cropland, rainfed",15498.63,16338.49,70-79,256,13.600000381469727
+Eritrea,Gash Barka,11,"Cropland, rainfed",15498.63,16338.49,80-89,252,13.600000381469727
+Eritrea,Gash Barka,11,"Cropland, rainfed",15498.63,16338.49,90-99,183,13.600000381469727
+Eritrea,Gash Barka,20,"Cropland, irrigated or post-flooding",54826.35,55876.46,0-9,46601,15.829999923706055
+Eritrea,Gash Barka,20,"Cropland, irrigated or post-flooding",54826.35,55876.46,10-19,5860,15.829999923706055
+Eritrea,Gash Barka,20,"Cropland, irrigated or post-flooding",54826.35,55876.46,20-29,3106,15.829999923706055
+Eritrea,Gash Barka,20,"Cropland, irrigated or post-flooding",54826.35,55876.46,30-39,2322,15.829999923706055
+Eritrea,Gash Barka,20,"Cropland, irrigated or post-flooding",54826.35,55876.46,40-49,1952,15.829999923706055
+Eritrea,Gash Barka,20,"Cropland, irrigated or post-flooding",54826.35,55876.46,50-59,1600,15.829999923706055
+Eritrea,Gash Barka,20,"Cropland, irrigated or post-flooding",54826.35,55876.46,60-69,1420,15.829999923706055
+Eritrea,Gash Barka,20,"Cropland, irrigated or post-flooding",54826.35,55876.46,70-79,1467,15.829999923706055
+Eritrea,Gash Barka,20,"Cropland, irrigated or post-flooding",54826.35,55876.46,80-89,1404,15.829999923706055
+Eritrea,Gash Barka,20,"Cropland, irrigated or post-flooding",54826.35,55876.46,90-99,1130,15.829999923706055
+Eritrea,Gash Barka,30,Mosaic cropland / natural vegetation,178866.51,185697.81,0-9,163579,13.239999771118164
+Eritrea,Gash Barka,30,Mosaic cropland / natural vegetation,178866.51,185697.81,10-19,21860,13.239999771118164
+Eritrea,Gash Barka,30,Mosaic cropland / natural vegetation,178866.51,185697.81,20-29,11044,13.239999771118164
+Eritrea,Gash Barka,30,Mosaic cropland / natural vegetation,178866.51,185697.81,30-39,7338,13.239999771118164
+Eritrea,Gash Barka,30,Mosaic cropland / natural vegetation,178866.51,185697.81,40-49,5564,13.239999771118164
+Eritrea,Gash Barka,30,Mosaic cropland / natural vegetation,178866.51,185697.81,50-59,4487,13.239999771118164
+Eritrea,Gash Barka,30,Mosaic cropland / natural vegetation,178866.51,185697.81,60-69,3692,13.239999771118164
+Eritrea,Gash Barka,30,Mosaic cropland / natural vegetation,178866.51,185697.81,70-79,3185,13.239999771118164
+Eritrea,Gash Barka,30,Mosaic cropland / natural vegetation,178866.51,185697.81,80-89,2782,13.239999771118164
+Eritrea,Gash Barka,30,Mosaic cropland / natural vegetation,178866.51,185697.81,90-99,1936,13.239999771118164
+Eritrea,Gash Barka,40,Mosaic natural vegetation / cropland,382267.47,389931.41,0-9,319509,12.65999984741211
+Eritrea,Gash Barka,40,Mosaic natural vegetation / cropland,382267.47,389931.41,10-19,67762,12.65999984741211
+Eritrea,Gash Barka,40,Mosaic natural vegetation / cropland,382267.47,389931.41,20-29,31918,12.65999984741211
+Eritrea,Gash Barka,40,Mosaic natural vegetation / cropland,382267.47,389931.41,30-39,18903,12.65999984741211
+Eritrea,Gash Barka,40,Mosaic natural vegetation / cropland,382267.47,389931.41,40-49,12238,12.65999984741211
+Eritrea,Gash Barka,40,Mosaic natural vegetation / cropland,382267.47,389931.41,50-59,8131,12.65999984741211
+Eritrea,Gash Barka,40,Mosaic natural vegetation / cropland,382267.47,389931.41,60-69,5506,12.65999984741211
+Eritrea,Gash Barka,40,Mosaic natural vegetation / cropland,382267.47,389931.41,70-79,3932,12.65999984741211
+Eritrea,Gash Barka,40,Mosaic natural vegetation / cropland,382267.47,389931.41,80-89,3050,12.65999984741211
+Eritrea,Gash Barka,40,Mosaic natural vegetation / cropland,382267.47,389931.41,90-99,1015,12.65999984741211
+Eritrea,Gash Barka,62,"Tree cover, broadleaved, deciduous",8673.97,12397.06,0-9,1723,61.06999969482422
+Eritrea,Gash Barka,62,"Tree cover, broadleaved, deciduous",8673.97,12397.06,10-19,567,61.06999969482422
+Eritrea,Gash Barka,62,"Tree cover, broadleaved, deciduous",8673.97,12397.06,20-29,423,61.06999969482422
+Eritrea,Gash Barka,62,"Tree cover, broadleaved, deciduous",8673.97,12397.06,30-39,481,61.06999969482422
+Eritrea,Gash Barka,62,"Tree cover, broadleaved, deciduous",8673.97,12397.06,40-49,512,61.06999969482422
+Eritrea,Gash Barka,62,"Tree cover, broadleaved, deciduous",8673.97,12397.06,50-59,658,61.06999969482422
+Eritrea,Gash Barka,62,"Tree cover, broadleaved, deciduous",8673.97,12397.06,60-69,823,61.06999969482422
+Eritrea,Gash Barka,62,"Tree cover, broadleaved, deciduous",8673.97,12397.06,70-79,1229,61.06999969482422
+Eritrea,Gash Barka,62,"Tree cover, broadleaved, deciduous",8673.97,12397.06,80-89,2213,61.06999969482422
+Eritrea,Gash Barka,62,"Tree cover, broadleaved, deciduous",8673.97,12397.06,90-99,2798,61.06999969482422
+Eritrea,Gash Barka,70,"Tree cover, needleleaved, evergreen",14.65,18.91,0-9,23,5.039999961853027
+Eritrea,Gash Barka,70,"Tree cover, needleleaved, evergreen",14.65,18.91,10-19,1,5.039999961853027
+Eritrea,Gash Barka,70,"Tree cover, needleleaved, evergreen",14.65,18.91,20-29,0,5.039999961853027
+Eritrea,Gash Barka,70,"Tree cover, needleleaved, evergreen",14.65,18.91,30-39,0,5.039999961853027
+Eritrea,Gash Barka,70,"Tree cover, needleleaved, evergreen",14.65,18.91,40-49,0,5.039999961853027
+Eritrea,Gash Barka,70,"Tree cover, needleleaved, evergreen",14.65,18.91,50-59,0,5.039999961853027
+Eritrea,Gash Barka,70,"Tree cover, needleleaved, evergreen",14.65,18.91,60-69,0,5.039999961853027
+Eritrea,Gash Barka,70,"Tree cover, needleleaved, evergreen",14.65,18.91,70-79,0,5.039999961853027
+Eritrea,Gash Barka,70,"Tree cover, needleleaved, evergreen",14.65,18.91,80-89,0,5.039999961853027
+Eritrea,Gash Barka,70,"Tree cover, needleleaved, evergreen",14.65,18.91,90-99,0,5.039999961853027
+Eritrea,Gash Barka,100,Mosaic tree and shrub / herbaceous cover,67862.22,68477.31,0-9,63036,10.640000343322754
+Eritrea,Gash Barka,100,Mosaic tree and shrub / herbaceous cover,67862.22,68477.31,10-19,12151,10.640000343322754
+Eritrea,Gash Barka,100,Mosaic tree and shrub / herbaceous cover,67862.22,68477.31,20-29,5423,10.640000343322754
+Eritrea,Gash Barka,100,Mosaic tree and shrub / herbaceous cover,67862.22,68477.31,30-39,2897,10.640000343322754
+Eritrea,Gash Barka,100,Mosaic tree and shrub / herbaceous cover,67862.22,68477.31,40-49,1724,10.640000343322754
+Eritrea,Gash Barka,100,Mosaic tree and shrub / herbaceous cover,67862.22,68477.31,50-59,1022,10.640000343322754
+Eritrea,Gash Barka,100,Mosaic tree and shrub / herbaceous cover,67862.22,68477.31,60-69,585,10.640000343322754
+Eritrea,Gash Barka,100,Mosaic tree and shrub / herbaceous cover,67862.22,68477.31,70-79,349,10.640000343322754
+Eritrea,Gash Barka,100,Mosaic tree and shrub / herbaceous cover,67862.22,68477.31,80-89,165,10.640000343322754
+Eritrea,Gash Barka,100,Mosaic tree and shrub / herbaceous cover,67862.22,68477.31,90-99,32,10.640000343322754
+Eritrea,Gash Barka,110,Mosaic herbaceous cover / tree and shrub,203584.41,236983.56,0-9,196251,9.270000457763672
+Eritrea,Gash Barka,110,Mosaic herbaceous cover / tree and shrub,203584.41,236983.56,10-19,30997,9.270000457763672
+Eritrea,Gash Barka,110,Mosaic herbaceous cover / tree and shrub,203584.41,236983.56,20-29,12875,9.270000457763672
+Eritrea,Gash Barka,110,Mosaic herbaceous cover / tree and shrub,203584.41,236983.56,30-39,6544,9.270000457763672
+Eritrea,Gash Barka,110,Mosaic herbaceous cover / tree and shrub,203584.41,236983.56,40-49,3577,9.270000457763672
+Eritrea,Gash Barka,110,Mosaic herbaceous cover / tree and shrub,203584.41,236983.56,50-59,1992,9.270000457763672
+Eritrea,Gash Barka,110,Mosaic herbaceous cover / tree and shrub,203584.41,236983.56,60-69,1050,9.270000457763672
+Eritrea,Gash Barka,110,Mosaic herbaceous cover / tree and shrub,203584.41,236983.56,70-79,629,9.270000457763672
+Eritrea,Gash Barka,110,Mosaic herbaceous cover / tree and shrub,203584.41,236983.56,80-89,369,9.270000457763672
+Eritrea,Gash Barka,110,Mosaic herbaceous cover / tree and shrub,203584.41,236983.56,90-99,200,9.270000457763672
+Eritrea,Gash Barka,120,Shrubland,479008.52,535518.3,0-9,218052,30.690000534057617
+Eritrea,Gash Barka,120,Shrubland,479008.52,535518.3,10-19,75524,30.690000534057617
+Eritrea,Gash Barka,120,Shrubland,479008.52,535518.3,20-29,48592,30.690000534057617
+Eritrea,Gash Barka,120,Shrubland,479008.52,535518.3,30-39,37860,30.690000534057617
+Eritrea,Gash Barka,120,Shrubland,479008.52,535518.3,40-49,32571,30.690000534057617
+Eritrea,Gash Barka,120,Shrubland,479008.52,535518.3,50-59,29091,30.690000534057617
+Eritrea,Gash Barka,120,Shrubland,479008.52,535518.3,60-69,28223,30.690000534057617
+Eritrea,Gash Barka,120,Shrubland,479008.52,535518.3,70-79,29945,30.690000534057617
+Eritrea,Gash Barka,120,Shrubland,479008.52,535518.3,80-89,37065,30.690000534057617
+Eritrea,Gash Barka,120,Shrubland,479008.52,535518.3,90-99,23282,30.690000534057617
+Eritrea,Gash Barka,122,Shrubland,4727.69,5315.13,0-9,439,67.94000244140625
+Eritrea,Gash Barka,122,Shrubland,4727.69,5315.13,10-19,252,67.94000244140625
+Eritrea,Gash Barka,122,Shrubland,4727.69,5315.13,20-29,238,67.94000244140625
+Eritrea,Gash Barka,122,Shrubland,4727.69,5315.13,30-39,266,67.94000244140625
+Eritrea,Gash Barka,122,Shrubland,4727.69,5315.13,40-49,304,67.94000244140625
+Eritrea,Gash Barka,122,Shrubland,4727.69,5315.13,50-59,412,67.94000244140625
+Eritrea,Gash Barka,122,Shrubland,4727.69,5315.13,60-69,483,67.94000244140625
+Eritrea,Gash Barka,122,Shrubland,4727.69,5315.13,70-79,758,67.94000244140625
+Eritrea,Gash Barka,122,Shrubland,4727.69,5315.13,80-89,1347,67.94000244140625
+Eritrea,Gash Barka,122,Shrubland,4727.69,5315.13,90-99,1803,67.94000244140625
+Eritrea,Gash Barka,130,Grassland,840205.58,971794.34,0-9,723661,8.880000114440918
+Eritrea,Gash Barka,130,Grassland,840205.58,971794.34,10-19,115679,8.880000114440918
+Eritrea,Gash Barka,130,Grassland,840205.58,971794.34,20-29,45609,8.880000114440918
+Eritrea,Gash Barka,130,Grassland,840205.58,971794.34,30-39,21933,8.880000114440918
+Eritrea,Gash Barka,130,Grassland,840205.58,971794.34,40-49,10959,8.880000114440918
+Eritrea,Gash Barka,130,Grassland,840205.58,971794.34,50-59,5604,8.880000114440918
+Eritrea,Gash Barka,130,Grassland,840205.58,971794.34,60-69,2988,8.880000114440918
+Eritrea,Gash Barka,130,Grassland,840205.58,971794.34,70-79,1692,8.880000114440918
+Eritrea,Gash Barka,130,Grassland,840205.58,971794.34,80-89,957,8.880000114440918
+Eritrea,Gash Barka,130,Grassland,840205.58,971794.34,90-99,529,8.880000114440918
+Eritrea,Gash Barka,150,Sparse vegetation,31220.16,50494.63,0-9,35090,6.809999942779541
+Eritrea,Gash Barka,150,Sparse vegetation,31220.16,50494.63,10-19,3764,6.809999942779541
+Eritrea,Gash Barka,150,Sparse vegetation,31220.16,50494.63,20-29,1197,6.809999942779541
+Eritrea,Gash Barka,150,Sparse vegetation,31220.16,50494.63,30-39,502,6.809999942779541
+Eritrea,Gash Barka,150,Sparse vegetation,31220.16,50494.63,40-49,160,6.809999942779541
+Eritrea,Gash Barka,150,Sparse vegetation,31220.16,50494.63,50-59,68,6.809999942779541
+Eritrea,Gash Barka,150,Sparse vegetation,31220.16,50494.63,60-69,34,6.809999942779541
+Eritrea,Gash Barka,150,Sparse vegetation,31220.16,50494.63,70-79,20,6.809999942779541
+Eritrea,Gash Barka,150,Sparse vegetation,31220.16,50494.63,80-89,7,6.809999942779541
+Eritrea,Gash Barka,150,Sparse vegetation,31220.16,50494.63,90-99,2,6.809999942779541
+Eritrea,Gash Barka,152,Sparse vegetation,771.69,881.5,0-9,857,7.150000095367432
+Eritrea,Gash Barka,152,Sparse vegetation,771.69,881.5,10-19,124,7.150000095367432
+Eritrea,Gash Barka,152,Sparse vegetation,771.69,881.5,20-29,36,7.150000095367432
+Eritrea,Gash Barka,152,Sparse vegetation,771.69,881.5,30-39,12,7.150000095367432
+Eritrea,Gash Barka,152,Sparse vegetation,771.69,881.5,40-49,7,7.150000095367432
+Eritrea,Gash Barka,152,Sparse vegetation,771.69,881.5,50-59,1,7.150000095367432
+Eritrea,Gash Barka,152,Sparse vegetation,771.69,881.5,60-69,0,7.150000095367432
+Eritrea,Gash Barka,152,Sparse vegetation,771.69,881.5,70-79,0,7.150000095367432
+Eritrea,Gash Barka,152,Sparse vegetation,771.69,881.5,80-89,0,7.150000095367432
+Eritrea,Gash Barka,152,Sparse vegetation,771.69,881.5,90-99,0,7.150000095367432
+Eritrea,Gash Barka,153,Sparse vegetation,0.0,18.91,0-9,0,
+Eritrea,Gash Barka,153,Sparse vegetation,0.0,18.91,10-19,0,
+Eritrea,Gash Barka,153,Sparse vegetation,0.0,18.91,20-29,0,
+Eritrea,Gash Barka,153,Sparse vegetation,0.0,18.91,30-39,0,
+Eritrea,Gash Barka,153,Sparse vegetation,0.0,18.91,40-49,0,
+Eritrea,Gash Barka,153,Sparse vegetation,0.0,18.91,50-59,0,
+Eritrea,Gash Barka,153,Sparse vegetation,0.0,18.91,60-69,0,
+Eritrea,Gash Barka,153,Sparse vegetation,0.0,18.91,70-79,0,
+Eritrea,Gash Barka,153,Sparse vegetation,0.0,18.91,80-89,0,
+Eritrea,Gash Barka,153,Sparse vegetation,0.0,18.91,90-99,0,
+Eritrea,Gash Barka,170,"Tree cover, flooded, saline water",27.3,81.9,0-9,44,5.039999961853027
+Eritrea,Gash Barka,170,"Tree cover, flooded, saline water",27.3,81.9,10-19,1,5.039999961853027
+Eritrea,Gash Barka,170,"Tree cover, flooded, saline water",27.3,81.9,20-29,0,5.039999961853027
+Eritrea,Gash Barka,170,"Tree cover, flooded, saline water",27.3,81.9,30-39,1,5.039999961853027
+Eritrea,Gash Barka,170,"Tree cover, flooded, saline water",27.3,81.9,40-49,0,5.039999961853027
+Eritrea,Gash Barka,170,"Tree cover, flooded, saline water",27.3,81.9,50-59,0,5.039999961853027
+Eritrea,Gash Barka,170,"Tree cover, flooded, saline water",27.3,81.9,60-69,0,5.039999961853027
+Eritrea,Gash Barka,170,"Tree cover, flooded, saline water",27.3,81.9,70-79,0,5.039999961853027
+Eritrea,Gash Barka,170,"Tree cover, flooded, saline water",27.3,81.9,80-89,0,5.039999961853027
+Eritrea,Gash Barka,170,"Tree cover, flooded, saline water",27.3,81.9,90-99,0,5.039999961853027
+Eritrea,Gash Barka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",166.84,203.14,0-9,134,16.139999389648438
+Eritrea,Gash Barka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",166.84,203.14,10-19,42,16.139999389648438
+Eritrea,Gash Barka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",166.84,203.14,20-29,26,16.139999389648438
+Eritrea,Gash Barka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",166.84,203.14,30-39,20,16.139999389648438
+Eritrea,Gash Barka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",166.84,203.14,40-49,11,16.139999389648438
+Eritrea,Gash Barka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",166.84,203.14,50-59,7,16.139999389648438
+Eritrea,Gash Barka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",166.84,203.14,60-69,1,16.139999389648438
+Eritrea,Gash Barka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",166.84,203.14,70-79,5,16.139999389648438
+Eritrea,Gash Barka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",166.84,203.14,80-89,1,16.139999389648438
+Eritrea,Gash Barka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",166.84,203.14,90-99,0,16.139999389648438
+Eritrea,Gash Barka,190,Urban areas,740.6,1196.23,0-9,472,35.939998626708984
+Eritrea,Gash Barka,190,Urban areas,740.6,1196.23,10-19,100,35.939998626708984
+Eritrea,Gash Barka,190,Urban areas,740.6,1196.23,20-29,68,35.939998626708984
+Eritrea,Gash Barka,190,Urban areas,740.6,1196.23,30-39,37,35.939998626708984
+Eritrea,Gash Barka,190,Urban areas,740.6,1196.23,40-49,34,35.939998626708984
+Eritrea,Gash Barka,190,Urban areas,740.6,1196.23,50-59,47,35.939998626708984
+Eritrea,Gash Barka,190,Urban areas,740.6,1196.23,60-69,37,35.939998626708984
+Eritrea,Gash Barka,190,Urban areas,740.6,1196.23,70-79,58,35.939998626708984
+Eritrea,Gash Barka,190,Urban areas,740.6,1196.23,80-89,82,35.939998626708984
+Eritrea,Gash Barka,190,Urban areas,740.6,1196.23,90-99,159,35.939998626708984
+Eritrea,Gash Barka,200,Bare areas,23388.71,50363.41,0-9,27582,5.860000133514404
+Eritrea,Gash Barka,200,Bare areas,23388.71,50363.41,10-19,2069,5.860000133514404
+Eritrea,Gash Barka,200,Bare areas,23388.71,50363.41,20-29,533,5.860000133514404
+Eritrea,Gash Barka,200,Bare areas,23388.71,50363.41,30-39,181,5.860000133514404
+Eritrea,Gash Barka,200,Bare areas,23388.71,50363.41,40-49,61,5.860000133514404
+Eritrea,Gash Barka,200,Bare areas,23388.71,50363.41,50-59,16,5.860000133514404
+Eritrea,Gash Barka,200,Bare areas,23388.71,50363.41,60-69,9,5.860000133514404
+Eritrea,Gash Barka,200,Bare areas,23388.71,50363.41,70-79,0,5.860000133514404
+Eritrea,Gash Barka,200,Bare areas,23388.71,50363.41,80-89,2,5.860000133514404
+Eritrea,Gash Barka,200,Bare areas,23388.71,50363.41,90-99,0,5.860000133514404
+Eritrea,Gash Barka,201,Bare areas,2783.51,3289.37,0-9,3770,4.75
+Eritrea,Gash Barka,201,Bare areas,2783.51,3289.37,10-19,72,4.75
+Eritrea,Gash Barka,201,Bare areas,2783.51,3289.37,20-29,13,4.75
+Eritrea,Gash Barka,201,Bare areas,2783.51,3289.37,30-39,5,4.75
+Eritrea,Gash Barka,201,Bare areas,2783.51,3289.37,40-49,1,4.75
+Eritrea,Gash Barka,201,Bare areas,2783.51,3289.37,50-59,3,4.75
+Eritrea,Gash Barka,201,Bare areas,2783.51,3289.37,60-69,6,4.75
+Eritrea,Gash Barka,201,Bare areas,2783.51,3289.37,70-79,2,4.75
+Eritrea,Gash Barka,201,Bare areas,2783.51,3289.37,80-89,0,4.75
+Eritrea,Gash Barka,201,Bare areas,2783.51,3289.37,90-99,0,4.75
+Eritrea,Gash Barka,210,Water bodies,70.32,292.81,0-9,66,18.850000381469727
+Eritrea,Gash Barka,210,Water bodies,70.32,292.81,10-19,11,18.850000381469727
+Eritrea,Gash Barka,210,Water bodies,70.32,292.81,20-29,7,18.850000381469727
+Eritrea,Gash Barka,210,Water bodies,70.32,292.81,30-39,5,18.850000381469727
+Eritrea,Gash Barka,210,Water bodies,70.32,292.81,40-49,4,18.850000381469727
+Eritrea,Gash Barka,210,Water bodies,70.32,292.81,50-59,5,18.850000381469727
+Eritrea,Gash Barka,210,Water bodies,70.32,292.81,60-69,7,18.850000381469727
+Eritrea,Gash Barka,210,Water bodies,70.32,292.81,70-79,5,18.850000381469727
+Eritrea,Gash Barka,210,Water bodies,70.32,292.81,80-89,0,18.850000381469727
+Eritrea,Gash Barka,210,Water bodies,70.32,292.81,90-99,0,18.850000381469727
+Eritrea,Gash Barka,255,No Data (flag),2483.39,2395150.84,0-9,4350,16.389999389648438
+Eritrea,Gash Barka,255,No Data (flag),2483.39,2395150.84,10-19,752,16.389999389648438
+Eritrea,Gash Barka,255,No Data (flag),2483.39,2395150.84,20-29,424,16.389999389648438
+Eritrea,Gash Barka,255,No Data (flag),2483.39,2395150.84,30-39,281,16.389999389648438
+Eritrea,Gash Barka,255,No Data (flag),2483.39,2395150.84,40-49,228,16.389999389648438
+Eritrea,Gash Barka,255,No Data (flag),2483.39,2395150.84,50-59,180,16.389999389648438
+Eritrea,Gash Barka,255,No Data (flag),2483.39,2395150.84,60-69,174,16.389999389648438
+Eritrea,Gash Barka,255,No Data (flag),2483.39,2395150.84,70-79,144,16.389999389648438
+Eritrea,Gash Barka,255,No Data (flag),2483.39,2395150.84,80-89,143,16.389999389648438
+Eritrea,Gash Barka,255,No Data (flag),2483.39,2395150.84,90-99,51,16.389999389648438
+Eritrea,Maekel,10,"Cropland, rainfed",21304.68,21539.36,0-9,22681,8.069999694824219
+Eritrea,Maekel,10,"Cropland, rainfed",21304.68,21539.36,10-19,2244,8.069999694824219
+Eritrea,Maekel,10,"Cropland, rainfed",21304.68,21539.36,20-29,849,8.069999694824219
+Eritrea,Maekel,10,"Cropland, rainfed",21304.68,21539.36,30-39,459,8.069999694824219
+Eritrea,Maekel,10,"Cropland, rainfed",21304.68,21539.36,40-49,256,8.069999694824219
+Eritrea,Maekel,10,"Cropland, rainfed",21304.68,21539.36,50-59,171,8.069999694824219
+Eritrea,Maekel,10,"Cropland, rainfed",21304.68,21539.36,60-69,107,8.069999694824219
+Eritrea,Maekel,10,"Cropland, rainfed",21304.68,21539.36,70-79,86,8.069999694824219
+Eritrea,Maekel,10,"Cropland, rainfed",21304.68,21539.36,80-89,88,8.069999694824219
+Eritrea,Maekel,10,"Cropland, rainfed",21304.68,21539.36,90-99,49,8.069999694824219
+Eritrea,Maekel,11,"Cropland, rainfed",2025.06,2026.79,0-9,2546,5.679999828338623
+Eritrea,Maekel,11,"Cropland, rainfed",2025.06,2026.79,10-19,97,5.679999828338623
+Eritrea,Maekel,11,"Cropland, rainfed",2025.06,2026.79,20-29,31,5.679999828338623
+Eritrea,Maekel,11,"Cropland, rainfed",2025.06,2026.79,30-39,14,5.679999828338623
+Eritrea,Maekel,11,"Cropland, rainfed",2025.06,2026.79,40-49,11,5.679999828338623
+Eritrea,Maekel,11,"Cropland, rainfed",2025.06,2026.79,50-59,10,5.679999828338623
+Eritrea,Maekel,11,"Cropland, rainfed",2025.06,2026.79,60-69,3,5.679999828338623
+Eritrea,Maekel,11,"Cropland, rainfed",2025.06,2026.79,70-79,6,5.679999828338623
+Eritrea,Maekel,11,"Cropland, rainfed",2025.06,2026.79,80-89,1,5.679999828338623
+Eritrea,Maekel,11,"Cropland, rainfed",2025.06,2026.79,90-99,1,5.679999828338623
+Eritrea,Maekel,20,"Cropland, irrigated or post-flooding",5678.34,5704.01,0-9,5702,10.609999656677246
+Eritrea,Maekel,20,"Cropland, irrigated or post-flooding",5678.34,5704.01,10-19,662,10.609999656677246
+Eritrea,Maekel,20,"Cropland, irrigated or post-flooding",5678.34,5704.01,20-29,379,10.609999656677246
+Eritrea,Maekel,20,"Cropland, irrigated or post-flooding",5678.34,5704.01,30-39,261,10.609999656677246
+Eritrea,Maekel,20,"Cropland, irrigated or post-flooding",5678.34,5704.01,40-49,163,10.609999656677246
+Eritrea,Maekel,20,"Cropland, irrigated or post-flooding",5678.34,5704.01,50-59,108,10.609999656677246
+Eritrea,Maekel,20,"Cropland, irrigated or post-flooding",5678.34,5704.01,60-69,69,10.609999656677246
+Eritrea,Maekel,20,"Cropland, irrigated or post-flooding",5678.34,5704.01,70-79,42,10.609999656677246
+Eritrea,Maekel,20,"Cropland, irrigated or post-flooding",5678.34,5704.01,80-89,25,10.609999656677246
+Eritrea,Maekel,20,"Cropland, irrigated or post-flooding",5678.34,5704.01,90-99,23,10.609999656677246
+Eritrea,Maekel,30,Mosaic cropland / natural vegetation,18346.28,18687.82,0-9,17826,10.369999885559082
+Eritrea,Maekel,30,Mosaic cropland / natural vegetation,18346.28,18687.82,10-19,2792,10.369999885559082
+Eritrea,Maekel,30,Mosaic cropland / natural vegetation,18346.28,18687.82,20-29,1331,10.369999885559082
+Eritrea,Maekel,30,Mosaic cropland / natural vegetation,18346.28,18687.82,30-39,735,10.369999885559082
+Eritrea,Maekel,30,Mosaic cropland / natural vegetation,18346.28,18687.82,40-49,471,10.369999885559082
+Eritrea,Maekel,30,Mosaic cropland / natural vegetation,18346.28,18687.82,50-59,295,10.369999885559082
+Eritrea,Maekel,30,Mosaic cropland / natural vegetation,18346.28,18687.82,60-69,177,10.369999885559082
+Eritrea,Maekel,30,Mosaic cropland / natural vegetation,18346.28,18687.82,70-79,136,10.369999885559082
+Eritrea,Maekel,30,Mosaic cropland / natural vegetation,18346.28,18687.82,80-89,64,10.369999885559082
+Eritrea,Maekel,30,Mosaic cropland / natural vegetation,18346.28,18687.82,90-99,13,10.369999885559082
+Eritrea,Maekel,40,Mosaic natural vegetation / cropland,11564.7,11805.85,0-9,10170,15.510000228881836
+Eritrea,Maekel,40,Mosaic natural vegetation / cropland,11564.7,11805.85,10-19,1826,15.510000228881836
+Eritrea,Maekel,40,Mosaic natural vegetation / cropland,11564.7,11805.85,20-29,971,15.510000228881836
+Eritrea,Maekel,40,Mosaic natural vegetation / cropland,11564.7,11805.85,30-39,633,15.510000228881836
+Eritrea,Maekel,40,Mosaic natural vegetation / cropland,11564.7,11805.85,40-49,446,15.510000228881836
+Eritrea,Maekel,40,Mosaic natural vegetation / cropland,11564.7,11805.85,50-59,365,15.510000228881836
+Eritrea,Maekel,40,Mosaic natural vegetation / cropland,11564.7,11805.85,60-69,293,15.510000228881836
+Eritrea,Maekel,40,Mosaic natural vegetation / cropland,11564.7,11805.85,70-79,271,15.510000228881836
+Eritrea,Maekel,40,Mosaic natural vegetation / cropland,11564.7,11805.85,80-89,269,15.510000228881836
+Eritrea,Maekel,40,Mosaic natural vegetation / cropland,11564.7,11805.85,90-99,176,15.510000228881836
+Eritrea,Maekel,70,"Tree cover, needleleaved, evergreen",3748.13,4036.2,0-9,2305,22.799999237060547
+Eritrea,Maekel,70,"Tree cover, needleleaved, evergreen",3748.13,4036.2,10-19,673,22.799999237060547
+Eritrea,Maekel,70,"Tree cover, needleleaved, evergreen",3748.13,4036.2,20-29,457,22.799999237060547
+Eritrea,Maekel,70,"Tree cover, needleleaved, evergreen",3748.13,4036.2,30-39,275,22.799999237060547
+Eritrea,Maekel,70,"Tree cover, needleleaved, evergreen",3748.13,4036.2,40-49,252,22.799999237060547
+Eritrea,Maekel,70,"Tree cover, needleleaved, evergreen",3748.13,4036.2,50-59,215,22.799999237060547
+Eritrea,Maekel,70,"Tree cover, needleleaved, evergreen",3748.13,4036.2,60-69,208,22.799999237060547
+Eritrea,Maekel,70,"Tree cover, needleleaved, evergreen",3748.13,4036.2,70-79,138,22.799999237060547
+Eritrea,Maekel,70,"Tree cover, needleleaved, evergreen",3748.13,4036.2,80-89,134,22.799999237060547
+Eritrea,Maekel,70,"Tree cover, needleleaved, evergreen",3748.13,4036.2,90-99,82,22.799999237060547
+Eritrea,Maekel,100,Mosaic tree and shrub / herbaceous cover,11835.17,11951.62,0-9,11607,10.460000038146973
+Eritrea,Maekel,100,Mosaic tree and shrub / herbaceous cover,11835.17,11951.62,10-19,1435,10.460000038146973
+Eritrea,Maekel,100,Mosaic tree and shrub / herbaceous cover,11835.17,11951.62,20-29,727,10.460000038146973
+Eritrea,Maekel,100,Mosaic tree and shrub / herbaceous cover,11835.17,11951.62,30-39,478,10.460000038146973
+Eritrea,Maekel,100,Mosaic tree and shrub / herbaceous cover,11835.17,11951.62,40-49,312,10.460000038146973
+Eritrea,Maekel,100,Mosaic tree and shrub / herbaceous cover,11835.17,11951.62,50-59,223,10.460000038146973
+Eritrea,Maekel,100,Mosaic tree and shrub / herbaceous cover,11835.17,11951.62,60-69,143,10.460000038146973
+Eritrea,Maekel,100,Mosaic tree and shrub / herbaceous cover,11835.17,11951.62,70-79,82,10.460000038146973
+Eritrea,Maekel,100,Mosaic tree and shrub / herbaceous cover,11835.17,11951.62,80-89,74,10.460000038146973
+Eritrea,Maekel,100,Mosaic tree and shrub / herbaceous cover,11835.17,11951.62,90-99,18,10.460000038146973
+Eritrea,Maekel,110,Mosaic herbaceous cover / tree and shrub,4178.34,4204.12,0-9,4060,10.84000015258789
+Eritrea,Maekel,110,Mosaic herbaceous cover / tree and shrub,4178.34,4204.12,10-19,795,10.84000015258789
+Eritrea,Maekel,110,Mosaic herbaceous cover / tree and shrub,4178.34,4204.12,20-29,375,10.84000015258789
+Eritrea,Maekel,110,Mosaic herbaceous cover / tree and shrub,4178.34,4204.12,30-39,193,10.84000015258789
+Eritrea,Maekel,110,Mosaic herbaceous cover / tree and shrub,4178.34,4204.12,40-49,107,10.84000015258789
+Eritrea,Maekel,110,Mosaic herbaceous cover / tree and shrub,4178.34,4204.12,50-59,80,10.84000015258789
+Eritrea,Maekel,110,Mosaic herbaceous cover / tree and shrub,4178.34,4204.12,60-69,49,10.84000015258789
+Eritrea,Maekel,110,Mosaic herbaceous cover / tree and shrub,4178.34,4204.12,70-79,24,10.84000015258789
+Eritrea,Maekel,110,Mosaic herbaceous cover / tree and shrub,4178.34,4204.12,80-89,13,10.84000015258789
+Eritrea,Maekel,110,Mosaic herbaceous cover / tree and shrub,4178.34,4204.12,90-99,0,10.84000015258789
+Eritrea,Maekel,120,Shrubland,34908.82,35653.63,0-9,21475,21.020000457763672
+Eritrea,Maekel,120,Shrubland,34908.82,35653.63,10-19,6006,21.020000457763672
+Eritrea,Maekel,120,Shrubland,34908.82,35653.63,20-29,3816,21.020000457763672
+Eritrea,Maekel,120,Shrubland,34908.82,35653.63,30-39,2871,21.020000457763672
+Eritrea,Maekel,120,Shrubland,34908.82,35653.63,40-49,2172,21.020000457763672
+Eritrea,Maekel,120,Shrubland,34908.82,35653.63,50-59,1670,21.020000457763672
+Eritrea,Maekel,120,Shrubland,34908.82,35653.63,60-69,1326,21.020000457763672
+Eritrea,Maekel,120,Shrubland,34908.82,35653.63,70-79,1140,21.020000457763672
+Eritrea,Maekel,120,Shrubland,34908.82,35653.63,80-89,997,21.020000457763672
+Eritrea,Maekel,120,Shrubland,34908.82,35653.63,90-99,556,21.020000457763672
+Eritrea,Maekel,130,Grassland,3666.28,3710.32,0-9,3943,7.699999809265137
+Eritrea,Maekel,130,Grassland,3666.28,3710.32,10-19,460,7.699999809265137
+Eritrea,Maekel,130,Grassland,3666.28,3710.32,20-29,168,7.699999809265137
+Eritrea,Maekel,130,Grassland,3666.28,3710.32,30-39,93,7.699999809265137
+Eritrea,Maekel,130,Grassland,3666.28,3710.32,40-49,50,7.699999809265137
+Eritrea,Maekel,130,Grassland,3666.28,3710.32,50-59,26,7.699999809265137
+Eritrea,Maekel,130,Grassland,3666.28,3710.32,60-69,7,7.699999809265137
+Eritrea,Maekel,130,Grassland,3666.28,3710.32,70-79,5,7.699999809265137
+Eritrea,Maekel,130,Grassland,3666.28,3710.32,80-89,0,7.699999809265137
+Eritrea,Maekel,130,Grassland,3666.28,3710.32,90-99,2,7.699999809265137
+Eritrea,Maekel,190,Urban areas,2915.3,2916.37,0-9,3176,6.849999904632568
+Eritrea,Maekel,190,Urban areas,2915.3,2916.37,10-19,313,6.849999904632568
+Eritrea,Maekel,190,Urban areas,2915.3,2916.37,20-29,110,6.849999904632568
+Eritrea,Maekel,190,Urban areas,2915.3,2916.37,30-39,47,6.849999904632568
+Eritrea,Maekel,190,Urban areas,2915.3,2916.37,40-49,25,6.849999904632568
+Eritrea,Maekel,190,Urban areas,2915.3,2916.37,50-59,10,6.849999904632568
+Eritrea,Maekel,190,Urban areas,2915.3,2916.37,60-69,3,6.849999904632568
+Eritrea,Maekel,190,Urban areas,2915.3,2916.37,70-79,1,6.849999904632568
+Eritrea,Maekel,190,Urban areas,2915.3,2916.37,80-89,1,6.849999904632568
+Eritrea,Maekel,190,Urban areas,2915.3,2916.37,90-99,0,6.849999904632568
+Eritrea,Maekel,201,Bare areas,121.7,129.32,0-9,122,10.210000038146973
+Eritrea,Maekel,201,Bare areas,121.7,129.32,10-19,27,10.210000038146973
+Eritrea,Maekel,201,Bare areas,121.7,129.32,20-29,15,10.210000038146973
+Eritrea,Maekel,201,Bare areas,121.7,129.32,30-39,3,10.210000038146973
+Eritrea,Maekel,201,Bare areas,121.7,129.32,40-49,2,10.210000038146973
+Eritrea,Maekel,201,Bare areas,121.7,129.32,50-59,3,10.210000038146973
+Eritrea,Maekel,201,Bare areas,121.7,129.32,60-69,1,10.210000038146973
+Eritrea,Maekel,201,Bare areas,121.7,129.32,70-79,0,10.210000038146973
+Eritrea,Maekel,201,Bare areas,121.7,129.32,80-89,0,10.210000038146973
+Eritrea,Maekel,201,Bare areas,121.7,129.32,90-99,0,10.210000038146973
+Eritrea,Maekel,210,Water bodies,138.02,138.02,0-9,141,7.860000133514404
+Eritrea,Maekel,210,Water bodies,138.02,138.02,10-19,22,7.860000133514404
+Eritrea,Maekel,210,Water bodies,138.02,138.02,20-29,12,7.860000133514404
+Eritrea,Maekel,210,Water bodies,138.02,138.02,30-39,3,7.860000133514404
+Eritrea,Maekel,210,Water bodies,138.02,138.02,40-49,1,7.860000133514404
+Eritrea,Maekel,210,Water bodies,138.02,138.02,50-59,0,7.860000133514404
+Eritrea,Maekel,210,Water bodies,138.02,138.02,60-69,0,7.860000133514404
+Eritrea,Maekel,210,Water bodies,138.02,138.02,70-79,0,7.860000133514404
+Eritrea,Maekel,210,Water bodies,138.02,138.02,80-89,0,7.860000133514404
+Eritrea,Maekel,210,Water bodies,138.02,138.02,90-99,0,7.860000133514404
+Eritrea,Maekel,255,No Data (flag),676.02,79972.69,0-9,1071,18.829999923706055
+Eritrea,Maekel,255,No Data (flag),676.02,79972.69,10-19,223,18.829999923706055
+Eritrea,Maekel,255,No Data (flag),676.02,79972.69,20-29,127,18.829999923706055
+Eritrea,Maekel,255,No Data (flag),676.02,79972.69,30-39,91,18.829999923706055
+Eritrea,Maekel,255,No Data (flag),676.02,79972.69,40-49,79,18.829999923706055
+Eritrea,Maekel,255,No Data (flag),676.02,79972.69,50-59,50,18.829999923706055
+Eritrea,Maekel,255,No Data (flag),676.02,79972.69,60-69,44,18.829999923706055
+Eritrea,Maekel,255,No Data (flag),676.02,79972.69,70-79,46,18.829999923706055
+Eritrea,Maekel,255,No Data (flag),676.02,79972.69,80-89,35,18.829999923706055
+Eritrea,Maekel,255,No Data (flag),676.02,79972.69,90-99,42,18.829999923706055
+Eritrea,Debubawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",0.0,18.3,0-9,0,
+Eritrea,Debubawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",0.0,18.3,10-19,0,
+Eritrea,Debubawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",0.0,18.3,20-29,0,
+Eritrea,Debubawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",0.0,18.3,30-39,0,
+Eritrea,Debubawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",0.0,18.3,40-49,0,
+Eritrea,Debubawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",0.0,18.3,50-59,0,
+Eritrea,Debubawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",0.0,18.3,60-69,0,
+Eritrea,Debubawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",0.0,18.3,70-79,0,
+Eritrea,Debubawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",0.0,18.3,80-89,0,
+Eritrea,Debubawi Keyih Bahri,20,"Cropland, irrigated or post-flooding",0.0,18.3,90-99,0,
+Eritrea,Debubawi Keyih Bahri,30,Mosaic cropland / natural vegetation,0.0,519.09,0-9,0,
+Eritrea,Debubawi Keyih Bahri,30,Mosaic cropland / natural vegetation,0.0,519.09,10-19,0,
+Eritrea,Debubawi Keyih Bahri,30,Mosaic cropland / natural vegetation,0.0,519.09,20-29,0,
+Eritrea,Debubawi Keyih Bahri,30,Mosaic cropland / natural vegetation,0.0,519.09,30-39,0,
+Eritrea,Debubawi Keyih Bahri,30,Mosaic cropland / natural vegetation,0.0,519.09,40-49,0,
+Eritrea,Debubawi Keyih Bahri,30,Mosaic cropland / natural vegetation,0.0,519.09,50-59,0,
+Eritrea,Debubawi Keyih Bahri,30,Mosaic cropland / natural vegetation,0.0,519.09,60-69,0,
+Eritrea,Debubawi Keyih Bahri,30,Mosaic cropland / natural vegetation,0.0,519.09,70-79,0,
+Eritrea,Debubawi Keyih Bahri,30,Mosaic cropland / natural vegetation,0.0,519.09,80-89,0,
+Eritrea,Debubawi Keyih Bahri,30,Mosaic cropland / natural vegetation,0.0,519.09,90-99,0,
+Eritrea,Debubawi Keyih Bahri,40,Mosaic natural vegetation / cropland,0.0,4405.14,0-9,0,
+Eritrea,Debubawi Keyih Bahri,40,Mosaic natural vegetation / cropland,0.0,4405.14,10-19,0,
+Eritrea,Debubawi Keyih Bahri,40,Mosaic natural vegetation / cropland,0.0,4405.14,20-29,0,
+Eritrea,Debubawi Keyih Bahri,40,Mosaic natural vegetation / cropland,0.0,4405.14,30-39,0,
+Eritrea,Debubawi Keyih Bahri,40,Mosaic natural vegetation / cropland,0.0,4405.14,40-49,0,
+Eritrea,Debubawi Keyih Bahri,40,Mosaic natural vegetation / cropland,0.0,4405.14,50-59,0,
+Eritrea,Debubawi Keyih Bahri,40,Mosaic natural vegetation / cropland,0.0,4405.14,60-69,0,
+Eritrea,Debubawi Keyih Bahri,40,Mosaic natural vegetation / cropland,0.0,4405.14,70-79,0,
+Eritrea,Debubawi Keyih Bahri,40,Mosaic natural vegetation / cropland,0.0,4405.14,80-89,0,
+Eritrea,Debubawi Keyih Bahri,40,Mosaic natural vegetation / cropland,0.0,4405.14,90-99,0,
+Eritrea,Debubawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,0.0,1204.03,0-9,0,
+Eritrea,Debubawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,0.0,1204.03,10-19,0,
+Eritrea,Debubawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,0.0,1204.03,20-29,0,
+Eritrea,Debubawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,0.0,1204.03,30-39,0,
+Eritrea,Debubawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,0.0,1204.03,40-49,0,
+Eritrea,Debubawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,0.0,1204.03,50-59,0,
+Eritrea,Debubawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,0.0,1204.03,60-69,0,
+Eritrea,Debubawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,0.0,1204.03,70-79,0,
+Eritrea,Debubawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,0.0,1204.03,80-89,0,
+Eritrea,Debubawi Keyih Bahri,110,Mosaic herbaceous cover / tree and shrub,0.0,1204.03,90-99,0,
+Eritrea,Debubawi Keyih Bahri,120,Shrubland,0.0,6111.99,0-9,0,
+Eritrea,Debubawi Keyih Bahri,120,Shrubland,0.0,6111.99,10-19,0,
+Eritrea,Debubawi Keyih Bahri,120,Shrubland,0.0,6111.99,20-29,0,
+Eritrea,Debubawi Keyih Bahri,120,Shrubland,0.0,6111.99,30-39,0,
+Eritrea,Debubawi Keyih Bahri,120,Shrubland,0.0,6111.99,40-49,0,
+Eritrea,Debubawi Keyih Bahri,120,Shrubland,0.0,6111.99,50-59,0,
+Eritrea,Debubawi Keyih Bahri,120,Shrubland,0.0,6111.99,60-69,0,
+Eritrea,Debubawi Keyih Bahri,120,Shrubland,0.0,6111.99,70-79,0,
+Eritrea,Debubawi Keyih Bahri,120,Shrubland,0.0,6111.99,80-89,0,
+Eritrea,Debubawi Keyih Bahri,120,Shrubland,0.0,6111.99,90-99,0,
+Eritrea,Debubawi Keyih Bahri,130,Grassland,0.0,18338.97,0-9,0,
+Eritrea,Debubawi Keyih Bahri,130,Grassland,0.0,18338.97,10-19,0,
+Eritrea,Debubawi Keyih Bahri,130,Grassland,0.0,18338.97,20-29,0,
+Eritrea,Debubawi Keyih Bahri,130,Grassland,0.0,18338.97,30-39,0,
+Eritrea,Debubawi Keyih Bahri,130,Grassland,0.0,18338.97,40-49,0,
+Eritrea,Debubawi Keyih Bahri,130,Grassland,0.0,18338.97,50-59,0,
+Eritrea,Debubawi Keyih Bahri,130,Grassland,0.0,18338.97,60-69,0,
+Eritrea,Debubawi Keyih Bahri,130,Grassland,0.0,18338.97,70-79,0,
+Eritrea,Debubawi Keyih Bahri,130,Grassland,0.0,18338.97,80-89,0,
+Eritrea,Debubawi Keyih Bahri,130,Grassland,0.0,18338.97,90-99,0,
+Eritrea,Debubawi Keyih Bahri,150,Sparse vegetation,0.0,34716.45,0-9,0,
+Eritrea,Debubawi Keyih Bahri,150,Sparse vegetation,0.0,34716.45,10-19,0,
+Eritrea,Debubawi Keyih Bahri,150,Sparse vegetation,0.0,34716.45,20-29,0,
+Eritrea,Debubawi Keyih Bahri,150,Sparse vegetation,0.0,34716.45,30-39,0,
+Eritrea,Debubawi Keyih Bahri,150,Sparse vegetation,0.0,34716.45,40-49,0,
+Eritrea,Debubawi Keyih Bahri,150,Sparse vegetation,0.0,34716.45,50-59,0,
+Eritrea,Debubawi Keyih Bahri,150,Sparse vegetation,0.0,34716.45,60-69,0,
+Eritrea,Debubawi Keyih Bahri,150,Sparse vegetation,0.0,34716.45,70-79,0,
+Eritrea,Debubawi Keyih Bahri,150,Sparse vegetation,0.0,34716.45,80-89,0,
+Eritrea,Debubawi Keyih Bahri,150,Sparse vegetation,0.0,34716.45,90-99,0,
+Eritrea,Debubawi Keyih Bahri,152,Sparse vegetation,0.0,156.92,0-9,0,
+Eritrea,Debubawi Keyih Bahri,152,Sparse vegetation,0.0,156.92,10-19,0,
+Eritrea,Debubawi Keyih Bahri,152,Sparse vegetation,0.0,156.92,20-29,0,
+Eritrea,Debubawi Keyih Bahri,152,Sparse vegetation,0.0,156.92,30-39,0,
+Eritrea,Debubawi Keyih Bahri,152,Sparse vegetation,0.0,156.92,40-49,0,
+Eritrea,Debubawi Keyih Bahri,152,Sparse vegetation,0.0,156.92,50-59,0,
+Eritrea,Debubawi Keyih Bahri,152,Sparse vegetation,0.0,156.92,60-69,0,
+Eritrea,Debubawi Keyih Bahri,152,Sparse vegetation,0.0,156.92,70-79,0,
+Eritrea,Debubawi Keyih Bahri,152,Sparse vegetation,0.0,156.92,80-89,0,
+Eritrea,Debubawi Keyih Bahri,152,Sparse vegetation,0.0,156.92,90-99,0,
+Eritrea,Debubawi Keyih Bahri,153,Sparse vegetation,0.0,146.71,0-9,0,
+Eritrea,Debubawi Keyih Bahri,153,Sparse vegetation,0.0,146.71,10-19,0,
+Eritrea,Debubawi Keyih Bahri,153,Sparse vegetation,0.0,146.71,20-29,0,
+Eritrea,Debubawi Keyih Bahri,153,Sparse vegetation,0.0,146.71,30-39,0,
+Eritrea,Debubawi Keyih Bahri,153,Sparse vegetation,0.0,146.71,40-49,0,
+Eritrea,Debubawi Keyih Bahri,153,Sparse vegetation,0.0,146.71,50-59,0,
+Eritrea,Debubawi Keyih Bahri,153,Sparse vegetation,0.0,146.71,60-69,0,
+Eritrea,Debubawi Keyih Bahri,153,Sparse vegetation,0.0,146.71,70-79,0,
+Eritrea,Debubawi Keyih Bahri,153,Sparse vegetation,0.0,146.71,80-89,0,
+Eritrea,Debubawi Keyih Bahri,153,Sparse vegetation,0.0,146.71,90-99,0,
+Eritrea,Debubawi Keyih Bahri,170,"Tree cover, flooded, saline water",0.0,6771.86,0-9,0,
+Eritrea,Debubawi Keyih Bahri,170,"Tree cover, flooded, saline water",0.0,6771.86,10-19,0,
+Eritrea,Debubawi Keyih Bahri,170,"Tree cover, flooded, saline water",0.0,6771.86,20-29,0,
+Eritrea,Debubawi Keyih Bahri,170,"Tree cover, flooded, saline water",0.0,6771.86,30-39,0,
+Eritrea,Debubawi Keyih Bahri,170,"Tree cover, flooded, saline water",0.0,6771.86,40-49,0,
+Eritrea,Debubawi Keyih Bahri,170,"Tree cover, flooded, saline water",0.0,6771.86,50-59,0,
+Eritrea,Debubawi Keyih Bahri,170,"Tree cover, flooded, saline water",0.0,6771.86,60-69,0,
+Eritrea,Debubawi Keyih Bahri,170,"Tree cover, flooded, saline water",0.0,6771.86,70-79,0,
+Eritrea,Debubawi Keyih Bahri,170,"Tree cover, flooded, saline water",0.0,6771.86,80-89,0,
+Eritrea,Debubawi Keyih Bahri,170,"Tree cover, flooded, saline water",0.0,6771.86,90-99,0,
+Eritrea,Debubawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",0.0,9249.31,0-9,0,
+Eritrea,Debubawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",0.0,9249.31,10-19,0,
+Eritrea,Debubawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",0.0,9249.31,20-29,0,
+Eritrea,Debubawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",0.0,9249.31,30-39,0,
+Eritrea,Debubawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",0.0,9249.31,40-49,0,
+Eritrea,Debubawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",0.0,9249.31,50-59,0,
+Eritrea,Debubawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",0.0,9249.31,60-69,0,
+Eritrea,Debubawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",0.0,9249.31,70-79,0,
+Eritrea,Debubawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",0.0,9249.31,80-89,0,
+Eritrea,Debubawi Keyih Bahri,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",0.0,9249.31,90-99,0,
+Eritrea,Debubawi Keyih Bahri,190,Urban areas,0.0,175.53,0-9,0,
+Eritrea,Debubawi Keyih Bahri,190,Urban areas,0.0,175.53,10-19,0,
+Eritrea,Debubawi Keyih Bahri,190,Urban areas,0.0,175.53,20-29,0,
+Eritrea,Debubawi Keyih Bahri,190,Urban areas,0.0,175.53,30-39,0,
+Eritrea,Debubawi Keyih Bahri,190,Urban areas,0.0,175.53,40-49,0,
+Eritrea,Debubawi Keyih Bahri,190,Urban areas,0.0,175.53,50-59,0,
+Eritrea,Debubawi Keyih Bahri,190,Urban areas,0.0,175.53,60-69,0,
+Eritrea,Debubawi Keyih Bahri,190,Urban areas,0.0,175.53,70-79,0,
+Eritrea,Debubawi Keyih Bahri,190,Urban areas,0.0,175.53,80-89,0,
+Eritrea,Debubawi Keyih Bahri,190,Urban areas,0.0,175.53,90-99,0,
+Eritrea,Debubawi Keyih Bahri,200,Bare areas,0.0,2012646.25,0-9,0,
+Eritrea,Debubawi Keyih Bahri,200,Bare areas,0.0,2012646.25,10-19,0,
+Eritrea,Debubawi Keyih Bahri,200,Bare areas,0.0,2012646.25,20-29,0,
+Eritrea,Debubawi Keyih Bahri,200,Bare areas,0.0,2012646.25,30-39,0,
+Eritrea,Debubawi Keyih Bahri,200,Bare areas,0.0,2012646.25,40-49,0,
+Eritrea,Debubawi Keyih Bahri,200,Bare areas,0.0,2012646.25,50-59,0,
+Eritrea,Debubawi Keyih Bahri,200,Bare areas,0.0,2012646.25,60-69,0,
+Eritrea,Debubawi Keyih Bahri,200,Bare areas,0.0,2012646.25,70-79,0,
+Eritrea,Debubawi Keyih Bahri,200,Bare areas,0.0,2012646.25,80-89,0,
+Eritrea,Debubawi Keyih Bahri,200,Bare areas,0.0,2012646.25,90-99,0,
+Eritrea,Debubawi Keyih Bahri,201,Bare areas,0.0,57672.33,0-9,0,
+Eritrea,Debubawi Keyih Bahri,201,Bare areas,0.0,57672.33,10-19,0,
+Eritrea,Debubawi Keyih Bahri,201,Bare areas,0.0,57672.33,20-29,0,
+Eritrea,Debubawi Keyih Bahri,201,Bare areas,0.0,57672.33,30-39,0,
+Eritrea,Debubawi Keyih Bahri,201,Bare areas,0.0,57672.33,40-49,0,
+Eritrea,Debubawi Keyih Bahri,201,Bare areas,0.0,57672.33,50-59,0,
+Eritrea,Debubawi Keyih Bahri,201,Bare areas,0.0,57672.33,60-69,0,
+Eritrea,Debubawi Keyih Bahri,201,Bare areas,0.0,57672.33,70-79,0,
+Eritrea,Debubawi Keyih Bahri,201,Bare areas,0.0,57672.33,80-89,0,
+Eritrea,Debubawi Keyih Bahri,201,Bare areas,0.0,57672.33,90-99,0,
+Eritrea,Debubawi Keyih Bahri,202,Bare areas,0.0,1651.39,0-9,0,
+Eritrea,Debubawi Keyih Bahri,202,Bare areas,0.0,1651.39,10-19,0,
+Eritrea,Debubawi Keyih Bahri,202,Bare areas,0.0,1651.39,20-29,0,
+Eritrea,Debubawi Keyih Bahri,202,Bare areas,0.0,1651.39,30-39,0,
+Eritrea,Debubawi Keyih Bahri,202,Bare areas,0.0,1651.39,40-49,0,
+Eritrea,Debubawi Keyih Bahri,202,Bare areas,0.0,1651.39,50-59,0,
+Eritrea,Debubawi Keyih Bahri,202,Bare areas,0.0,1651.39,60-69,0,
+Eritrea,Debubawi Keyih Bahri,202,Bare areas,0.0,1651.39,70-79,0,
+Eritrea,Debubawi Keyih Bahri,202,Bare areas,0.0,1651.39,80-89,0,
+Eritrea,Debubawi Keyih Bahri,202,Bare areas,0.0,1651.39,90-99,0,
+Eritrea,Debubawi Keyih Bahri,210,Water bodies,0.0,18870.72,0-9,0,
+Eritrea,Debubawi Keyih Bahri,210,Water bodies,0.0,18870.72,10-19,0,
+Eritrea,Debubawi Keyih Bahri,210,Water bodies,0.0,18870.72,20-29,0,
+Eritrea,Debubawi Keyih Bahri,210,Water bodies,0.0,18870.72,30-39,0,
+Eritrea,Debubawi Keyih Bahri,210,Water bodies,0.0,18870.72,40-49,0,
+Eritrea,Debubawi Keyih Bahri,210,Water bodies,0.0,18870.72,50-59,0,
+Eritrea,Debubawi Keyih Bahri,210,Water bodies,0.0,18870.72,60-69,0,
+Eritrea,Debubawi Keyih Bahri,210,Water bodies,0.0,18870.72,70-79,0,
+Eritrea,Debubawi Keyih Bahri,210,Water bodies,0.0,18870.72,80-89,0,
+Eritrea,Debubawi Keyih Bahri,210,Water bodies,0.0,18870.72,90-99,0,
+Eritrea,Debubawi Keyih Bahri,255,No Data (flag),0.0,6517427.58,0-9,0,
+Eritrea,Debubawi Keyih Bahri,255,No Data (flag),0.0,6517427.58,10-19,0,
+Eritrea,Debubawi Keyih Bahri,255,No Data (flag),0.0,6517427.58,20-29,0,
+Eritrea,Debubawi Keyih Bahri,255,No Data (flag),0.0,6517427.58,30-39,0,
+Eritrea,Debubawi Keyih Bahri,255,No Data (flag),0.0,6517427.58,40-49,0,
+Eritrea,Debubawi Keyih Bahri,255,No Data (flag),0.0,6517427.58,50-59,0,
+Eritrea,Debubawi Keyih Bahri,255,No Data (flag),0.0,6517427.58,60-69,0,
+Eritrea,Debubawi Keyih Bahri,255,No Data (flag),0.0,6517427.58,70-79,0,
+Eritrea,Debubawi Keyih Bahri,255,No Data (flag),0.0,6517427.58,80-89,0,
+Eritrea,Debubawi Keyih Bahri,255,No Data (flag),0.0,6517427.58,90-99,0,

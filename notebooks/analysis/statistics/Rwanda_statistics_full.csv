@@ -1,0 +1,961 @@
+country,admin,esa_id,esa_class,esa_sampled_ha,esa_total_ha,tree_cover_class,tof_ha,hans_ha,tof_mean,hans_mean
+Rwanda,Amajyaruguru,10,"Cropland, rainfed",56036.35,58197.5,0-9,39434,10042,16.969999313354492,16.690000534057617
+Rwanda,Amajyaruguru,10,"Cropland, rainfed",56036.35,58197.5,10-19,10759,46603,16.969999313354492,16.690000534057617
+Rwanda,Amajyaruguru,10,"Cropland, rainfed",56036.35,58197.5,20-29,5671,9270,16.969999313354492,16.690000534057617
+Rwanda,Amajyaruguru,10,"Cropland, rainfed",56036.35,58197.5,30-39,3732,2661,16.969999313354492,16.690000534057617
+Rwanda,Amajyaruguru,10,"Cropland, rainfed",56036.35,58197.5,40-49,2790,1087,16.969999313354492,16.690000534057617
+Rwanda,Amajyaruguru,10,"Cropland, rainfed",56036.35,58197.5,50-59,2025,380,16.969999313354492,16.690000534057617
+Rwanda,Amajyaruguru,10,"Cropland, rainfed",56036.35,58197.5,60-69,1540,361,16.969999313354492,16.690000534057617
+Rwanda,Amajyaruguru,10,"Cropland, rainfed",56036.35,58197.5,70-79,1106,327,16.969999313354492,16.690000534057617
+Rwanda,Amajyaruguru,10,"Cropland, rainfed",56036.35,58197.5,80-89,814,124,16.969999313354492,16.690000534057617
+Rwanda,Amajyaruguru,10,"Cropland, rainfed",56036.35,58197.5,90-99,541,60,16.969999313354492,16.690000534057617
+Rwanda,Amajyaruguru,11,"Cropland, rainfed",184937.7,197025.3,0-9,98882,11240,19.979999542236328,22.690000534057617
+Rwanda,Amajyaruguru,11,"Cropland, rainfed",184937.7,197025.3,10-19,37210,103201,19.979999542236328,22.690000534057617
+Rwanda,Amajyaruguru,11,"Cropland, rainfed",184937.7,197025.3,20-29,22453,57761,19.979999542236328,22.690000534057617
+Rwanda,Amajyaruguru,11,"Cropland, rainfed",184937.7,197025.3,30-39,15500,27826,19.979999542236328,22.690000534057617
+Rwanda,Amajyaruguru,11,"Cropland, rainfed",184937.7,197025.3,40-49,11042,13426,19.979999542236328,22.690000534057617
+Rwanda,Amajyaruguru,11,"Cropland, rainfed",184937.7,197025.3,50-59,7957,4734,19.979999542236328,22.690000534057617
+Rwanda,Amajyaruguru,11,"Cropland, rainfed",184937.7,197025.3,60-69,5778,1348,19.979999542236328,22.690000534057617
+Rwanda,Amajyaruguru,11,"Cropland, rainfed",184937.7,197025.3,70-79,4323,464,19.979999542236328,22.690000534057617
+Rwanda,Amajyaruguru,11,"Cropland, rainfed",184937.7,197025.3,80-89,2947,165,19.979999542236328,22.690000534057617
+Rwanda,Amajyaruguru,11,"Cropland, rainfed",184937.7,197025.3,90-99,1264,38,19.979999542236328,22.690000534057617
+Rwanda,Amajyaruguru,12,"Cropland, rainfed",207.71,255.76,0-9,269,3,5.909999847412109,38.27000045776367
+Rwanda,Amajyaruguru,12,"Cropland, rainfed",207.71,255.76,10-19,10,33,5.909999847412109,38.27000045776367
+Rwanda,Amajyaruguru,12,"Cropland, rainfed",207.71,255.76,20-29,3,69,5.909999847412109,38.27000045776367
+Rwanda,Amajyaruguru,12,"Cropland, rainfed",207.71,255.76,30-39,3,71,5.909999847412109,38.27000045776367
+Rwanda,Amajyaruguru,12,"Cropland, rainfed",207.71,255.76,40-49,1,100,5.909999847412109,38.27000045776367
+Rwanda,Amajyaruguru,12,"Cropland, rainfed",207.71,255.76,50-59,0,67,5.909999847412109,38.27000045776367
+Rwanda,Amajyaruguru,12,"Cropland, rainfed",207.71,255.76,60-69,1,12,5.909999847412109,38.27000045776367
+Rwanda,Amajyaruguru,12,"Cropland, rainfed",207.71,255.76,70-79,2,0,5.909999847412109,38.27000045776367
+Rwanda,Amajyaruguru,12,"Cropland, rainfed",207.71,255.76,80-89,0,0,5.909999847412109,38.27000045776367
+Rwanda,Amajyaruguru,12,"Cropland, rainfed",207.71,255.76,90-99,0,0,5.909999847412109,38.27000045776367
+Rwanda,Amajyaruguru,20,"Cropland, irrigated or post-flooding",97.91,132.06,0-9,124,57,7.059999942779541,12.069999694824219
+Rwanda,Amajyaruguru,20,"Cropland, irrigated or post-flooding",97.91,132.06,10-19,26,82,7.059999942779541,12.069999694824219
+Rwanda,Amajyaruguru,20,"Cropland, irrigated or post-flooding",97.91,132.06,20-29,4,14,7.059999942779541,12.069999694824219
+Rwanda,Amajyaruguru,20,"Cropland, irrigated or post-flooding",97.91,132.06,30-39,0,1,7.059999942779541,12.069999694824219
+Rwanda,Amajyaruguru,20,"Cropland, irrigated or post-flooding",97.91,132.06,40-49,0,0,7.059999942779541,12.069999694824219
+Rwanda,Amajyaruguru,20,"Cropland, irrigated or post-flooding",97.91,132.06,50-59,0,0,7.059999942779541,12.069999694824219
+Rwanda,Amajyaruguru,20,"Cropland, irrigated or post-flooding",97.91,132.06,60-69,0,0,7.059999942779541,12.069999694824219
+Rwanda,Amajyaruguru,20,"Cropland, irrigated or post-flooding",97.91,132.06,70-79,0,0,7.059999942779541,12.069999694824219
+Rwanda,Amajyaruguru,20,"Cropland, irrigated or post-flooding",97.91,132.06,80-89,0,0,7.059999942779541,12.069999694824219
+Rwanda,Amajyaruguru,20,"Cropland, irrigated or post-flooding",97.91,132.06,90-99,0,0,7.059999942779541,12.069999694824219
+Rwanda,Amajyaruguru,30,Mosaic cropland / natural vegetation,824.47,1746.24,0-9,129,15,59.119998931884766,64.80000305175781
+Rwanda,Amajyaruguru,30,Mosaic cropland / natural vegetation,824.47,1746.24,10-19,83,28,59.119998931884766,64.80000305175781
+Rwanda,Amajyaruguru,30,Mosaic cropland / natural vegetation,824.47,1746.24,20-29,89,49,59.119998931884766,64.80000305175781
+Rwanda,Amajyaruguru,30,Mosaic cropland / natural vegetation,824.47,1746.24,30-39,71,47,59.119998931884766,64.80000305175781
+Rwanda,Amajyaruguru,30,Mosaic cropland / natural vegetation,824.47,1746.24,40-49,58,135,59.119998931884766,64.80000305175781
+Rwanda,Amajyaruguru,30,Mosaic cropland / natural vegetation,824.47,1746.24,50-59,71,459,59.119998931884766,64.80000305175781
+Rwanda,Amajyaruguru,30,Mosaic cropland / natural vegetation,824.47,1746.24,60-69,102,696,59.119998931884766,64.80000305175781
+Rwanda,Amajyaruguru,30,Mosaic cropland / natural vegetation,824.47,1746.24,70-79,97,508,59.119998931884766,64.80000305175781
+Rwanda,Amajyaruguru,30,Mosaic cropland / natural vegetation,824.47,1746.24,80-89,122,247,59.119998931884766,64.80000305175781
+Rwanda,Amajyaruguru,30,Mosaic cropland / natural vegetation,824.47,1746.24,90-99,326,92,59.119998931884766,64.80000305175781
+Rwanda,Amajyaruguru,40,Mosaic natural vegetation / cropland,831.46,1004.1,0-9,349,29,31.229999542236328,38.5099983215332
+Rwanda,Amajyaruguru,40,Mosaic natural vegetation / cropland,831.46,1004.1,10-19,190,203,31.229999542236328,38.5099983215332
+Rwanda,Amajyaruguru,40,Mosaic natural vegetation / cropland,831.46,1004.1,20-29,164,360,31.229999542236328,38.5099983215332
+Rwanda,Amajyaruguru,40,Mosaic natural vegetation / cropland,831.46,1004.1,30-39,117,272,31.229999542236328,38.5099983215332
+Rwanda,Amajyaruguru,40,Mosaic natural vegetation / cropland,831.46,1004.1,40-49,97,203,31.229999542236328,38.5099983215332
+Rwanda,Amajyaruguru,40,Mosaic natural vegetation / cropland,831.46,1004.1,50-59,79,142,31.229999542236328,38.5099983215332
+Rwanda,Amajyaruguru,40,Mosaic natural vegetation / cropland,831.46,1004.1,60-69,58,128,31.229999542236328,38.5099983215332
+Rwanda,Amajyaruguru,40,Mosaic natural vegetation / cropland,831.46,1004.1,70-79,63,75,31.229999542236328,38.5099983215332
+Rwanda,Amajyaruguru,40,Mosaic natural vegetation / cropland,831.46,1004.1,80-89,33,31,31.229999542236328,38.5099983215332
+Rwanda,Amajyaruguru,40,Mosaic natural vegetation / cropland,831.46,1004.1,90-99,50,9,31.229999542236328,38.5099983215332
+Rwanda,Amajyaruguru,50,"Tree cover, broadleaved, evergreen",3235.09,5828.39,0-9,577,33,58.56999969482422,64.77999877929688
+Rwanda,Amajyaruguru,50,"Tree cover, broadleaved, evergreen",3235.09,5828.39,10-19,279,91,58.56999969482422,64.77999877929688
+Rwanda,Amajyaruguru,50,"Tree cover, broadleaved, evergreen",3235.09,5828.39,20-29,227,206,58.56999969482422,64.77999877929688
+Rwanda,Amajyaruguru,50,"Tree cover, broadleaved, evergreen",3235.09,5828.39,30-39,238,287,58.56999969482422,64.77999877929688
+Rwanda,Amajyaruguru,50,"Tree cover, broadleaved, evergreen",3235.09,5828.39,40-49,240,528,58.56999969482422,64.77999877929688
+Rwanda,Amajyaruguru,50,"Tree cover, broadleaved, evergreen",3235.09,5828.39,50-59,238,1334,58.56999969482422,64.77999877929688
+Rwanda,Amajyaruguru,50,"Tree cover, broadleaved, evergreen",3235.09,5828.39,60-69,281,1428,58.56999969482422,64.77999877929688
+Rwanda,Amajyaruguru,50,"Tree cover, broadleaved, evergreen",3235.09,5828.39,70-79,305,1430,58.56999969482422,64.77999877929688
+Rwanda,Amajyaruguru,50,"Tree cover, broadleaved, evergreen",3235.09,5828.39,80-89,450,987,58.56999969482422,64.77999877929688
+Rwanda,Amajyaruguru,50,"Tree cover, broadleaved, evergreen",3235.09,5828.39,90-99,1190,425,58.56999969482422,64.77999877929688
+Rwanda,Amajyaruguru,60,"Tree cover, broadleaved, deciduous",20918.1,23557.15,0-9,9636,518,24.530000686645508,31.6200008392334
+Rwanda,Amajyaruguru,60,"Tree cover, broadleaved, deciduous",20918.1,23557.15,10-19,4919,5420,24.530000686645508,31.6200008392334
+Rwanda,Amajyaruguru,60,"Tree cover, broadleaved, deciduous",20918.1,23557.15,20-29,3402,9528,24.530000686645508,31.6200008392334
+Rwanda,Amajyaruguru,60,"Tree cover, broadleaved, deciduous",20918.1,23557.15,30-39,2452,6597,24.530000686645508,31.6200008392334
+Rwanda,Amajyaruguru,60,"Tree cover, broadleaved, deciduous",20918.1,23557.15,40-49,1753,3849,24.530000686645508,31.6200008392334
+Rwanda,Amajyaruguru,60,"Tree cover, broadleaved, deciduous",20918.1,23557.15,50-59,1269,2012,24.530000686645508,31.6200008392334
+Rwanda,Amajyaruguru,60,"Tree cover, broadleaved, deciduous",20918.1,23557.15,60-69,933,829,24.530000686645508,31.6200008392334
+Rwanda,Amajyaruguru,60,"Tree cover, broadleaved, deciduous",20918.1,23557.15,70-79,675,309,24.530000686645508,31.6200008392334
+Rwanda,Amajyaruguru,60,"Tree cover, broadleaved, deciduous",20918.1,23557.15,80-89,651,126,24.530000686645508,31.6200008392334
+Rwanda,Amajyaruguru,60,"Tree cover, broadleaved, deciduous",20918.1,23557.15,90-99,354,24,24.530000686645508,31.6200008392334
+Rwanda,Amajyaruguru,61,"Tree cover, broadleaved, deciduous",286.13,343.48,0-9,138,4,26.350000381469727,36.709999084472656
+Rwanda,Amajyaruguru,61,"Tree cover, broadleaved, deciduous",286.13,343.48,10-19,73,40,26.350000381469727,36.709999084472656
+Rwanda,Amajyaruguru,61,"Tree cover, broadleaved, deciduous",286.13,343.48,20-29,57,138,26.350000381469727,36.709999084472656
+Rwanda,Amajyaruguru,61,"Tree cover, broadleaved, deciduous",286.13,343.48,30-39,43,153,26.350000381469727,36.709999084472656
+Rwanda,Amajyaruguru,61,"Tree cover, broadleaved, deciduous",286.13,343.48,40-49,37,90,26.350000381469727,36.709999084472656
+Rwanda,Amajyaruguru,61,"Tree cover, broadleaved, deciduous",286.13,343.48,50-59,24,45,26.350000381469727,36.709999084472656
+Rwanda,Amajyaruguru,61,"Tree cover, broadleaved, deciduous",286.13,343.48,60-69,19,17,26.350000381469727,36.709999084472656
+Rwanda,Amajyaruguru,61,"Tree cover, broadleaved, deciduous",286.13,343.48,70-79,18,15,26.350000381469727,36.709999084472656
+Rwanda,Amajyaruguru,61,"Tree cover, broadleaved, deciduous",286.13,343.48,80-89,6,5,26.350000381469727,36.709999084472656
+Rwanda,Amajyaruguru,61,"Tree cover, broadleaved, deciduous",286.13,343.48,90-99,3,2,26.350000381469727,36.709999084472656
+Rwanda,Amajyaruguru,62,"Tree cover, broadleaved, deciduous",1814.74,2768.95,0-9,1230,118,24.420000076293945,33.650001525878906
+Rwanda,Amajyaruguru,62,"Tree cover, broadleaved, deciduous",1814.74,2768.95,10-19,359,889,24.420000076293945,33.650001525878906
+Rwanda,Amajyaruguru,62,"Tree cover, broadleaved, deciduous",1814.74,2768.95,20-29,249,1059,24.420000076293945,33.650001525878906
+Rwanda,Amajyaruguru,62,"Tree cover, broadleaved, deciduous",1814.74,2768.95,30-39,152,485,24.420000076293945,33.650001525878906
+Rwanda,Amajyaruguru,62,"Tree cover, broadleaved, deciduous",1814.74,2768.95,40-49,120,333,24.420000076293945,33.650001525878906
+Rwanda,Amajyaruguru,62,"Tree cover, broadleaved, deciduous",1814.74,2768.95,50-59,106,390,24.420000076293945,33.650001525878906
+Rwanda,Amajyaruguru,62,"Tree cover, broadleaved, deciduous",1814.74,2768.95,60-69,83,234,24.420000076293945,33.650001525878906
+Rwanda,Amajyaruguru,62,"Tree cover, broadleaved, deciduous",1814.74,2768.95,70-79,77,154,24.420000076293945,33.650001525878906
+Rwanda,Amajyaruguru,62,"Tree cover, broadleaved, deciduous",1814.74,2768.95,80-89,111,41,24.420000076293945,33.650001525878906
+Rwanda,Amajyaruguru,62,"Tree cover, broadleaved, deciduous",1814.74,2768.95,90-99,91,17,24.420000076293945,33.650001525878906
+Rwanda,Amajyaruguru,100,Mosaic tree and shrub / herbaceous cover,23356.72,26150.38,0-9,14373,1837,20.139999389648438,25.850000381469727
+Rwanda,Amajyaruguru,100,Mosaic tree and shrub / herbaceous cover,23356.72,26150.38,10-19,6202,12385,20.139999389648438,25.850000381469727
+Rwanda,Amajyaruguru,100,Mosaic tree and shrub / herbaceous cover,23356.72,26150.38,20-29,3781,9878,20.139999389648438,25.850000381469727
+Rwanda,Amajyaruguru,100,Mosaic tree and shrub / herbaceous cover,23356.72,26150.38,30-39,2479,5856,20.139999389648438,25.850000381469727
+Rwanda,Amajyaruguru,100,Mosaic tree and shrub / herbaceous cover,23356.72,26150.38,40-49,1737,3244,20.139999389648438,25.850000381469727
+Rwanda,Amajyaruguru,100,Mosaic tree and shrub / herbaceous cover,23356.72,26150.38,50-59,1173,1317,20.139999389648438,25.850000381469727
+Rwanda,Amajyaruguru,100,Mosaic tree and shrub / herbaceous cover,23356.72,26150.38,60-69,861,440,20.139999389648438,25.850000381469727
+Rwanda,Amajyaruguru,100,Mosaic tree and shrub / herbaceous cover,23356.72,26150.38,70-79,579,180,20.139999389648438,25.850000381469727
+Rwanda,Amajyaruguru,100,Mosaic tree and shrub / herbaceous cover,23356.72,26150.38,80-89,412,72,20.139999389648438,25.850000381469727
+Rwanda,Amajyaruguru,100,Mosaic tree and shrub / herbaceous cover,23356.72,26150.38,90-99,227,25,20.139999389648438,25.850000381469727
+Rwanda,Amajyaruguru,110,Mosaic herbaceous cover / tree and shrub,66.96,66.96,0-9,28,13,28.729999542236328,24.969999313354492
+Rwanda,Amajyaruguru,110,Mosaic herbaceous cover / tree and shrub,66.96,66.96,10-19,17,25,28.729999542236328,24.969999313354492
+Rwanda,Amajyaruguru,110,Mosaic herbaceous cover / tree and shrub,66.96,66.96,20-29,13,24,28.729999542236328,24.969999313354492
+Rwanda,Amajyaruguru,110,Mosaic herbaceous cover / tree and shrub,66.96,66.96,30-39,5,10,28.729999542236328,24.969999313354492
+Rwanda,Amajyaruguru,110,Mosaic herbaceous cover / tree and shrub,66.96,66.96,40-49,7,16,28.729999542236328,24.969999313354492
+Rwanda,Amajyaruguru,110,Mosaic herbaceous cover / tree and shrub,66.96,66.96,50-59,11,4,28.729999542236328,24.969999313354492
+Rwanda,Amajyaruguru,110,Mosaic herbaceous cover / tree and shrub,66.96,66.96,60-69,4,0,28.729999542236328,24.969999313354492
+Rwanda,Amajyaruguru,110,Mosaic herbaceous cover / tree and shrub,66.96,66.96,70-79,2,0,28.729999542236328,24.969999313354492
+Rwanda,Amajyaruguru,110,Mosaic herbaceous cover / tree and shrub,66.96,66.96,80-89,2,0,28.729999542236328,24.969999313354492
+Rwanda,Amajyaruguru,110,Mosaic herbaceous cover / tree and shrub,66.96,66.96,90-99,3,0,28.729999542236328,24.969999313354492
+Rwanda,Amajyaruguru,120,Shrubland,114.39,209.56,0-9,95,42,16.850000381469727,28.530000686645508
+Rwanda,Amajyaruguru,120,Shrubland,114.39,209.56,10-19,31,120,16.850000381469727,28.530000686645508
+Rwanda,Amajyaruguru,120,Shrubland,114.39,209.56,20-29,13,59,16.850000381469727,28.530000686645508
+Rwanda,Amajyaruguru,120,Shrubland,114.39,209.56,30-39,13,27,16.850000381469727,28.530000686645508
+Rwanda,Amajyaruguru,120,Shrubland,114.39,209.56,40-49,5,10,16.850000381469727,28.530000686645508
+Rwanda,Amajyaruguru,120,Shrubland,114.39,209.56,50-59,4,9,16.850000381469727,28.530000686645508
+Rwanda,Amajyaruguru,120,Shrubland,114.39,209.56,60-69,3,5,16.850000381469727,28.530000686645508
+Rwanda,Amajyaruguru,120,Shrubland,114.39,209.56,70-79,4,5,16.850000381469727,28.530000686645508
+Rwanda,Amajyaruguru,120,Shrubland,114.39,209.56,80-89,3,15,16.850000381469727,28.530000686645508
+Rwanda,Amajyaruguru,120,Shrubland,114.39,209.56,90-99,0,15,16.850000381469727,28.530000686645508
+Rwanda,Amajyaruguru,130,Grassland,38.13,57.35,0-9,6,16,47.33000183105469,25.829999923706055
+Rwanda,Amajyaruguru,130,Grassland,38.13,57.35,10-19,5,17,47.33000183105469,25.829999923706055
+Rwanda,Amajyaruguru,130,Grassland,38.13,57.35,20-29,5,13,47.33000183105469,25.829999923706055
+Rwanda,Amajyaruguru,130,Grassland,38.13,57.35,30-39,5,17,47.33000183105469,25.829999923706055
+Rwanda,Amajyaruguru,130,Grassland,38.13,57.35,40-49,5,14,47.33000183105469,25.829999923706055
+Rwanda,Amajyaruguru,130,Grassland,38.13,57.35,50-59,8,1,47.33000183105469,25.829999923706055
+Rwanda,Amajyaruguru,130,Grassland,38.13,57.35,60-69,5,2,47.33000183105469,25.829999923706055
+Rwanda,Amajyaruguru,130,Grassland,38.13,57.35,70-79,8,0,47.33000183105469,25.829999923706055
+Rwanda,Amajyaruguru,130,Grassland,38.13,57.35,80-89,2,0,47.33000183105469,25.829999923706055
+Rwanda,Amajyaruguru,130,Grassland,38.13,57.35,90-99,3,0,47.33000183105469,25.829999923706055
+Rwanda,Amajyaruguru,160,"Tree cover, flooded, fresh or brakish water",58.32,152.52,0-9,46,0,24.610000610351562,61.88999938964844
+Rwanda,Amajyaruguru,160,"Tree cover, flooded, fresh or brakish water",58.32,152.52,10-19,13,3,24.610000610351562,61.88999938964844
+Rwanda,Amajyaruguru,160,"Tree cover, flooded, fresh or brakish water",58.32,152.52,20-29,7,7,24.610000610351562,61.88999938964844
+Rwanda,Amajyaruguru,160,"Tree cover, flooded, fresh or brakish water",58.32,152.52,30-39,9,9,24.610000610351562,61.88999938964844
+Rwanda,Amajyaruguru,160,"Tree cover, flooded, fresh or brakish water",58.32,152.52,40-49,3,16,24.610000610351562,61.88999938964844
+Rwanda,Amajyaruguru,160,"Tree cover, flooded, fresh or brakish water",58.32,152.52,50-59,4,48,24.610000610351562,61.88999938964844
+Rwanda,Amajyaruguru,160,"Tree cover, flooded, fresh or brakish water",58.32,152.52,60-69,6,61,24.610000610351562,61.88999938964844
+Rwanda,Amajyaruguru,160,"Tree cover, flooded, fresh or brakish water",58.32,152.52,70-79,5,43,24.610000610351562,61.88999938964844
+Rwanda,Amajyaruguru,160,"Tree cover, flooded, fresh or brakish water",58.32,152.52,80-89,4,17,24.610000610351562,61.88999938964844
+Rwanda,Amajyaruguru,160,"Tree cover, flooded, fresh or brakish water",58.32,152.52,90-99,0,6,24.610000610351562,61.88999938964844
+Rwanda,Amajyaruguru,170,"Tree cover, flooded, saline water",56.73,56.73,0-9,46,5,14.739999771118164,26.610000610351562
+Rwanda,Amajyaruguru,170,"Tree cover, flooded, saline water",56.73,56.73,10-19,16,19,14.739999771118164,26.610000610351562
+Rwanda,Amajyaruguru,170,"Tree cover, flooded, saline water",56.73,56.73,20-29,11,37,14.739999771118164,26.610000610351562
+Rwanda,Amajyaruguru,170,"Tree cover, flooded, saline water",56.73,56.73,30-39,9,11,14.739999771118164,26.610000610351562
+Rwanda,Amajyaruguru,170,"Tree cover, flooded, saline water",56.73,56.73,40-49,3,10,14.739999771118164,26.610000610351562
+Rwanda,Amajyaruguru,170,"Tree cover, flooded, saline water",56.73,56.73,50-59,1,5,14.739999771118164,26.610000610351562
+Rwanda,Amajyaruguru,170,"Tree cover, flooded, saline water",56.73,56.73,60-69,1,0,14.739999771118164,26.610000610351562
+Rwanda,Amajyaruguru,170,"Tree cover, flooded, saline water",56.73,56.73,70-79,0,0,14.739999771118164,26.610000610351562
+Rwanda,Amajyaruguru,170,"Tree cover, flooded, saline water",56.73,56.73,80-89,0,0,14.739999771118164,26.610000610351562
+Rwanda,Amajyaruguru,170,"Tree cover, flooded, saline water",56.73,56.73,90-99,0,0,14.739999771118164,26.610000610351562
+Rwanda,Amajyaruguru,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",67.27,67.27,0-9,12,5,48.13999938964844,23.329999923706055
+Rwanda,Amajyaruguru,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",67.27,67.27,10-19,10,43,48.13999938964844,23.329999923706055
+Rwanda,Amajyaruguru,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",67.27,67.27,20-29,10,23,48.13999938964844,23.329999923706055
+Rwanda,Amajyaruguru,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",67.27,67.27,30-39,10,19,48.13999938964844,23.329999923706055
+Rwanda,Amajyaruguru,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",67.27,67.27,40-49,10,8,48.13999938964844,23.329999923706055
+Rwanda,Amajyaruguru,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",67.27,67.27,50-59,9,1,48.13999938964844,23.329999923706055
+Rwanda,Amajyaruguru,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",67.27,67.27,60-69,9,1,48.13999938964844,23.329999923706055
+Rwanda,Amajyaruguru,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",67.27,67.27,70-79,10,0,48.13999938964844,23.329999923706055
+Rwanda,Amajyaruguru,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",67.27,67.27,80-89,15,0,48.13999938964844,23.329999923706055
+Rwanda,Amajyaruguru,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",67.27,67.27,90-99,5,0,48.13999938964844,23.329999923706055
+Rwanda,Amajyaruguru,190,Urban areas,1204.35,1213.96,0-9,942,569,14.350000381469727,13.75
+Rwanda,Amajyaruguru,190,Urban areas,1204.35,1213.96,10-19,285,727,14.350000381469727,13.75
+Rwanda,Amajyaruguru,190,Urban areas,1204.35,1213.96,20-29,129,218,14.350000381469727,13.75
+Rwanda,Amajyaruguru,190,Urban areas,1204.35,1213.96,30-39,89,55,14.350000381469727,13.75
+Rwanda,Amajyaruguru,190,Urban areas,1204.35,1213.96,40-49,42,8,14.350000381469727,13.75
+Rwanda,Amajyaruguru,190,Urban areas,1204.35,1213.96,50-59,28,7,14.350000381469727,13.75
+Rwanda,Amajyaruguru,190,Urban areas,1204.35,1213.96,60-69,21,1,14.350000381469727,13.75
+Rwanda,Amajyaruguru,190,Urban areas,1204.35,1213.96,70-79,19,1,14.350000381469727,13.75
+Rwanda,Amajyaruguru,190,Urban areas,1204.35,1213.96,80-89,12,0,14.350000381469727,13.75
+Rwanda,Amajyaruguru,190,Urban areas,1204.35,1213.96,90-99,3,0,14.350000381469727,13.75
+Rwanda,Amajyaruguru,210,Water bodies,7331.6,8706.77,0-9,6716,7373,9.220000267028809,8.779999732971191
+Rwanda,Amajyaruguru,210,Water bodies,7331.6,8706.77,10-19,309,747,9.220000267028809,8.779999732971191
+Rwanda,Amajyaruguru,210,Water bodies,7331.6,8706.77,20-29,240,521,9.220000267028809,8.779999732971191
+Rwanda,Amajyaruguru,210,Water bodies,7331.6,8706.77,30-39,188,303,9.220000267028809,8.779999732971191
+Rwanda,Amajyaruguru,210,Water bodies,7331.6,8706.77,40-49,144,211,9.220000267028809,8.779999732971191
+Rwanda,Amajyaruguru,210,Water bodies,7331.6,8706.77,50-59,99,87,9.220000267028809,8.779999732971191
+Rwanda,Amajyaruguru,210,Water bodies,7331.6,8706.77,60-69,88,24,9.220000267028809,8.779999732971191
+Rwanda,Amajyaruguru,210,Water bodies,7331.6,8706.77,70-79,63,4,9.220000267028809,8.779999732971191
+Rwanda,Amajyaruguru,210,Water bodies,7331.6,8706.77,80-89,53,3,9.220000267028809,8.779999732971191
+Rwanda,Amajyaruguru,210,Water bodies,7331.6,8706.77,90-99,14,0,9.220000267028809,8.779999732971191
+Rwanda,Amajyaruguru,255,No Data (flag),1041.68,290334.52,0-9,1872,633,20.170000076293945,27.299999237060547
+Rwanda,Amajyaruguru,255,No Data (flag),1041.68,290334.52,10-19,224,1164,20.170000076293945,27.299999237060547
+Rwanda,Amajyaruguru,255,No Data (flag),1041.68,290334.52,20-29,168,724,20.170000076293945,27.299999237060547
+Rwanda,Amajyaruguru,255,No Data (flag),1041.68,290334.52,30-39,118,299,20.170000076293945,27.299999237060547
+Rwanda,Amajyaruguru,255,No Data (flag),1041.68,290334.52,40-49,107,236,20.170000076293945,27.299999237060547
+Rwanda,Amajyaruguru,255,No Data (flag),1041.68,290334.52,50-59,64,144,20.170000076293945,27.299999237060547
+Rwanda,Amajyaruguru,255,No Data (flag),1041.68,290334.52,60-69,68,115,20.170000076293945,27.299999237060547
+Rwanda,Amajyaruguru,255,No Data (flag),1041.68,290334.52,70-79,59,102,20.170000076293945,27.299999237060547
+Rwanda,Amajyaruguru,255,No Data (flag),1041.68,290334.52,80-89,77,76,20.170000076293945,27.299999237060547
+Rwanda,Amajyaruguru,255,No Data (flag),1041.68,290334.52,90-99,164,103,20.170000076293945,27.299999237060547
+Rwanda,Iburasirazuba,10,"Cropland, rainfed",245503.91,274711.86,0-9,201574,64335,9.970000267028809,13.399999618530273
+Rwanda,Iburasirazuba,10,"Cropland, rainfed",245503.91,274711.86,10-19,47042,221638,9.970000267028809,13.399999618530273
+Rwanda,Iburasirazuba,10,"Cropland, rainfed",245503.91,274711.86,20-29,15340,22127,9.970000267028809,13.399999618530273
+Rwanda,Iburasirazuba,10,"Cropland, rainfed",245503.91,274711.86,30-39,6628,2779,9.970000267028809,13.399999618530273
+Rwanda,Iburasirazuba,10,"Cropland, rainfed",245503.91,274711.86,40-49,3574,681,9.970000267028809,13.399999618530273
+Rwanda,Iburasirazuba,10,"Cropland, rainfed",245503.91,274711.86,50-59,2098,84,9.970000267028809,13.399999618530273
+Rwanda,Iburasirazuba,10,"Cropland, rainfed",245503.91,274711.86,60-69,1366,4,9.970000267028809,13.399999618530273
+Rwanda,Iburasirazuba,10,"Cropland, rainfed",245503.91,274711.86,70-79,797,3,9.970000267028809,13.399999618530273
+Rwanda,Iburasirazuba,10,"Cropland, rainfed",245503.91,274711.86,80-89,436,2,9.970000267028809,13.399999618530273
+Rwanda,Iburasirazuba,10,"Cropland, rainfed",245503.91,274711.86,90-99,177,0,9.970000267028809,13.399999618530273
+Rwanda,Iburasirazuba,11,"Cropland, rainfed",315316.66,336354.83,0-9,240791,55212,11.979999542236328,16.309999465942383
+Rwanda,Iburasirazuba,11,"Cropland, rainfed",315316.66,336354.83,10-19,56679,234705,11.979999542236328,16.309999465942383
+Rwanda,Iburasirazuba,11,"Cropland, rainfed",315316.66,336354.83,20-29,23277,68118,11.979999542236328,16.309999465942383
+Rwanda,Iburasirazuba,11,"Cropland, rainfed",315316.66,336354.83,30-39,11945,13556,11.979999542236328,16.309999465942383
+Rwanda,Iburasirazuba,11,"Cropland, rainfed",315316.66,336354.83,40-49,7006,4124,11.979999542236328,16.309999465942383
+Rwanda,Iburasirazuba,11,"Cropland, rainfed",315316.66,336354.83,50-59,4496,833,11.979999542236328,16.309999465942383
+Rwanda,Iburasirazuba,11,"Cropland, rainfed",315316.66,336354.83,60-69,3028,259,11.979999542236328,16.309999465942383
+Rwanda,Iburasirazuba,11,"Cropland, rainfed",315316.66,336354.83,70-79,2298,126,11.979999542236328,16.309999465942383
+Rwanda,Iburasirazuba,11,"Cropland, rainfed",315316.66,336354.83,80-89,2075,38,11.979999542236328,16.309999465942383
+Rwanda,Iburasirazuba,11,"Cropland, rainfed",315316.66,336354.83,90-99,1168,3,11.979999542236328,16.309999465942383
+Rwanda,Iburasirazuba,20,"Cropland, irrigated or post-flooding",566.63,642.01,0-9,765,234,5.53000020980835,17.0
+Rwanda,Iburasirazuba,20,"Cropland, irrigated or post-flooding",566.63,642.01,10-19,26,286,5.53000020980835,17.0
+Rwanda,Iburasirazuba,20,"Cropland, irrigated or post-flooding",566.63,642.01,20-29,7,203,5.53000020980835,17.0
+Rwanda,Iburasirazuba,20,"Cropland, irrigated or post-flooding",566.63,642.01,30-39,10,77,5.53000020980835,17.0
+Rwanda,Iburasirazuba,20,"Cropland, irrigated or post-flooding",566.63,642.01,40-49,2,17,5.53000020980835,17.0
+Rwanda,Iburasirazuba,20,"Cropland, irrigated or post-flooding",566.63,642.01,50-59,0,0,5.53000020980835,17.0
+Rwanda,Iburasirazuba,20,"Cropland, irrigated or post-flooding",566.63,642.01,60-69,4,0,5.53000020980835,17.0
+Rwanda,Iburasirazuba,20,"Cropland, irrigated or post-flooding",566.63,642.01,70-79,0,0,5.53000020980835,17.0
+Rwanda,Iburasirazuba,20,"Cropland, irrigated or post-flooding",566.63,642.01,80-89,0,0,5.53000020980835,17.0
+Rwanda,Iburasirazuba,20,"Cropland, irrigated or post-flooding",566.63,642.01,90-99,0,0,5.53000020980835,17.0
+Rwanda,Iburasirazuba,30,Mosaic cropland / natural vegetation,5600.8,10321.57,0-9,5680,3012,11.489999771118164,14.649999618530273
+Rwanda,Iburasirazuba,30,Mosaic cropland / natural vegetation,5600.8,10321.57,10-19,1071,8743,11.489999771118164,14.649999618530273
+Rwanda,Iburasirazuba,30,Mosaic cropland / natural vegetation,5600.8,10321.57,20-29,362,1653,11.489999771118164,14.649999618530273
+Rwanda,Iburasirazuba,30,Mosaic cropland / natural vegetation,5600.8,10321.57,30-39,168,499,11.489999771118164,14.649999618530273
+Rwanda,Iburasirazuba,30,Mosaic cropland / natural vegetation,5600.8,10321.57,40-49,118,187,11.489999771118164,14.649999618530273
+Rwanda,Iburasirazuba,30,Mosaic cropland / natural vegetation,5600.8,10321.57,50-59,117,22,11.489999771118164,14.649999618530273
+Rwanda,Iburasirazuba,30,Mosaic cropland / natural vegetation,5600.8,10321.57,60-69,112,1,11.489999771118164,14.649999618530273
+Rwanda,Iburasirazuba,30,Mosaic cropland / natural vegetation,5600.8,10321.57,70-79,84,0,11.489999771118164,14.649999618530273
+Rwanda,Iburasirazuba,30,Mosaic cropland / natural vegetation,5600.8,10321.57,80-89,59,0,11.489999771118164,14.649999618530273
+Rwanda,Iburasirazuba,30,Mosaic cropland / natural vegetation,5600.8,10321.57,90-99,18,0,11.489999771118164,14.649999618530273
+Rwanda,Iburasirazuba,40,Mosaic natural vegetation / cropland,4250.8,7859.57,0-9,4405,4466,11.569999694824219,12.050000190734863
+Rwanda,Iburasirazuba,40,Mosaic natural vegetation / cropland,4250.8,7859.57,10-19,695,4937,11.569999694824219,12.050000190734863
+Rwanda,Iburasirazuba,40,Mosaic natural vegetation / cropland,4250.8,7859.57,20-29,248,806,11.569999694824219,12.050000190734863
+Rwanda,Iburasirazuba,40,Mosaic natural vegetation / cropland,4250.8,7859.57,30-39,134,198,11.569999694824219,12.050000190734863
+Rwanda,Iburasirazuba,40,Mosaic natural vegetation / cropland,4250.8,7859.57,40-49,89,83,11.569999694824219,12.050000190734863
+Rwanda,Iburasirazuba,40,Mosaic natural vegetation / cropland,4250.8,7859.57,50-59,85,53,11.569999694824219,12.050000190734863
+Rwanda,Iburasirazuba,40,Mosaic natural vegetation / cropland,4250.8,7859.57,60-69,67,5,11.569999694824219,12.050000190734863
+Rwanda,Iburasirazuba,40,Mosaic natural vegetation / cropland,4250.8,7859.57,70-79,67,11,11.569999694824219,12.050000190734863
+Rwanda,Iburasirazuba,40,Mosaic natural vegetation / cropland,4250.8,7859.57,80-89,70,3,11.569999694824219,12.050000190734863
+Rwanda,Iburasirazuba,40,Mosaic natural vegetation / cropland,4250.8,7859.57,90-99,32,1,11.569999694824219,12.050000190734863
+Rwanda,Iburasirazuba,50,"Tree cover, broadleaved, evergreen",198.88,524.84,0-9,288,39,4.329999923706055,30.43000030517578
+Rwanda,Iburasirazuba,50,"Tree cover, broadleaved, evergreen",198.88,524.84,10-19,1,84,4.329999923706055,30.43000030517578
+Rwanda,Iburasirazuba,50,"Tree cover, broadleaved, evergreen",198.88,524.84,20-29,2,227,4.329999923706055,30.43000030517578
+Rwanda,Iburasirazuba,50,"Tree cover, broadleaved, evergreen",198.88,524.84,30-39,0,237,4.329999923706055,30.43000030517578
+Rwanda,Iburasirazuba,50,"Tree cover, broadleaved, evergreen",198.88,524.84,40-49,0,110,4.329999923706055,30.43000030517578
+Rwanda,Iburasirazuba,50,"Tree cover, broadleaved, evergreen",198.88,524.84,50-59,0,36,4.329999923706055,30.43000030517578
+Rwanda,Iburasirazuba,50,"Tree cover, broadleaved, evergreen",198.88,524.84,60-69,0,2,4.329999923706055,30.43000030517578
+Rwanda,Iburasirazuba,50,"Tree cover, broadleaved, evergreen",198.88,524.84,70-79,0,0,4.329999923706055,30.43000030517578
+Rwanda,Iburasirazuba,50,"Tree cover, broadleaved, evergreen",198.88,524.84,80-89,0,0,4.329999923706055,30.43000030517578
+Rwanda,Iburasirazuba,50,"Tree cover, broadleaved, evergreen",198.88,524.84,90-99,0,0,4.329999923706055,30.43000030517578
+Rwanda,Iburasirazuba,60,"Tree cover, broadleaved, deciduous",11816.31,12879.36,0-9,7462,1518,27.760000228881836,20.739999771118164
+Rwanda,Iburasirazuba,60,"Tree cover, broadleaved, deciduous",11816.31,12879.36,10-19,1700,8359,27.760000228881836,20.739999771118164
+Rwanda,Iburasirazuba,60,"Tree cover, broadleaved, deciduous",11816.31,12879.36,20-29,980,4030,27.760000228881836,20.739999771118164
+Rwanda,Iburasirazuba,60,"Tree cover, broadleaved, deciduous",11816.31,12879.36,30-39,712,1027,27.760000228881836,20.739999771118164
+Rwanda,Iburasirazuba,60,"Tree cover, broadleaved, deciduous",11816.31,12879.36,40-49,565,981,27.760000228881836,20.739999771118164
+Rwanda,Iburasirazuba,60,"Tree cover, broadleaved, deciduous",11816.31,12879.36,50-59,557,404,27.760000228881836,20.739999771118164
+Rwanda,Iburasirazuba,60,"Tree cover, broadleaved, deciduous",11816.31,12879.36,60-69,513,77,27.760000228881836,20.739999771118164
+Rwanda,Iburasirazuba,60,"Tree cover, broadleaved, deciduous",11816.31,12879.36,70-79,596,48,27.760000228881836,20.739999771118164
+Rwanda,Iburasirazuba,60,"Tree cover, broadleaved, deciduous",11816.31,12879.36,80-89,942,22,27.760000228881836,20.739999771118164
+Rwanda,Iburasirazuba,60,"Tree cover, broadleaved, deciduous",11816.31,12879.36,90-99,993,5,27.760000228881836,20.739999771118164
+Rwanda,Iburasirazuba,61,"Tree cover, broadleaved, deciduous",19.22,46.82,0-9,16,0,25.59000015258789,46.400001525878906
+Rwanda,Iburasirazuba,61,"Tree cover, broadleaved, deciduous",19.22,46.82,10-19,0,7,25.59000015258789,46.400001525878906
+Rwanda,Iburasirazuba,61,"Tree cover, broadleaved, deciduous",19.22,46.82,20-29,4,7,25.59000015258789,46.400001525878906
+Rwanda,Iburasirazuba,61,"Tree cover, broadleaved, deciduous",19.22,46.82,30-39,2,7,25.59000015258789,46.400001525878906
+Rwanda,Iburasirazuba,61,"Tree cover, broadleaved, deciduous",19.22,46.82,40-49,0,8,25.59000015258789,46.400001525878906
+Rwanda,Iburasirazuba,61,"Tree cover, broadleaved, deciduous",19.22,46.82,50-59,1,32,25.59000015258789,46.400001525878906
+Rwanda,Iburasirazuba,61,"Tree cover, broadleaved, deciduous",19.22,46.82,60-69,0,5,25.59000015258789,46.400001525878906
+Rwanda,Iburasirazuba,61,"Tree cover, broadleaved, deciduous",19.22,46.82,70-79,1,1,25.59000015258789,46.400001525878906
+Rwanda,Iburasirazuba,61,"Tree cover, broadleaved, deciduous",19.22,46.82,80-89,3,1,25.59000015258789,46.400001525878906
+Rwanda,Iburasirazuba,61,"Tree cover, broadleaved, deciduous",19.22,46.82,90-99,1,0,25.59000015258789,46.400001525878906
+Rwanda,Iburasirazuba,62,"Tree cover, broadleaved, deciduous",4753.67,5212.19,0-9,3862,518,22.489999771118164,21.309999465942383
+Rwanda,Iburasirazuba,62,"Tree cover, broadleaved, deciduous",4753.67,5212.19,10-19,638,3269,22.489999771118164,21.309999465942383
+Rwanda,Iburasirazuba,62,"Tree cover, broadleaved, deciduous",4753.67,5212.19,20-29,371,2083,22.489999771118164,21.309999465942383
+Rwanda,Iburasirazuba,62,"Tree cover, broadleaved, deciduous",4753.67,5212.19,30-39,274,770,22.489999771118164,21.309999465942383
+Rwanda,Iburasirazuba,62,"Tree cover, broadleaved, deciduous",4753.67,5212.19,40-49,204,371,22.489999771118164,21.309999465942383
+Rwanda,Iburasirazuba,62,"Tree cover, broadleaved, deciduous",4753.67,5212.19,50-59,199,108,22.489999771118164,21.309999465942383
+Rwanda,Iburasirazuba,62,"Tree cover, broadleaved, deciduous",4753.67,5212.19,60-69,213,7,22.489999771118164,21.309999465942383
+Rwanda,Iburasirazuba,62,"Tree cover, broadleaved, deciduous",4753.67,5212.19,70-79,270,1,22.489999771118164,21.309999465942383
+Rwanda,Iburasirazuba,62,"Tree cover, broadleaved, deciduous",4753.67,5212.19,80-89,286,0,22.489999771118164,21.309999465942383
+Rwanda,Iburasirazuba,62,"Tree cover, broadleaved, deciduous",4753.67,5212.19,90-99,255,0,22.489999771118164,21.309999465942383
+Rwanda,Iburasirazuba,70,"Tree cover, needleleaved, evergreen",0.0,19.22,0-9,0,1,,28.510000228881836
+Rwanda,Iburasirazuba,70,"Tree cover, needleleaved, evergreen",0.0,19.22,10-19,0,1,,28.510000228881836
+Rwanda,Iburasirazuba,70,"Tree cover, needleleaved, evergreen",0.0,19.22,20-29,0,19,,28.510000228881836
+Rwanda,Iburasirazuba,70,"Tree cover, needleleaved, evergreen",0.0,19.22,30-39,0,8,,28.510000228881836
+Rwanda,Iburasirazuba,70,"Tree cover, needleleaved, evergreen",0.0,19.22,40-49,0,2,,28.510000228881836
+Rwanda,Iburasirazuba,70,"Tree cover, needleleaved, evergreen",0.0,19.22,50-59,0,0,,28.510000228881836
+Rwanda,Iburasirazuba,70,"Tree cover, needleleaved, evergreen",0.0,19.22,60-69,0,0,,28.510000228881836
+Rwanda,Iburasirazuba,70,"Tree cover, needleleaved, evergreen",0.0,19.22,70-79,0,0,,28.510000228881836
+Rwanda,Iburasirazuba,70,"Tree cover, needleleaved, evergreen",0.0,19.22,80-89,0,0,,28.510000228881836
+Rwanda,Iburasirazuba,70,"Tree cover, needleleaved, evergreen",0.0,19.22,90-99,0,0,,28.510000228881836
+Rwanda,Iburasirazuba,100,Mosaic tree and shrub / herbaceous cover,27420.59,31994.74,0-9,24896,7949,15.289999961853027,15.630000114440918
+Rwanda,Iburasirazuba,100,Mosaic tree and shrub / herbaceous cover,27420.59,31994.74,10-19,5197,26622,15.289999961853027,15.630000114440918
+Rwanda,Iburasirazuba,100,Mosaic tree and shrub / herbaceous cover,27420.59,31994.74,20-29,2164,6596,15.289999961853027,15.630000114440918
+Rwanda,Iburasirazuba,100,Mosaic tree and shrub / herbaceous cover,27420.59,31994.74,30-39,1263,1524,15.289999961853027,15.630000114440918
+Rwanda,Iburasirazuba,100,Mosaic tree and shrub / herbaceous cover,27420.59,31994.74,40-49,807,550,15.289999961853027,15.630000114440918
+Rwanda,Iburasirazuba,100,Mosaic tree and shrub / herbaceous cover,27420.59,31994.74,50-59,693,209,15.289999961853027,15.630000114440918
+Rwanda,Iburasirazuba,100,Mosaic tree and shrub / herbaceous cover,27420.59,31994.74,60-69,588,22,15.289999961853027,15.630000114440918
+Rwanda,Iburasirazuba,100,Mosaic tree and shrub / herbaceous cover,27420.59,31994.74,70-79,670,5,15.289999961853027,15.630000114440918
+Rwanda,Iburasirazuba,100,Mosaic tree and shrub / herbaceous cover,27420.59,31994.74,80-89,845,3,15.289999961853027,15.630000114440918
+Rwanda,Iburasirazuba,100,Mosaic tree and shrub / herbaceous cover,27420.59,31994.74,90-99,532,0,15.289999961853027,15.630000114440918
+Rwanda,Iburasirazuba,110,Mosaic herbaceous cover / tree and shrub,218.55,351.85,0-9,293,374,7.269999980926514,8.470000267028809
+Rwanda,Iburasirazuba,110,Mosaic herbaceous cover / tree and shrub,218.55,351.85,10-19,16,129,7.269999980926514,8.470000267028809
+Rwanda,Iburasirazuba,110,Mosaic herbaceous cover / tree and shrub,218.55,351.85,20-29,10,27,7.269999980926514,8.470000267028809
+Rwanda,Iburasirazuba,110,Mosaic herbaceous cover / tree and shrub,218.55,351.85,30-39,3,10,7.269999980926514,8.470000267028809
+Rwanda,Iburasirazuba,110,Mosaic herbaceous cover / tree and shrub,218.55,351.85,40-49,9,0,7.269999980926514,8.470000267028809
+Rwanda,Iburasirazuba,110,Mosaic herbaceous cover / tree and shrub,218.55,351.85,50-59,0,0,7.269999980926514,8.470000267028809
+Rwanda,Iburasirazuba,110,Mosaic herbaceous cover / tree and shrub,218.55,351.85,60-69,1,0,7.269999980926514,8.470000267028809
+Rwanda,Iburasirazuba,110,Mosaic herbaceous cover / tree and shrub,218.55,351.85,70-79,1,0,7.269999980926514,8.470000267028809
+Rwanda,Iburasirazuba,110,Mosaic herbaceous cover / tree and shrub,218.55,351.85,80-89,0,0,7.269999980926514,8.470000267028809
+Rwanda,Iburasirazuba,110,Mosaic herbaceous cover / tree and shrub,218.55,351.85,90-99,1,0,7.269999980926514,8.470000267028809
+Rwanda,Iburasirazuba,120,Shrubland,132036.65,147038.57,0-9,87407,23700,16.149999618530273,15.34000015258789
+Rwanda,Iburasirazuba,120,Shrubland,132036.65,147038.57,10-19,23142,109211,16.149999618530273,15.34000015258789
+Rwanda,Iburasirazuba,120,Shrubland,132036.65,147038.57,20-29,10756,23881,16.149999618530273,15.34000015258789
+Rwanda,Iburasirazuba,120,Shrubland,132036.65,147038.57,30-39,6923,4191,16.149999618530273,15.34000015258789
+Rwanda,Iburasirazuba,120,Shrubland,132036.65,147038.57,40-49,5061,1159,16.149999618530273,15.34000015258789
+Rwanda,Iburasirazuba,120,Shrubland,132036.65,147038.57,50-59,4073,100,16.149999618530273,15.34000015258789
+Rwanda,Iburasirazuba,120,Shrubland,132036.65,147038.57,60-69,3200,2,16.149999618530273,15.34000015258789
+Rwanda,Iburasirazuba,120,Shrubland,132036.65,147038.57,70-79,2422,0,16.149999618530273,15.34000015258789
+Rwanda,Iburasirazuba,120,Shrubland,132036.65,147038.57,80-89,1806,0,16.149999618530273,15.34000015258789
+Rwanda,Iburasirazuba,120,Shrubland,132036.65,147038.57,90-99,797,0,16.149999618530273,15.34000015258789
+Rwanda,Iburasirazuba,122,Shrubland,517.7,594.27,0-9,488,124,16.690000534057617,15.029999732971191
+Rwanda,Iburasirazuba,122,Shrubland,517.7,594.27,10-19,82,603,16.690000534057617,15.029999732971191
+Rwanda,Iburasirazuba,122,Shrubland,517.7,594.27,20-29,42,127,16.690000534057617,15.029999732971191
+Rwanda,Iburasirazuba,122,Shrubland,517.7,594.27,30-39,32,8,16.690000534057617,15.029999732971191
+Rwanda,Iburasirazuba,122,Shrubland,517.7,594.27,40-49,21,2,16.690000534057617,15.029999732971191
+Rwanda,Iburasirazuba,122,Shrubland,517.7,594.27,50-59,28,0,16.690000534057617,15.029999732971191
+Rwanda,Iburasirazuba,122,Shrubland,517.7,594.27,60-69,11,0,16.690000534057617,15.029999732971191
+Rwanda,Iburasirazuba,122,Shrubland,517.7,594.27,70-79,8,0,16.690000534057617,15.029999732971191
+Rwanda,Iburasirazuba,122,Shrubland,517.7,594.27,80-89,12,0,16.690000534057617,15.029999732971191
+Rwanda,Iburasirazuba,122,Shrubland,517.7,594.27,90-99,22,0,16.690000534057617,15.029999732971191
+Rwanda,Iburasirazuba,130,Grassland,1537.59,2281.62,0-9,1610,786,9.359999656677246,12.40999984741211
+Rwanda,Iburasirazuba,130,Grassland,1537.59,2281.62,10-19,300,2129,9.359999656677246,12.40999984741211
+Rwanda,Iburasirazuba,130,Grassland,1537.59,2281.62,20-29,106,104,9.359999656677246,12.40999984741211
+Rwanda,Iburasirazuba,130,Grassland,1537.59,2281.62,30-39,51,17,9.359999656677246,12.40999984741211
+Rwanda,Iburasirazuba,130,Grassland,1537.59,2281.62,40-49,21,11,9.359999656677246,12.40999984741211
+Rwanda,Iburasirazuba,130,Grassland,1537.59,2281.62,50-59,8,5,9.359999656677246,12.40999984741211
+Rwanda,Iburasirazuba,130,Grassland,1537.59,2281.62,60-69,15,2,9.359999656677246,12.40999984741211
+Rwanda,Iburasirazuba,130,Grassland,1537.59,2281.62,70-79,4,0,9.359999656677246,12.40999984741211
+Rwanda,Iburasirazuba,130,Grassland,1537.59,2281.62,80-89,7,0,9.359999656677246,12.40999984741211
+Rwanda,Iburasirazuba,130,Grassland,1537.59,2281.62,90-99,5,0,9.359999656677246,12.40999984741211
+Rwanda,Iburasirazuba,160,"Tree cover, flooded, fresh or brakish water",157.38,296.67,0-9,170,4,19.459999084472656,35.810001373291016
+Rwanda,Iburasirazuba,160,"Tree cover, flooded, fresh or brakish water",157.38,296.67,10-19,5,22,19.459999084472656,35.810001373291016
+Rwanda,Iburasirazuba,160,"Tree cover, flooded, fresh or brakish water",157.38,296.67,20-29,3,113,19.459999084472656,35.810001373291016
+Rwanda,Iburasirazuba,160,"Tree cover, flooded, fresh or brakish water",157.38,296.67,30-39,6,136,19.459999084472656,35.810001373291016
+Rwanda,Iburasirazuba,160,"Tree cover, flooded, fresh or brakish water",157.38,296.67,40-49,2,92,19.459999084472656,35.810001373291016
+Rwanda,Iburasirazuba,160,"Tree cover, flooded, fresh or brakish water",157.38,296.67,50-59,5,48,19.459999084472656,35.810001373291016
+Rwanda,Iburasirazuba,160,"Tree cover, flooded, fresh or brakish water",157.38,296.67,60-69,6,7,19.459999084472656,35.810001373291016
+Rwanda,Iburasirazuba,160,"Tree cover, flooded, fresh or brakish water",157.38,296.67,70-79,4,0,19.459999084472656,35.810001373291016
+Rwanda,Iburasirazuba,160,"Tree cover, flooded, fresh or brakish water",157.38,296.67,80-89,7,0,19.459999084472656,35.810001373291016
+Rwanda,Iburasirazuba,160,"Tree cover, flooded, fresh or brakish water",157.38,296.67,90-99,18,0,19.459999084472656,35.810001373291016
+Rwanda,Iburasirazuba,170,"Tree cover, flooded, saline water",162.45,210.19,0-9,78,9,44.68000030517578,23.899999618530273
+Rwanda,Iburasirazuba,170,"Tree cover, flooded, saline water",162.45,210.19,10-19,29,137,44.68000030517578,23.899999618530273
+Rwanda,Iburasirazuba,170,"Tree cover, flooded, saline water",162.45,210.19,20-29,14,97,44.68000030517578,23.899999618530273
+Rwanda,Iburasirazuba,170,"Tree cover, flooded, saline water",162.45,210.19,30-39,14,50,44.68000030517578,23.899999618530273
+Rwanda,Iburasirazuba,170,"Tree cover, flooded, saline water",162.45,210.19,40-49,2,31,44.68000030517578,23.899999618530273
+Rwanda,Iburasirazuba,170,"Tree cover, flooded, saline water",162.45,210.19,50-59,5,6,44.68000030517578,23.899999618530273
+Rwanda,Iburasirazuba,170,"Tree cover, flooded, saline water",162.45,210.19,60-69,21,0,44.68000030517578,23.899999618530273
+Rwanda,Iburasirazuba,170,"Tree cover, flooded, saline water",162.45,210.19,70-79,19,0,44.68000030517578,23.899999618530273
+Rwanda,Iburasirazuba,170,"Tree cover, flooded, saline water",162.45,210.19,80-89,38,0,44.68000030517578,23.899999618530273
+Rwanda,Iburasirazuba,170,"Tree cover, flooded, saline water",162.45,210.19,90-99,38,0,44.68000030517578,23.899999618530273
+Rwanda,Iburasirazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",46123.23,78442.83,0-9,43243,4760,12.069999694824219,27.90999984741211
+Rwanda,Iburasirazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",46123.23,78442.83,10-19,2680,17658,12.069999694824219,27.90999984741211
+Rwanda,Iburasirazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",46123.23,78442.83,20-29,1505,29061,12.069999694824219,27.90999984741211
+Rwanda,Iburasirazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",46123.23,78442.83,30-39,1008,20568,12.069999694824219,27.90999984741211
+Rwanda,Iburasirazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",46123.23,78442.83,40-49,827,12898,12.069999694824219,27.90999984741211
+Rwanda,Iburasirazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",46123.23,78442.83,50-59,704,2553,12.069999694824219,27.90999984741211
+Rwanda,Iburasirazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",46123.23,78442.83,60-69,666,85,12.069999694824219,27.90999984741211
+Rwanda,Iburasirazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",46123.23,78442.83,70-79,710,12,12.069999694824219,27.90999984741211
+Rwanda,Iburasirazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",46123.23,78442.83,80-89,815,1,12.069999694824219,27.90999984741211
+Rwanda,Iburasirazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",46123.23,78442.83,90-99,1145,0,12.069999694824219,27.90999984741211
+Rwanda,Iburasirazuba,190,Urban areas,1309.45,1366.49,0-9,1158,1416,11.6899995803833,8.079999923706055
+Rwanda,Iburasirazuba,190,Urban areas,1309.45,1366.49,10-19,409,454,11.6899995803833,8.079999923706055
+Rwanda,Iburasirazuba,190,Urban areas,1309.45,1366.49,20-29,157,47,11.6899995803833,8.079999923706055
+Rwanda,Iburasirazuba,190,Urban areas,1309.45,1366.49,30-39,67,21,11.6899995803833,8.079999923706055
+Rwanda,Iburasirazuba,190,Urban areas,1309.45,1366.49,40-49,34,10,11.6899995803833,8.079999923706055
+Rwanda,Iburasirazuba,190,Urban areas,1309.45,1366.49,50-59,26,1,11.6899995803833,8.079999923706055
+Rwanda,Iburasirazuba,190,Urban areas,1309.45,1366.49,60-69,6,0,11.6899995803833,8.079999923706055
+Rwanda,Iburasirazuba,190,Urban areas,1309.45,1366.49,70-79,2,0,11.6899995803833,8.079999923706055
+Rwanda,Iburasirazuba,190,Urban areas,1309.45,1366.49,80-89,0,0,11.6899995803833,8.079999923706055
+Rwanda,Iburasirazuba,190,Urban areas,1309.45,1366.49,90-99,2,0,11.6899995803833,8.079999923706055
+Rwanda,Iburasirazuba,210,Water bodies,31351.8,41093.43,0-9,31164,34591,7.789999961853027,8.859999656677246
+Rwanda,Iburasirazuba,210,Water bodies,31351.8,41093.43,10-19,1126,5311,7.789999961853027,8.859999656677246
+Rwanda,Iburasirazuba,210,Water bodies,31351.8,41093.43,20-29,701,2617,7.789999961853027,8.859999656677246
+Rwanda,Iburasirazuba,210,Water bodies,31351.8,41093.43,30-39,501,1278,7.789999961853027,8.859999656677246
+Rwanda,Iburasirazuba,210,Water bodies,31351.8,41093.43,40-49,394,1011,7.789999961853027,8.859999656677246
+Rwanda,Iburasirazuba,210,Water bodies,31351.8,41093.43,50-59,300,367,7.789999961853027,8.859999656677246
+Rwanda,Iburasirazuba,210,Water bodies,31351.8,41093.43,60-69,217,55,7.789999961853027,8.859999656677246
+Rwanda,Iburasirazuba,210,Water bodies,31351.8,41093.43,70-79,184,9,7.789999961853027,8.859999656677246
+Rwanda,Iburasirazuba,210,Water bodies,31351.8,41093.43,80-89,173,0,7.789999961853027,8.859999656677246
+Rwanda,Iburasirazuba,210,Water bodies,31351.8,41093.43,90-99,171,0,7.789999961853027,8.859999656677246
+Rwanda,Iburasirazuba,255,No Data (flag),1096.11,665195.71,0-9,2479,1750,9.470000267028809,18.93000030517578
+Rwanda,Iburasirazuba,255,No Data (flag),1096.11,665195.71,10-19,134,1889,9.470000267028809,18.93000030517578
+Rwanda,Iburasirazuba,255,No Data (flag),1096.11,665195.71,20-29,65,1223,9.470000267028809,18.93000030517578
+Rwanda,Iburasirazuba,255,No Data (flag),1096.11,665195.71,30-39,66,765,9.470000267028809,18.93000030517578
+Rwanda,Iburasirazuba,255,No Data (flag),1096.11,665195.71,40-49,52,399,9.470000267028809,18.93000030517578
+Rwanda,Iburasirazuba,255,No Data (flag),1096.11,665195.71,50-59,32,60,9.470000267028809,18.93000030517578
+Rwanda,Iburasirazuba,255,No Data (flag),1096.11,665195.71,60-69,20,10,9.470000267028809,18.93000030517578
+Rwanda,Iburasirazuba,255,No Data (flag),1096.11,665195.71,70-79,33,5,9.470000267028809,18.93000030517578
+Rwanda,Iburasirazuba,255,No Data (flag),1096.11,665195.71,80-89,28,7,9.470000267028809,18.93000030517578
+Rwanda,Iburasirazuba,255,No Data (flag),1096.11,665195.71,90-99,13,2,9.470000267028809,18.93000030517578
+Rwanda,Umujyi wa Kigali,10,"Cropland, rainfed",17186.31,17269.09,0-9,15174,4484,10.09000015258789,13.4399995803833
+Rwanda,Umujyi wa Kigali,10,"Cropland, rainfed",17186.31,17269.09,10-19,3289,14719,10.09000015258789,13.4399995803833
+Rwanda,Umujyi wa Kigali,10,"Cropland, rainfed",17186.31,17269.09,20-29,1268,1593,10.09000015258789,13.4399995803833
+Rwanda,Umujyi wa Kigali,10,"Cropland, rainfed",17186.31,17269.09,30-39,555,133,10.09000015258789,13.4399995803833
+Rwanda,Umujyi wa Kigali,10,"Cropland, rainfed",17186.31,17269.09,40-49,287,22,10.09000015258789,13.4399995803833
+Rwanda,Umujyi wa Kigali,10,"Cropland, rainfed",17186.31,17269.09,50-59,154,3,10.09000015258789,13.4399995803833
+Rwanda,Umujyi wa Kigali,10,"Cropland, rainfed",17186.31,17269.09,60-69,101,0,10.09000015258789,13.4399995803833
+Rwanda,Umujyi wa Kigali,10,"Cropland, rainfed",17186.31,17269.09,70-79,55,0,10.09000015258789,13.4399995803833
+Rwanda,Umujyi wa Kigali,10,"Cropland, rainfed",17186.31,17269.09,80-89,39,0,10.09000015258789,13.4399995803833
+Rwanda,Umujyi wa Kigali,10,"Cropland, rainfed",17186.31,17269.09,90-99,32,0,10.09000015258789,13.4399995803833
+Rwanda,Umujyi wa Kigali,11,"Cropland, rainfed",40042.52,40276.57,0-9,30733,4610,12.380000114440918,16.420000076293945
+Rwanda,Umujyi wa Kigali,11,"Cropland, rainfed",40042.52,40276.57,10-19,7046,30833,12.380000114440918,16.420000076293945
+Rwanda,Umujyi wa Kigali,11,"Cropland, rainfed",40042.52,40276.57,20-29,2710,7493,12.380000114440918,16.420000076293945
+Rwanda,Umujyi wa Kigali,11,"Cropland, rainfed",40042.52,40276.57,30-39,1487,1486,12.380000114440918,16.420000076293945
+Rwanda,Umujyi wa Kigali,11,"Cropland, rainfed",40042.52,40276.57,40-49,926,395,12.380000114440918,16.420000076293945
+Rwanda,Umujyi wa Kigali,11,"Cropland, rainfed",40042.52,40276.57,50-59,644,65,12.380000114440918,16.420000076293945
+Rwanda,Umujyi wa Kigali,11,"Cropland, rainfed",40042.52,40276.57,60-69,447,13,12.380000114440918,16.420000076293945
+Rwanda,Umujyi wa Kigali,11,"Cropland, rainfed",40042.52,40276.57,70-79,357,4,12.380000114440918,16.420000076293945
+Rwanda,Umujyi wa Kigali,11,"Cropland, rainfed",40042.52,40276.57,80-89,315,0,12.380000114440918,16.420000076293945
+Rwanda,Umujyi wa Kigali,11,"Cropland, rainfed",40042.52,40276.57,90-99,240,0,12.380000114440918,16.420000076293945
+Rwanda,Umujyi wa Kigali,20,"Cropland, irrigated or post-flooding",868.89,1030.14,0-9,1210,290,5.059999942779541,16.729999542236328
+Rwanda,Umujyi wa Kigali,20,"Cropland, irrigated or post-flooding",868.89,1030.14,10-19,51,589,5.059999942779541,16.729999542236328
+Rwanda,Umujyi wa Kigali,20,"Cropland, irrigated or post-flooding",868.89,1030.14,20-29,16,298,5.059999942779541,16.729999542236328
+Rwanda,Umujyi wa Kigali,20,"Cropland, irrigated or post-flooding",868.89,1030.14,30-39,5,83,5.059999942779541,16.729999542236328
+Rwanda,Umujyi wa Kigali,20,"Cropland, irrigated or post-flooding",868.89,1030.14,40-49,3,24,5.059999942779541,16.729999542236328
+Rwanda,Umujyi wa Kigali,20,"Cropland, irrigated or post-flooding",868.89,1030.14,50-59,0,2,5.059999942779541,16.729999542236328
+Rwanda,Umujyi wa Kigali,20,"Cropland, irrigated or post-flooding",868.89,1030.14,60-69,1,0,5.059999942779541,16.729999542236328
+Rwanda,Umujyi wa Kigali,20,"Cropland, irrigated or post-flooding",868.89,1030.14,70-79,0,0,5.059999942779541,16.729999542236328
+Rwanda,Umujyi wa Kigali,20,"Cropland, irrigated or post-flooding",868.89,1030.14,80-89,0,0,5.059999942779541,16.729999542236328
+Rwanda,Umujyi wa Kigali,20,"Cropland, irrigated or post-flooding",868.89,1030.14,90-99,0,0,5.059999942779541,16.729999542236328
+Rwanda,Umujyi wa Kigali,30,Mosaic cropland / natural vegetation,9.61,9.61,0-9,11,16,9.729999542236328,4.369999885559082
+Rwanda,Umujyi wa Kigali,30,Mosaic cropland / natural vegetation,9.61,9.61,10-19,4,0,9.729999542236328,4.369999885559082
+Rwanda,Umujyi wa Kigali,30,Mosaic cropland / natural vegetation,9.61,9.61,20-29,0,0,9.729999542236328,4.369999885559082
+Rwanda,Umujyi wa Kigali,30,Mosaic cropland / natural vegetation,9.61,9.61,30-39,0,0,9.729999542236328,4.369999885559082
+Rwanda,Umujyi wa Kigali,30,Mosaic cropland / natural vegetation,9.61,9.61,40-49,1,0,9.729999542236328,4.369999885559082
+Rwanda,Umujyi wa Kigali,30,Mosaic cropland / natural vegetation,9.61,9.61,50-59,0,0,9.729999542236328,4.369999885559082
+Rwanda,Umujyi wa Kigali,30,Mosaic cropland / natural vegetation,9.61,9.61,60-69,0,0,9.729999542236328,4.369999885559082
+Rwanda,Umujyi wa Kigali,30,Mosaic cropland / natural vegetation,9.61,9.61,70-79,0,0,9.729999542236328,4.369999885559082
+Rwanda,Umujyi wa Kigali,30,Mosaic cropland / natural vegetation,9.61,9.61,80-89,0,0,9.729999542236328,4.369999885559082
+Rwanda,Umujyi wa Kigali,30,Mosaic cropland / natural vegetation,9.61,9.61,90-99,0,0,9.729999542236328,4.369999885559082
+Rwanda,Umujyi wa Kigali,40,Mosaic natural vegetation / cropland,631.1,640.46,0-9,540,584,15.850000381469727,9.460000038146973
+Rwanda,Umujyi wa Kigali,40,Mosaic natural vegetation / cropland,631.1,640.46,10-19,174,324,15.850000381469727,9.460000038146973
+Rwanda,Umujyi wa Kigali,40,Mosaic natural vegetation / cropland,631.1,640.46,20-29,97,53,15.850000381469727,9.460000038146973
+Rwanda,Umujyi wa Kigali,40,Mosaic natural vegetation / cropland,631.1,640.46,30-39,60,5,15.850000381469727,9.460000038146973
+Rwanda,Umujyi wa Kigali,40,Mosaic natural vegetation / cropland,631.1,640.46,40-49,36,0,15.850000381469727,9.460000038146973
+Rwanda,Umujyi wa Kigali,40,Mosaic natural vegetation / cropland,631.1,640.46,50-59,21,0,15.850000381469727,9.460000038146973
+Rwanda,Umujyi wa Kigali,40,Mosaic natural vegetation / cropland,631.1,640.46,60-69,16,0,15.850000381469727,9.460000038146973
+Rwanda,Umujyi wa Kigali,40,Mosaic natural vegetation / cropland,631.1,640.46,70-79,12,0,15.850000381469727,9.460000038146973
+Rwanda,Umujyi wa Kigali,40,Mosaic natural vegetation / cropland,631.1,640.46,80-89,11,0,15.850000381469727,9.460000038146973
+Rwanda,Umujyi wa Kigali,40,Mosaic natural vegetation / cropland,631.1,640.46,90-99,2,0,15.850000381469727,9.460000038146973
+Rwanda,Umujyi wa Kigali,60,"Tree cover, broadleaved, deciduous",730.99,736.25,0-9,481,57,25.479999542236328,23.43000030517578
+Rwanda,Umujyi wa Kigali,60,"Tree cover, broadleaved, deciduous",730.99,736.25,10-19,144,379,25.479999542236328,23.43000030517578
+Rwanda,Umujyi wa Kigali,60,"Tree cover, broadleaved, deciduous",730.99,736.25,20-29,65,280,25.479999542236328,23.43000030517578
+Rwanda,Umujyi wa Kigali,60,"Tree cover, broadleaved, deciduous",730.99,736.25,30-39,37,147,25.479999542236328,23.43000030517578
+Rwanda,Umujyi wa Kigali,60,"Tree cover, broadleaved, deciduous",730.99,736.25,40-49,36,63,25.479999542236328,23.43000030517578
+Rwanda,Umujyi wa Kigali,60,"Tree cover, broadleaved, deciduous",730.99,736.25,50-59,22,18,25.479999542236328,23.43000030517578
+Rwanda,Umujyi wa Kigali,60,"Tree cover, broadleaved, deciduous",730.99,736.25,60-69,26,7,25.479999542236328,23.43000030517578
+Rwanda,Umujyi wa Kigali,60,"Tree cover, broadleaved, deciduous",730.99,736.25,70-79,25,0,25.479999542236328,23.43000030517578
+Rwanda,Umujyi wa Kigali,60,"Tree cover, broadleaved, deciduous",730.99,736.25,80-89,35,0,25.479999542236328,23.43000030517578
+Rwanda,Umujyi wa Kigali,60,"Tree cover, broadleaved, deciduous",730.99,736.25,90-99,80,0,25.479999542236328,23.43000030517578
+Rwanda,Umujyi wa Kigali,62,"Tree cover, broadleaved, deciduous",98.91,124.93,0-9,132,50,8.970000267028809,14.449999809265137
+Rwanda,Umujyi wa Kigali,62,"Tree cover, broadleaved, deciduous",98.91,124.93,10-19,11,74,8.970000267028809,14.449999809265137
+Rwanda,Umujyi wa Kigali,62,"Tree cover, broadleaved, deciduous",98.91,124.93,20-29,7,32,8.970000267028809,14.449999809265137
+Rwanda,Umujyi wa Kigali,62,"Tree cover, broadleaved, deciduous",98.91,124.93,30-39,6,5,8.970000267028809,14.449999809265137
+Rwanda,Umujyi wa Kigali,62,"Tree cover, broadleaved, deciduous",98.91,124.93,40-49,3,0,8.970000267028809,14.449999809265137
+Rwanda,Umujyi wa Kigali,62,"Tree cover, broadleaved, deciduous",98.91,124.93,50-59,0,0,8.970000267028809,14.449999809265137
+Rwanda,Umujyi wa Kigali,62,"Tree cover, broadleaved, deciduous",98.91,124.93,60-69,2,0,8.970000267028809,14.449999809265137
+Rwanda,Umujyi wa Kigali,62,"Tree cover, broadleaved, deciduous",98.91,124.93,70-79,0,0,8.970000267028809,14.449999809265137
+Rwanda,Umujyi wa Kigali,62,"Tree cover, broadleaved, deciduous",98.91,124.93,80-89,1,0,8.970000267028809,14.449999809265137
+Rwanda,Umujyi wa Kigali,62,"Tree cover, broadleaved, deciduous",98.91,124.93,90-99,0,0,8.970000267028809,14.449999809265137
+Rwanda,Umujyi wa Kigali,100,Mosaic tree and shrub / herbaceous cover,3008.54,3054.18,0-9,2993,851,12.619999885559082,15.600000381469727
+Rwanda,Umujyi wa Kigali,100,Mosaic tree and shrub / herbaceous cover,3008.54,3054.18,10-19,614,2530,12.619999885559082,15.600000381469727
+Rwanda,Umujyi wa Kigali,100,Mosaic tree and shrub / herbaceous cover,3008.54,3054.18,20-29,268,754,12.619999885559082,15.600000381469727
+Rwanda,Umujyi wa Kigali,100,Mosaic tree and shrub / herbaceous cover,3008.54,3054.18,30-39,156,154,12.619999885559082,15.600000381469727
+Rwanda,Umujyi wa Kigali,100,Mosaic tree and shrub / herbaceous cover,3008.54,3054.18,40-49,101,49,12.619999885559082,15.600000381469727
+Rwanda,Umujyi wa Kigali,100,Mosaic tree and shrub / herbaceous cover,3008.54,3054.18,50-59,59,4,12.619999885559082,15.600000381469727
+Rwanda,Umujyi wa Kigali,100,Mosaic tree and shrub / herbaceous cover,3008.54,3054.18,60-69,50,0,12.619999885559082,15.600000381469727
+Rwanda,Umujyi wa Kigali,100,Mosaic tree and shrub / herbaceous cover,3008.54,3054.18,70-79,42,0,12.619999885559082,15.600000381469727
+Rwanda,Umujyi wa Kigali,100,Mosaic tree and shrub / herbaceous cover,3008.54,3054.18,80-89,34,0,12.619999885559082,15.600000381469727
+Rwanda,Umujyi wa Kigali,100,Mosaic tree and shrub / herbaceous cover,3008.54,3054.18,90-99,25,0,12.619999885559082,15.600000381469727
+Rwanda,Umujyi wa Kigali,120,Shrubland,210.18,210.18,0-9,144,153,20.84000015258789,9.899999618530273
+Rwanda,Umujyi wa Kigali,120,Shrubland,210.18,210.18,10-19,47,117,20.84000015258789,9.899999618530273
+Rwanda,Umujyi wa Kigali,120,Shrubland,210.18,210.18,20-29,22,12,20.84000015258789,9.899999618530273
+Rwanda,Umujyi wa Kigali,120,Shrubland,210.18,210.18,30-39,20,1,20.84000015258789,9.899999618530273
+Rwanda,Umujyi wa Kigali,120,Shrubland,210.18,210.18,40-49,9,0,20.84000015258789,9.899999618530273
+Rwanda,Umujyi wa Kigali,120,Shrubland,210.18,210.18,50-59,10,0,20.84000015258789,9.899999618530273
+Rwanda,Umujyi wa Kigali,120,Shrubland,210.18,210.18,60-69,13,0,20.84000015258789,9.899999618530273
+Rwanda,Umujyi wa Kigali,120,Shrubland,210.18,210.18,70-79,9,0,20.84000015258789,9.899999618530273
+Rwanda,Umujyi wa Kigali,120,Shrubland,210.18,210.18,80-89,3,0,20.84000015258789,9.899999618530273
+Rwanda,Umujyi wa Kigali,120,Shrubland,210.18,210.18,90-99,6,0,20.84000015258789,9.899999618530273
+Rwanda,Umujyi wa Kigali,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1561.89,1594.66,0-9,1734,167,5.949999809265137,24.0
+Rwanda,Umujyi wa Kigali,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1561.89,1594.66,10-19,74,378,5.949999809265137,24.0
+Rwanda,Umujyi wa Kigali,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1561.89,1594.66,20-29,20,857,5.949999809265137,24.0
+Rwanda,Umujyi wa Kigali,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1561.89,1594.66,30-39,11,384,5.949999809265137,24.0
+Rwanda,Umujyi wa Kigali,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1561.89,1594.66,40-49,4,72,5.949999809265137,24.0
+Rwanda,Umujyi wa Kigali,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1561.89,1594.66,50-59,4,7,5.949999809265137,24.0
+Rwanda,Umujyi wa Kigali,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1561.89,1594.66,60-69,10,0,5.949999809265137,24.0
+Rwanda,Umujyi wa Kigali,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1561.89,1594.66,70-79,3,0,5.949999809265137,24.0
+Rwanda,Umujyi wa Kigali,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1561.89,1594.66,80-89,2,0,5.949999809265137,24.0
+Rwanda,Umujyi wa Kigali,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1561.89,1594.66,90-99,3,0,5.949999809265137,24.0
+Rwanda,Umujyi wa Kigali,190,Urban areas,8147.18,8147.18,0-9,4976,8052,14.479999542236328,5.75
+Rwanda,Umujyi wa Kigali,190,Urban areas,8147.18,8147.18,10-19,2132,992,14.479999542236328,5.75
+Rwanda,Umujyi wa Kigali,190,Urban areas,8147.18,8147.18,20-29,918,57,14.479999542236328,5.75
+Rwanda,Umujyi wa Kigali,190,Urban areas,8147.18,8147.18,30-39,470,8,14.479999542236328,5.75
+Rwanda,Umujyi wa Kigali,190,Urban areas,8147.18,8147.18,40-49,262,1,14.479999542236328,5.75
+Rwanda,Umujyi wa Kigali,190,Urban areas,8147.18,8147.18,50-59,155,0,14.479999542236328,5.75
+Rwanda,Umujyi wa Kigali,190,Urban areas,8147.18,8147.18,60-69,107,0,14.479999542236328,5.75
+Rwanda,Umujyi wa Kigali,190,Urban areas,8147.18,8147.18,70-79,58,0,14.479999542236328,5.75
+Rwanda,Umujyi wa Kigali,190,Urban areas,8147.18,8147.18,80-89,23,0,14.479999542236328,5.75
+Rwanda,Umujyi wa Kigali,190,Urban areas,8147.18,8147.18,90-99,9,0,14.479999542236328,5.75
+Rwanda,Umujyi wa Kigali,210,Water bodies,177.83,210.49,0-9,223,118,8.84000015258789,12.640000343322754
+Rwanda,Umujyi wa Kigali,210,Water bodies,177.83,210.49,10-19,28,109,8.84000015258789,12.640000343322754
+Rwanda,Umujyi wa Kigali,210,Water bodies,177.83,210.49,20-29,8,35,8.84000015258789,12.640000343322754
+Rwanda,Umujyi wa Kigali,210,Water bodies,177.83,210.49,30-39,6,15,8.84000015258789,12.640000343322754
+Rwanda,Umujyi wa Kigali,210,Water bodies,177.83,210.49,40-49,5,0,8.84000015258789,12.640000343322754
+Rwanda,Umujyi wa Kigali,210,Water bodies,177.83,210.49,50-59,2,0,8.84000015258789,12.640000343322754
+Rwanda,Umujyi wa Kigali,210,Water bodies,177.83,210.49,60-69,4,0,8.84000015258789,12.640000343322754
+Rwanda,Umujyi wa Kigali,210,Water bodies,177.83,210.49,70-79,1,0,8.84000015258789,12.640000343322754
+Rwanda,Umujyi wa Kigali,210,Water bodies,177.83,210.49,80-89,0,0,8.84000015258789,12.640000343322754
+Rwanda,Umujyi wa Kigali,210,Water bodies,177.83,210.49,90-99,0,0,8.84000015258789,12.640000343322754
+Rwanda,Umujyi wa Kigali,255,No Data (flag),626.63,38051.86,0-9,1405,596,8.619999885559082,14.869999885559082
+Rwanda,Umujyi wa Kigali,255,No Data (flag),626.63,38051.86,10-19,122,581,8.619999885559082,14.869999885559082
+Rwanda,Umujyi wa Kigali,255,No Data (flag),626.63,38051.86,20-29,48,367,8.619999885559082,14.869999885559082
+Rwanda,Umujyi wa Kigali,255,No Data (flag),626.63,38051.86,30-39,26,77,8.619999885559082,14.869999885559082
+Rwanda,Umujyi wa Kigali,255,No Data (flag),626.63,38051.86,40-49,16,33,8.619999885559082,14.869999885559082
+Rwanda,Umujyi wa Kigali,255,No Data (flag),626.63,38051.86,50-59,10,6,8.619999885559082,14.869999885559082
+Rwanda,Umujyi wa Kigali,255,No Data (flag),626.63,38051.86,60-69,10,1,8.619999885559082,14.869999885559082
+Rwanda,Umujyi wa Kigali,255,No Data (flag),626.63,38051.86,70-79,11,0,8.619999885559082,14.869999885559082
+Rwanda,Umujyi wa Kigali,255,No Data (flag),626.63,38051.86,80-89,14,0,8.619999885559082,14.869999885559082
+Rwanda,Umujyi wa Kigali,255,No Data (flag),626.63,38051.86,90-99,5,0,8.619999885559082,14.869999885559082
+Rwanda,Amajyepfo,10,"Cropland, rainfed",166349.14,183516.65,0-9,105222,58078,13.619999885559082,12.630000114440918
+Rwanda,Amajyepfo,10,"Cropland, rainfed",166349.14,183516.65,10-19,43209,133651,13.619999885559082,12.630000114440918
+Rwanda,Amajyepfo,10,"Cropland, rainfed",166349.14,183516.65,20-29,17601,11618,13.619999885559082,12.630000114440918
+Rwanda,Amajyepfo,10,"Cropland, rainfed",166349.14,183516.65,30-39,8937,1854,13.619999885559082,12.630000114440918
+Rwanda,Amajyepfo,10,"Cropland, rainfed",166349.14,183516.65,40-49,4878,420,13.619999885559082,12.630000114440918
+Rwanda,Amajyepfo,10,"Cropland, rainfed",166349.14,183516.65,50-59,2588,44,13.619999885559082,12.630000114440918
+Rwanda,Amajyepfo,10,"Cropland, rainfed",166349.14,183516.65,60-69,1532,4,13.619999885559082,12.630000114440918
+Rwanda,Amajyepfo,10,"Cropland, rainfed",166349.14,183516.65,70-79,921,0,13.619999885559082,12.630000114440918
+Rwanda,Amajyepfo,10,"Cropland, rainfed",166349.14,183516.65,80-89,514,0,13.619999885559082,12.630000114440918
+Rwanda,Amajyepfo,10,"Cropland, rainfed",166349.14,183516.65,90-99,143,0,13.619999885559082,12.630000114440918
+Rwanda,Amajyepfo,11,"Cropland, rainfed",281392.37,317983.09,0-9,146145,38799,18.989999771118164,18.18000030517578
+Rwanda,Amajyepfo,11,"Cropland, rainfed",281392.37,317983.09,10-19,65514,207548,18.989999771118164,18.18000030517578
+Rwanda,Amajyepfo,11,"Cropland, rainfed",281392.37,317983.09,20-29,35199,69517,18.989999771118164,18.18000030517578
+Rwanda,Amajyepfo,11,"Cropland, rainfed",281392.37,317983.09,30-39,22489,24241,18.989999771118164,18.18000030517578
+Rwanda,Amajyepfo,11,"Cropland, rainfed",281392.37,317983.09,40-49,14791,9215,18.989999771118164,18.18000030517578
+Rwanda,Amajyepfo,11,"Cropland, rainfed",281392.37,317983.09,50-59,10438,2208,18.989999771118164,18.18000030517578
+Rwanda,Amajyepfo,11,"Cropland, rainfed",281392.37,317983.09,60-69,7398,348,18.989999771118164,18.18000030517578
+Rwanda,Amajyepfo,11,"Cropland, rainfed",281392.37,317983.09,70-79,4840,99,18.989999771118164,18.18000030517578
+Rwanda,Amajyepfo,11,"Cropland, rainfed",281392.37,317983.09,80-89,3333,24,18.989999771118164,18.18000030517578
+Rwanda,Amajyepfo,11,"Cropland, rainfed",281392.37,317983.09,90-99,1848,4,18.989999771118164,18.18000030517578
+Rwanda,Amajyepfo,12,"Cropland, rainfed",2180.7,2186.75,0-9,1073,292,41.310001373291016,31.809999465942383
+Rwanda,Amajyepfo,12,"Cropland, rainfed",2180.7,2186.75,10-19,216,652,41.310001373291016,31.809999465942383
+Rwanda,Amajyepfo,12,"Cropland, rainfed",2180.7,2186.75,20-29,160,403,41.310001373291016,31.809999465942383
+Rwanda,Amajyepfo,12,"Cropland, rainfed",2180.7,2186.75,30-39,121,384,41.310001373291016,31.809999465942383
+Rwanda,Amajyepfo,12,"Cropland, rainfed",2180.7,2186.75,40-49,80,490,41.310001373291016,31.809999465942383
+Rwanda,Amajyepfo,12,"Cropland, rainfed",2180.7,2186.75,50-59,94,408,41.310001373291016,31.809999465942383
+Rwanda,Amajyepfo,12,"Cropland, rainfed",2180.7,2186.75,60-69,93,112,41.310001373291016,31.809999465942383
+Rwanda,Amajyepfo,12,"Cropland, rainfed",2180.7,2186.75,70-79,127,25,41.310001373291016,31.809999465942383
+Rwanda,Amajyepfo,12,"Cropland, rainfed",2180.7,2186.75,80-89,200,5,41.310001373291016,31.809999465942383
+Rwanda,Amajyepfo,12,"Cropland, rainfed",2180.7,2186.75,90-99,609,0,41.310001373291016,31.809999465942383
+Rwanda,Amajyepfo,20,"Cropland, irrigated or post-flooding",567.35,695.35,0-9,778,310,5.789999961853027,14.029999732971191
+Rwanda,Amajyepfo,20,"Cropland, irrigated or post-flooding",567.35,695.35,10-19,39,364,5.789999961853027,14.029999732971191
+Rwanda,Amajyepfo,20,"Cropland, irrigated or post-flooding",567.35,695.35,20-29,19,136,5.789999961853027,14.029999732971191
+Rwanda,Amajyepfo,20,"Cropland, irrigated or post-flooding",567.35,695.35,30-39,12,43,5.789999961853027,14.029999732971191
+Rwanda,Amajyepfo,20,"Cropland, irrigated or post-flooding",567.35,695.35,40-49,2,5,5.789999961853027,14.029999732971191
+Rwanda,Amajyepfo,20,"Cropland, irrigated or post-flooding",567.35,695.35,50-59,1,0,5.789999961853027,14.029999732971191
+Rwanda,Amajyepfo,20,"Cropland, irrigated or post-flooding",567.35,695.35,60-69,1,0,5.789999961853027,14.029999732971191
+Rwanda,Amajyepfo,20,"Cropland, irrigated or post-flooding",567.35,695.35,70-79,0,0,5.789999961853027,14.029999732971191
+Rwanda,Amajyepfo,20,"Cropland, irrigated or post-flooding",567.35,695.35,80-89,0,0,5.789999961853027,14.029999732971191
+Rwanda,Amajyepfo,20,"Cropland, irrigated or post-flooding",567.35,695.35,90-99,0,0,5.789999961853027,14.029999732971191
+Rwanda,Amajyepfo,30,Mosaic cropland / natural vegetation,228.47,228.47,0-9,11,0,73.83000183105469,49.47999954223633
+Rwanda,Amajyepfo,30,Mosaic cropland / natural vegetation,228.47,228.47,10-19,10,11,73.83000183105469,49.47999954223633
+Rwanda,Amajyepfo,30,Mosaic cropland / natural vegetation,228.47,228.47,20-29,10,16,73.83000183105469,49.47999954223633
+Rwanda,Amajyepfo,30,Mosaic cropland / natural vegetation,228.47,228.47,30-39,12,16,73.83000183105469,49.47999954223633
+Rwanda,Amajyepfo,30,Mosaic cropland / natural vegetation,228.47,228.47,40-49,18,98,73.83000183105469,49.47999954223633
+Rwanda,Amajyepfo,30,Mosaic cropland / natural vegetation,228.47,228.47,50-59,12,123,73.83000183105469,49.47999954223633
+Rwanda,Amajyepfo,30,Mosaic cropland / natural vegetation,228.47,228.47,60-69,17,34,73.83000183105469,49.47999954223633
+Rwanda,Amajyepfo,30,Mosaic cropland / natural vegetation,228.47,228.47,70-79,31,4,73.83000183105469,49.47999954223633
+Rwanda,Amajyepfo,30,Mosaic cropland / natural vegetation,228.47,228.47,80-89,57,4,73.83000183105469,49.47999954223633
+Rwanda,Amajyepfo,30,Mosaic cropland / natural vegetation,228.47,228.47,90-99,129,1,73.83000183105469,49.47999954223633
+Rwanda,Amajyepfo,40,Mosaic natural vegetation / cropland,1593.57,1652.03,0-9,273,133,65.7699966430664,43.18000030517578
+Rwanda,Amajyepfo,40,Mosaic natural vegetation / cropland,1593.57,1652.03,10-19,135,193,65.7699966430664,43.18000030517578
+Rwanda,Amajyepfo,40,Mosaic natural vegetation / cropland,1593.57,1652.03,20-29,92,177,65.7699966430664,43.18000030517578
+Rwanda,Amajyepfo,40,Mosaic natural vegetation / cropland,1593.57,1652.03,30-39,110,194,65.7699966430664,43.18000030517578
+Rwanda,Amajyepfo,40,Mosaic natural vegetation / cropland,1593.57,1652.03,40-49,90,652,65.7699966430664,43.18000030517578
+Rwanda,Amajyepfo,40,Mosaic natural vegetation / cropland,1593.57,1652.03,50-59,90,777,65.7699966430664,43.18000030517578
+Rwanda,Amajyepfo,40,Mosaic natural vegetation / cropland,1593.57,1652.03,60-69,119,151,65.7699966430664,43.18000030517578
+Rwanda,Amajyepfo,40,Mosaic natural vegetation / cropland,1593.57,1652.03,70-79,157,34,65.7699966430664,43.18000030517578
+Rwanda,Amajyepfo,40,Mosaic natural vegetation / cropland,1593.57,1652.03,80-89,288,16,65.7699966430664,43.18000030517578
+Rwanda,Amajyepfo,40,Mosaic natural vegetation / cropland,1593.57,1652.03,90-99,949,7,65.7699966430664,43.18000030517578
+Rwanda,Amajyepfo,50,"Tree cover, broadleaved, evergreen",13506.76,13677.96,0-9,134,139,89.1500015258789,56.189998626708984
+Rwanda,Amajyepfo,50,"Tree cover, broadleaved, evergreen",13506.76,13677.96,10-19,70,169,89.1500015258789,56.189998626708984
+Rwanda,Amajyepfo,50,"Tree cover, broadleaved, evergreen",13506.76,13677.96,20-29,85,265,89.1500015258789,56.189998626708984
+Rwanda,Amajyepfo,50,"Tree cover, broadleaved, evergreen",13506.76,13677.96,30-39,89,328,89.1500015258789,56.189998626708984
+Rwanda,Amajyepfo,50,"Tree cover, broadleaved, evergreen",13506.76,13677.96,40-49,167,2122,89.1500015258789,56.189998626708984
+Rwanda,Amajyepfo,50,"Tree cover, broadleaved, evergreen",13506.76,13677.96,50-59,197,9116,89.1500015258789,56.189998626708984
+Rwanda,Amajyepfo,50,"Tree cover, broadleaved, evergreen",13506.76,13677.96,60-69,325,3662,89.1500015258789,56.189998626708984
+Rwanda,Amajyepfo,50,"Tree cover, broadleaved, evergreen",13506.76,13677.96,70-79,582,1169,89.1500015258789,56.189998626708984
+Rwanda,Amajyepfo,50,"Tree cover, broadleaved, evergreen",13506.76,13677.96,80-89,1714,332,89.1500015258789,56.189998626708984
+Rwanda,Amajyepfo,50,"Tree cover, broadleaved, evergreen",13506.76,13677.96,90-99,13938,69,89.1500015258789,56.189998626708984
+Rwanda,Amajyepfo,60,"Tree cover, broadleaved, deciduous",34574.05,35064.76,0-9,5384,1361,67.13999938964844,46.86000061035156
+Rwanda,Amajyepfo,60,"Tree cover, broadleaved, deciduous",34574.05,35064.76,10-19,2545,4810,67.13999938964844,46.86000061035156
+Rwanda,Amajyepfo,60,"Tree cover, broadleaved, deciduous",34574.05,35064.76,20-29,1833,4513,67.13999938964844,46.86000061035156
+Rwanda,Amajyepfo,60,"Tree cover, broadleaved, deciduous",34574.05,35064.76,30-39,1673,3873,67.13999938964844,46.86000061035156
+Rwanda,Amajyepfo,60,"Tree cover, broadleaved, deciduous",34574.05,35064.76,40-49,1546,5181,67.13999938964844,46.86000061035156
+Rwanda,Amajyepfo,60,"Tree cover, broadleaved, deciduous",34574.05,35064.76,50-59,1420,12511,67.13999938964844,46.86000061035156
+Rwanda,Amajyepfo,60,"Tree cover, broadleaved, deciduous",34574.05,35064.76,60-69,1601,6714,67.13999938964844,46.86000061035156
+Rwanda,Amajyepfo,60,"Tree cover, broadleaved, deciduous",34574.05,35064.76,70-79,1891,2873,67.13999938964844,46.86000061035156
+Rwanda,Amajyepfo,60,"Tree cover, broadleaved, deciduous",34574.05,35064.76,80-89,3443,1345,67.13999938964844,46.86000061035156
+Rwanda,Amajyepfo,60,"Tree cover, broadleaved, deciduous",34574.05,35064.76,90-99,21694,280,67.13999938964844,46.86000061035156
+Rwanda,Amajyepfo,61,"Tree cover, broadleaved, deciduous",7597.27,7665.49,0-9,91,68,90.80000305175781,61.470001220703125
+Rwanda,Amajyepfo,61,"Tree cover, broadleaved, deciduous",7597.27,7665.49,10-19,31,59,90.80000305175781,61.470001220703125
+Rwanda,Amajyepfo,61,"Tree cover, broadleaved, deciduous",7597.27,7665.49,20-29,21,61,90.80000305175781,61.470001220703125
+Rwanda,Amajyepfo,61,"Tree cover, broadleaved, deciduous",7597.27,7665.49,30-39,27,128,90.80000305175781,61.470001220703125
+Rwanda,Amajyepfo,61,"Tree cover, broadleaved, deciduous",7597.27,7665.49,40-49,37,572,90.80000305175781,61.470001220703125
+Rwanda,Amajyepfo,61,"Tree cover, broadleaved, deciduous",7597.27,7665.49,50-59,73,4354,90.80000305175781,61.470001220703125
+Rwanda,Amajyepfo,61,"Tree cover, broadleaved, deciduous",7597.27,7665.49,60-69,106,2937,90.80000305175781,61.470001220703125
+Rwanda,Amajyepfo,61,"Tree cover, broadleaved, deciduous",7597.27,7665.49,70-79,206,1515,90.80000305175781,61.470001220703125
+Rwanda,Amajyepfo,61,"Tree cover, broadleaved, deciduous",7597.27,7665.49,80-89,718,669,90.80000305175781,61.470001220703125
+Rwanda,Amajyepfo,61,"Tree cover, broadleaved, deciduous",7597.27,7665.49,90-99,9187,133,90.80000305175781,61.470001220703125
+Rwanda,Amajyepfo,62,"Tree cover, broadleaved, deciduous",3897.58,3968.08,0-9,1793,342,39.34000015258789,30.540000915527344
+Rwanda,Amajyepfo,62,"Tree cover, broadleaved, deciduous",3897.58,3968.08,10-19,575,1479,39.34000015258789,30.540000915527344
+Rwanda,Amajyepfo,62,"Tree cover, broadleaved, deciduous",3897.58,3968.08,20-29,441,1219,39.34000015258789,30.540000915527344
+Rwanda,Amajyepfo,62,"Tree cover, broadleaved, deciduous",3897.58,3968.08,30-39,381,915,39.34000015258789,30.540000915527344
+Rwanda,Amajyepfo,62,"Tree cover, broadleaved, deciduous",3897.58,3968.08,40-49,375,863,39.34000015258789,30.540000915527344
+Rwanda,Amajyepfo,62,"Tree cover, broadleaved, deciduous",3897.58,3968.08,50-59,332,606,39.34000015258789,30.540000915527344
+Rwanda,Amajyepfo,62,"Tree cover, broadleaved, deciduous",3897.58,3968.08,60-69,307,173,39.34000015258789,30.540000915527344
+Rwanda,Amajyepfo,62,"Tree cover, broadleaved, deciduous",3897.58,3968.08,70-79,317,47,39.34000015258789,30.540000915527344
+Rwanda,Amajyepfo,62,"Tree cover, broadleaved, deciduous",3897.58,3968.08,80-89,394,4,39.34000015258789,30.540000915527344
+Rwanda,Amajyepfo,62,"Tree cover, broadleaved, deciduous",3897.58,3968.08,90-99,735,0,39.34000015258789,30.540000915527344
+Rwanda,Amajyepfo,100,Mosaic tree and shrub / herbaceous cover,25046.71,28977.54,0-9,17348,4501,24.420000076293945,22.020000457763672
+Rwanda,Amajyepfo,100,Mosaic tree and shrub / herbaceous cover,25046.71,28977.54,10-19,5869,20201,24.420000076293945,22.020000457763672
+Rwanda,Amajyepfo,100,Mosaic tree and shrub / herbaceous cover,25046.71,28977.54,20-29,2857,7288,24.420000076293945,22.020000457763672
+Rwanda,Amajyepfo,100,Mosaic tree and shrub / herbaceous cover,25046.71,28977.54,30-39,1829,2914,24.420000076293945,22.020000457763672
+Rwanda,Amajyepfo,100,Mosaic tree and shrub / herbaceous cover,25046.71,28977.54,40-49,1270,2031,24.420000076293945,22.020000457763672
+Rwanda,Amajyepfo,100,Mosaic tree and shrub / herbaceous cover,25046.71,28977.54,50-59,840,2128,24.420000076293945,22.020000457763672
+Rwanda,Amajyepfo,100,Mosaic tree and shrub / herbaceous cover,25046.71,28977.54,60-69,650,741,24.420000076293945,22.020000457763672
+Rwanda,Amajyepfo,100,Mosaic tree and shrub / herbaceous cover,25046.71,28977.54,70-79,595,274,24.420000076293945,22.020000457763672
+Rwanda,Amajyepfo,100,Mosaic tree and shrub / herbaceous cover,25046.71,28977.54,80-89,807,76,24.420000076293945,22.020000457763672
+Rwanda,Amajyepfo,100,Mosaic tree and shrub / herbaceous cover,25046.71,28977.54,90-99,3125,21,24.420000076293945,22.020000457763672
+Rwanda,Amajyepfo,110,Mosaic herbaceous cover / tree and shrub,19.22,19.22,0-9,28,7,6.099999904632568,20.8799991607666
+Rwanda,Amajyepfo,110,Mosaic herbaceous cover / tree and shrub,19.22,19.22,10-19,3,5,6.099999904632568,20.8799991607666
+Rwanda,Amajyepfo,110,Mosaic herbaceous cover / tree and shrub,19.22,19.22,20-29,1,14,6.099999904632568,20.8799991607666
+Rwanda,Amajyepfo,110,Mosaic herbaceous cover / tree and shrub,19.22,19.22,30-39,0,6,6.099999904632568,20.8799991607666
+Rwanda,Amajyepfo,110,Mosaic herbaceous cover / tree and shrub,19.22,19.22,40-49,0,0,6.099999904632568,20.8799991607666
+Rwanda,Amajyepfo,110,Mosaic herbaceous cover / tree and shrub,19.22,19.22,50-59,0,0,6.099999904632568,20.8799991607666
+Rwanda,Amajyepfo,110,Mosaic herbaceous cover / tree and shrub,19.22,19.22,60-69,0,0,6.099999904632568,20.8799991607666
+Rwanda,Amajyepfo,110,Mosaic herbaceous cover / tree and shrub,19.22,19.22,70-79,0,0,6.099999904632568,20.8799991607666
+Rwanda,Amajyepfo,110,Mosaic herbaceous cover / tree and shrub,19.22,19.22,80-89,0,0,6.099999904632568,20.8799991607666
+Rwanda,Amajyepfo,110,Mosaic herbaceous cover / tree and shrub,19.22,19.22,90-99,0,0,6.099999904632568,20.8799991607666
+Rwanda,Amajyepfo,120,Shrubland,982.65,1001.0,0-9,812,344,18.700000762939453,18.690000534057617
+Rwanda,Amajyepfo,120,Shrubland,982.65,1001.0,10-19,210,652,18.700000762939453,18.690000534057617
+Rwanda,Amajyepfo,120,Shrubland,982.65,1001.0,20-29,117,218,18.700000762939453,18.690000534057617
+Rwanda,Amajyepfo,120,Shrubland,982.65,1001.0,30-39,76,108,18.700000762939453,18.690000534057617
+Rwanda,Amajyepfo,120,Shrubland,982.65,1001.0,40-49,48,60,18.700000762939453,18.690000534057617
+Rwanda,Amajyepfo,120,Shrubland,982.65,1001.0,50-59,44,33,18.700000762939453,18.690000534057617
+Rwanda,Amajyepfo,120,Shrubland,982.65,1001.0,60-69,35,7,18.700000762939453,18.690000534057617
+Rwanda,Amajyepfo,120,Shrubland,982.65,1001.0,70-79,21,7,18.700000762939453,18.690000534057617
+Rwanda,Amajyepfo,120,Shrubland,982.65,1001.0,80-89,31,9,18.700000762939453,18.690000534057617
+Rwanda,Amajyepfo,120,Shrubland,982.65,1001.0,90-99,32,4,18.700000762939453,18.690000534057617
+Rwanda,Amajyepfo,130,Grassland,315.58,371.7,0-9,50,35,80.91999816894531,54.7599983215332
+Rwanda,Amajyepfo,130,Grassland,315.58,371.7,10-19,8,74,80.91999816894531,54.7599983215332
+Rwanda,Amajyepfo,130,Grassland,315.58,371.7,20-29,6,29,80.91999816894531,54.7599983215332
+Rwanda,Amajyepfo,130,Grassland,315.58,371.7,30-39,2,12,80.91999816894531,54.7599983215332
+Rwanda,Amajyepfo,130,Grassland,315.58,371.7,40-49,1,22,80.91999816894531,54.7599983215332
+Rwanda,Amajyepfo,130,Grassland,315.58,371.7,50-59,1,63,80.91999816894531,54.7599983215332
+Rwanda,Amajyepfo,130,Grassland,315.58,371.7,60-69,0,96,80.91999816894531,54.7599983215332
+Rwanda,Amajyepfo,130,Grassland,315.58,371.7,70-79,3,125,80.91999816894531,54.7599983215332
+Rwanda,Amajyepfo,130,Grassland,315.58,371.7,80-89,14,80,80.91999816894531,54.7599983215332
+Rwanda,Amajyepfo,130,Grassland,315.58,371.7,90-99,369,3,80.91999816894531,54.7599983215332
+Rwanda,Amajyepfo,160,"Tree cover, flooded, fresh or brakish water",282.77,488.56,0-9,280,35,22.440000534057617,31.149999618530273
+Rwanda,Amajyepfo,160,"Tree cover, flooded, fresh or brakish water",282.77,488.56,10-19,16,103,22.440000534057617,31.149999618530273
+Rwanda,Amajyepfo,160,"Tree cover, flooded, fresh or brakish water",282.77,488.56,20-29,9,188,22.440000534057617,31.149999618530273
+Rwanda,Amajyepfo,160,"Tree cover, flooded, fresh or brakish water",282.77,488.56,30-39,7,129,22.440000534057617,31.149999618530273
+Rwanda,Amajyepfo,160,"Tree cover, flooded, fresh or brakish water",282.77,488.56,40-49,7,154,22.440000534057617,31.149999618530273
+Rwanda,Amajyepfo,160,"Tree cover, flooded, fresh or brakish water",282.77,488.56,50-59,3,43,22.440000534057617,31.149999618530273
+Rwanda,Amajyepfo,160,"Tree cover, flooded, fresh or brakish water",282.77,488.56,60-69,6,5,22.440000534057617,31.149999618530273
+Rwanda,Amajyepfo,160,"Tree cover, flooded, fresh or brakish water",282.77,488.56,70-79,13,0,22.440000534057617,31.149999618530273
+Rwanda,Amajyepfo,160,"Tree cover, flooded, fresh or brakish water",282.77,488.56,80-89,15,0,22.440000534057617,31.149999618530273
+Rwanda,Amajyepfo,160,"Tree cover, flooded, fresh or brakish water",282.77,488.56,90-99,42,0,22.440000534057617,31.149999618530273
+Rwanda,Amajyepfo,170,"Tree cover, flooded, saline water",0.0,19.22,0-9,0,0,,31.25
+Rwanda,Amajyepfo,170,"Tree cover, flooded, saline water",0.0,19.22,10-19,0,2,,31.25
+Rwanda,Amajyepfo,170,"Tree cover, flooded, saline water",0.0,19.22,20-29,0,11,,31.25
+Rwanda,Amajyepfo,170,"Tree cover, flooded, saline water",0.0,19.22,30-39,0,12,,31.25
+Rwanda,Amajyepfo,170,"Tree cover, flooded, saline water",0.0,19.22,40-49,0,3,,31.25
+Rwanda,Amajyepfo,170,"Tree cover, flooded, saline water",0.0,19.22,50-59,0,0,,31.25
+Rwanda,Amajyepfo,170,"Tree cover, flooded, saline water",0.0,19.22,60-69,0,0,,31.25
+Rwanda,Amajyepfo,170,"Tree cover, flooded, saline water",0.0,19.22,70-79,0,0,,31.25
+Rwanda,Amajyepfo,170,"Tree cover, flooded, saline water",0.0,19.22,80-89,0,0,,31.25
+Rwanda,Amajyepfo,170,"Tree cover, flooded, saline water",0.0,19.22,90-99,0,0,,31.25
+Rwanda,Amajyepfo,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",903.33,946.13,0-9,983,9,4.119999885559082,37.88999938964844
+Rwanda,Amajyepfo,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",903.33,946.13,10-19,2,34,4.119999885559082,37.88999938964844
+Rwanda,Amajyepfo,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",903.33,946.13,20-29,2,104,4.119999885559082,37.88999938964844
+Rwanda,Amajyepfo,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",903.33,946.13,30-39,0,343,4.119999885559082,37.88999938964844
+Rwanda,Amajyepfo,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",903.33,946.13,40-49,0,471,4.119999885559082,37.88999938964844
+Rwanda,Amajyepfo,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",903.33,946.13,50-59,0,25,4.119999885559082,37.88999938964844
+Rwanda,Amajyepfo,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",903.33,946.13,60-69,0,1,4.119999885559082,37.88999938964844
+Rwanda,Amajyepfo,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",903.33,946.13,70-79,0,0,4.119999885559082,37.88999938964844
+Rwanda,Amajyepfo,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",903.33,946.13,80-89,0,0,4.119999885559082,37.88999938964844
+Rwanda,Amajyepfo,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",903.33,946.13,90-99,0,0,4.119999885559082,37.88999938964844
+Rwanda,Amajyepfo,190,Urban areas,896.22,896.22,0-9,894,918,10.079999923706055,7.900000095367432
+Rwanda,Amajyepfo,190,Urban areas,896.22,896.22,10-19,201,254,10.079999923706055,7.900000095367432
+Rwanda,Amajyepfo,190,Urban areas,896.22,896.22,20-29,56,28,10.079999923706055,7.900000095367432
+Rwanda,Amajyepfo,190,Urban areas,896.22,896.22,30-39,23,13,10.079999923706055,7.900000095367432
+Rwanda,Amajyepfo,190,Urban areas,896.22,896.22,40-49,21,7,10.079999923706055,7.900000095367432
+Rwanda,Amajyepfo,190,Urban areas,896.22,896.22,50-59,10,0,10.079999923706055,7.900000095367432
+Rwanda,Amajyepfo,190,Urban areas,896.22,896.22,60-69,4,0,10.079999923706055,7.900000095367432
+Rwanda,Amajyepfo,190,Urban areas,896.22,896.22,70-79,2,0,10.079999923706055,7.900000095367432
+Rwanda,Amajyepfo,190,Urban areas,896.22,896.22,80-89,6,0,10.079999923706055,7.900000095367432
+Rwanda,Amajyepfo,190,Urban areas,896.22,896.22,90-99,3,0,10.079999923706055,7.900000095367432
+Rwanda,Amajyepfo,210,Water bodies,0.0,38.13,0-9,0,33,,9.5600004196167
+Rwanda,Amajyepfo,210,Water bodies,0.0,38.13,10-19,0,14,,9.5600004196167
+Rwanda,Amajyepfo,210,Water bodies,0.0,38.13,20-29,0,2,,9.5600004196167
+Rwanda,Amajyepfo,210,Water bodies,0.0,38.13,30-39,0,3,,9.5600004196167
+Rwanda,Amajyepfo,210,Water bodies,0.0,38.13,40-49,0,0,,9.5600004196167
+Rwanda,Amajyepfo,210,Water bodies,0.0,38.13,50-59,0,0,,9.5600004196167
+Rwanda,Amajyepfo,210,Water bodies,0.0,38.13,60-69,0,0,,9.5600004196167
+Rwanda,Amajyepfo,210,Water bodies,0.0,38.13,70-79,0,0,,9.5600004196167
+Rwanda,Amajyepfo,210,Water bodies,0.0,38.13,80-89,0,0,,9.5600004196167
+Rwanda,Amajyepfo,210,Water bodies,0.0,38.13,90-99,0,0,,9.5600004196167
+Rwanda,Amajyepfo,255,No Data (flag),1459.91,438431.33,0-9,2238,1494,29.389999389648438,23.920000076293945
+Rwanda,Amajyepfo,255,No Data (flag),1459.91,438431.33,10-19,312,1450,29.389999389648438,23.920000076293945
+Rwanda,Amajyepfo,255,No Data (flag),1459.91,438431.33,20-29,172,589,29.389999389648438,23.920000076293945
+Rwanda,Amajyepfo,255,No Data (flag),1459.91,438431.33,30-39,100,248,29.389999389648438,23.920000076293945
+Rwanda,Amajyepfo,255,No Data (flag),1459.91,438431.33,40-49,83,263,29.389999389648438,23.920000076293945
+Rwanda,Amajyepfo,255,No Data (flag),1459.91,438431.33,50-59,66,451,29.389999389648438,23.920000076293945
+Rwanda,Amajyepfo,255,No Data (flag),1459.91,438431.33,60-69,58,249,29.389999389648438,23.920000076293945
+Rwanda,Amajyepfo,255,No Data (flag),1459.91,438431.33,70-79,89,108,29.389999389648438,23.920000076293945
+Rwanda,Amajyepfo,255,No Data (flag),1459.91,438431.33,80-89,113,48,29.389999389648438,23.920000076293945
+Rwanda,Amajyepfo,255,No Data (flag),1459.91,438431.33,90-99,704,14,29.389999389648438,23.920000076293945
+Rwanda,Iburengerazuba,10,"Cropland, rainfed",22527.73,25968.03,0-9,17437,6568,16.469999313354492,19.829999923706055
+Rwanda,Iburengerazuba,10,"Cropland, rainfed",22527.73,25968.03,10-19,4807,14369,16.469999313354492,19.829999923706055
+Rwanda,Iburengerazuba,10,"Cropland, rainfed",22527.73,25968.03,20-29,2418,6659,16.469999313354492,19.829999923706055
+Rwanda,Iburengerazuba,10,"Cropland, rainfed",22527.73,25968.03,30-39,1565,3693,16.469999313354492,19.829999923706055
+Rwanda,Iburengerazuba,10,"Cropland, rainfed",22527.73,25968.03,40-49,1038,2077,16.469999313354492,19.829999923706055
+Rwanda,Iburengerazuba,10,"Cropland, rainfed",22527.73,25968.03,50-59,704,503,16.469999313354492,19.829999923706055
+Rwanda,Iburengerazuba,10,"Cropland, rainfed",22527.73,25968.03,60-69,520,81,16.469999313354492,19.829999923706055
+Rwanda,Iburengerazuba,10,"Cropland, rainfed",22527.73,25968.03,70-79,384,48,16.469999313354492,19.829999923706055
+Rwanda,Iburengerazuba,10,"Cropland, rainfed",22527.73,25968.03,80-89,334,35,16.469999313354492,19.829999923706055
+Rwanda,Iburengerazuba,10,"Cropland, rainfed",22527.73,25968.03,90-99,460,19,16.469999313354492,19.829999923706055
+Rwanda,Iburengerazuba,11,"Cropland, rainfed",226953.23,271924.67,0-9,105323,19764,21.979999542236328,26.889999389648438
+Rwanda,Iburengerazuba,11,"Cropland, rainfed",226953.23,271924.67,10-19,50398,97810,21.979999542236328,26.889999389648438
+Rwanda,Iburengerazuba,11,"Cropland, rainfed",226953.23,271924.67,20-29,29627,76614,21.979999542236328,26.889999389648438
+Rwanda,Iburengerazuba,11,"Cropland, rainfed",226953.23,271924.67,30-39,19489,50286,21.979999542236328,26.889999389648438
+Rwanda,Iburengerazuba,11,"Cropland, rainfed",226953.23,271924.67,40-49,13596,34519,21.979999542236328,26.889999389648438
+Rwanda,Iburengerazuba,11,"Cropland, rainfed",226953.23,271924.67,50-59,9898,14967,21.979999542236328,26.889999389648438
+Rwanda,Iburengerazuba,11,"Cropland, rainfed",226953.23,271924.67,60-69,7208,3990,21.979999542236328,26.889999389648438
+Rwanda,Iburengerazuba,11,"Cropland, rainfed",226953.23,271924.67,70-79,5348,1605,21.979999542236328,26.889999389648438
+Rwanda,Iburengerazuba,11,"Cropland, rainfed",226953.23,271924.67,80-89,4320,848,21.979999542236328,26.889999389648438
+Rwanda,Iburengerazuba,11,"Cropland, rainfed",226953.23,271924.67,90-99,4155,493,21.979999542236328,26.889999389648438
+Rwanda,Iburengerazuba,12,"Cropland, rainfed",4110.6,5059.27,0-9,3662,261,19.5,34.720001220703125
+Rwanda,Iburengerazuba,12,"Cropland, rainfed",4110.6,5059.27,10-19,323,872,19.5,34.720001220703125
+Rwanda,Iburengerazuba,12,"Cropland, rainfed",4110.6,5059.27,20-29,191,1452,19.5,34.720001220703125
+Rwanda,Iburengerazuba,12,"Cropland, rainfed",4110.6,5059.27,30-39,138,1608,19.5,34.720001220703125
+Rwanda,Iburengerazuba,12,"Cropland, rainfed",4110.6,5059.27,40-49,131,1394,19.5,34.720001220703125
+Rwanda,Iburengerazuba,12,"Cropland, rainfed",4110.6,5059.27,50-59,111,664,19.5,34.720001220703125
+Rwanda,Iburengerazuba,12,"Cropland, rainfed",4110.6,5059.27,60-69,97,210,19.5,34.720001220703125
+Rwanda,Iburengerazuba,12,"Cropland, rainfed",4110.6,5059.27,70-79,120,73,19.5,34.720001220703125
+Rwanda,Iburengerazuba,12,"Cropland, rainfed",4110.6,5059.27,80-89,154,27,19.5,34.720001220703125
+Rwanda,Iburengerazuba,12,"Cropland, rainfed",4110.6,5059.27,90-99,344,15,19.5,34.720001220703125
+Rwanda,Iburengerazuba,20,"Cropland, irrigated or post-flooding",9.61,9.61,0-9,0,0,91.6500015258789,72.9000015258789
+Rwanda,Iburengerazuba,20,"Cropland, irrigated or post-flooding",9.61,9.61,10-19,0,0,91.6500015258789,72.9000015258789
+Rwanda,Iburengerazuba,20,"Cropland, irrigated or post-flooding",9.61,9.61,20-29,0,1,91.6500015258789,72.9000015258789
+Rwanda,Iburengerazuba,20,"Cropland, irrigated or post-flooding",9.61,9.61,30-39,0,0,91.6500015258789,72.9000015258789
+Rwanda,Iburengerazuba,20,"Cropland, irrigated or post-flooding",9.61,9.61,40-49,0,0,91.6500015258789,72.9000015258789
+Rwanda,Iburengerazuba,20,"Cropland, irrigated or post-flooding",9.61,9.61,50-59,0,0,91.6500015258789,72.9000015258789
+Rwanda,Iburengerazuba,20,"Cropland, irrigated or post-flooding",9.61,9.61,60-69,0,3,91.6500015258789,72.9000015258789
+Rwanda,Iburengerazuba,20,"Cropland, irrigated or post-flooding",9.61,9.61,70-79,1,7,91.6500015258789,72.9000015258789
+Rwanda,Iburengerazuba,20,"Cropland, irrigated or post-flooding",9.61,9.61,80-89,2,4,91.6500015258789,72.9000015258789
+Rwanda,Iburengerazuba,20,"Cropland, irrigated or post-flooding",9.61,9.61,90-99,13,1,91.6500015258789,72.9000015258789
+Rwanda,Iburengerazuba,30,Mosaic cropland / natural vegetation,1133.23,1749.33,0-9,488,175,39.119998931884766,45.68000030517578
+Rwanda,Iburengerazuba,30,Mosaic cropland / natural vegetation,1133.23,1749.33,10-19,187,230,39.119998931884766,45.68000030517578
+Rwanda,Iburengerazuba,30,Mosaic cropland / natural vegetation,1133.23,1749.33,20-29,141,221,39.119998931884766,45.68000030517578
+Rwanda,Iburengerazuba,30,Mosaic cropland / natural vegetation,1133.23,1749.33,30-39,107,253,39.119998931884766,45.68000030517578
+Rwanda,Iburengerazuba,30,Mosaic cropland / natural vegetation,1133.23,1749.33,40-49,84,451,39.119998931884766,45.68000030517578
+Rwanda,Iburengerazuba,30,Mosaic cropland / natural vegetation,1133.23,1749.33,50-59,79,471,39.119998931884766,45.68000030517578
+Rwanda,Iburengerazuba,30,Mosaic cropland / natural vegetation,1133.23,1749.33,60-69,78,241,39.119998931884766,45.68000030517578
+Rwanda,Iburengerazuba,30,Mosaic cropland / natural vegetation,1133.23,1749.33,70-79,89,157,39.119998931884766,45.68000030517578
+Rwanda,Iburengerazuba,30,Mosaic cropland / natural vegetation,1133.23,1749.33,80-89,138,114,39.119998931884766,45.68000030517578
+Rwanda,Iburengerazuba,30,Mosaic cropland / natural vegetation,1133.23,1749.33,90-99,192,78,39.119998931884766,45.68000030517578
+Rwanda,Iburengerazuba,40,Mosaic natural vegetation / cropland,1716.05,2071.13,0-9,318,200,59.45000076293945,43.939998626708984
+Rwanda,Iburengerazuba,40,Mosaic natural vegetation / cropland,1716.05,2071.13,10-19,159,284,59.45000076293945,43.939998626708984
+Rwanda,Iburengerazuba,40,Mosaic natural vegetation / cropland,1716.05,2071.13,20-29,157,199,59.45000076293945,43.939998626708984
+Rwanda,Iburengerazuba,40,Mosaic natural vegetation / cropland,1716.05,2071.13,30-39,139,264,59.45000076293945,43.939998626708984
+Rwanda,Iburengerazuba,40,Mosaic natural vegetation / cropland,1716.05,2071.13,40-49,157,608,59.45000076293945,43.939998626708984
+Rwanda,Iburengerazuba,40,Mosaic natural vegetation / cropland,1716.05,2071.13,50-59,159,978,59.45000076293945,43.939998626708984
+Rwanda,Iburengerazuba,40,Mosaic natural vegetation / cropland,1716.05,2071.13,60-69,166,278,59.45000076293945,43.939998626708984
+Rwanda,Iburengerazuba,40,Mosaic natural vegetation / cropland,1716.05,2071.13,70-79,189,92,59.45000076293945,43.939998626708984
+Rwanda,Iburengerazuba,40,Mosaic natural vegetation / cropland,1716.05,2071.13,80-89,363,33,59.45000076293945,43.939998626708984
+Rwanda,Iburengerazuba,40,Mosaic natural vegetation / cropland,1716.05,2071.13,90-99,675,21,59.45000076293945,43.939998626708984
+Rwanda,Iburengerazuba,50,"Tree cover, broadleaved, evergreen",18477.69,22306.91,0-9,765,313,82.87000274658203,62.91999816894531
+Rwanda,Iburengerazuba,50,"Tree cover, broadleaved, evergreen",18477.69,22306.91,10-19,477,411,82.87000274658203,62.91999816894531
+Rwanda,Iburengerazuba,50,"Tree cover, broadleaved, evergreen",18477.69,22306.91,20-29,430,793,82.87000274658203,62.91999816894531
+Rwanda,Iburengerazuba,50,"Tree cover, broadleaved, evergreen",18477.69,22306.91,30-39,441,1047,82.87000274658203,62.91999816894531
+Rwanda,Iburengerazuba,50,"Tree cover, broadleaved, evergreen",18477.69,22306.91,40-49,423,2090,82.87000274658203,62.91999816894531
+Rwanda,Iburengerazuba,50,"Tree cover, broadleaved, evergreen",18477.69,22306.91,50-59,427,7300,82.87000274658203,62.91999816894531
+Rwanda,Iburengerazuba,50,"Tree cover, broadleaved, evergreen",18477.69,22306.91,60-69,606,6368,82.87000274658203,62.91999816894531
+Rwanda,Iburengerazuba,50,"Tree cover, broadleaved, evergreen",18477.69,22306.91,70-79,839,4422,82.87000274658203,62.91999816894531
+Rwanda,Iburengerazuba,50,"Tree cover, broadleaved, evergreen",18477.69,22306.91,80-89,2269,2914,82.87000274658203,62.91999816894531
+Rwanda,Iburengerazuba,50,"Tree cover, broadleaved, evergreen",18477.69,22306.91,90-99,16426,2000,82.87000274658203,62.91999816894531
+Rwanda,Iburengerazuba,60,"Tree cover, broadleaved, deciduous",58421.31,74329.81,0-9,10676,1869,59.4900016784668,47.939998626708984
+Rwanda,Iburengerazuba,60,"Tree cover, broadleaved, deciduous",58421.31,74329.81,10-19,6924,8348,59.4900016784668,47.939998626708984
+Rwanda,Iburengerazuba,60,"Tree cover, broadleaved, deciduous",58421.31,74329.81,20-29,4894,13086,59.4900016784668,47.939998626708984
+Rwanda,Iburengerazuba,60,"Tree cover, broadleaved, deciduous",58421.31,74329.81,30-39,3757,12043,59.4900016784668,47.939998626708984
+Rwanda,Iburengerazuba,60,"Tree cover, broadleaved, deciduous",58421.31,74329.81,40-49,3075,11913,59.4900016784668,47.939998626708984
+Rwanda,Iburengerazuba,60,"Tree cover, broadleaved, deciduous",58421.31,74329.81,50-59,2708,15709,59.4900016784668,47.939998626708984
+Rwanda,Iburengerazuba,60,"Tree cover, broadleaved, deciduous",58421.31,74329.81,60-69,2618,13007,59.4900016784668,47.939998626708984
+Rwanda,Iburengerazuba,60,"Tree cover, broadleaved, deciduous",58421.31,74329.81,70-79,2892,8770,59.4900016784668,47.939998626708984
+Rwanda,Iburengerazuba,60,"Tree cover, broadleaved, deciduous",58421.31,74329.81,80-89,4806,5210,59.4900016784668,47.939998626708984
+Rwanda,Iburengerazuba,60,"Tree cover, broadleaved, deciduous",58421.31,74329.81,90-99,29999,1951,59.4900016784668,47.939998626708984
+Rwanda,Iburengerazuba,61,"Tree cover, broadleaved, deciduous",12365.27,13625.27,0-9,179,61,90.2699966430664,67.47000122070312
+Rwanda,Iburengerazuba,61,"Tree cover, broadleaved, deciduous",12365.27,13625.27,10-19,83,63,90.2699966430664,67.47000122070312
+Rwanda,Iburengerazuba,61,"Tree cover, broadleaved, deciduous",12365.27,13625.27,20-29,80,97,90.2699966430664,67.47000122070312
+Rwanda,Iburengerazuba,61,"Tree cover, broadleaved, deciduous",12365.27,13625.27,30-39,86,196,90.2699966430664,67.47000122070312
+Rwanda,Iburengerazuba,61,"Tree cover, broadleaved, deciduous",12365.27,13625.27,40-49,95,505,90.2699966430664,67.47000122070312
+Rwanda,Iburengerazuba,61,"Tree cover, broadleaved, deciduous",12365.27,13625.27,50-59,105,4035,90.2699966430664,67.47000122070312
+Rwanda,Iburengerazuba,61,"Tree cover, broadleaved, deciduous",12365.27,13625.27,60-69,141,5648,90.2699966430664,67.47000122070312
+Rwanda,Iburengerazuba,61,"Tree cover, broadleaved, deciduous",12365.27,13625.27,70-79,249,4314,90.2699966430664,67.47000122070312
+Rwanda,Iburengerazuba,61,"Tree cover, broadleaved, deciduous",12365.27,13625.27,80-89,930,2427,90.2699966430664,67.47000122070312
+Rwanda,Iburengerazuba,61,"Tree cover, broadleaved, deciduous",12365.27,13625.27,90-99,14578,730,90.2699966430664,67.47000122070312
+Rwanda,Iburengerazuba,62,"Tree cover, broadleaved, deciduous",6026.51,8093.9,0-9,2138,565,42.130001068115234,38.77000045776367
+Rwanda,Iburengerazuba,62,"Tree cover, broadleaved, deciduous",6026.51,8093.9,10-19,1125,1746,42.130001068115234,38.77000045776367
+Rwanda,Iburengerazuba,62,"Tree cover, broadleaved, deciduous",6026.51,8093.9,20-29,806,1980,42.130001068115234,38.77000045776367
+Rwanda,Iburengerazuba,62,"Tree cover, broadleaved, deciduous",6026.51,8093.9,30-39,634,1790,42.130001068115234,38.77000045776367
+Rwanda,Iburengerazuba,62,"Tree cover, broadleaved, deciduous",6026.51,8093.9,40-49,559,2036,42.130001068115234,38.77000045776367
+Rwanda,Iburengerazuba,62,"Tree cover, broadleaved, deciduous",6026.51,8093.9,50-59,495,1774,42.130001068115234,38.77000045776367
+Rwanda,Iburengerazuba,62,"Tree cover, broadleaved, deciduous",6026.51,8093.9,60-69,467,825,42.130001068115234,38.77000045776367
+Rwanda,Iburengerazuba,62,"Tree cover, broadleaved, deciduous",6026.51,8093.9,70-79,524,418,42.130001068115234,38.77000045776367
+Rwanda,Iburengerazuba,62,"Tree cover, broadleaved, deciduous",6026.51,8093.9,80-89,607,252,42.130001068115234,38.77000045776367
+Rwanda,Iburengerazuba,62,"Tree cover, broadleaved, deciduous",6026.51,8093.9,90-99,1297,107,42.130001068115234,38.77000045776367
+Rwanda,Iburengerazuba,100,Mosaic tree and shrub / herbaceous cover,33433.28,55246.0,0-9,15028,3767,33.150001525878906,34.16999816894531
+Rwanda,Iburengerazuba,100,Mosaic tree and shrub / herbaceous cover,33433.28,55246.0,10-19,7138,13525,33.150001525878906,34.16999816894531
+Rwanda,Iburengerazuba,100,Mosaic tree and shrub / herbaceous cover,33433.28,55246.0,20-29,4629,14639,33.150001525878906,34.16999816894531
+Rwanda,Iburengerazuba,100,Mosaic tree and shrub / herbaceous cover,33433.28,55246.0,30-39,3476,13571,33.150001525878906,34.16999816894531
+Rwanda,Iburengerazuba,100,Mosaic tree and shrub / herbaceous cover,33433.28,55246.0,40-49,2692,13085,33.150001525878906,34.16999816894531
+Rwanda,Iburengerazuba,100,Mosaic tree and shrub / herbaceous cover,33433.28,55246.0,50-59,2216,8347,33.150001525878906,34.16999816894531
+Rwanda,Iburengerazuba,100,Mosaic tree and shrub / herbaceous cover,33433.28,55246.0,60-69,1860,2760,33.150001525878906,34.16999816894531
+Rwanda,Iburengerazuba,100,Mosaic tree and shrub / herbaceous cover,33433.28,55246.0,70-79,1708,1151,33.150001525878906,34.16999816894531
+Rwanda,Iburengerazuba,100,Mosaic tree and shrub / herbaceous cover,33433.28,55246.0,80-89,2002,529,33.150001525878906,34.16999816894531
+Rwanda,Iburengerazuba,100,Mosaic tree and shrub / herbaceous cover,33433.28,55246.0,90-99,4484,422,33.150001525878906,34.16999816894531
+Rwanda,Iburengerazuba,110,Mosaic herbaceous cover / tree and shrub,38.44,314.09,0-9,21,97,31.25,22.790000915527344
+Rwanda,Iburengerazuba,110,Mosaic herbaceous cover / tree and shrub,38.44,314.09,10-19,10,125,31.25,22.790000915527344
+Rwanda,Iburengerazuba,110,Mosaic herbaceous cover / tree and shrub,38.44,314.09,20-29,4,86,31.25,22.790000915527344
+Rwanda,Iburengerazuba,110,Mosaic herbaceous cover / tree and shrub,38.44,314.09,30-39,6,54,31.25,22.790000915527344
+Rwanda,Iburengerazuba,110,Mosaic herbaceous cover / tree and shrub,38.44,314.09,40-49,5,40,31.25,22.790000915527344
+Rwanda,Iburengerazuba,110,Mosaic herbaceous cover / tree and shrub,38.44,314.09,50-59,5,23,31.25,22.790000915527344
+Rwanda,Iburengerazuba,110,Mosaic herbaceous cover / tree and shrub,38.44,314.09,60-69,4,7,31.25,22.790000915527344
+Rwanda,Iburengerazuba,110,Mosaic herbaceous cover / tree and shrub,38.44,314.09,70-79,7,1,31.25,22.790000915527344
+Rwanda,Iburengerazuba,110,Mosaic herbaceous cover / tree and shrub,38.44,314.09,80-89,2,0,31.25,22.790000915527344
+Rwanda,Iburengerazuba,110,Mosaic herbaceous cover / tree and shrub,38.44,314.09,90-99,0,0,31.25,22.790000915527344
+Rwanda,Iburengerazuba,120,Shrubland,741.83,957.9,0-9,324,157,39.939998626708984,32.349998474121094
+Rwanda,Iburengerazuba,120,Shrubland,741.83,957.9,10-19,182,343,39.939998626708984,32.349998474121094
+Rwanda,Iburengerazuba,120,Shrubland,741.83,957.9,20-29,87,340,39.939998626708984,32.349998474121094
+Rwanda,Iburengerazuba,120,Shrubland,741.83,957.9,30-39,67,171,39.939998626708984,32.349998474121094
+Rwanda,Iburengerazuba,120,Shrubland,741.83,957.9,40-49,36,78,39.939998626708984,32.349998474121094
+Rwanda,Iburengerazuba,120,Shrubland,741.83,957.9,50-59,25,78,39.939998626708984,32.349998474121094
+Rwanda,Iburengerazuba,120,Shrubland,741.83,957.9,60-69,30,92,39.939998626708984,32.349998474121094
+Rwanda,Iburengerazuba,120,Shrubland,741.83,957.9,70-79,36,64,39.939998626708984,32.349998474121094
+Rwanda,Iburengerazuba,120,Shrubland,741.83,957.9,80-89,39,62,39.939998626708984,32.349998474121094
+Rwanda,Iburengerazuba,120,Shrubland,741.83,957.9,90-99,251,12,39.939998626708984,32.349998474121094
+Rwanda,Iburengerazuba,130,Grassland,467.79,975.26,0-9,233,273,51.15999984741211,37.34000015258789
+Rwanda,Iburengerazuba,130,Grassland,467.79,975.26,10-19,41,269,51.15999984741211,37.34000015258789
+Rwanda,Iburengerazuba,130,Grassland,467.79,975.26,20-29,22,168,51.15999984741211,37.34000015258789
+Rwanda,Iburengerazuba,130,Grassland,467.79,975.26,30-39,24,131,51.15999984741211,37.34000015258789
+Rwanda,Iburengerazuba,130,Grassland,467.79,975.26,40-49,17,135,51.15999984741211,37.34000015258789
+Rwanda,Iburengerazuba,130,Grassland,467.79,975.26,50-59,8,113,51.15999984741211,37.34000015258789
+Rwanda,Iburengerazuba,130,Grassland,467.79,975.26,60-69,17,104,51.15999984741211,37.34000015258789
+Rwanda,Iburengerazuba,130,Grassland,467.79,975.26,70-79,14,80,51.15999984741211,37.34000015258789
+Rwanda,Iburengerazuba,130,Grassland,467.79,975.26,80-89,39,86,51.15999984741211,37.34000015258789
+Rwanda,Iburengerazuba,130,Grassland,467.79,975.26,90-99,272,77,51.15999984741211,37.34000015258789
+Rwanda,Iburengerazuba,150,Sparse vegetation,0.0,9.3,0-9,0,0,,27.739999771118164
+Rwanda,Iburengerazuba,150,Sparse vegetation,0.0,9.3,10-19,0,0,,27.739999771118164
+Rwanda,Iburengerazuba,150,Sparse vegetation,0.0,9.3,20-29,0,12,,27.739999771118164
+Rwanda,Iburengerazuba,150,Sparse vegetation,0.0,9.3,30-39,0,4,,27.739999771118164
+Rwanda,Iburengerazuba,150,Sparse vegetation,0.0,9.3,40-49,0,0,,27.739999771118164
+Rwanda,Iburengerazuba,150,Sparse vegetation,0.0,9.3,50-59,0,0,,27.739999771118164
+Rwanda,Iburengerazuba,150,Sparse vegetation,0.0,9.3,60-69,0,0,,27.739999771118164
+Rwanda,Iburengerazuba,150,Sparse vegetation,0.0,9.3,70-79,0,0,,27.739999771118164
+Rwanda,Iburengerazuba,150,Sparse vegetation,0.0,9.3,80-89,0,0,,27.739999771118164
+Rwanda,Iburengerazuba,150,Sparse vegetation,0.0,9.3,90-99,0,0,,27.739999771118164
+Rwanda,Iburengerazuba,160,"Tree cover, flooded, fresh or brakish water",109.94,114.7,0-9,14,0,55.08000183105469,55.38999938964844
+Rwanda,Iburengerazuba,160,"Tree cover, flooded, fresh or brakish water",109.94,114.7,10-19,17,0,55.08000183105469,55.38999938964844
+Rwanda,Iburengerazuba,160,"Tree cover, flooded, fresh or brakish water",109.94,114.7,20-29,14,3,55.08000183105469,55.38999938964844
+Rwanda,Iburengerazuba,160,"Tree cover, flooded, fresh or brakish water",109.94,114.7,30-39,12,18,55.08000183105469,55.38999938964844
+Rwanda,Iburengerazuba,160,"Tree cover, flooded, fresh or brakish water",109.94,114.7,40-49,15,50,55.08000183105469,55.38999938964844
+Rwanda,Iburengerazuba,160,"Tree cover, flooded, fresh or brakish water",109.94,114.7,50-59,16,50,55.08000183105469,55.38999938964844
+Rwanda,Iburengerazuba,160,"Tree cover, flooded, fresh or brakish water",109.94,114.7,60-69,17,21,55.08000183105469,55.38999938964844
+Rwanda,Iburengerazuba,160,"Tree cover, flooded, fresh or brakish water",109.94,114.7,70-79,21,15,55.08000183105469,55.38999938964844
+Rwanda,Iburengerazuba,160,"Tree cover, flooded, fresh or brakish water",109.94,114.7,80-89,23,15,55.08000183105469,55.38999938964844
+Rwanda,Iburengerazuba,160,"Tree cover, flooded, fresh or brakish water",109.94,114.7,90-99,24,1,55.08000183105469,55.38999938964844
+Rwanda,Iburengerazuba,170,"Tree cover, flooded, saline water",95.17,322.72,0-9,52,40,30.389999389648438,34.22999954223633
+Rwanda,Iburengerazuba,170,"Tree cover, flooded, saline water",95.17,322.72,10-19,19,118,30.389999389648438,34.22999954223633
+Rwanda,Iburengerazuba,170,"Tree cover, flooded, saline water",95.17,322.72,20-29,19,103,30.389999389648438,34.22999954223633
+Rwanda,Iburengerazuba,170,"Tree cover, flooded, saline water",95.17,322.72,30-39,10,58,30.389999389648438,34.22999954223633
+Rwanda,Iburengerazuba,170,"Tree cover, flooded, saline water",95.17,322.72,40-49,17,53,30.389999389648438,34.22999954223633
+Rwanda,Iburengerazuba,170,"Tree cover, flooded, saline water",95.17,322.72,50-59,9,37,30.389999389648438,34.22999954223633
+Rwanda,Iburengerazuba,170,"Tree cover, flooded, saline water",95.17,322.72,60-69,13,13,30.389999389648438,34.22999954223633
+Rwanda,Iburengerazuba,170,"Tree cover, flooded, saline water",95.17,322.72,70-79,5,10,30.389999389648438,34.22999954223633
+Rwanda,Iburengerazuba,170,"Tree cover, flooded, saline water",95.17,322.72,80-89,5,15,30.389999389648438,34.22999954223633
+Rwanda,Iburengerazuba,170,"Tree cover, flooded, saline water",95.17,322.72,90-99,3,25,30.389999389648438,34.22999954223633
+Rwanda,Iburengerazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",296.36,696.88,0-9,151,222,33.47999954223633,20.969999313354492
+Rwanda,Iburengerazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",296.36,696.88,10-19,48,372,33.47999954223633,20.969999313354492
+Rwanda,Iburengerazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",296.36,696.88,20-29,31,220,33.47999954223633,20.969999313354492
+Rwanda,Iburengerazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",296.36,696.88,30-39,40,97,33.47999954223633,20.969999313354492
+Rwanda,Iburengerazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",296.36,696.88,40-49,28,48,33.47999954223633,20.969999313354492
+Rwanda,Iburengerazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",296.36,696.88,50-59,37,24,33.47999954223633,20.969999313354492
+Rwanda,Iburengerazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",296.36,696.88,60-69,20,12,33.47999954223633,20.969999313354492
+Rwanda,Iburengerazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",296.36,696.88,70-79,28,7,33.47999954223633,20.969999313354492
+Rwanda,Iburengerazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",296.36,696.88,80-89,17,11,33.47999954223633,20.969999313354492
+Rwanda,Iburengerazuba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",296.36,696.88,90-99,29,2,33.47999954223633,20.969999313354492
+Rwanda,Iburengerazuba,190,Urban areas,488.56,1825.28,0-9,366,1024,13.5600004196167,13.800000190734863
+Rwanda,Iburengerazuba,190,Urban areas,488.56,1825.28,10-19,195,853,13.5600004196167,13.800000190734863
+Rwanda,Iburengerazuba,190,Urban areas,488.56,1825.28,20-29,71,302,13.5600004196167,13.800000190734863
+Rwanda,Iburengerazuba,190,Urban areas,488.56,1825.28,30-39,35,104,13.5600004196167,13.800000190734863
+Rwanda,Iburengerazuba,190,Urban areas,488.56,1825.28,40-49,22,59,13.5600004196167,13.800000190734863
+Rwanda,Iburengerazuba,190,Urban areas,488.56,1825.28,50-59,7,18,13.5600004196167,13.800000190734863
+Rwanda,Iburengerazuba,190,Urban areas,488.56,1825.28,60-69,5,5,13.5600004196167,13.800000190734863
+Rwanda,Iburengerazuba,190,Urban areas,488.56,1825.28,70-79,0,0,13.5600004196167,13.800000190734863
+Rwanda,Iburengerazuba,190,Urban areas,488.56,1825.28,80-89,1,0,13.5600004196167,13.800000190734863
+Rwanda,Iburengerazuba,190,Urban areas,488.56,1825.28,90-99,1,0,13.5600004196167,13.800000190734863
+Rwanda,Iburengerazuba,200,Bare areas,9.3,9.3,0-9,6,4,15.130000114440918,17.239999771118164
+Rwanda,Iburengerazuba,200,Bare areas,9.3,9.3,10-19,4,4,15.130000114440918,17.239999771118164
+Rwanda,Iburengerazuba,200,Bare areas,9.3,9.3,20-29,5,7,15.130000114440918,17.239999771118164
+Rwanda,Iburengerazuba,200,Bare areas,9.3,9.3,30-39,1,1,15.130000114440918,17.239999771118164
+Rwanda,Iburengerazuba,200,Bare areas,9.3,9.3,40-49,0,0,15.130000114440918,17.239999771118164
+Rwanda,Iburengerazuba,200,Bare areas,9.3,9.3,50-59,0,0,15.130000114440918,17.239999771118164
+Rwanda,Iburengerazuba,200,Bare areas,9.3,9.3,60-69,0,0,15.130000114440918,17.239999771118164
+Rwanda,Iburengerazuba,200,Bare areas,9.3,9.3,70-79,0,0,15.130000114440918,17.239999771118164
+Rwanda,Iburengerazuba,200,Bare areas,9.3,9.3,80-89,0,0,15.130000114440918,17.239999771118164
+Rwanda,Iburengerazuba,200,Bare areas,9.3,9.3,90-99,0,0,15.130000114440918,17.239999771118164
+Rwanda,Iburengerazuba,210,Water bodies,10682.97,104660.48,0-9,9126,99907,13.140000343322754,5.610000133514404
+Rwanda,Iburengerazuba,210,Water bodies,10682.97,104660.48,10-19,547,2393,13.140000343322754,5.610000133514404
+Rwanda,Iburengerazuba,210,Water bodies,10682.97,104660.48,20-29,426,1815,13.140000343322754,5.610000133514404
+Rwanda,Iburengerazuba,210,Water bodies,10682.97,104660.48,30-39,369,1182,13.140000343322754,5.610000133514404
+Rwanda,Iburengerazuba,210,Water bodies,10682.97,104660.48,40-49,324,755,13.140000343322754,5.610000133514404
+Rwanda,Iburengerazuba,210,Water bodies,10682.97,104660.48,50-59,282,406,13.140000343322754,5.610000133514404
+Rwanda,Iburengerazuba,210,Water bodies,10682.97,104660.48,60-69,253,143,13.140000343322754,5.610000133514404
+Rwanda,Iburengerazuba,210,Water bodies,10682.97,104660.48,70-79,237,57,13.140000343322754,5.610000133514404
+Rwanda,Iburengerazuba,210,Water bodies,10682.97,104660.48,80-89,198,35,13.140000343322754,5.610000133514404
+Rwanda,Iburengerazuba,210,Water bodies,10682.97,104660.48,90-99,57,16,13.140000343322754,5.610000133514404
+Rwanda,Iburengerazuba,255,No Data (flag),1156.4,656096.16,0-9,1486,1887,37.060001373291016,27.139999389648438
+Rwanda,Iburengerazuba,255,No Data (flag),1156.4,656096.16,10-19,219,848,37.060001373291016,27.139999389648438
+Rwanda,Iburengerazuba,255,No Data (flag),1156.4,656096.16,20-29,149,705,37.060001373291016,27.139999389648438
+Rwanda,Iburengerazuba,255,No Data (flag),1156.4,656096.16,30-39,106,444,37.060001373291016,27.139999389648438
+Rwanda,Iburengerazuba,255,No Data (flag),1156.4,656096.16,40-49,85,482,37.060001373291016,27.139999389648438
+Rwanda,Iburengerazuba,255,No Data (flag),1156.4,656096.16,50-59,90,582,37.060001373291016,27.139999389648438
+Rwanda,Iburengerazuba,255,No Data (flag),1156.4,656096.16,60-69,68,264,37.060001373291016,27.139999389648438
+Rwanda,Iburengerazuba,255,No Data (flag),1156.4,656096.16,70-79,86,171,37.060001373291016,27.139999389648438
+Rwanda,Iburengerazuba,255,No Data (flag),1156.4,656096.16,80-89,147,84,37.060001373291016,27.139999389648438
+Rwanda,Iburengerazuba,255,No Data (flag),1156.4,656096.16,90-99,721,64,37.060001373291016,27.139999389648438

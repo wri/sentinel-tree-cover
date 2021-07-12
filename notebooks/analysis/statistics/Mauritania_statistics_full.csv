@@ -1,0 +1,2021 @@
+country,admin,esa_id,esa_class,esa_sampled_ha,esa_total_ha,tree_cover_class,tof_ha,hans_ha,tof_mean,hans_mean
+Mauritania,Adrar,10,"Cropland, rainfed",1198.57,2714.57,0-9,1169,3445,9.140000343322754,4.0
+Mauritania,Adrar,10,"Cropland, rainfed",1198.57,2714.57,10-19,116,0,9.140000343322754,4.0
+Mauritania,Adrar,10,"Cropland, rainfed",1198.57,2714.57,20-29,53,0,9.140000343322754,4.0
+Mauritania,Adrar,10,"Cropland, rainfed",1198.57,2714.57,30-39,49,0,9.140000343322754,4.0
+Mauritania,Adrar,10,"Cropland, rainfed",1198.57,2714.57,40-49,21,0,9.140000343322754,4.0
+Mauritania,Adrar,10,"Cropland, rainfed",1198.57,2714.57,50-59,22,0,9.140000343322754,4.0
+Mauritania,Adrar,10,"Cropland, rainfed",1198.57,2714.57,60-69,14,0,9.140000343322754,4.0
+Mauritania,Adrar,10,"Cropland, rainfed",1198.57,2714.57,70-79,3,0,9.140000343322754,4.0
+Mauritania,Adrar,10,"Cropland, rainfed",1198.57,2714.57,80-89,0,0,9.140000343322754,4.0
+Mauritania,Adrar,10,"Cropland, rainfed",1198.57,2714.57,90-99,0,0,9.140000343322754,4.0
+Mauritania,Adrar,11,"Cropland, rainfed",2066.83,3307.39,0-9,2354,4083,5.130000114440918,4.0
+Mauritania,Adrar,11,"Cropland, rainfed",2066.83,3307.39,10-19,44,0,5.130000114440918,4.0
+Mauritania,Adrar,11,"Cropland, rainfed",2066.83,3307.39,20-29,19,0,5.130000114440918,4.0
+Mauritania,Adrar,11,"Cropland, rainfed",2066.83,3307.39,30-39,15,0,5.130000114440918,4.0
+Mauritania,Adrar,11,"Cropland, rainfed",2066.83,3307.39,40-49,6,0,5.130000114440918,4.0
+Mauritania,Adrar,11,"Cropland, rainfed",2066.83,3307.39,50-59,8,0,5.130000114440918,4.0
+Mauritania,Adrar,11,"Cropland, rainfed",2066.83,3307.39,60-69,4,0,5.130000114440918,4.0
+Mauritania,Adrar,11,"Cropland, rainfed",2066.83,3307.39,70-79,4,0,5.130000114440918,4.0
+Mauritania,Adrar,11,"Cropland, rainfed",2066.83,3307.39,80-89,0,0,5.130000114440918,4.0
+Mauritania,Adrar,11,"Cropland, rainfed",2066.83,3307.39,90-99,0,0,5.130000114440918,4.0
+Mauritania,Adrar,20,"Cropland, irrigated or post-flooding",0.0,9.0,0-9,0,16,,4.0
+Mauritania,Adrar,20,"Cropland, irrigated or post-flooding",0.0,9.0,10-19,0,0,,4.0
+Mauritania,Adrar,20,"Cropland, irrigated or post-flooding",0.0,9.0,20-29,0,0,,4.0
+Mauritania,Adrar,20,"Cropland, irrigated or post-flooding",0.0,9.0,30-39,0,0,,4.0
+Mauritania,Adrar,20,"Cropland, irrigated or post-flooding",0.0,9.0,40-49,0,0,,4.0
+Mauritania,Adrar,20,"Cropland, irrigated or post-flooding",0.0,9.0,50-59,0,0,,4.0
+Mauritania,Adrar,20,"Cropland, irrigated or post-flooding",0.0,9.0,60-69,0,0,,4.0
+Mauritania,Adrar,20,"Cropland, irrigated or post-flooding",0.0,9.0,70-79,0,0,,4.0
+Mauritania,Adrar,20,"Cropland, irrigated or post-flooding",0.0,9.0,80-89,0,0,,4.0
+Mauritania,Adrar,20,"Cropland, irrigated or post-flooding",0.0,9.0,90-99,0,0,,4.0
+Mauritania,Adrar,130,Grassland,1271.18,2551.96,0-9,1404,3076,5.119999885559082,4.0
+Mauritania,Adrar,130,Grassland,1271.18,2551.96,10-19,43,0,5.119999885559082,4.0
+Mauritania,Adrar,130,Grassland,1271.18,2551.96,20-29,15,0,5.119999885559082,4.0
+Mauritania,Adrar,130,Grassland,1271.18,2551.96,30-39,13,0,5.119999885559082,4.0
+Mauritania,Adrar,130,Grassland,1271.18,2551.96,40-49,2,0,5.119999885559082,4.0
+Mauritania,Adrar,130,Grassland,1271.18,2551.96,50-59,1,0,5.119999885559082,4.0
+Mauritania,Adrar,130,Grassland,1271.18,2551.96,60-69,0,0,5.119999885559082,4.0
+Mauritania,Adrar,130,Grassland,1271.18,2551.96,70-79,0,0,5.119999885559082,4.0
+Mauritania,Adrar,130,Grassland,1271.18,2551.96,80-89,0,0,5.119999885559082,4.0
+Mauritania,Adrar,130,Grassland,1271.18,2551.96,90-99,0,0,5.119999885559082,4.0
+Mauritania,Adrar,150,Sparse vegetation,1327.29,4687.13,0-9,1025,6168,14.199999809265137,4.0
+Mauritania,Adrar,150,Sparse vegetation,1327.29,4687.13,10-19,278,0,14.199999809265137,4.0
+Mauritania,Adrar,150,Sparse vegetation,1327.29,4687.13,20-29,114,0,14.199999809265137,4.0
+Mauritania,Adrar,150,Sparse vegetation,1327.29,4687.13,30-39,93,0,14.199999809265137,4.0
+Mauritania,Adrar,150,Sparse vegetation,1327.29,4687.13,40-49,42,0,14.199999809265137,4.0
+Mauritania,Adrar,150,Sparse vegetation,1327.29,4687.13,50-59,38,0,14.199999809265137,4.0
+Mauritania,Adrar,150,Sparse vegetation,1327.29,4687.13,60-69,27,0,14.199999809265137,4.0
+Mauritania,Adrar,150,Sparse vegetation,1327.29,4687.13,70-79,24,0,14.199999809265137,4.0
+Mauritania,Adrar,150,Sparse vegetation,1327.29,4687.13,80-89,8,0,14.199999809265137,4.0
+Mauritania,Adrar,150,Sparse vegetation,1327.29,4687.13,90-99,0,0,14.199999809265137,4.0
+Mauritania,Adrar,153,Sparse vegetation,18.0,18.0,0-9,10,32,23.170000076293945,4.0
+Mauritania,Adrar,153,Sparse vegetation,18.0,18.0,10-19,10,0,23.170000076293945,4.0
+Mauritania,Adrar,153,Sparse vegetation,18.0,18.0,20-29,1,0,23.170000076293945,4.0
+Mauritania,Adrar,153,Sparse vegetation,18.0,18.0,30-39,4,0,23.170000076293945,4.0
+Mauritania,Adrar,153,Sparse vegetation,18.0,18.0,40-49,3,0,23.170000076293945,4.0
+Mauritania,Adrar,153,Sparse vegetation,18.0,18.0,50-59,2,0,23.170000076293945,4.0
+Mauritania,Adrar,153,Sparse vegetation,18.0,18.0,60-69,1,0,23.170000076293945,4.0
+Mauritania,Adrar,153,Sparse vegetation,18.0,18.0,70-79,0,0,23.170000076293945,4.0
+Mauritania,Adrar,153,Sparse vegetation,18.0,18.0,80-89,1,0,23.170000076293945,4.0
+Mauritania,Adrar,153,Sparse vegetation,18.0,18.0,90-99,0,0,23.170000076293945,4.0
+Mauritania,Adrar,190,Urban areas,786.65,1931.54,0-9,679,2509,13.800000190734863,4.0
+Mauritania,Adrar,190,Urban areas,786.65,1931.54,10-19,94,0,13.800000190734863,4.0
+Mauritania,Adrar,190,Urban areas,786.65,1931.54,20-29,57,0,13.800000190734863,4.0
+Mauritania,Adrar,190,Urban areas,786.65,1931.54,30-39,43,0,13.800000190734863,4.0
+Mauritania,Adrar,190,Urban areas,786.65,1931.54,40-49,36,0,13.800000190734863,4.0
+Mauritania,Adrar,190,Urban areas,786.65,1931.54,50-59,25,0,13.800000190734863,4.0
+Mauritania,Adrar,190,Urban areas,786.65,1931.54,60-69,25,0,13.800000190734863,4.0
+Mauritania,Adrar,190,Urban areas,786.65,1931.54,70-79,14,0,13.800000190734863,4.0
+Mauritania,Adrar,190,Urban areas,786.65,1931.54,80-89,6,0,13.800000190734863,4.0
+Mauritania,Adrar,190,Urban areas,786.65,1931.54,90-99,0,0,13.800000190734863,4.0
+Mauritania,Adrar,200,Bare areas,40054.16,22860946.53,0-9,40696,22867912,5.019999980926514,4.0
+Mauritania,Adrar,200,Bare areas,40054.16,22860946.53,10-19,1104,0,5.019999980926514,4.0
+Mauritania,Adrar,200,Bare areas,40054.16,22860946.53,20-29,286,0,5.019999980926514,4.0
+Mauritania,Adrar,200,Bare areas,40054.16,22860946.53,30-39,157,0,5.019999980926514,4.0
+Mauritania,Adrar,200,Bare areas,40054.16,22860946.53,40-49,89,0,5.019999980926514,4.0
+Mauritania,Adrar,200,Bare areas,40054.16,22860946.53,50-59,73,0,5.019999980926514,4.0
+Mauritania,Adrar,200,Bare areas,40054.16,22860946.53,60-69,28,0,5.019999980926514,4.0
+Mauritania,Adrar,200,Bare areas,40054.16,22860946.53,70-79,19,0,5.019999980926514,4.0
+Mauritania,Adrar,200,Bare areas,40054.16,22860946.53,80-89,10,0,5.019999980926514,4.0
+Mauritania,Adrar,200,Bare areas,40054.16,22860946.53,90-99,0,0,5.019999980926514,4.0
+Mauritania,Adrar,201,Bare areas,617.52,1619.49,0-9,776,2162,5.880000114440918,4.0
+Mauritania,Adrar,201,Bare areas,617.52,1619.49,10-19,39,0,5.880000114440918,4.0
+Mauritania,Adrar,201,Bare areas,617.52,1619.49,20-29,11,0,5.880000114440918,4.0
+Mauritania,Adrar,201,Bare areas,617.52,1619.49,30-39,14,0,5.880000114440918,4.0
+Mauritania,Adrar,201,Bare areas,617.52,1619.49,40-49,4,0,5.880000114440918,4.0
+Mauritania,Adrar,201,Bare areas,617.52,1619.49,50-59,2,0,5.880000114440918,4.0
+Mauritania,Adrar,201,Bare areas,617.52,1619.49,60-69,1,0,5.880000114440918,4.0
+Mauritania,Adrar,201,Bare areas,617.52,1619.49,70-79,0,0,5.880000114440918,4.0
+Mauritania,Adrar,201,Bare areas,617.52,1619.49,80-89,0,0,5.880000114440918,4.0
+Mauritania,Adrar,201,Bare areas,617.52,1619.49,90-99,0,0,5.880000114440918,4.0
+Mauritania,Adrar,202,Bare areas,0.0,511.22,0-9,0,633,,4.0
+Mauritania,Adrar,202,Bare areas,0.0,511.22,10-19,0,0,,4.0
+Mauritania,Adrar,202,Bare areas,0.0,511.22,20-29,0,0,,4.0
+Mauritania,Adrar,202,Bare areas,0.0,511.22,30-39,0,0,,4.0
+Mauritania,Adrar,202,Bare areas,0.0,511.22,40-49,0,0,,4.0
+Mauritania,Adrar,202,Bare areas,0.0,511.22,50-59,0,0,,4.0
+Mauritania,Adrar,202,Bare areas,0.0,511.22,60-69,0,0,,4.0
+Mauritania,Adrar,202,Bare areas,0.0,511.22,70-79,0,0,,4.0
+Mauritania,Adrar,202,Bare areas,0.0,511.22,80-89,0,0,,4.0
+Mauritania,Adrar,202,Bare areas,0.0,511.22,90-99,0,0,,4.0
+Mauritania,Adrar,210,Water bodies,0.0,36.9,0-9,0,56,,4.0
+Mauritania,Adrar,210,Water bodies,0.0,36.9,10-19,0,0,,4.0
+Mauritania,Adrar,210,Water bodies,0.0,36.9,20-29,0,0,,4.0
+Mauritania,Adrar,210,Water bodies,0.0,36.9,30-39,0,0,,4.0
+Mauritania,Adrar,210,Water bodies,0.0,36.9,40-49,0,0,,4.0
+Mauritania,Adrar,210,Water bodies,0.0,36.9,50-59,0,0,,4.0
+Mauritania,Adrar,210,Water bodies,0.0,36.9,60-69,0,0,,4.0
+Mauritania,Adrar,210,Water bodies,0.0,36.9,70-79,0,0,,4.0
+Mauritania,Adrar,210,Water bodies,0.0,36.9,80-89,0,0,,4.0
+Mauritania,Adrar,210,Water bodies,0.0,36.9,90-99,0,0,,4.0
+Mauritania,Adrar,255,No Data (flag),12.56,31268992.78,0-9,35,24289,4.0,4.0
+Mauritania,Adrar,255,No Data (flag),12.56,31268992.78,10-19,0,0,4.0,4.0
+Mauritania,Adrar,255,No Data (flag),12.56,31268992.78,20-29,0,0,4.0,4.0
+Mauritania,Adrar,255,No Data (flag),12.56,31268992.78,30-39,0,0,4.0,4.0
+Mauritania,Adrar,255,No Data (flag),12.56,31268992.78,40-49,0,0,4.0,4.0
+Mauritania,Adrar,255,No Data (flag),12.56,31268992.78,50-59,0,0,4.0,4.0
+Mauritania,Adrar,255,No Data (flag),12.56,31268992.78,60-69,0,0,4.0,4.0
+Mauritania,Adrar,255,No Data (flag),12.56,31268992.78,70-79,0,0,4.0,4.0
+Mauritania,Adrar,255,No Data (flag),12.56,31268992.78,80-89,0,0,4.0,4.0
+Mauritania,Adrar,255,No Data (flag),12.56,31268992.78,90-99,0,0,4.0,4.0
+Mauritania,Assaba,10,"Cropland, rainfed",258822.02,267207.79,0-9,234062,315681,10.4399995803833,4.0
+Mauritania,Assaba,10,"Cropland, rainfed",258822.02,267207.79,10-19,33634,4,10.4399995803833,4.0
+Mauritania,Assaba,10,"Cropland, rainfed",258822.02,267207.79,20-29,14684,0,10.4399995803833,4.0
+Mauritania,Assaba,10,"Cropland, rainfed",258822.02,267207.79,30-39,8818,0,10.4399995803833,4.0
+Mauritania,Assaba,10,"Cropland, rainfed",258822.02,267207.79,40-49,5841,0,10.4399995803833,4.0
+Mauritania,Assaba,10,"Cropland, rainfed",258822.02,267207.79,50-59,3844,0,10.4399995803833,4.0
+Mauritania,Assaba,10,"Cropland, rainfed",258822.02,267207.79,60-69,2662,0,10.4399995803833,4.0
+Mauritania,Assaba,10,"Cropland, rainfed",258822.02,267207.79,70-79,1759,0,10.4399995803833,4.0
+Mauritania,Assaba,10,"Cropland, rainfed",258822.02,267207.79,80-89,1124,0,10.4399995803833,4.0
+Mauritania,Assaba,10,"Cropland, rainfed",258822.02,267207.79,90-99,525,0,10.4399995803833,4.0
+Mauritania,Assaba,11,"Cropland, rainfed",12059.14,12126.53,0-9,11072,16968,14.239999771118164,4.0
+Mauritania,Assaba,11,"Cropland, rainfed",12059.14,12126.53,10-19,2347,0,14.239999771118164,4.0
+Mauritania,Assaba,11,"Cropland, rainfed",12059.14,12126.53,20-29,1220,0,14.239999771118164,4.0
+Mauritania,Assaba,11,"Cropland, rainfed",12059.14,12126.53,30-39,723,0,14.239999771118164,4.0
+Mauritania,Assaba,11,"Cropland, rainfed",12059.14,12126.53,40-49,515,0,14.239999771118164,4.0
+Mauritania,Assaba,11,"Cropland, rainfed",12059.14,12126.53,50-59,374,0,14.239999771118164,4.0
+Mauritania,Assaba,11,"Cropland, rainfed",12059.14,12126.53,60-69,275,0,14.239999771118164,4.0
+Mauritania,Assaba,11,"Cropland, rainfed",12059.14,12126.53,70-79,206,0,14.239999771118164,4.0
+Mauritania,Assaba,11,"Cropland, rainfed",12059.14,12126.53,80-89,142,0,14.239999771118164,4.0
+Mauritania,Assaba,11,"Cropland, rainfed",12059.14,12126.53,90-99,91,0,14.239999771118164,4.0
+Mauritania,Assaba,20,"Cropland, irrigated or post-flooding",12511.24,12692.59,0-9,10970,16666,14.979999542236328,4.0
+Mauritania,Assaba,20,"Cropland, irrigated or post-flooding",12511.24,12692.59,10-19,2038,0,14.979999542236328,4.0
+Mauritania,Assaba,20,"Cropland, irrigated or post-flooding",12511.24,12692.59,20-29,1056,0,14.979999542236328,4.0
+Mauritania,Assaba,20,"Cropland, irrigated or post-flooding",12511.24,12692.59,30-39,658,0,14.979999542236328,4.0
+Mauritania,Assaba,20,"Cropland, irrigated or post-flooding",12511.24,12692.59,40-49,490,0,14.979999542236328,4.0
+Mauritania,Assaba,20,"Cropland, irrigated or post-flooding",12511.24,12692.59,50-59,404,0,14.979999542236328,4.0
+Mauritania,Assaba,20,"Cropland, irrigated or post-flooding",12511.24,12692.59,60-69,281,0,14.979999542236328,4.0
+Mauritania,Assaba,20,"Cropland, irrigated or post-flooding",12511.24,12692.59,70-79,261,0,14.979999542236328,4.0
+Mauritania,Assaba,20,"Cropland, irrigated or post-flooding",12511.24,12692.59,80-89,233,0,14.979999542236328,4.0
+Mauritania,Assaba,20,"Cropland, irrigated or post-flooding",12511.24,12692.59,90-99,181,0,14.979999542236328,4.0
+Mauritania,Assaba,30,Mosaic cropland / natural vegetation,64427.57,66223.24,0-9,69299,83651,7.710000038146973,4.0
+Mauritania,Assaba,30,Mosaic cropland / natural vegetation,64427.57,66223.24,10-19,6609,0,7.710000038146973,4.0
+Mauritania,Assaba,30,Mosaic cropland / natural vegetation,64427.57,66223.24,20-29,2490,0,7.710000038146973,4.0
+Mauritania,Assaba,30,Mosaic cropland / natural vegetation,64427.57,66223.24,30-39,1165,0,7.710000038146973,4.0
+Mauritania,Assaba,30,Mosaic cropland / natural vegetation,64427.57,66223.24,40-49,728,0,7.710000038146973,4.0
+Mauritania,Assaba,30,Mosaic cropland / natural vegetation,64427.57,66223.24,50-59,433,0,7.710000038146973,4.0
+Mauritania,Assaba,30,Mosaic cropland / natural vegetation,64427.57,66223.24,60-69,265,0,7.710000038146973,4.0
+Mauritania,Assaba,30,Mosaic cropland / natural vegetation,64427.57,66223.24,70-79,182,0,7.710000038146973,4.0
+Mauritania,Assaba,30,Mosaic cropland / natural vegetation,64427.57,66223.24,80-89,140,0,7.710000038146973,4.0
+Mauritania,Assaba,30,Mosaic cropland / natural vegetation,64427.57,66223.24,90-99,110,0,7.710000038146973,4.0
+Mauritania,Assaba,40,Mosaic natural vegetation / cropland,146598.49,149231.71,0-9,129802,175892,9.84000015258789,4.0
+Mauritania,Assaba,40,Mosaic natural vegetation / cropland,146598.49,149231.71,10-19,22844,0,9.84000015258789,4.0
+Mauritania,Assaba,40,Mosaic natural vegetation / cropland,146598.49,149231.71,20-29,9310,0,9.84000015258789,4.0
+Mauritania,Assaba,40,Mosaic natural vegetation / cropland,146598.49,149231.71,30-39,4960,0,9.84000015258789,4.0
+Mauritania,Assaba,40,Mosaic natural vegetation / cropland,146598.49,149231.71,40-49,2672,0,9.84000015258789,4.0
+Mauritania,Assaba,40,Mosaic natural vegetation / cropland,146598.49,149231.71,50-59,1596,0,9.84000015258789,4.0
+Mauritania,Assaba,40,Mosaic natural vegetation / cropland,146598.49,149231.71,60-69,921,0,9.84000015258789,4.0
+Mauritania,Assaba,40,Mosaic natural vegetation / cropland,146598.49,149231.71,70-79,522,0,9.84000015258789,4.0
+Mauritania,Assaba,40,Mosaic natural vegetation / cropland,146598.49,149231.71,80-89,272,0,9.84000015258789,4.0
+Mauritania,Assaba,40,Mosaic natural vegetation / cropland,146598.49,149231.71,90-99,55,0,9.84000015258789,4.0
+Mauritania,Assaba,100,Mosaic tree and shrub / herbaceous cover,20486.34,20536.7,0-9,17797,27571,13.84000015258789,4.0
+Mauritania,Assaba,100,Mosaic tree and shrub / herbaceous cover,20486.34,20536.7,10-19,3800,0,13.84000015258789,4.0
+Mauritania,Assaba,100,Mosaic tree and shrub / herbaceous cover,20486.34,20536.7,20-29,2053,0,13.84000015258789,4.0
+Mauritania,Assaba,100,Mosaic tree and shrub / herbaceous cover,20486.34,20536.7,30-39,1379,0,13.84000015258789,4.0
+Mauritania,Assaba,100,Mosaic tree and shrub / herbaceous cover,20486.34,20536.7,40-49,952,0,13.84000015258789,4.0
+Mauritania,Assaba,100,Mosaic tree and shrub / herbaceous cover,20486.34,20536.7,50-59,654,0,13.84000015258789,4.0
+Mauritania,Assaba,100,Mosaic tree and shrub / herbaceous cover,20486.34,20536.7,60-69,390,0,13.84000015258789,4.0
+Mauritania,Assaba,100,Mosaic tree and shrub / herbaceous cover,20486.34,20536.7,70-79,257,0,13.84000015258789,4.0
+Mauritania,Assaba,100,Mosaic tree and shrub / herbaceous cover,20486.34,20536.7,80-89,167,0,13.84000015258789,4.0
+Mauritania,Assaba,100,Mosaic tree and shrub / herbaceous cover,20486.34,20536.7,90-99,65,0,13.84000015258789,4.0
+Mauritania,Assaba,110,Mosaic herbaceous cover / tree and shrub,3690.67,3718.45,0-9,4693,5150,6.960000038146973,4.0
+Mauritania,Assaba,110,Mosaic herbaceous cover / tree and shrub,3690.67,3718.45,10-19,191,0,6.960000038146973,4.0
+Mauritania,Assaba,110,Mosaic herbaceous cover / tree and shrub,3690.67,3718.45,20-29,63,0,6.960000038146973,4.0
+Mauritania,Assaba,110,Mosaic herbaceous cover / tree and shrub,3690.67,3718.45,30-39,46,0,6.960000038146973,4.0
+Mauritania,Assaba,110,Mosaic herbaceous cover / tree and shrub,3690.67,3718.45,40-49,47,0,6.960000038146973,4.0
+Mauritania,Assaba,110,Mosaic herbaceous cover / tree and shrub,3690.67,3718.45,50-59,27,0,6.960000038146973,4.0
+Mauritania,Assaba,110,Mosaic herbaceous cover / tree and shrub,3690.67,3718.45,60-69,29,0,6.960000038146973,4.0
+Mauritania,Assaba,110,Mosaic herbaceous cover / tree and shrub,3690.67,3718.45,70-79,26,0,6.960000038146973,4.0
+Mauritania,Assaba,110,Mosaic herbaceous cover / tree and shrub,3690.67,3718.45,80-89,20,0,6.960000038146973,4.0
+Mauritania,Assaba,110,Mosaic herbaceous cover / tree and shrub,3690.67,3718.45,90-99,7,0,6.960000038146973,4.0
+Mauritania,Assaba,120,Shrubland,88125.13,88726.61,0-9,80062,113119,12.100000381469727,4.0
+Mauritania,Assaba,120,Shrubland,88125.13,88726.61,10-19,14459,1,12.100000381469727,4.0
+Mauritania,Assaba,120,Shrubland,88125.13,88726.61,20-29,6493,0,12.100000381469727,4.0
+Mauritania,Assaba,120,Shrubland,88125.13,88726.61,30-39,3816,0,12.100000381469727,4.0
+Mauritania,Assaba,120,Shrubland,88125.13,88726.61,40-49,2509,0,12.100000381469727,4.0
+Mauritania,Assaba,120,Shrubland,88125.13,88726.61,50-59,1747,0,12.100000381469727,4.0
+Mauritania,Assaba,120,Shrubland,88125.13,88726.61,60-69,1304,0,12.100000381469727,4.0
+Mauritania,Assaba,120,Shrubland,88125.13,88726.61,70-79,997,0,12.100000381469727,4.0
+Mauritania,Assaba,120,Shrubland,88125.13,88726.61,80-89,761,0,12.100000381469727,4.0
+Mauritania,Assaba,120,Shrubland,88125.13,88726.61,90-99,520,0,12.100000381469727,4.0
+Mauritania,Assaba,130,Grassland,1851751.42,1857854.99,0-9,1679800,1966055,7.570000171661377,4.0
+Mauritania,Assaba,130,Grassland,1851751.42,1857854.99,10-19,148314,5,7.570000171661377,4.0
+Mauritania,Assaba,130,Grassland,1851751.42,1857854.99,20-29,57447,0,7.570000171661377,4.0
+Mauritania,Assaba,130,Grassland,1851751.42,1857854.99,30-39,30382,0,7.570000171661377,4.0
+Mauritania,Assaba,130,Grassland,1851751.42,1857854.99,40-49,17692,0,7.570000171661377,4.0
+Mauritania,Assaba,130,Grassland,1851751.42,1857854.99,50-59,11208,0,7.570000171661377,4.0
+Mauritania,Assaba,130,Grassland,1851751.42,1857854.99,60-69,7281,0,7.570000171661377,4.0
+Mauritania,Assaba,130,Grassland,1851751.42,1857854.99,70-79,4858,0,7.570000171661377,4.0
+Mauritania,Assaba,130,Grassland,1851751.42,1857854.99,80-89,2999,0,7.570000171661377,4.0
+Mauritania,Assaba,130,Grassland,1851751.42,1857854.99,90-99,1016,0,7.570000171661377,4.0
+Mauritania,Assaba,150,Sparse vegetation,221003.75,226446.91,0-9,269101,287822,4.96999979019165,4.0
+Mauritania,Assaba,150,Sparse vegetation,221003.75,226446.91,10-19,7420,0,4.96999979019165,4.0
+Mauritania,Assaba,150,Sparse vegetation,221003.75,226446.91,20-29,2227,0,4.96999979019165,4.0
+Mauritania,Assaba,150,Sparse vegetation,221003.75,226446.91,30-39,1066,0,4.96999979019165,4.0
+Mauritania,Assaba,150,Sparse vegetation,221003.75,226446.91,40-49,495,0,4.96999979019165,4.0
+Mauritania,Assaba,150,Sparse vegetation,221003.75,226446.91,50-59,308,0,4.96999979019165,4.0
+Mauritania,Assaba,150,Sparse vegetation,221003.75,226446.91,60-69,122,0,4.96999979019165,4.0
+Mauritania,Assaba,150,Sparse vegetation,221003.75,226446.91,70-79,69,0,4.96999979019165,4.0
+Mauritania,Assaba,150,Sparse vegetation,221003.75,226446.91,80-89,28,0,4.96999979019165,4.0
+Mauritania,Assaba,150,Sparse vegetation,221003.75,226446.91,90-99,8,0,4.96999979019165,4.0
+Mauritania,Assaba,152,Sparse vegetation,7309.68,7348.32,0-9,8689,10044,7.949999809265137,4.0
+Mauritania,Assaba,152,Sparse vegetation,7309.68,7348.32,10-19,540,0,7.949999809265137,4.0
+Mauritania,Assaba,152,Sparse vegetation,7309.68,7348.32,20-29,251,0,7.949999809265137,4.0
+Mauritania,Assaba,152,Sparse vegetation,7309.68,7348.32,30-39,170,0,7.949999809265137,4.0
+Mauritania,Assaba,152,Sparse vegetation,7309.68,7348.32,40-49,134,0,7.949999809265137,4.0
+Mauritania,Assaba,152,Sparse vegetation,7309.68,7348.32,50-59,110,0,7.949999809265137,4.0
+Mauritania,Assaba,152,Sparse vegetation,7309.68,7348.32,60-69,57,0,7.949999809265137,4.0
+Mauritania,Assaba,152,Sparse vegetation,7309.68,7348.32,70-79,47,0,7.949999809265137,4.0
+Mauritania,Assaba,152,Sparse vegetation,7309.68,7348.32,80-89,36,0,7.949999809265137,4.0
+Mauritania,Assaba,152,Sparse vegetation,7309.68,7348.32,90-99,9,0,7.949999809265137,4.0
+Mauritania,Assaba,153,Sparse vegetation,158352.07,158654.33,0-9,177441,184308,4.840000152587891,4.0
+Mauritania,Assaba,153,Sparse vegetation,158352.07,158654.33,10-19,4580,0,4.840000152587891,4.0
+Mauritania,Assaba,153,Sparse vegetation,158352.07,158654.33,20-29,1007,0,4.840000152587891,4.0
+Mauritania,Assaba,153,Sparse vegetation,158352.07,158654.33,30-39,478,0,4.840000152587891,4.0
+Mauritania,Assaba,153,Sparse vegetation,158352.07,158654.33,40-49,243,0,4.840000152587891,4.0
+Mauritania,Assaba,153,Sparse vegetation,158352.07,158654.33,50-59,117,0,4.840000152587891,4.0
+Mauritania,Assaba,153,Sparse vegetation,158352.07,158654.33,60-69,67,0,4.840000152587891,4.0
+Mauritania,Assaba,153,Sparse vegetation,158352.07,158654.33,70-79,44,0,4.840000152587891,4.0
+Mauritania,Assaba,153,Sparse vegetation,158352.07,158654.33,80-89,9,0,4.840000152587891,4.0
+Mauritania,Assaba,153,Sparse vegetation,158352.07,158654.33,90-99,2,0,4.840000152587891,4.0
+Mauritania,Assaba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1071.87,1261.61,0-9,1247,1725,8.380000114440918,4.0
+Mauritania,Assaba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1071.87,1261.61,10-19,169,0,8.380000114440918,4.0
+Mauritania,Assaba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1071.87,1261.61,20-29,17,0,8.380000114440918,4.0
+Mauritania,Assaba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1071.87,1261.61,30-39,8,0,8.380000114440918,4.0
+Mauritania,Assaba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1071.87,1261.61,40-49,4,0,8.380000114440918,4.0
+Mauritania,Assaba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1071.87,1261.61,50-59,0,0,8.380000114440918,4.0
+Mauritania,Assaba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1071.87,1261.61,60-69,1,0,8.380000114440918,4.0
+Mauritania,Assaba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1071.87,1261.61,70-79,0,0,8.380000114440918,4.0
+Mauritania,Assaba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1071.87,1261.61,80-89,3,0,8.380000114440918,4.0
+Mauritania,Assaba,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1071.87,1261.61,90-99,28,0,8.380000114440918,4.0
+Mauritania,Assaba,190,Urban areas,1203.45,1205.76,0-9,1248,1517,9.649999618530273,4.0
+Mauritania,Assaba,190,Urban areas,1203.45,1205.76,10-19,131,0,9.649999618530273,4.0
+Mauritania,Assaba,190,Urban areas,1203.45,1205.76,20-29,44,0,9.649999618530273,4.0
+Mauritania,Assaba,190,Urban areas,1203.45,1205.76,30-39,23,0,9.649999618530273,4.0
+Mauritania,Assaba,190,Urban areas,1203.45,1205.76,40-49,15,0,9.649999618530273,4.0
+Mauritania,Assaba,190,Urban areas,1203.45,1205.76,50-59,8,0,9.649999618530273,4.0
+Mauritania,Assaba,190,Urban areas,1203.45,1205.76,60-69,11,0,9.649999618530273,4.0
+Mauritania,Assaba,190,Urban areas,1203.45,1205.76,70-79,9,0,9.649999618530273,4.0
+Mauritania,Assaba,190,Urban areas,1203.45,1205.76,80-89,4,0,9.649999618530273,4.0
+Mauritania,Assaba,190,Urban areas,1203.45,1205.76,90-99,23,0,9.649999618530273,4.0
+Mauritania,Assaba,200,Bare areas,411753.94,725066.63,0-9,445570,771398,4.630000114440918,4.0
+Mauritania,Assaba,200,Bare areas,411753.94,725066.63,10-19,8267,0,4.630000114440918,4.0
+Mauritania,Assaba,200,Bare areas,411753.94,725066.63,20-29,2260,0,4.630000114440918,4.0
+Mauritania,Assaba,200,Bare areas,411753.94,725066.63,30-39,920,0,4.630000114440918,4.0
+Mauritania,Assaba,200,Bare areas,411753.94,725066.63,40-49,398,0,4.630000114440918,4.0
+Mauritania,Assaba,200,Bare areas,411753.94,725066.63,50-59,195,0,4.630000114440918,4.0
+Mauritania,Assaba,200,Bare areas,411753.94,725066.63,60-69,110,0,4.630000114440918,4.0
+Mauritania,Assaba,200,Bare areas,411753.94,725066.63,70-79,55,0,4.630000114440918,4.0
+Mauritania,Assaba,200,Bare areas,411753.94,725066.63,80-89,33,0,4.630000114440918,4.0
+Mauritania,Assaba,200,Bare areas,411753.94,725066.63,90-99,10,0,4.630000114440918,4.0
+Mauritania,Assaba,201,Bare areas,1377.97,1379.8,0-9,1581,1829,6.46999979019165,4.0
+Mauritania,Assaba,201,Bare areas,1377.97,1379.8,10-19,204,0,6.46999979019165,4.0
+Mauritania,Assaba,201,Bare areas,1377.97,1379.8,20-29,33,0,6.46999979019165,4.0
+Mauritania,Assaba,201,Bare areas,1377.97,1379.8,30-39,7,0,6.46999979019165,4.0
+Mauritania,Assaba,201,Bare areas,1377.97,1379.8,40-49,3,0,6.46999979019165,4.0
+Mauritania,Assaba,201,Bare areas,1377.97,1379.8,50-59,0,0,6.46999979019165,4.0
+Mauritania,Assaba,201,Bare areas,1377.97,1379.8,60-69,0,0,6.46999979019165,4.0
+Mauritania,Assaba,201,Bare areas,1377.97,1379.8,70-79,0,0,6.46999979019165,4.0
+Mauritania,Assaba,201,Bare areas,1377.97,1379.8,80-89,0,0,6.46999979019165,4.0
+Mauritania,Assaba,201,Bare areas,1377.97,1379.8,90-99,1,0,6.46999979019165,4.0
+Mauritania,Assaba,210,Water bodies,584.13,584.13,0-9,607,721,9.630000114440918,4.0
+Mauritania,Assaba,210,Water bodies,584.13,584.13,10-19,34,0,9.630000114440918,4.0
+Mauritania,Assaba,210,Water bodies,584.13,584.13,20-29,23,0,9.630000114440918,4.0
+Mauritania,Assaba,210,Water bodies,584.13,584.13,30-39,14,0,9.630000114440918,4.0
+Mauritania,Assaba,210,Water bodies,584.13,584.13,40-49,13,0,9.630000114440918,4.0
+Mauritania,Assaba,210,Water bodies,584.13,584.13,50-59,5,0,9.630000114440918,4.0
+Mauritania,Assaba,210,Water bodies,584.13,584.13,60-69,8,0,9.630000114440918,4.0
+Mauritania,Assaba,210,Water bodies,584.13,584.13,70-79,8,0,9.630000114440918,4.0
+Mauritania,Assaba,210,Water bodies,584.13,584.13,80-89,6,0,9.630000114440918,4.0
+Mauritania,Assaba,210,Water bodies,584.13,584.13,90-99,3,0,9.630000114440918,4.0
+Mauritania,Assaba,255,No Data (flag),4204.27,4969413.21,0-9,9478,14051,9.300000190734863,4.0
+Mauritania,Assaba,255,No Data (flag),4204.27,4969413.21,10-19,740,0,9.300000190734863,4.0
+Mauritania,Assaba,255,No Data (flag),4204.27,4969413.21,20-29,365,0,9.300000190734863,4.0
+Mauritania,Assaba,255,No Data (flag),4204.27,4969413.21,30-39,197,0,9.300000190734863,4.0
+Mauritania,Assaba,255,No Data (flag),4204.27,4969413.21,40-49,167,0,9.300000190734863,4.0
+Mauritania,Assaba,255,No Data (flag),4204.27,4969413.21,50-59,136,0,9.300000190734863,4.0
+Mauritania,Assaba,255,No Data (flag),4204.27,4969413.21,60-69,125,0,9.300000190734863,4.0
+Mauritania,Assaba,255,No Data (flag),4204.27,4969413.21,70-79,91,0,9.300000190734863,4.0
+Mauritania,Assaba,255,No Data (flag),4204.27,4969413.21,80-89,65,0,9.300000190734863,4.0
+Mauritania,Assaba,255,No Data (flag),4204.27,4969413.21,90-99,27,0,9.300000190734863,4.0
+Mauritania,Brakna,10,"Cropland, rainfed",14788.14,15259.33,0-9,17373,21040,10.210000038146973,4.0
+Mauritania,Brakna,10,"Cropland, rainfed",14788.14,15259.33,10-19,942,0,10.210000038146973,4.0
+Mauritania,Brakna,10,"Cropland, rainfed",14788.14,15259.33,20-29,448,0,10.210000038146973,4.0
+Mauritania,Brakna,10,"Cropland, rainfed",14788.14,15259.33,30-39,271,0,10.210000038146973,4.0
+Mauritania,Brakna,10,"Cropland, rainfed",14788.14,15259.33,40-49,206,0,10.210000038146973,4.0
+Mauritania,Brakna,10,"Cropland, rainfed",14788.14,15259.33,50-59,215,0,10.210000038146973,4.0
+Mauritania,Brakna,10,"Cropland, rainfed",14788.14,15259.33,60-69,202,0,10.210000038146973,4.0
+Mauritania,Brakna,10,"Cropland, rainfed",14788.14,15259.33,70-79,218,0,10.210000038146973,4.0
+Mauritania,Brakna,10,"Cropland, rainfed",14788.14,15259.33,80-89,262,0,10.210000038146973,4.0
+Mauritania,Brakna,10,"Cropland, rainfed",14788.14,15259.33,90-99,248,0,10.210000038146973,4.0
+Mauritania,Brakna,11,"Cropland, rainfed",1412.83,1414.89,0-9,1440,2105,17.889999389648438,4.0
+Mauritania,Brakna,11,"Cropland, rainfed",1412.83,1414.89,10-19,142,0,17.889999389648438,4.0
+Mauritania,Brakna,11,"Cropland, rainfed",1412.83,1414.89,20-29,92,0,17.889999389648438,4.0
+Mauritania,Brakna,11,"Cropland, rainfed",1412.83,1414.89,30-39,66,0,17.889999389648438,4.0
+Mauritania,Brakna,11,"Cropland, rainfed",1412.83,1414.89,40-49,69,0,17.889999389648438,4.0
+Mauritania,Brakna,11,"Cropland, rainfed",1412.83,1414.89,50-59,65,0,17.889999389648438,4.0
+Mauritania,Brakna,11,"Cropland, rainfed",1412.83,1414.89,60-69,62,0,17.889999389648438,4.0
+Mauritania,Brakna,11,"Cropland, rainfed",1412.83,1414.89,70-79,62,0,17.889999389648438,4.0
+Mauritania,Brakna,11,"Cropland, rainfed",1412.83,1414.89,80-89,76,0,17.889999389648438,4.0
+Mauritania,Brakna,11,"Cropland, rainfed",1412.83,1414.89,90-99,31,0,17.889999389648438,4.0
+Mauritania,Brakna,20,"Cropland, irrigated or post-flooding",8604.53,9196.14,0-9,7410,11466,19.43000030517578,4.0
+Mauritania,Brakna,20,"Cropland, irrigated or post-flooding",8604.53,9196.14,10-19,789,0,19.43000030517578,4.0
+Mauritania,Brakna,20,"Cropland, irrigated or post-flooding",8604.53,9196.14,20-29,408,0,19.43000030517578,4.0
+Mauritania,Brakna,20,"Cropland, irrigated or post-flooding",8604.53,9196.14,30-39,309,0,19.43000030517578,4.0
+Mauritania,Brakna,20,"Cropland, irrigated or post-flooding",8604.53,9196.14,40-49,246,0,19.43000030517578,4.0
+Mauritania,Brakna,20,"Cropland, irrigated or post-flooding",8604.53,9196.14,50-59,231,0,19.43000030517578,4.0
+Mauritania,Brakna,20,"Cropland, irrigated or post-flooding",8604.53,9196.14,60-69,263,0,19.43000030517578,4.0
+Mauritania,Brakna,20,"Cropland, irrigated or post-flooding",8604.53,9196.14,70-79,288,0,19.43000030517578,4.0
+Mauritania,Brakna,20,"Cropland, irrigated or post-flooding",8604.53,9196.14,80-89,492,0,19.43000030517578,4.0
+Mauritania,Brakna,20,"Cropland, irrigated or post-flooding",8604.53,9196.14,90-99,445,0,19.43000030517578,4.0
+Mauritania,Brakna,30,Mosaic cropland / natural vegetation,358.54,440.74,0-9,376,642,13.369999885559082,4.0
+Mauritania,Brakna,30,Mosaic cropland / natural vegetation,358.54,440.74,10-19,38,0,13.369999885559082,4.0
+Mauritania,Brakna,30,Mosaic cropland / natural vegetation,358.54,440.74,20-29,27,0,13.369999885559082,4.0
+Mauritania,Brakna,30,Mosaic cropland / natural vegetation,358.54,440.74,30-39,20,0,13.369999885559082,4.0
+Mauritania,Brakna,30,Mosaic cropland / natural vegetation,358.54,440.74,40-49,16,0,13.369999885559082,4.0
+Mauritania,Brakna,30,Mosaic cropland / natural vegetation,358.54,440.74,50-59,10,0,13.369999885559082,4.0
+Mauritania,Brakna,30,Mosaic cropland / natural vegetation,358.54,440.74,60-69,12,0,13.369999885559082,4.0
+Mauritania,Brakna,30,Mosaic cropland / natural vegetation,358.54,440.74,70-79,7,0,13.369999885559082,4.0
+Mauritania,Brakna,30,Mosaic cropland / natural vegetation,358.54,440.74,80-89,8,0,13.369999885559082,4.0
+Mauritania,Brakna,30,Mosaic cropland / natural vegetation,358.54,440.74,90-99,1,0,13.369999885559082,4.0
+Mauritania,Brakna,40,Mosaic natural vegetation / cropland,620.44,666.04,0-9,817,909,4.78000020980835,4.0
+Mauritania,Brakna,40,Mosaic natural vegetation / cropland,620.44,666.04,10-19,11,0,4.78000020980835,4.0
+Mauritania,Brakna,40,Mosaic natural vegetation / cropland,620.44,666.04,20-29,4,0,4.78000020980835,4.0
+Mauritania,Brakna,40,Mosaic natural vegetation / cropland,620.44,666.04,30-39,1,0,4.78000020980835,4.0
+Mauritania,Brakna,40,Mosaic natural vegetation / cropland,620.44,666.04,40-49,1,0,4.78000020980835,4.0
+Mauritania,Brakna,40,Mosaic natural vegetation / cropland,620.44,666.04,50-59,1,0,4.78000020980835,4.0
+Mauritania,Brakna,40,Mosaic natural vegetation / cropland,620.44,666.04,60-69,2,0,4.78000020980835,4.0
+Mauritania,Brakna,40,Mosaic natural vegetation / cropland,620.44,666.04,70-79,1,0,4.78000020980835,4.0
+Mauritania,Brakna,40,Mosaic natural vegetation / cropland,620.44,666.04,80-89,0,0,4.78000020980835,4.0
+Mauritania,Brakna,40,Mosaic natural vegetation / cropland,620.44,666.04,90-99,0,0,4.78000020980835,4.0
+Mauritania,Brakna,100,Mosaic tree and shrub / herbaceous cover,24858.96,25698.1,0-9,27985,34984,9.920000076293945,4.0
+Mauritania,Brakna,100,Mosaic tree and shrub / herbaceous cover,24858.96,25698.1,10-19,2041,0,9.920000076293945,4.0
+Mauritania,Brakna,100,Mosaic tree and shrub / herbaceous cover,24858.96,25698.1,20-29,1012,0,9.920000076293945,4.0
+Mauritania,Brakna,100,Mosaic tree and shrub / herbaceous cover,24858.96,25698.1,30-39,736,0,9.920000076293945,4.0
+Mauritania,Brakna,100,Mosaic tree and shrub / herbaceous cover,24858.96,25698.1,40-49,521,0,9.920000076293945,4.0
+Mauritania,Brakna,100,Mosaic tree and shrub / herbaceous cover,24858.96,25698.1,50-59,443,0,9.920000076293945,4.0
+Mauritania,Brakna,100,Mosaic tree and shrub / herbaceous cover,24858.96,25698.1,60-69,353,0,9.920000076293945,4.0
+Mauritania,Brakna,100,Mosaic tree and shrub / herbaceous cover,24858.96,25698.1,70-79,338,0,9.920000076293945,4.0
+Mauritania,Brakna,100,Mosaic tree and shrub / herbaceous cover,24858.96,25698.1,80-89,270,0,9.920000076293945,4.0
+Mauritania,Brakna,100,Mosaic tree and shrub / herbaceous cover,24858.96,25698.1,90-99,126,0,9.920000076293945,4.0
+Mauritania,Brakna,110,Mosaic herbaceous cover / tree and shrub,181.5,181.5,0-9,260,270,4.940000057220459,4.0
+Mauritania,Brakna,110,Mosaic herbaceous cover / tree and shrub,181.5,181.5,10-19,6,0,4.940000057220459,4.0
+Mauritania,Brakna,110,Mosaic herbaceous cover / tree and shrub,181.5,181.5,20-29,2,0,4.940000057220459,4.0
+Mauritania,Brakna,110,Mosaic herbaceous cover / tree and shrub,181.5,181.5,30-39,0,0,4.940000057220459,4.0
+Mauritania,Brakna,110,Mosaic herbaceous cover / tree and shrub,181.5,181.5,40-49,0,0,4.940000057220459,4.0
+Mauritania,Brakna,110,Mosaic herbaceous cover / tree and shrub,181.5,181.5,50-59,1,0,4.940000057220459,4.0
+Mauritania,Brakna,110,Mosaic herbaceous cover / tree and shrub,181.5,181.5,60-69,0,0,4.940000057220459,4.0
+Mauritania,Brakna,110,Mosaic herbaceous cover / tree and shrub,181.5,181.5,70-79,0,0,4.940000057220459,4.0
+Mauritania,Brakna,110,Mosaic herbaceous cover / tree and shrub,181.5,181.5,80-89,1,0,4.940000057220459,4.0
+Mauritania,Brakna,110,Mosaic herbaceous cover / tree and shrub,181.5,181.5,90-99,0,0,4.940000057220459,4.0
+Mauritania,Brakna,120,Shrubland,106338.29,109926.06,0-9,115162,137407,8.510000228881836,4.0
+Mauritania,Brakna,120,Shrubland,106338.29,109926.06,10-19,6339,0,8.510000228881836,4.0
+Mauritania,Brakna,120,Shrubland,106338.29,109926.06,20-29,3176,0,8.510000228881836,4.0
+Mauritania,Brakna,120,Shrubland,106338.29,109926.06,30-39,2204,0,8.510000228881836,4.0
+Mauritania,Brakna,120,Shrubland,106338.29,109926.06,40-49,1655,0,8.510000228881836,4.0
+Mauritania,Brakna,120,Shrubland,106338.29,109926.06,50-59,1342,0,8.510000228881836,4.0
+Mauritania,Brakna,120,Shrubland,106338.29,109926.06,60-69,1121,0,8.510000228881836,4.0
+Mauritania,Brakna,120,Shrubland,106338.29,109926.06,70-79,974,0,8.510000228881836,4.0
+Mauritania,Brakna,120,Shrubland,106338.29,109926.06,80-89,846,0,8.510000228881836,4.0
+Mauritania,Brakna,120,Shrubland,106338.29,109926.06,90-99,305,0,8.510000228881836,4.0
+Mauritania,Brakna,130,Grassland,1265706.25,1293904.66,0-9,1288145,1387418,5.519999980926514,4.0
+Mauritania,Brakna,130,Grassland,1265706.25,1293904.66,10-19,35629,0,5.519999980926514,4.0
+Mauritania,Brakna,130,Grassland,1265706.25,1293904.66,20-29,12452,0,5.519999980926514,4.0
+Mauritania,Brakna,130,Grassland,1265706.25,1293904.66,30-39,6889,0,5.519999980926514,4.0
+Mauritania,Brakna,130,Grassland,1265706.25,1293904.66,40-49,4530,0,5.519999980926514,4.0
+Mauritania,Brakna,130,Grassland,1265706.25,1293904.66,50-59,3347,0,5.519999980926514,4.0
+Mauritania,Brakna,130,Grassland,1265706.25,1293904.66,60-69,2655,0,5.519999980926514,4.0
+Mauritania,Brakna,130,Grassland,1265706.25,1293904.66,70-79,2125,0,5.519999980926514,4.0
+Mauritania,Brakna,130,Grassland,1265706.25,1293904.66,80-89,1692,0,5.519999980926514,4.0
+Mauritania,Brakna,130,Grassland,1265706.25,1293904.66,90-99,543,0,5.519999980926514,4.0
+Mauritania,Brakna,150,Sparse vegetation,442822.48,465990.67,0-9,528002,567910,4.75,4.0
+Mauritania,Brakna,150,Sparse vegetation,442822.48,465990.67,10-19,8551,0,4.75,4.0
+Mauritania,Brakna,150,Sparse vegetation,442822.48,465990.67,20-29,1555,0,4.75,4.0
+Mauritania,Brakna,150,Sparse vegetation,442822.48,465990.67,30-39,724,0,4.75,4.0
+Mauritania,Brakna,150,Sparse vegetation,442822.48,465990.67,40-49,441,0,4.75,4.0
+Mauritania,Brakna,150,Sparse vegetation,442822.48,465990.67,50-59,329,0,4.75,4.0
+Mauritania,Brakna,150,Sparse vegetation,442822.48,465990.67,60-69,229,0,4.75,4.0
+Mauritania,Brakna,150,Sparse vegetation,442822.48,465990.67,70-79,179,0,4.75,4.0
+Mauritania,Brakna,150,Sparse vegetation,442822.48,465990.67,80-89,156,0,4.75,4.0
+Mauritania,Brakna,150,Sparse vegetation,442822.48,465990.67,90-99,61,0,4.75,4.0
+Mauritania,Brakna,152,Sparse vegetation,14214.62,16713.07,0-9,16043,22278,8.829999923706055,4.0
+Mauritania,Brakna,152,Sparse vegetation,14214.62,16713.07,10-19,1371,0,8.829999923706055,4.0
+Mauritania,Brakna,152,Sparse vegetation,14214.62,16713.07,20-29,604,0,8.829999923706055,4.0
+Mauritania,Brakna,152,Sparse vegetation,14214.62,16713.07,30-39,403,0,8.829999923706055,4.0
+Mauritania,Brakna,152,Sparse vegetation,14214.62,16713.07,40-49,265,0,8.829999923706055,4.0
+Mauritania,Brakna,152,Sparse vegetation,14214.62,16713.07,50-59,188,0,8.829999923706055,4.0
+Mauritania,Brakna,152,Sparse vegetation,14214.62,16713.07,60-69,185,0,8.829999923706055,4.0
+Mauritania,Brakna,152,Sparse vegetation,14214.62,16713.07,70-79,128,0,8.829999923706055,4.0
+Mauritania,Brakna,152,Sparse vegetation,14214.62,16713.07,80-89,79,0,8.829999923706055,4.0
+Mauritania,Brakna,152,Sparse vegetation,14214.62,16713.07,90-99,10,0,8.829999923706055,4.0
+Mauritania,Brakna,153,Sparse vegetation,241114.99,244856.48,0-9,272682,283246,4.690000057220459,4.0
+Mauritania,Brakna,153,Sparse vegetation,241114.99,244856.48,10-19,4935,0,4.690000057220459,4.0
+Mauritania,Brakna,153,Sparse vegetation,241114.99,244856.48,20-29,693,0,4.690000057220459,4.0
+Mauritania,Brakna,153,Sparse vegetation,241114.99,244856.48,30-39,205,0,4.690000057220459,4.0
+Mauritania,Brakna,153,Sparse vegetation,241114.99,244856.48,40-49,91,0,4.690000057220459,4.0
+Mauritania,Brakna,153,Sparse vegetation,241114.99,244856.48,50-59,41,0,4.690000057220459,4.0
+Mauritania,Brakna,153,Sparse vegetation,241114.99,244856.48,60-69,22,0,4.690000057220459,4.0
+Mauritania,Brakna,153,Sparse vegetation,241114.99,244856.48,70-79,15,0,4.690000057220459,4.0
+Mauritania,Brakna,153,Sparse vegetation,241114.99,244856.48,80-89,1,0,4.690000057220459,4.0
+Mauritania,Brakna,153,Sparse vegetation,241114.99,244856.48,90-99,0,0,4.690000057220459,4.0
+Mauritania,Brakna,160,"Tree cover, flooded, fresh or brakish water",2118.78,2250.46,0-9,794,2976,37.59000015258789,4.0
+Mauritania,Brakna,160,"Tree cover, flooded, fresh or brakish water",2118.78,2250.46,10-19,281,0,37.59000015258789,4.0
+Mauritania,Brakna,160,"Tree cover, flooded, fresh or brakish water",2118.78,2250.46,20-29,235,0,37.59000015258789,4.0
+Mauritania,Brakna,160,"Tree cover, flooded, fresh or brakish water",2118.78,2250.46,30-39,256,0,37.59000015258789,4.0
+Mauritania,Brakna,160,"Tree cover, flooded, fresh or brakish water",2118.78,2250.46,40-49,224,0,37.59000015258789,4.0
+Mauritania,Brakna,160,"Tree cover, flooded, fresh or brakish water",2118.78,2250.46,50-59,230,0,37.59000015258789,4.0
+Mauritania,Brakna,160,"Tree cover, flooded, fresh or brakish water",2118.78,2250.46,60-69,228,0,37.59000015258789,4.0
+Mauritania,Brakna,160,"Tree cover, flooded, fresh or brakish water",2118.78,2250.46,70-79,251,0,37.59000015258789,4.0
+Mauritania,Brakna,160,"Tree cover, flooded, fresh or brakish water",2118.78,2250.46,80-89,220,0,37.59000015258789,4.0
+Mauritania,Brakna,160,"Tree cover, flooded, fresh or brakish water",2118.78,2250.46,90-99,79,0,37.59000015258789,4.0
+Mauritania,Brakna,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",52964.43,57355.72,0-9,45962,65582,11.8100004196167,4.0
+Mauritania,Brakna,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",52964.43,57355.72,10-19,5391,0,11.8100004196167,4.0
+Mauritania,Brakna,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",52964.43,57355.72,20-29,2863,0,11.8100004196167,4.0
+Mauritania,Brakna,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",52964.43,57355.72,30-39,1910,0,11.8100004196167,4.0
+Mauritania,Brakna,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",52964.43,57355.72,40-49,1366,0,11.8100004196167,4.0
+Mauritania,Brakna,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",52964.43,57355.72,50-59,1040,0,11.8100004196167,4.0
+Mauritania,Brakna,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",52964.43,57355.72,60-69,864,0,11.8100004196167,4.0
+Mauritania,Brakna,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",52964.43,57355.72,70-79,720,0,11.8100004196167,4.0
+Mauritania,Brakna,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",52964.43,57355.72,80-89,576,0,11.8100004196167,4.0
+Mauritania,Brakna,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",52964.43,57355.72,90-99,226,0,11.8100004196167,4.0
+Mauritania,Brakna,190,Urban areas,2231.26,2231.26,0-9,2377,2645,7.400000095367432,4.0
+Mauritania,Brakna,190,Urban areas,2231.26,2231.26,10-19,121,0,7.400000095367432,4.0
+Mauritania,Brakna,190,Urban areas,2231.26,2231.26,20-29,46,0,7.400000095367432,4.0
+Mauritania,Brakna,190,Urban areas,2231.26,2231.26,30-39,21,0,7.400000095367432,4.0
+Mauritania,Brakna,190,Urban areas,2231.26,2231.26,40-49,18,0,7.400000095367432,4.0
+Mauritania,Brakna,190,Urban areas,2231.26,2231.26,50-59,12,0,7.400000095367432,4.0
+Mauritania,Brakna,190,Urban areas,2231.26,2231.26,60-69,7,0,7.400000095367432,4.0
+Mauritania,Brakna,190,Urban areas,2231.26,2231.26,70-79,15,0,7.400000095367432,4.0
+Mauritania,Brakna,190,Urban areas,2231.26,2231.26,80-89,20,0,7.400000095367432,4.0
+Mauritania,Brakna,190,Urban areas,2231.26,2231.26,90-99,8,0,7.400000095367432,4.0
+Mauritania,Brakna,200,Bare areas,654770.82,1093319.23,0-9,708429,1167000,4.659999847412109,4.0
+Mauritania,Brakna,200,Bare areas,654770.82,1093319.23,10-19,13757,0,4.659999847412109,4.0
+Mauritania,Brakna,200,Bare areas,654770.82,1093319.23,20-29,2086,0,4.659999847412109,4.0
+Mauritania,Brakna,200,Bare areas,654770.82,1093319.23,30-39,718,0,4.659999847412109,4.0
+Mauritania,Brakna,200,Bare areas,654770.82,1093319.23,40-49,367,0,4.659999847412109,4.0
+Mauritania,Brakna,200,Bare areas,654770.82,1093319.23,50-59,220,0,4.659999847412109,4.0
+Mauritania,Brakna,200,Bare areas,654770.82,1093319.23,60-69,175,0,4.659999847412109,4.0
+Mauritania,Brakna,200,Bare areas,654770.82,1093319.23,70-79,146,0,4.659999847412109,4.0
+Mauritania,Brakna,200,Bare areas,654770.82,1093319.23,80-89,69,0,4.659999847412109,4.0
+Mauritania,Brakna,200,Bare areas,654770.82,1093319.23,90-99,25,0,4.659999847412109,4.0
+Mauritania,Brakna,201,Bare areas,229.22,283.82,0-9,322,407,4.119999885559082,4.0
+Mauritania,Brakna,201,Bare areas,229.22,283.82,10-19,2,0,4.119999885559082,4.0
+Mauritania,Brakna,201,Bare areas,229.22,283.82,20-29,0,0,4.119999885559082,4.0
+Mauritania,Brakna,201,Bare areas,229.22,283.82,30-39,0,0,4.119999885559082,4.0
+Mauritania,Brakna,201,Bare areas,229.22,283.82,40-49,0,0,4.119999885559082,4.0
+Mauritania,Brakna,201,Bare areas,229.22,283.82,50-59,0,0,4.119999885559082,4.0
+Mauritania,Brakna,201,Bare areas,229.22,283.82,60-69,0,0,4.119999885559082,4.0
+Mauritania,Brakna,201,Bare areas,229.22,283.82,70-79,0,0,4.119999885559082,4.0
+Mauritania,Brakna,201,Bare areas,229.22,283.82,80-89,0,0,4.119999885559082,4.0
+Mauritania,Brakna,201,Bare areas,229.22,283.82,90-99,0,0,4.119999885559082,4.0
+Mauritania,Brakna,210,Water bodies,4025.49,4089.56,0-9,4136,4602,6.5,4.010000228881836
+Mauritania,Brakna,210,Water bodies,4025.49,4089.56,10-19,160,0,6.5,4.010000228881836
+Mauritania,Brakna,210,Water bodies,4025.49,4089.56,20-29,78,0,6.5,4.010000228881836
+Mauritania,Brakna,210,Water bodies,4025.49,4089.56,30-39,47,0,6.5,4.010000228881836
+Mauritania,Brakna,210,Water bodies,4025.49,4089.56,40-49,29,0,6.5,4.010000228881836
+Mauritania,Brakna,210,Water bodies,4025.49,4089.56,50-59,27,0,6.5,4.010000228881836
+Mauritania,Brakna,210,Water bodies,4025.49,4089.56,60-69,9,0,6.5,4.010000228881836
+Mauritania,Brakna,210,Water bodies,4025.49,4089.56,70-79,19,0,6.5,4.010000228881836
+Mauritania,Brakna,210,Water bodies,4025.49,4089.56,80-89,15,0,6.5,4.010000228881836
+Mauritania,Brakna,210,Water bodies,4025.49,4089.56,90-99,5,0,6.5,4.010000228881836
+Mauritania,Brakna,255,No Data (flag),2591.7,4338300.07,0-9,6483,9764,7.260000228881836,4.0
+Mauritania,Brakna,255,No Data (flag),2591.7,4338300.07,10-19,294,0,7.260000228881836,4.0
+Mauritania,Brakna,255,No Data (flag),2591.7,4338300.07,20-29,141,0,7.260000228881836,4.0
+Mauritania,Brakna,255,No Data (flag),2591.7,4338300.07,30-39,79,0,7.260000228881836,4.0
+Mauritania,Brakna,255,No Data (flag),2591.7,4338300.07,40-49,68,0,7.260000228881836,4.0
+Mauritania,Brakna,255,No Data (flag),2591.7,4338300.07,50-59,59,0,7.260000228881836,4.0
+Mauritania,Brakna,255,No Data (flag),2591.7,4338300.07,60-69,46,0,7.260000228881836,4.0
+Mauritania,Brakna,255,No Data (flag),2591.7,4338300.07,70-79,34,0,7.260000228881836,4.0
+Mauritania,Brakna,255,No Data (flag),2591.7,4338300.07,80-89,20,0,7.260000228881836,4.0
+Mauritania,Brakna,255,No Data (flag),2591.7,4338300.07,90-99,13,0,7.260000228881836,4.0
+Mauritania,Gorgol,10,"Cropland, rainfed",41739.19,46107.13,0-9,24917,55907,17.920000076293945,4.0
+Mauritania,Gorgol,10,"Cropland, rainfed",41739.19,46107.13,10-19,10464,0,17.920000076293945,4.0
+Mauritania,Gorgol,10,"Cropland, rainfed",41739.19,46107.13,20-29,5620,0,17.920000076293945,4.0
+Mauritania,Gorgol,10,"Cropland, rainfed",41739.19,46107.13,30-39,3374,0,17.920000076293945,4.0
+Mauritania,Gorgol,10,"Cropland, rainfed",41739.19,46107.13,40-49,2139,0,17.920000076293945,4.0
+Mauritania,Gorgol,10,"Cropland, rainfed",41739.19,46107.13,50-59,1437,0,17.920000076293945,4.0
+Mauritania,Gorgol,10,"Cropland, rainfed",41739.19,46107.13,60-69,986,0,17.920000076293945,4.0
+Mauritania,Gorgol,10,"Cropland, rainfed",41739.19,46107.13,70-79,743,0,17.920000076293945,4.0
+Mauritania,Gorgol,10,"Cropland, rainfed",41739.19,46107.13,80-89,608,0,17.920000076293945,4.0
+Mauritania,Gorgol,10,"Cropland, rainfed",41739.19,46107.13,90-99,261,0,17.920000076293945,4.0
+Mauritania,Gorgol,11,"Cropland, rainfed",9167.17,9374.44,0-9,5226,11615,19.219999313354492,4.0
+Mauritania,Gorgol,11,"Cropland, rainfed",9167.17,9374.44,10-19,2253,0,19.219999313354492,4.0
+Mauritania,Gorgol,11,"Cropland, rainfed",9167.17,9374.44,20-29,1409,0,19.219999313354492,4.0
+Mauritania,Gorgol,11,"Cropland, rainfed",9167.17,9374.44,30-39,910,0,19.219999313354492,4.0
+Mauritania,Gorgol,11,"Cropland, rainfed",9167.17,9374.44,40-49,594,0,19.219999313354492,4.0
+Mauritania,Gorgol,11,"Cropland, rainfed",9167.17,9374.44,50-59,377,0,19.219999313354492,4.0
+Mauritania,Gorgol,11,"Cropland, rainfed",9167.17,9374.44,60-69,249,0,19.219999313354492,4.0
+Mauritania,Gorgol,11,"Cropland, rainfed",9167.17,9374.44,70-79,187,0,19.219999313354492,4.0
+Mauritania,Gorgol,11,"Cropland, rainfed",9167.17,9374.44,80-89,151,0,19.219999313354492,4.0
+Mauritania,Gorgol,11,"Cropland, rainfed",9167.17,9374.44,90-99,30,0,19.219999313354492,4.0
+Mauritania,Gorgol,20,"Cropland, irrigated or post-flooding",23994.72,26791.87,0-9,20362,33011,14.420000076293945,4.0
+Mauritania,Gorgol,20,"Cropland, irrigated or post-flooding",23994.72,26791.87,10-19,2872,0,14.420000076293945,4.0
+Mauritania,Gorgol,20,"Cropland, irrigated or post-flooding",23994.72,26791.87,20-29,1745,0,14.420000076293945,4.0
+Mauritania,Gorgol,20,"Cropland, irrigated or post-flooding",23994.72,26791.87,30-39,1237,0,14.420000076293945,4.0
+Mauritania,Gorgol,20,"Cropland, irrigated or post-flooding",23994.72,26791.87,40-49,959,0,14.420000076293945,4.0
+Mauritania,Gorgol,20,"Cropland, irrigated or post-flooding",23994.72,26791.87,50-59,785,0,14.420000076293945,4.0
+Mauritania,Gorgol,20,"Cropland, irrigated or post-flooding",23994.72,26791.87,60-69,649,0,14.420000076293945,4.0
+Mauritania,Gorgol,20,"Cropland, irrigated or post-flooding",23994.72,26791.87,70-79,487,0,14.420000076293945,4.0
+Mauritania,Gorgol,20,"Cropland, irrigated or post-flooding",23994.72,26791.87,80-89,382,0,14.420000076293945,4.0
+Mauritania,Gorgol,20,"Cropland, irrigated or post-flooding",23994.72,26791.87,90-99,103,0,14.420000076293945,4.0
+Mauritania,Gorgol,30,Mosaic cropland / natural vegetation,10811.86,12415.45,0-9,7295,16269,17.290000915527344,4.0
+Mauritania,Gorgol,30,Mosaic cropland / natural vegetation,10811.86,12415.45,10-19,2786,0,17.290000915527344,4.0
+Mauritania,Gorgol,30,Mosaic cropland / natural vegetation,10811.86,12415.45,20-29,1519,0,17.290000915527344,4.0
+Mauritania,Gorgol,30,Mosaic cropland / natural vegetation,10811.86,12415.45,30-39,866,0,17.290000915527344,4.0
+Mauritania,Gorgol,30,Mosaic cropland / natural vegetation,10811.86,12415.45,40-49,583,0,17.290000915527344,4.0
+Mauritania,Gorgol,30,Mosaic cropland / natural vegetation,10811.86,12415.45,50-59,398,0,17.290000915527344,4.0
+Mauritania,Gorgol,30,Mosaic cropland / natural vegetation,10811.86,12415.45,60-69,292,0,17.290000915527344,4.0
+Mauritania,Gorgol,30,Mosaic cropland / natural vegetation,10811.86,12415.45,70-79,175,0,17.290000915527344,4.0
+Mauritania,Gorgol,30,Mosaic cropland / natural vegetation,10811.86,12415.45,80-89,150,0,17.290000915527344,4.0
+Mauritania,Gorgol,30,Mosaic cropland / natural vegetation,10811.86,12415.45,90-99,67,0,17.290000915527344,4.0
+Mauritania,Gorgol,40,Mosaic natural vegetation / cropland,12144.02,12840.49,0-9,7883,16077,16.43000030517578,4.0
+Mauritania,Gorgol,40,Mosaic natural vegetation / cropland,12144.02,12840.49,10-19,3285,0,16.43000030517578,4.0
+Mauritania,Gorgol,40,Mosaic natural vegetation / cropland,12144.02,12840.49,20-29,1603,0,16.43000030517578,4.0
+Mauritania,Gorgol,40,Mosaic natural vegetation / cropland,12144.02,12840.49,30-39,872,0,16.43000030517578,4.0
+Mauritania,Gorgol,40,Mosaic natural vegetation / cropland,12144.02,12840.49,40-49,530,0,16.43000030517578,4.0
+Mauritania,Gorgol,40,Mosaic natural vegetation / cropland,12144.02,12840.49,50-59,325,0,16.43000030517578,4.0
+Mauritania,Gorgol,40,Mosaic natural vegetation / cropland,12144.02,12840.49,60-69,245,0,16.43000030517578,4.0
+Mauritania,Gorgol,40,Mosaic natural vegetation / cropland,12144.02,12840.49,70-79,197,0,16.43000030517578,4.0
+Mauritania,Gorgol,40,Mosaic natural vegetation / cropland,12144.02,12840.49,80-89,154,0,16.43000030517578,4.0
+Mauritania,Gorgol,40,Mosaic natural vegetation / cropland,12144.02,12840.49,90-99,47,0,16.43000030517578,4.0
+Mauritania,Gorgol,100,Mosaic tree and shrub / herbaceous cover,4134.51,4404.87,0-9,4624,6399,10.34000015258789,4.0
+Mauritania,Gorgol,100,Mosaic tree and shrub / herbaceous cover,4134.51,4404.87,10-19,574,0,10.34000015258789,4.0
+Mauritania,Gorgol,100,Mosaic tree and shrub / herbaceous cover,4134.51,4404.87,20-29,286,0,10.34000015258789,4.0
+Mauritania,Gorgol,100,Mosaic tree and shrub / herbaceous cover,4134.51,4404.87,30-39,204,0,10.34000015258789,4.0
+Mauritania,Gorgol,100,Mosaic tree and shrub / herbaceous cover,4134.51,4404.87,40-49,131,0,10.34000015258789,4.0
+Mauritania,Gorgol,100,Mosaic tree and shrub / herbaceous cover,4134.51,4404.87,50-59,82,0,10.34000015258789,4.0
+Mauritania,Gorgol,100,Mosaic tree and shrub / herbaceous cover,4134.51,4404.87,60-69,55,0,10.34000015258789,4.0
+Mauritania,Gorgol,100,Mosaic tree and shrub / herbaceous cover,4134.51,4404.87,70-79,47,0,10.34000015258789,4.0
+Mauritania,Gorgol,100,Mosaic tree and shrub / herbaceous cover,4134.51,4404.87,80-89,18,0,10.34000015258789,4.0
+Mauritania,Gorgol,100,Mosaic tree and shrub / herbaceous cover,4134.51,4404.87,90-99,0,0,10.34000015258789,4.0
+Mauritania,Gorgol,110,Mosaic herbaceous cover / tree and shrub,1043.16,1389.7,0-9,1265,1963,7.840000152587891,4.0
+Mauritania,Gorgol,110,Mosaic herbaceous cover / tree and shrub,1043.16,1389.7,10-19,76,0,7.840000152587891,4.0
+Mauritania,Gorgol,110,Mosaic herbaceous cover / tree and shrub,1043.16,1389.7,20-29,41,0,7.840000152587891,4.0
+Mauritania,Gorgol,110,Mosaic herbaceous cover / tree and shrub,1043.16,1389.7,30-39,25,0,7.840000152587891,4.0
+Mauritania,Gorgol,110,Mosaic herbaceous cover / tree and shrub,1043.16,1389.7,40-49,15,0,7.840000152587891,4.0
+Mauritania,Gorgol,110,Mosaic herbaceous cover / tree and shrub,1043.16,1389.7,50-59,12,0,7.840000152587891,4.0
+Mauritania,Gorgol,110,Mosaic herbaceous cover / tree and shrub,1043.16,1389.7,60-69,12,0,7.840000152587891,4.0
+Mauritania,Gorgol,110,Mosaic herbaceous cover / tree and shrub,1043.16,1389.7,70-79,8,0,7.840000152587891,4.0
+Mauritania,Gorgol,110,Mosaic herbaceous cover / tree and shrub,1043.16,1389.7,80-89,5,0,7.840000152587891,4.0
+Mauritania,Gorgol,110,Mosaic herbaceous cover / tree and shrub,1043.16,1389.7,90-99,0,0,7.840000152587891,4.0
+Mauritania,Gorgol,120,Shrubland,23883.96,28164.28,0-9,27209,37686,8.239999771118164,4.0
+Mauritania,Gorgol,120,Shrubland,23883.96,28164.28,10-19,2280,0,8.239999771118164,4.0
+Mauritania,Gorgol,120,Shrubland,23883.96,28164.28,20-29,1038,0,8.239999771118164,4.0
+Mauritania,Gorgol,120,Shrubland,23883.96,28164.28,30-39,617,0,8.239999771118164,4.0
+Mauritania,Gorgol,120,Shrubland,23883.96,28164.28,40-49,374,0,8.239999771118164,4.0
+Mauritania,Gorgol,120,Shrubland,23883.96,28164.28,50-59,272,0,8.239999771118164,4.0
+Mauritania,Gorgol,120,Shrubland,23883.96,28164.28,60-69,172,0,8.239999771118164,4.0
+Mauritania,Gorgol,120,Shrubland,23883.96,28164.28,70-79,140,0,8.239999771118164,4.0
+Mauritania,Gorgol,120,Shrubland,23883.96,28164.28,80-89,124,0,8.239999771118164,4.0
+Mauritania,Gorgol,120,Shrubland,23883.96,28164.28,90-99,31,0,8.239999771118164,4.0
+Mauritania,Gorgol,130,Grassland,943502.09,976635.1,0-9,836676,1018896,7.75,4.0
+Mauritania,Gorgol,130,Grassland,943502.09,976635.1,10-19,72841,1,7.75,4.0
+Mauritania,Gorgol,130,Grassland,943502.09,976635.1,20-29,31592,0,7.75,4.0
+Mauritania,Gorgol,130,Grassland,943502.09,976635.1,30-39,17526,0,7.75,4.0
+Mauritania,Gorgol,130,Grassland,943502.09,976635.1,40-49,10684,0,7.75,4.0
+Mauritania,Gorgol,130,Grassland,943502.09,976635.1,50-59,6836,0,7.75,4.0
+Mauritania,Gorgol,130,Grassland,943502.09,976635.1,60-69,4371,0,7.75,4.0
+Mauritania,Gorgol,130,Grassland,943502.09,976635.1,70-79,2722,0,7.75,4.0
+Mauritania,Gorgol,130,Grassland,943502.09,976635.1,80-89,1428,0,7.75,4.0
+Mauritania,Gorgol,130,Grassland,943502.09,976635.1,90-99,264,0,7.75,4.0
+Mauritania,Gorgol,150,Sparse vegetation,76259.03,77079.34,0-9,93767,100027,5.139999866485596,4.0
+Mauritania,Gorgol,150,Sparse vegetation,76259.03,77079.34,10-19,3372,0,5.139999866485596,4.0
+Mauritania,Gorgol,150,Sparse vegetation,76259.03,77079.34,20-29,1059,0,5.139999866485596,4.0
+Mauritania,Gorgol,150,Sparse vegetation,76259.03,77079.34,30-39,448,0,5.139999866485596,4.0
+Mauritania,Gorgol,150,Sparse vegetation,76259.03,77079.34,40-49,210,0,5.139999866485596,4.0
+Mauritania,Gorgol,150,Sparse vegetation,76259.03,77079.34,50-59,128,0,5.139999866485596,4.0
+Mauritania,Gorgol,150,Sparse vegetation,76259.03,77079.34,60-69,61,0,5.139999866485596,4.0
+Mauritania,Gorgol,150,Sparse vegetation,76259.03,77079.34,70-79,27,0,5.139999866485596,4.0
+Mauritania,Gorgol,150,Sparse vegetation,76259.03,77079.34,80-89,15,0,5.139999866485596,4.0
+Mauritania,Gorgol,150,Sparse vegetation,76259.03,77079.34,90-99,3,0,5.139999866485596,4.0
+Mauritania,Gorgol,152,Sparse vegetation,4772.19,5132.61,0-9,6056,7303,6.929999828338623,4.0
+Mauritania,Gorgol,152,Sparse vegetation,4772.19,5132.61,10-19,378,0,6.929999828338623,4.0
+Mauritania,Gorgol,152,Sparse vegetation,4772.19,5132.61,20-29,139,0,6.929999828338623,4.0
+Mauritania,Gorgol,152,Sparse vegetation,4772.19,5132.61,30-39,88,0,6.929999828338623,4.0
+Mauritania,Gorgol,152,Sparse vegetation,4772.19,5132.61,40-49,55,0,6.929999828338623,4.0
+Mauritania,Gorgol,152,Sparse vegetation,4772.19,5132.61,50-59,42,0,6.929999828338623,4.0
+Mauritania,Gorgol,152,Sparse vegetation,4772.19,5132.61,60-69,31,0,6.929999828338623,4.0
+Mauritania,Gorgol,152,Sparse vegetation,4772.19,5132.61,70-79,20,0,6.929999828338623,4.0
+Mauritania,Gorgol,152,Sparse vegetation,4772.19,5132.61,80-89,11,0,6.929999828338623,4.0
+Mauritania,Gorgol,152,Sparse vegetation,4772.19,5132.61,90-99,1,0,6.929999828338623,4.0
+Mauritania,Gorgol,153,Sparse vegetation,11762.71,12169.39,0-9,13701,15603,6.739999771118164,4.0
+Mauritania,Gorgol,153,Sparse vegetation,11762.71,12169.39,10-19,697,0,6.739999771118164,4.0
+Mauritania,Gorgol,153,Sparse vegetation,11762.71,12169.39,20-29,248,0,6.739999771118164,4.0
+Mauritania,Gorgol,153,Sparse vegetation,11762.71,12169.39,30-39,138,0,6.739999771118164,4.0
+Mauritania,Gorgol,153,Sparse vegetation,11762.71,12169.39,40-49,90,0,6.739999771118164,4.0
+Mauritania,Gorgol,153,Sparse vegetation,11762.71,12169.39,50-59,62,0,6.739999771118164,4.0
+Mauritania,Gorgol,153,Sparse vegetation,11762.71,12169.39,60-69,56,0,6.739999771118164,4.0
+Mauritania,Gorgol,153,Sparse vegetation,11762.71,12169.39,70-79,51,0,6.739999771118164,4.0
+Mauritania,Gorgol,153,Sparse vegetation,11762.71,12169.39,80-89,51,0,6.739999771118164,4.0
+Mauritania,Gorgol,153,Sparse vegetation,11762.71,12169.39,90-99,27,0,6.739999771118164,4.0
+Mauritania,Gorgol,160,"Tree cover, flooded, fresh or brakish water",6479.44,12431.03,0-9,4294,15575,20.690000534057617,4.0
+Mauritania,Gorgol,160,"Tree cover, flooded, fresh or brakish water",6479.44,12431.03,10-19,1136,0,20.690000534057617,4.0
+Mauritania,Gorgol,160,"Tree cover, flooded, fresh or brakish water",6479.44,12431.03,20-29,710,0,20.690000534057617,4.0
+Mauritania,Gorgol,160,"Tree cover, flooded, fresh or brakish water",6479.44,12431.03,30-39,544,0,20.690000534057617,4.0
+Mauritania,Gorgol,160,"Tree cover, flooded, fresh or brakish water",6479.44,12431.03,40-49,410,0,20.690000534057617,4.0
+Mauritania,Gorgol,160,"Tree cover, flooded, fresh or brakish water",6479.44,12431.03,50-59,349,0,20.690000534057617,4.0
+Mauritania,Gorgol,160,"Tree cover, flooded, fresh or brakish water",6479.44,12431.03,60-69,315,0,20.690000534057617,4.0
+Mauritania,Gorgol,160,"Tree cover, flooded, fresh or brakish water",6479.44,12431.03,70-79,274,0,20.690000534057617,4.0
+Mauritania,Gorgol,160,"Tree cover, flooded, fresh or brakish water",6479.44,12431.03,80-89,171,0,20.690000534057617,4.0
+Mauritania,Gorgol,160,"Tree cover, flooded, fresh or brakish water",6479.44,12431.03,90-99,41,0,20.690000534057617,4.0
+Mauritania,Gorgol,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",25010.63,37605.55,0-9,21361,44504,12.430000305175781,4.0
+Mauritania,Gorgol,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",25010.63,37605.55,10-19,3147,0,12.430000305175781,4.0
+Mauritania,Gorgol,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",25010.63,37605.55,20-29,1702,0,12.430000305175781,4.0
+Mauritania,Gorgol,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",25010.63,37605.55,30-39,990,0,12.430000305175781,4.0
+Mauritania,Gorgol,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",25010.63,37605.55,40-49,693,0,12.430000305175781,4.0
+Mauritania,Gorgol,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",25010.63,37605.55,50-59,570,0,12.430000305175781,4.0
+Mauritania,Gorgol,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",25010.63,37605.55,60-69,438,0,12.430000305175781,4.0
+Mauritania,Gorgol,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",25010.63,37605.55,70-79,371,0,12.430000305175781,4.0
+Mauritania,Gorgol,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",25010.63,37605.55,80-89,269,0,12.430000305175781,4.0
+Mauritania,Gorgol,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",25010.63,37605.55,90-99,67,0,12.430000305175781,4.0
+Mauritania,Gorgol,190,Urban areas,3001.32,3040.75,0-9,2928,3647,8.569999694824219,4.0
+Mauritania,Gorgol,190,Urban areas,3001.32,3040.75,10-19,330,0,8.569999694824219,4.0
+Mauritania,Gorgol,190,Urban areas,3001.32,3040.75,20-29,133,0,8.569999694824219,4.0
+Mauritania,Gorgol,190,Urban areas,3001.32,3040.75,30-39,93,0,8.569999694824219,4.0
+Mauritania,Gorgol,190,Urban areas,3001.32,3040.75,40-49,44,0,8.569999694824219,4.0
+Mauritania,Gorgol,190,Urban areas,3001.32,3040.75,50-59,19,0,8.569999694824219,4.0
+Mauritania,Gorgol,190,Urban areas,3001.32,3040.75,60-69,9,0,8.569999694824219,4.0
+Mauritania,Gorgol,190,Urban areas,3001.32,3040.75,70-79,8,0,8.569999694824219,4.0
+Mauritania,Gorgol,190,Urban areas,3001.32,3040.75,80-89,14,0,8.569999694824219,4.0
+Mauritania,Gorgol,190,Urban areas,3001.32,3040.75,90-99,9,0,8.569999694824219,4.0
+Mauritania,Gorgol,200,Bare areas,83447.01,85438.37,0-9,91970,98482,4.960000038146973,4.0
+Mauritania,Gorgol,200,Bare areas,83447.01,85438.37,10-19,2953,0,4.960000038146973,4.0
+Mauritania,Gorgol,200,Bare areas,83447.01,85438.37,20-29,793,0,4.960000038146973,4.0
+Mauritania,Gorgol,200,Bare areas,83447.01,85438.37,30-39,321,0,4.960000038146973,4.0
+Mauritania,Gorgol,200,Bare areas,83447.01,85438.37,40-49,161,0,4.960000038146973,4.0
+Mauritania,Gorgol,200,Bare areas,83447.01,85438.37,50-59,65,0,4.960000038146973,4.0
+Mauritania,Gorgol,200,Bare areas,83447.01,85438.37,60-69,45,0,4.960000038146973,4.0
+Mauritania,Gorgol,200,Bare areas,83447.01,85438.37,70-79,27,0,4.960000038146973,4.0
+Mauritania,Gorgol,200,Bare areas,83447.01,85438.37,80-89,10,0,4.960000038146973,4.0
+Mauritania,Gorgol,200,Bare areas,83447.01,85438.37,90-99,2,0,4.960000038146973,4.0
+Mauritania,Gorgol,201,Bare areas,640.23,640.23,0-9,812,814,4.110000133514404,4.0
+Mauritania,Gorgol,201,Bare areas,640.23,640.23,10-19,2,0,4.110000133514404,4.0
+Mauritania,Gorgol,201,Bare areas,640.23,640.23,20-29,0,0,4.110000133514404,4.0
+Mauritania,Gorgol,201,Bare areas,640.23,640.23,30-39,0,0,4.110000133514404,4.0
+Mauritania,Gorgol,201,Bare areas,640.23,640.23,40-49,0,0,4.110000133514404,4.0
+Mauritania,Gorgol,201,Bare areas,640.23,640.23,50-59,0,0,4.110000133514404,4.0
+Mauritania,Gorgol,201,Bare areas,640.23,640.23,60-69,0,0,4.110000133514404,4.0
+Mauritania,Gorgol,201,Bare areas,640.23,640.23,70-79,0,0,4.110000133514404,4.0
+Mauritania,Gorgol,201,Bare areas,640.23,640.23,80-89,0,0,4.110000133514404,4.0
+Mauritania,Gorgol,201,Bare areas,640.23,640.23,90-99,0,0,4.110000133514404,4.0
+Mauritania,Gorgol,210,Water bodies,20869.76,28778.98,0-9,22011,32052,5.5,4.0
+Mauritania,Gorgol,210,Water bodies,20869.76,28778.98,10-19,525,0,5.5,4.0
+Mauritania,Gorgol,210,Water bodies,20869.76,28778.98,20-29,243,0,5.5,4.0
+Mauritania,Gorgol,210,Water bodies,20869.76,28778.98,30-39,152,0,5.5,4.0
+Mauritania,Gorgol,210,Water bodies,20869.76,28778.98,40-49,94,0,5.5,4.0
+Mauritania,Gorgol,210,Water bodies,20869.76,28778.98,50-59,68,0,5.5,4.0
+Mauritania,Gorgol,210,Water bodies,20869.76,28778.98,60-69,66,0,5.5,4.0
+Mauritania,Gorgol,210,Water bodies,20869.76,28778.98,70-79,56,0,5.5,4.0
+Mauritania,Gorgol,210,Water bodies,20869.76,28778.98,80-89,23,0,5.5,4.0
+Mauritania,Gorgol,210,Water bodies,20869.76,28778.98,90-99,6,0,5.5,4.0
+Mauritania,Gorgol,255,No Data (flag),1975.05,2131948.94,0-9,4637,7308,8.449999809265137,4.0
+Mauritania,Gorgol,255,No Data (flag),1975.05,2131948.94,10-19,277,0,8.449999809265137,4.0
+Mauritania,Gorgol,255,No Data (flag),1975.05,2131948.94,20-29,174,0,8.449999809265137,4.0
+Mauritania,Gorgol,255,No Data (flag),1975.05,2131948.94,30-39,108,0,8.449999809265137,4.0
+Mauritania,Gorgol,255,No Data (flag),1975.05,2131948.94,40-49,72,0,8.449999809265137,4.0
+Mauritania,Gorgol,255,No Data (flag),1975.05,2131948.94,50-59,39,0,8.449999809265137,4.0
+Mauritania,Gorgol,255,No Data (flag),1975.05,2131948.94,60-69,39,0,8.449999809265137,4.0
+Mauritania,Gorgol,255,No Data (flag),1975.05,2131948.94,70-79,38,0,8.449999809265137,4.0
+Mauritania,Gorgol,255,No Data (flag),1975.05,2131948.94,80-89,33,0,8.449999809265137,4.0
+Mauritania,Gorgol,255,No Data (flag),1975.05,2131948.94,90-99,5,0,8.449999809265137,4.0
+Mauritania,Guidimaka,10,"Cropland, rainfed",250152.39,253113.68,0-9,187279,286754,12.859999656677246,4.0
+Mauritania,Guidimaka,10,"Cropland, rainfed",250152.39,253113.68,10-19,44803,1,12.859999656677246,4.0
+Mauritania,Guidimaka,10,"Cropland, rainfed",250152.39,253113.68,20-29,19959,0,12.859999656677246,4.0
+Mauritania,Guidimaka,10,"Cropland, rainfed",250152.39,253113.68,30-39,11813,0,12.859999656677246,4.0
+Mauritania,Guidimaka,10,"Cropland, rainfed",250152.39,253113.68,40-49,7545,0,12.859999656677246,4.0
+Mauritania,Guidimaka,10,"Cropland, rainfed",250152.39,253113.68,50-59,5072,0,12.859999656677246,4.0
+Mauritania,Guidimaka,10,"Cropland, rainfed",250152.39,253113.68,60-69,3270,0,12.859999656677246,4.0
+Mauritania,Guidimaka,10,"Cropland, rainfed",250152.39,253113.68,70-79,2104,0,12.859999656677246,4.0
+Mauritania,Guidimaka,10,"Cropland, rainfed",250152.39,253113.68,80-89,1433,0,12.859999656677246,4.0
+Mauritania,Guidimaka,10,"Cropland, rainfed",250152.39,253113.68,90-99,363,0,12.859999656677246,4.0
+Mauritania,Guidimaka,11,"Cropland, rainfed",13927.89,14176.16,0-9,11566,19523,16.540000915527344,4.0
+Mauritania,Guidimaka,11,"Cropland, rainfed",13927.89,14176.16,10-19,2718,0,16.540000915527344,4.0
+Mauritania,Guidimaka,11,"Cropland, rainfed",13927.89,14176.16,20-29,1528,0,16.540000915527344,4.0
+Mauritania,Guidimaka,11,"Cropland, rainfed",13927.89,14176.16,30-39,967,0,16.540000915527344,4.0
+Mauritania,Guidimaka,11,"Cropland, rainfed",13927.89,14176.16,40-49,747,0,16.540000915527344,4.0
+Mauritania,Guidimaka,11,"Cropland, rainfed",13927.89,14176.16,50-59,574,0,16.540000915527344,4.0
+Mauritania,Guidimaka,11,"Cropland, rainfed",13927.89,14176.16,60-69,407,0,16.540000915527344,4.0
+Mauritania,Guidimaka,11,"Cropland, rainfed",13927.89,14176.16,70-79,309,0,16.540000915527344,4.0
+Mauritania,Guidimaka,11,"Cropland, rainfed",13927.89,14176.16,80-89,350,0,16.540000915527344,4.0
+Mauritania,Guidimaka,11,"Cropland, rainfed",13927.89,14176.16,90-99,69,0,16.540000915527344,4.0
+Mauritania,Guidimaka,20,"Cropland, irrigated or post-flooding",16552.36,17662.44,0-9,13202,21217,14.279999732971191,4.010000228881836
+Mauritania,Guidimaka,20,"Cropland, irrigated or post-flooding",16552.36,17662.44,10-19,2711,1,14.279999732971191,4.010000228881836
+Mauritania,Guidimaka,20,"Cropland, irrigated or post-flooding",16552.36,17662.44,20-29,1295,0,14.279999732971191,4.010000228881836
+Mauritania,Guidimaka,20,"Cropland, irrigated or post-flooding",16552.36,17662.44,30-39,782,0,14.279999732971191,4.010000228881836
+Mauritania,Guidimaka,20,"Cropland, irrigated or post-flooding",16552.36,17662.44,40-49,597,0,14.279999732971191,4.010000228881836
+Mauritania,Guidimaka,20,"Cropland, irrigated or post-flooding",16552.36,17662.44,50-59,451,0,14.279999732971191,4.010000228881836
+Mauritania,Guidimaka,20,"Cropland, irrigated or post-flooding",16552.36,17662.44,60-69,351,0,14.279999732971191,4.010000228881836
+Mauritania,Guidimaka,20,"Cropland, irrigated or post-flooding",16552.36,17662.44,70-79,254,0,14.279999732971191,4.010000228881836
+Mauritania,Guidimaka,20,"Cropland, irrigated or post-flooding",16552.36,17662.44,80-89,212,0,14.279999732971191,4.010000228881836
+Mauritania,Guidimaka,20,"Cropland, irrigated or post-flooding",16552.36,17662.44,90-99,122,0,14.279999732971191,4.010000228881836
+Mauritania,Guidimaka,30,Mosaic cropland / natural vegetation,33249.39,34544.79,0-9,30560,45350,12.300000190734863,4.0
+Mauritania,Guidimaka,30,Mosaic cropland / natural vegetation,33249.39,34544.79,10-19,6394,1,12.300000190734863,4.0
+Mauritania,Guidimaka,30,Mosaic cropland / natural vegetation,33249.39,34544.79,20-29,2513,0,12.300000190734863,4.0
+Mauritania,Guidimaka,30,Mosaic cropland / natural vegetation,33249.39,34544.79,30-39,1371,0,12.300000190734863,4.0
+Mauritania,Guidimaka,30,Mosaic cropland / natural vegetation,33249.39,34544.79,40-49,919,0,12.300000190734863,4.0
+Mauritania,Guidimaka,30,Mosaic cropland / natural vegetation,33249.39,34544.79,50-59,634,0,12.300000190734863,4.0
+Mauritania,Guidimaka,30,Mosaic cropland / natural vegetation,33249.39,34544.79,60-69,453,0,12.300000190734863,4.0
+Mauritania,Guidimaka,30,Mosaic cropland / natural vegetation,33249.39,34544.79,70-79,386,0,12.300000190734863,4.0
+Mauritania,Guidimaka,30,Mosaic cropland / natural vegetation,33249.39,34544.79,80-89,389,0,12.300000190734863,4.0
+Mauritania,Guidimaka,30,Mosaic cropland / natural vegetation,33249.39,34544.79,90-99,173,0,12.300000190734863,4.0
+Mauritania,Guidimaka,40,Mosaic natural vegetation / cropland,37899.16,38213.44,0-9,30885,49308,12.470000267028809,4.0
+Mauritania,Guidimaka,40,Mosaic natural vegetation / cropland,37899.16,38213.44,10-19,9010,0,12.470000267028809,4.0
+Mauritania,Guidimaka,40,Mosaic natural vegetation / cropland,37899.16,38213.44,20-29,4171,0,12.470000267028809,4.0
+Mauritania,Guidimaka,40,Mosaic natural vegetation / cropland,37899.16,38213.44,30-39,2379,0,12.470000267028809,4.0
+Mauritania,Guidimaka,40,Mosaic natural vegetation / cropland,37899.16,38213.44,40-49,1262,0,12.470000267028809,4.0
+Mauritania,Guidimaka,40,Mosaic natural vegetation / cropland,37899.16,38213.44,50-59,638,0,12.470000267028809,4.0
+Mauritania,Guidimaka,40,Mosaic natural vegetation / cropland,37899.16,38213.44,60-69,303,0,12.470000267028809,4.0
+Mauritania,Guidimaka,40,Mosaic natural vegetation / cropland,37899.16,38213.44,70-79,145,0,12.470000267028809,4.0
+Mauritania,Guidimaka,40,Mosaic natural vegetation / cropland,37899.16,38213.44,80-89,116,0,12.470000267028809,4.0
+Mauritania,Guidimaka,40,Mosaic natural vegetation / cropland,37899.16,38213.44,90-99,28,0,12.470000267028809,4.0
+Mauritania,Guidimaka,100,Mosaic tree and shrub / herbaceous cover,5623.74,5631.6,0-9,4364,7501,14.180000305175781,4.0
+Mauritania,Guidimaka,100,Mosaic tree and shrub / herbaceous cover,5623.74,5631.6,10-19,1341,0,14.180000305175781,4.0
+Mauritania,Guidimaka,100,Mosaic tree and shrub / herbaceous cover,5623.74,5631.6,20-29,739,0,14.180000305175781,4.0
+Mauritania,Guidimaka,100,Mosaic tree and shrub / herbaceous cover,5623.74,5631.6,30-39,480,0,14.180000305175781,4.0
+Mauritania,Guidimaka,100,Mosaic tree and shrub / herbaceous cover,5623.74,5631.6,40-49,292,0,14.180000305175781,4.0
+Mauritania,Guidimaka,100,Mosaic tree and shrub / herbaceous cover,5623.74,5631.6,50-59,143,0,14.180000305175781,4.0
+Mauritania,Guidimaka,100,Mosaic tree and shrub / herbaceous cover,5623.74,5631.6,60-69,103,0,14.180000305175781,4.0
+Mauritania,Guidimaka,100,Mosaic tree and shrub / herbaceous cover,5623.74,5631.6,70-79,26,0,14.180000305175781,4.0
+Mauritania,Guidimaka,100,Mosaic tree and shrub / herbaceous cover,5623.74,5631.6,80-89,9,0,14.180000305175781,4.0
+Mauritania,Guidimaka,100,Mosaic tree and shrub / herbaceous cover,5623.74,5631.6,90-99,3,0,14.180000305175781,4.0
+Mauritania,Guidimaka,110,Mosaic herbaceous cover / tree and shrub,822.25,831.34,0-9,1004,1133,6.380000114440918,4.0
+Mauritania,Guidimaka,110,Mosaic herbaceous cover / tree and shrub,822.25,831.34,10-19,57,0,6.380000114440918,4.0
+Mauritania,Guidimaka,110,Mosaic herbaceous cover / tree and shrub,822.25,831.34,20-29,29,0,6.380000114440918,4.0
+Mauritania,Guidimaka,110,Mosaic herbaceous cover / tree and shrub,822.25,831.34,30-39,13,0,6.380000114440918,4.0
+Mauritania,Guidimaka,110,Mosaic herbaceous cover / tree and shrub,822.25,831.34,40-49,6,0,6.380000114440918,4.0
+Mauritania,Guidimaka,110,Mosaic herbaceous cover / tree and shrub,822.25,831.34,50-59,11,0,6.380000114440918,4.0
+Mauritania,Guidimaka,110,Mosaic herbaceous cover / tree and shrub,822.25,831.34,60-69,1,0,6.380000114440918,4.0
+Mauritania,Guidimaka,110,Mosaic herbaceous cover / tree and shrub,822.25,831.34,70-79,0,0,6.380000114440918,4.0
+Mauritania,Guidimaka,110,Mosaic herbaceous cover / tree and shrub,822.25,831.34,80-89,0,0,6.380000114440918,4.0
+Mauritania,Guidimaka,110,Mosaic herbaceous cover / tree and shrub,822.25,831.34,90-99,0,0,6.380000114440918,4.0
+Mauritania,Guidimaka,120,Shrubland,17759.91,17836.97,0-9,16559,23878,11.520000457763672,4.0
+Mauritania,Guidimaka,120,Shrubland,17759.91,17836.97,10-19,3353,1,11.520000457763672,4.0
+Mauritania,Guidimaka,120,Shrubland,17759.91,17836.97,20-29,1705,0,11.520000457763672,4.0
+Mauritania,Guidimaka,120,Shrubland,17759.91,17836.97,30-39,947,0,11.520000457763672,4.0
+Mauritania,Guidimaka,120,Shrubland,17759.91,17836.97,40-49,536,0,11.520000457763672,4.0
+Mauritania,Guidimaka,120,Shrubland,17759.91,17836.97,50-59,333,0,11.520000457763672,4.0
+Mauritania,Guidimaka,120,Shrubland,17759.91,17836.97,60-69,205,0,11.520000457763672,4.0
+Mauritania,Guidimaka,120,Shrubland,17759.91,17836.97,70-79,121,0,11.520000457763672,4.0
+Mauritania,Guidimaka,120,Shrubland,17759.91,17836.97,80-89,77,0,11.520000457763672,4.0
+Mauritania,Guidimaka,120,Shrubland,17759.91,17836.97,90-99,28,0,11.520000457763672,4.0
+Mauritania,Guidimaka,130,Grassland,644429.08,648213.5,0-9,596491,691277,6.889999866485596,4.0
+Mauritania,Guidimaka,130,Grassland,644429.08,648213.5,10-19,55464,0,6.889999866485596,4.0
+Mauritania,Guidimaka,130,Grassland,644429.08,648213.5,20-29,19031,0,6.889999866485596,4.0
+Mauritania,Guidimaka,130,Grassland,644429.08,648213.5,30-39,8746,0,6.889999866485596,4.0
+Mauritania,Guidimaka,130,Grassland,644429.08,648213.5,40-49,4211,0,6.889999866485596,4.0
+Mauritania,Guidimaka,130,Grassland,644429.08,648213.5,50-59,2092,0,6.889999866485596,4.0
+Mauritania,Guidimaka,130,Grassland,644429.08,648213.5,60-69,1065,0,6.889999866485596,4.0
+Mauritania,Guidimaka,130,Grassland,644429.08,648213.5,70-79,537,0,6.889999866485596,4.0
+Mauritania,Guidimaka,130,Grassland,644429.08,648213.5,80-89,222,0,6.889999866485596,4.0
+Mauritania,Guidimaka,130,Grassland,644429.08,648213.5,90-99,26,0,6.889999866485596,4.0
+Mauritania,Guidimaka,150,Sparse vegetation,25009.54,25084.48,0-9,30702,31801,4.710000038146973,4.0
+Mauritania,Guidimaka,150,Sparse vegetation,25009.54,25084.48,10-19,744,0,4.710000038146973,4.0
+Mauritania,Guidimaka,150,Sparse vegetation,25009.54,25084.48,20-29,219,0,4.710000038146973,4.0
+Mauritania,Guidimaka,150,Sparse vegetation,25009.54,25084.48,30-39,92,0,4.710000038146973,4.0
+Mauritania,Guidimaka,150,Sparse vegetation,25009.54,25084.48,40-49,26,0,4.710000038146973,4.0
+Mauritania,Guidimaka,150,Sparse vegetation,25009.54,25084.48,50-59,14,0,4.710000038146973,4.0
+Mauritania,Guidimaka,150,Sparse vegetation,25009.54,25084.48,60-69,3,0,4.710000038146973,4.0
+Mauritania,Guidimaka,150,Sparse vegetation,25009.54,25084.48,70-79,1,0,4.710000038146973,4.0
+Mauritania,Guidimaka,150,Sparse vegetation,25009.54,25084.48,80-89,0,0,4.710000038146973,4.0
+Mauritania,Guidimaka,150,Sparse vegetation,25009.54,25084.48,90-99,0,0,4.710000038146973,4.0
+Mauritania,Guidimaka,152,Sparse vegetation,1129.76,1134.98,0-9,1526,1673,5.920000076293945,4.0
+Mauritania,Guidimaka,152,Sparse vegetation,1129.76,1134.98,10-19,88,0,5.920000076293945,4.0
+Mauritania,Guidimaka,152,Sparse vegetation,1129.76,1134.98,20-29,31,0,5.920000076293945,4.0
+Mauritania,Guidimaka,152,Sparse vegetation,1129.76,1134.98,30-39,20,0,5.920000076293945,4.0
+Mauritania,Guidimaka,152,Sparse vegetation,1129.76,1134.98,40-49,4,0,5.920000076293945,4.0
+Mauritania,Guidimaka,152,Sparse vegetation,1129.76,1134.98,50-59,1,0,5.920000076293945,4.0
+Mauritania,Guidimaka,152,Sparse vegetation,1129.76,1134.98,60-69,2,0,5.920000076293945,4.0
+Mauritania,Guidimaka,152,Sparse vegetation,1129.76,1134.98,70-79,0,0,5.920000076293945,4.0
+Mauritania,Guidimaka,152,Sparse vegetation,1129.76,1134.98,80-89,1,0,5.920000076293945,4.0
+Mauritania,Guidimaka,152,Sparse vegetation,1129.76,1134.98,90-99,0,0,5.920000076293945,4.0
+Mauritania,Guidimaka,153,Sparse vegetation,804.04,804.04,0-9,1085,1114,4.53000020980835,4.0
+Mauritania,Guidimaka,153,Sparse vegetation,804.04,804.04,10-19,19,0,4.53000020980835,4.0
+Mauritania,Guidimaka,153,Sparse vegetation,804.04,804.04,20-29,7,0,4.53000020980835,4.0
+Mauritania,Guidimaka,153,Sparse vegetation,804.04,804.04,30-39,1,0,4.53000020980835,4.0
+Mauritania,Guidimaka,153,Sparse vegetation,804.04,804.04,40-49,1,0,4.53000020980835,4.0
+Mauritania,Guidimaka,153,Sparse vegetation,804.04,804.04,50-59,0,0,4.53000020980835,4.0
+Mauritania,Guidimaka,153,Sparse vegetation,804.04,804.04,60-69,1,0,4.53000020980835,4.0
+Mauritania,Guidimaka,153,Sparse vegetation,804.04,804.04,70-79,0,0,4.53000020980835,4.0
+Mauritania,Guidimaka,153,Sparse vegetation,804.04,804.04,80-89,0,0,4.53000020980835,4.0
+Mauritania,Guidimaka,153,Sparse vegetation,804.04,804.04,90-99,0,0,4.53000020980835,4.0
+Mauritania,Guidimaka,160,"Tree cover, flooded, fresh or brakish water",530.37,658.24,0-9,496,952,14.220000267028809,4.0
+Mauritania,Guidimaka,160,"Tree cover, flooded, fresh or brakish water",530.37,658.24,10-19,95,0,14.220000267028809,4.0
+Mauritania,Guidimaka,160,"Tree cover, flooded, fresh or brakish water",530.37,658.24,20-29,66,0,14.220000267028809,4.0
+Mauritania,Guidimaka,160,"Tree cover, flooded, fresh or brakish water",530.37,658.24,30-39,36,0,14.220000267028809,4.0
+Mauritania,Guidimaka,160,"Tree cover, flooded, fresh or brakish water",530.37,658.24,40-49,29,0,14.220000267028809,4.0
+Mauritania,Guidimaka,160,"Tree cover, flooded, fresh or brakish water",530.37,658.24,50-59,15,0,14.220000267028809,4.0
+Mauritania,Guidimaka,160,"Tree cover, flooded, fresh or brakish water",530.37,658.24,60-69,12,0,14.220000267028809,4.0
+Mauritania,Guidimaka,160,"Tree cover, flooded, fresh or brakish water",530.37,658.24,70-79,6,0,14.220000267028809,4.0
+Mauritania,Guidimaka,160,"Tree cover, flooded, fresh or brakish water",530.37,658.24,80-89,9,0,14.220000267028809,4.0
+Mauritania,Guidimaka,160,"Tree cover, flooded, fresh or brakish water",530.37,658.24,90-99,2,0,14.220000267028809,4.0
+Mauritania,Guidimaka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1256.08,1994.25,0-9,1181,2694,16.68000030517578,4.0
+Mauritania,Guidimaka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1256.08,1994.25,10-19,157,0,16.68000030517578,4.0
+Mauritania,Guidimaka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1256.08,1994.25,20-29,91,0,16.68000030517578,4.0
+Mauritania,Guidimaka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1256.08,1994.25,30-39,46,0,16.68000030517578,4.0
+Mauritania,Guidimaka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1256.08,1994.25,40-49,51,0,16.68000030517578,4.0
+Mauritania,Guidimaka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1256.08,1994.25,50-59,46,0,16.68000030517578,4.0
+Mauritania,Guidimaka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1256.08,1994.25,60-69,44,0,16.68000030517578,4.0
+Mauritania,Guidimaka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1256.08,1994.25,70-79,48,0,16.68000030517578,4.0
+Mauritania,Guidimaka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1256.08,1994.25,80-89,47,0,16.68000030517578,4.0
+Mauritania,Guidimaka,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",1256.08,1994.25,90-99,23,0,16.68000030517578,4.0
+Mauritania,Guidimaka,190,Urban areas,273.32,300.61,0-9,309,447,9.90999984741211,4.0
+Mauritania,Guidimaka,190,Urban areas,273.32,300.61,10-19,49,0,9.90999984741211,4.0
+Mauritania,Guidimaka,190,Urban areas,273.32,300.61,20-29,29,0,9.90999984741211,4.0
+Mauritania,Guidimaka,190,Urban areas,273.32,300.61,30-39,11,0,9.90999984741211,4.0
+Mauritania,Guidimaka,190,Urban areas,273.32,300.61,40-49,4,0,9.90999984741211,4.0
+Mauritania,Guidimaka,190,Urban areas,273.32,300.61,50-59,2,0,9.90999984741211,4.0
+Mauritania,Guidimaka,190,Urban areas,273.32,300.61,60-69,2,0,9.90999984741211,4.0
+Mauritania,Guidimaka,190,Urban areas,273.32,300.61,70-79,2,0,9.90999984741211,4.0
+Mauritania,Guidimaka,190,Urban areas,273.32,300.61,80-89,3,0,9.90999984741211,4.0
+Mauritania,Guidimaka,190,Urban areas,273.32,300.61,90-99,0,0,9.90999984741211,4.0
+Mauritania,Guidimaka,200,Bare areas,4109.4,4142.36,0-9,5201,5348,4.559999942779541,4.0
+Mauritania,Guidimaka,200,Bare areas,4109.4,4142.36,10-19,110,0,4.559999942779541,4.0
+Mauritania,Guidimaka,200,Bare areas,4109.4,4142.36,20-29,27,0,4.559999942779541,4.0
+Mauritania,Guidimaka,200,Bare areas,4109.4,4142.36,30-39,12,0,4.559999942779541,4.0
+Mauritania,Guidimaka,200,Bare areas,4109.4,4142.36,40-49,2,0,4.559999942779541,4.0
+Mauritania,Guidimaka,200,Bare areas,4109.4,4142.36,50-59,0,0,4.559999942779541,4.0
+Mauritania,Guidimaka,200,Bare areas,4109.4,4142.36,60-69,0,0,4.559999942779541,4.0
+Mauritania,Guidimaka,200,Bare areas,4109.4,4142.36,70-79,0,0,4.559999942779541,4.0
+Mauritania,Guidimaka,200,Bare areas,4109.4,4142.36,80-89,0,0,4.559999942779541,4.0
+Mauritania,Guidimaka,200,Bare areas,4109.4,4142.36,90-99,0,0,4.559999942779541,4.0
+Mauritania,Guidimaka,210,Water bodies,1450.72,2136.7,0-9,1646,2807,11.3100004196167,4.0
+Mauritania,Guidimaka,210,Water bodies,1450.72,2136.7,10-19,145,0,11.3100004196167,4.0
+Mauritania,Guidimaka,210,Water bodies,1450.72,2136.7,20-29,80,0,11.3100004196167,4.0
+Mauritania,Guidimaka,210,Water bodies,1450.72,2136.7,30-39,42,0,11.3100004196167,4.0
+Mauritania,Guidimaka,210,Water bodies,1450.72,2136.7,40-49,31,0,11.3100004196167,4.0
+Mauritania,Guidimaka,210,Water bodies,1450.72,2136.7,50-59,33,0,11.3100004196167,4.0
+Mauritania,Guidimaka,210,Water bodies,1450.72,2136.7,60-69,25,0,11.3100004196167,4.0
+Mauritania,Guidimaka,210,Water bodies,1450.72,2136.7,70-79,36,0,11.3100004196167,4.0
+Mauritania,Guidimaka,210,Water bodies,1450.72,2136.7,80-89,36,0,11.3100004196167,4.0
+Mauritania,Guidimaka,210,Water bodies,1450.72,2136.7,90-99,5,0,11.3100004196167,4.0
+Mauritania,Guidimaka,255,No Data (flag),1576.59,914207.87,0-9,3602,5047,9.699999809265137,4.0
+Mauritania,Guidimaka,255,No Data (flag),1576.59,914207.87,10-19,353,0,9.699999809265137,4.0
+Mauritania,Guidimaka,255,No Data (flag),1576.59,914207.87,20-29,185,0,9.699999809265137,4.0
+Mauritania,Guidimaka,255,No Data (flag),1576.59,914207.87,30-39,94,0,9.699999809265137,4.0
+Mauritania,Guidimaka,255,No Data (flag),1576.59,914207.87,40-49,80,0,9.699999809265137,4.0
+Mauritania,Guidimaka,255,No Data (flag),1576.59,914207.87,50-59,67,0,9.699999809265137,4.0
+Mauritania,Guidimaka,255,No Data (flag),1576.59,914207.87,60-69,54,0,9.699999809265137,4.0
+Mauritania,Guidimaka,255,No Data (flag),1576.59,914207.87,70-79,24,0,9.699999809265137,4.0
+Mauritania,Guidimaka,255,No Data (flag),1576.59,914207.87,80-89,18,0,9.699999809265137,4.0
+Mauritania,Guidimaka,255,No Data (flag),1576.59,914207.87,90-99,8,0,9.699999809265137,4.0
+Mauritania,Hodh ech Chargui,10,"Cropland, rainfed",156139.47,157451.73,0-9,160785,194799,11.930000305175781,4.0
+Mauritania,Hodh ech Chargui,10,"Cropland, rainfed",156139.47,157451.73,10-19,7919,0,11.930000305175781,4.0
+Mauritania,Hodh ech Chargui,10,"Cropland, rainfed",156139.47,157451.73,20-29,3705,0,11.930000305175781,4.0
+Mauritania,Hodh ech Chargui,10,"Cropland, rainfed",156139.47,157451.73,30-39,2884,0,11.930000305175781,4.0
+Mauritania,Hodh ech Chargui,10,"Cropland, rainfed",156139.47,157451.73,40-49,2596,0,11.930000305175781,4.0
+Mauritania,Hodh ech Chargui,10,"Cropland, rainfed",156139.47,157451.73,50-59,2584,0,11.930000305175781,4.0
+Mauritania,Hodh ech Chargui,10,"Cropland, rainfed",156139.47,157451.73,60-69,2783,0,11.930000305175781,4.0
+Mauritania,Hodh ech Chargui,10,"Cropland, rainfed",156139.47,157451.73,70-79,3060,0,11.930000305175781,4.0
+Mauritania,Hodh ech Chargui,10,"Cropland, rainfed",156139.47,157451.73,80-89,4193,0,11.930000305175781,4.0
+Mauritania,Hodh ech Chargui,10,"Cropland, rainfed",156139.47,157451.73,90-99,2898,0,11.930000305175781,4.0
+Mauritania,Hodh ech Chargui,11,"Cropland, rainfed",8745.25,8843.46,0-9,8119,11740,17.049999237060547,4.0
+Mauritania,Hodh ech Chargui,11,"Cropland, rainfed",8745.25,8843.46,10-19,677,1,17.049999237060547,4.0
+Mauritania,Hodh ech Chargui,11,"Cropland, rainfed",8745.25,8843.46,20-29,538,0,17.049999237060547,4.0
+Mauritania,Hodh ech Chargui,11,"Cropland, rainfed",8745.25,8843.46,30-39,407,0,17.049999237060547,4.0
+Mauritania,Hodh ech Chargui,11,"Cropland, rainfed",8745.25,8843.46,40-49,405,0,17.049999237060547,4.0
+Mauritania,Hodh ech Chargui,11,"Cropland, rainfed",8745.25,8843.46,50-59,344,0,17.049999237060547,4.0
+Mauritania,Hodh ech Chargui,11,"Cropland, rainfed",8745.25,8843.46,60-69,349,0,17.049999237060547,4.0
+Mauritania,Hodh ech Chargui,11,"Cropland, rainfed",8745.25,8843.46,70-79,384,0,17.049999237060547,4.0
+Mauritania,Hodh ech Chargui,11,"Cropland, rainfed",8745.25,8843.46,80-89,283,0,17.049999237060547,4.0
+Mauritania,Hodh ech Chargui,11,"Cropland, rainfed",8745.25,8843.46,90-99,136,0,17.049999237060547,4.0
+Mauritania,Hodh ech Chargui,20,"Cropland, irrigated or post-flooding",24035.84,24096.35,0-9,19643,30829,23.739999771118164,4.03000020980835
+Mauritania,Hodh ech Chargui,20,"Cropland, irrigated or post-flooding",24035.84,24096.35,10-19,1705,20,23.739999771118164,4.03000020980835
+Mauritania,Hodh ech Chargui,20,"Cropland, irrigated or post-flooding",24035.84,24096.35,20-29,1099,0,23.739999771118164,4.03000020980835
+Mauritania,Hodh ech Chargui,20,"Cropland, irrigated or post-flooding",24035.84,24096.35,30-39,882,0,23.739999771118164,4.03000020980835
+Mauritania,Hodh ech Chargui,20,"Cropland, irrigated or post-flooding",24035.84,24096.35,40-49,831,0,23.739999771118164,4.03000020980835
+Mauritania,Hodh ech Chargui,20,"Cropland, irrigated or post-flooding",24035.84,24096.35,50-59,892,0,23.739999771118164,4.03000020980835
+Mauritania,Hodh ech Chargui,20,"Cropland, irrigated or post-flooding",24035.84,24096.35,60-69,901,0,23.739999771118164,4.03000020980835
+Mauritania,Hodh ech Chargui,20,"Cropland, irrigated or post-flooding",24035.84,24096.35,70-79,1125,0,23.739999771118164,4.03000020980835
+Mauritania,Hodh ech Chargui,20,"Cropland, irrigated or post-flooding",24035.84,24096.35,80-89,1747,0,23.739999771118164,4.03000020980835
+Mauritania,Hodh ech Chargui,20,"Cropland, irrigated or post-flooding",24035.84,24096.35,90-99,1958,0,23.739999771118164,4.03000020980835
+Mauritania,Hodh ech Chargui,30,Mosaic cropland / natural vegetation,100334.32,101598.92,0-9,110622,124329,9.010000228881836,4.0
+Mauritania,Hodh ech Chargui,30,Mosaic cropland / natural vegetation,100334.32,101598.92,10-19,2495,0,9.010000228881836,4.0
+Mauritania,Hodh ech Chargui,30,Mosaic cropland / natural vegetation,100334.32,101598.92,20-29,1329,0,9.010000228881836,4.0
+Mauritania,Hodh ech Chargui,30,Mosaic cropland / natural vegetation,100334.32,101598.92,30-39,1120,0,9.010000228881836,4.0
+Mauritania,Hodh ech Chargui,30,Mosaic cropland / natural vegetation,100334.32,101598.92,40-49,1047,0,9.010000228881836,4.0
+Mauritania,Hodh ech Chargui,30,Mosaic cropland / natural vegetation,100334.32,101598.92,50-59,1070,0,9.010000228881836,4.0
+Mauritania,Hodh ech Chargui,30,Mosaic cropland / natural vegetation,100334.32,101598.92,60-69,1192,0,9.010000228881836,4.0
+Mauritania,Hodh ech Chargui,30,Mosaic cropland / natural vegetation,100334.32,101598.92,70-79,1310,0,9.010000228881836,4.0
+Mauritania,Hodh ech Chargui,30,Mosaic cropland / natural vegetation,100334.32,101598.92,80-89,1492,0,9.010000228881836,4.0
+Mauritania,Hodh ech Chargui,30,Mosaic cropland / natural vegetation,100334.32,101598.92,90-99,1244,0,9.010000228881836,4.0
+Mauritania,Hodh ech Chargui,40,Mosaic natural vegetation / cropland,77742.75,78356.4,0-9,90376,101007,8.15999984741211,4.0
+Mauritania,Hodh ech Chargui,40,Mosaic natural vegetation / cropland,77742.75,78356.4,10-19,2915,1,8.15999984741211,4.0
+Mauritania,Hodh ech Chargui,40,Mosaic natural vegetation / cropland,77742.75,78356.4,20-29,1352,0,8.15999984741211,4.0
+Mauritania,Hodh ech Chargui,40,Mosaic natural vegetation / cropland,77742.75,78356.4,30-39,943,0,8.15999984741211,4.0
+Mauritania,Hodh ech Chargui,40,Mosaic natural vegetation / cropland,77742.75,78356.4,40-49,836,0,8.15999984741211,4.0
+Mauritania,Hodh ech Chargui,40,Mosaic natural vegetation / cropland,77742.75,78356.4,50-59,799,0,8.15999984741211,4.0
+Mauritania,Hodh ech Chargui,40,Mosaic natural vegetation / cropland,77742.75,78356.4,60-69,773,0,8.15999984741211,4.0
+Mauritania,Hodh ech Chargui,40,Mosaic natural vegetation / cropland,77742.75,78356.4,70-79,871,0,8.15999984741211,4.0
+Mauritania,Hodh ech Chargui,40,Mosaic natural vegetation / cropland,77742.75,78356.4,80-89,908,0,8.15999984741211,4.0
+Mauritania,Hodh ech Chargui,40,Mosaic natural vegetation / cropland,77742.75,78356.4,90-99,536,0,8.15999984741211,4.0
+Mauritania,Hodh ech Chargui,100,Mosaic tree and shrub / herbaceous cover,14126.55,14163.93,0-9,17190,18858,7.699999809265137,4.0
+Mauritania,Hodh ech Chargui,100,Mosaic tree and shrub / herbaceous cover,14126.55,14163.93,10-19,501,0,7.699999809265137,4.0
+Mauritania,Hodh ech Chargui,100,Mosaic tree and shrub / herbaceous cover,14126.55,14163.93,20-29,217,0,7.699999809265137,4.0
+Mauritania,Hodh ech Chargui,100,Mosaic tree and shrub / herbaceous cover,14126.55,14163.93,30-39,137,0,7.699999809265137,4.0
+Mauritania,Hodh ech Chargui,100,Mosaic tree and shrub / herbaceous cover,14126.55,14163.93,40-49,125,0,7.699999809265137,4.0
+Mauritania,Hodh ech Chargui,100,Mosaic tree and shrub / herbaceous cover,14126.55,14163.93,50-59,96,0,7.699999809265137,4.0
+Mauritania,Hodh ech Chargui,100,Mosaic tree and shrub / herbaceous cover,14126.55,14163.93,60-69,102,0,7.699999809265137,4.0
+Mauritania,Hodh ech Chargui,100,Mosaic tree and shrub / herbaceous cover,14126.55,14163.93,70-79,133,0,7.699999809265137,4.0
+Mauritania,Hodh ech Chargui,100,Mosaic tree and shrub / herbaceous cover,14126.55,14163.93,80-89,167,0,7.699999809265137,4.0
+Mauritania,Hodh ech Chargui,100,Mosaic tree and shrub / herbaceous cover,14126.55,14163.93,90-99,141,0,7.699999809265137,4.0
+Mauritania,Hodh ech Chargui,110,Mosaic herbaceous cover / tree and shrub,39290.04,39423.86,0-9,46248,52148,7.829999923706055,4.0
+Mauritania,Hodh ech Chargui,110,Mosaic herbaceous cover / tree and shrub,39290.04,39423.86,10-19,1999,0,7.829999923706055,4.0
+Mauritania,Hodh ech Chargui,110,Mosaic herbaceous cover / tree and shrub,39290.04,39423.86,20-29,979,0,7.829999923706055,4.0
+Mauritania,Hodh ech Chargui,110,Mosaic herbaceous cover / tree and shrub,39290.04,39423.86,30-39,643,0,7.829999923706055,4.0
+Mauritania,Hodh ech Chargui,110,Mosaic herbaceous cover / tree and shrub,39290.04,39423.86,40-49,500,0,7.829999923706055,4.0
+Mauritania,Hodh ech Chargui,110,Mosaic herbaceous cover / tree and shrub,39290.04,39423.86,50-59,410,0,7.829999923706055,4.0
+Mauritania,Hodh ech Chargui,110,Mosaic herbaceous cover / tree and shrub,39290.04,39423.86,60-69,354,0,7.829999923706055,4.0
+Mauritania,Hodh ech Chargui,110,Mosaic herbaceous cover / tree and shrub,39290.04,39423.86,70-79,331,0,7.829999923706055,4.0
+Mauritania,Hodh ech Chargui,110,Mosaic herbaceous cover / tree and shrub,39290.04,39423.86,80-89,317,0,7.829999923706055,4.0
+Mauritania,Hodh ech Chargui,110,Mosaic herbaceous cover / tree and shrub,39290.04,39423.86,90-99,185,0,7.829999923706055,4.0
+Mauritania,Hodh ech Chargui,120,Shrubland,119476.79,120851.44,0-9,124878,151740,10.819999694824219,4.0
+Mauritania,Hodh ech Chargui,120,Shrubland,119476.79,120851.44,10-19,7558,0,10.819999694824219,4.0
+Mauritania,Hodh ech Chargui,120,Shrubland,119476.79,120851.44,20-29,3694,0,10.819999694824219,4.0
+Mauritania,Hodh ech Chargui,120,Shrubland,119476.79,120851.44,30-39,2544,0,10.819999694824219,4.0
+Mauritania,Hodh ech Chargui,120,Shrubland,119476.79,120851.44,40-49,1990,0,10.819999694824219,4.0
+Mauritania,Hodh ech Chargui,120,Shrubland,119476.79,120851.44,50-59,1831,0,10.819999694824219,4.0
+Mauritania,Hodh ech Chargui,120,Shrubland,119476.79,120851.44,60-69,1670,0,10.819999694824219,4.0
+Mauritania,Hodh ech Chargui,120,Shrubland,119476.79,120851.44,70-79,1732,0,10.819999694824219,4.0
+Mauritania,Hodh ech Chargui,120,Shrubland,119476.79,120851.44,80-89,2237,0,10.819999694824219,4.0
+Mauritania,Hodh ech Chargui,120,Shrubland,119476.79,120851.44,90-99,1917,0,10.819999694824219,4.0
+Mauritania,Hodh ech Chargui,130,Grassland,3333880.08,3370699.67,0-9,3087080,3533240,7.5,4.0
+Mauritania,Hodh ech Chargui,130,Grassland,3333880.08,3370699.67,10-19,175304,1,7.5,4.0
+Mauritania,Hodh ech Chargui,130,Grassland,3333880.08,3370699.67,20-29,78916,0,7.5,4.0
+Mauritania,Hodh ech Chargui,130,Grassland,3333880.08,3370699.67,30-39,49610,0,7.5,4.0
+Mauritania,Hodh ech Chargui,130,Grassland,3333880.08,3370699.67,40-49,33723,0,7.5,4.0
+Mauritania,Hodh ech Chargui,130,Grassland,3333880.08,3370699.67,50-59,23809,0,7.5,4.0
+Mauritania,Hodh ech Chargui,130,Grassland,3333880.08,3370699.67,60-69,17998,0,7.5,4.0
+Mauritania,Hodh ech Chargui,130,Grassland,3333880.08,3370699.67,70-79,14039,0,7.5,4.0
+Mauritania,Hodh ech Chargui,130,Grassland,3333880.08,3370699.67,80-89,11213,0,7.5,4.0
+Mauritania,Hodh ech Chargui,130,Grassland,3333880.08,3370699.67,90-99,4604,0,7.5,4.0
+Mauritania,Hodh ech Chargui,150,Sparse vegetation,803368.0,834667.63,0-9,926500,1009676,5.139999866485596,4.0
+Mauritania,Hodh ech Chargui,150,Sparse vegetation,803368.0,834667.63,10-19,26590,0,5.139999866485596,4.0
+Mauritania,Hodh ech Chargui,150,Sparse vegetation,803368.0,834667.63,20-29,8239,0,5.139999866485596,4.0
+Mauritania,Hodh ech Chargui,150,Sparse vegetation,803368.0,834667.63,30-39,3478,0,5.139999866485596,4.0
+Mauritania,Hodh ech Chargui,150,Sparse vegetation,803368.0,834667.63,40-49,1810,0,5.139999866485596,4.0
+Mauritania,Hodh ech Chargui,150,Sparse vegetation,803368.0,834667.63,50-59,1056,0,5.139999866485596,4.0
+Mauritania,Hodh ech Chargui,150,Sparse vegetation,803368.0,834667.63,60-69,653,0,5.139999866485596,4.0
+Mauritania,Hodh ech Chargui,150,Sparse vegetation,803368.0,834667.63,70-79,521,0,5.139999866485596,4.0
+Mauritania,Hodh ech Chargui,150,Sparse vegetation,803368.0,834667.63,80-89,365,0,5.139999866485596,4.0
+Mauritania,Hodh ech Chargui,150,Sparse vegetation,803368.0,834667.63,90-99,117,0,5.139999866485596,4.0
+Mauritania,Hodh ech Chargui,152,Sparse vegetation,14027.95,14156.05,0-9,17507,19347,6.480000019073486,4.0
+Mauritania,Hodh ech Chargui,152,Sparse vegetation,14027.95,14156.05,10-19,728,0,6.480000019073486,4.0
+Mauritania,Hodh ech Chargui,152,Sparse vegetation,14027.95,14156.05,20-29,326,0,6.480000019073486,4.0
+Mauritania,Hodh ech Chargui,152,Sparse vegetation,14027.95,14156.05,30-39,189,0,6.480000019073486,4.0
+Mauritania,Hodh ech Chargui,152,Sparse vegetation,14027.95,14156.05,40-49,125,0,6.480000019073486,4.0
+Mauritania,Hodh ech Chargui,152,Sparse vegetation,14027.95,14156.05,50-59,97,0,6.480000019073486,4.0
+Mauritania,Hodh ech Chargui,152,Sparse vegetation,14027.95,14156.05,60-69,87,0,6.480000019073486,4.0
+Mauritania,Hodh ech Chargui,152,Sparse vegetation,14027.95,14156.05,70-79,48,0,6.480000019073486,4.0
+Mauritania,Hodh ech Chargui,152,Sparse vegetation,14027.95,14156.05,80-89,40,0,6.480000019073486,4.0
+Mauritania,Hodh ech Chargui,152,Sparse vegetation,14027.95,14156.05,90-99,18,0,6.480000019073486,4.0
+Mauritania,Hodh ech Chargui,153,Sparse vegetation,437499.32,444998.11,0-9,483232,513480,5.0,4.0
+Mauritania,Hodh ech Chargui,153,Sparse vegetation,437499.32,444998.11,10-19,12999,0,5.0,4.0
+Mauritania,Hodh ech Chargui,153,Sparse vegetation,437499.32,444998.11,20-29,4669,0,5.0,4.0
+Mauritania,Hodh ech Chargui,153,Sparse vegetation,437499.32,444998.11,30-39,1950,0,5.0,4.0
+Mauritania,Hodh ech Chargui,153,Sparse vegetation,437499.32,444998.11,40-49,833,0,5.0,4.0
+Mauritania,Hodh ech Chargui,153,Sparse vegetation,437499.32,444998.11,50-59,394,0,5.0,4.0
+Mauritania,Hodh ech Chargui,153,Sparse vegetation,437499.32,444998.11,60-69,196,0,5.0,4.0
+Mauritania,Hodh ech Chargui,153,Sparse vegetation,437499.32,444998.11,70-79,117,0,5.0,4.0
+Mauritania,Hodh ech Chargui,153,Sparse vegetation,437499.32,444998.11,80-89,71,0,5.0,4.0
+Mauritania,Hodh ech Chargui,153,Sparse vegetation,437499.32,444998.11,90-99,17,0,5.0,4.0
+Mauritania,Hodh ech Chargui,190,Urban areas,285.03,285.03,0-9,346,402,10.460000038146973,4.0
+Mauritania,Hodh ech Chargui,190,Urban areas,285.03,285.03,10-19,18,0,10.460000038146973,4.0
+Mauritania,Hodh ech Chargui,190,Urban areas,285.03,285.03,20-29,8,0,10.460000038146973,4.0
+Mauritania,Hodh ech Chargui,190,Urban areas,285.03,285.03,30-39,2,0,10.460000038146973,4.0
+Mauritania,Hodh ech Chargui,190,Urban areas,285.03,285.03,40-49,2,0,10.460000038146973,4.0
+Mauritania,Hodh ech Chargui,190,Urban areas,285.03,285.03,50-59,5,0,10.460000038146973,4.0
+Mauritania,Hodh ech Chargui,190,Urban areas,285.03,285.03,60-69,1,0,10.460000038146973,4.0
+Mauritania,Hodh ech Chargui,190,Urban areas,285.03,285.03,70-79,1,0,10.460000038146973,4.0
+Mauritania,Hodh ech Chargui,190,Urban areas,285.03,285.03,80-89,6,0,10.460000038146973,4.0
+Mauritania,Hodh ech Chargui,190,Urban areas,285.03,285.03,90-99,13,0,10.460000038146973,4.0
+Mauritania,Hodh ech Chargui,200,Bare areas,1139023.37,13670295.71,0-9,1217722,13794439,4.960000038146973,4.0
+Mauritania,Hodh ech Chargui,200,Bare areas,1139023.37,13670295.71,10-19,27343,0,4.960000038146973,4.0
+Mauritania,Hodh ech Chargui,200,Bare areas,1139023.37,13670295.71,20-29,7459,0,4.960000038146973,4.0
+Mauritania,Hodh ech Chargui,200,Bare areas,1139023.37,13670295.71,30-39,3197,0,4.960000038146973,4.0
+Mauritania,Hodh ech Chargui,200,Bare areas,1139023.37,13670295.71,40-49,1792,0,4.960000038146973,4.0
+Mauritania,Hodh ech Chargui,200,Bare areas,1139023.37,13670295.71,50-59,1035,0,4.960000038146973,4.0
+Mauritania,Hodh ech Chargui,200,Bare areas,1139023.37,13670295.71,60-69,594,0,4.960000038146973,4.0
+Mauritania,Hodh ech Chargui,200,Bare areas,1139023.37,13670295.71,70-79,436,0,4.960000038146973,4.0
+Mauritania,Hodh ech Chargui,200,Bare areas,1139023.37,13670295.71,80-89,249,0,4.960000038146973,4.0
+Mauritania,Hodh ech Chargui,200,Bare areas,1139023.37,13670295.71,90-99,70,0,4.960000038146973,4.0
+Mauritania,Hodh ech Chargui,201,Bare areas,2890.4,2908.7,0-9,3316,3578,6.460000038146973,4.0
+Mauritania,Hodh ech Chargui,201,Bare areas,2890.4,2908.7,10-19,62,0,6.460000038146973,4.0
+Mauritania,Hodh ech Chargui,201,Bare areas,2890.4,2908.7,20-29,46,0,6.460000038146973,4.0
+Mauritania,Hodh ech Chargui,201,Bare areas,2890.4,2908.7,30-39,27,0,6.460000038146973,4.0
+Mauritania,Hodh ech Chargui,201,Bare areas,2890.4,2908.7,40-49,21,0,6.460000038146973,4.0
+Mauritania,Hodh ech Chargui,201,Bare areas,2890.4,2908.7,50-59,17,0,6.460000038146973,4.0
+Mauritania,Hodh ech Chargui,201,Bare areas,2890.4,2908.7,60-69,19,0,6.460000038146973,4.0
+Mauritania,Hodh ech Chargui,201,Bare areas,2890.4,2908.7,70-79,17,0,6.460000038146973,4.0
+Mauritania,Hodh ech Chargui,201,Bare areas,2890.4,2908.7,80-89,12,0,6.460000038146973,4.0
+Mauritania,Hodh ech Chargui,201,Bare areas,2890.4,2908.7,90-99,10,0,6.460000038146973,4.0
+Mauritania,Hodh ech Chargui,210,Water bodies,5008.82,5175.63,0-9,5377,5798,4.840000152587891,4.090000152587891
+Mauritania,Hodh ech Chargui,210,Water bodies,5008.82,5175.63,10-19,94,7,4.840000152587891,4.090000152587891
+Mauritania,Hodh ech Chargui,210,Water bodies,5008.82,5175.63,20-29,52,0,4.840000152587891,4.090000152587891
+Mauritania,Hodh ech Chargui,210,Water bodies,5008.82,5175.63,30-39,22,0,4.840000152587891,4.090000152587891
+Mauritania,Hodh ech Chargui,210,Water bodies,5008.82,5175.63,40-49,13,0,4.840000152587891,4.090000152587891
+Mauritania,Hodh ech Chargui,210,Water bodies,5008.82,5175.63,50-59,12,0,4.840000152587891,4.090000152587891
+Mauritania,Hodh ech Chargui,210,Water bodies,5008.82,5175.63,60-69,5,0,4.840000152587891,4.090000152587891
+Mauritania,Hodh ech Chargui,210,Water bodies,5008.82,5175.63,70-79,0,0,4.840000152587891,4.090000152587891
+Mauritania,Hodh ech Chargui,210,Water bodies,5008.82,5175.63,80-89,2,0,4.840000152587891,4.090000152587891
+Mauritania,Hodh ech Chargui,210,Water bodies,5008.82,5175.63,90-99,0,0,4.840000152587891,4.090000152587891
+Mauritania,Hodh ech Chargui,255,No Data (flag),1276.24,15831836.0,0-9,3317,21974,5.590000152587891,4.0
+Mauritania,Hodh ech Chargui,255,No Data (flag),1276.24,15831836.0,10-19,131,0,5.590000152587891,4.0
+Mauritania,Hodh ech Chargui,255,No Data (flag),1276.24,15831836.0,20-29,33,0,5.590000152587891,4.0
+Mauritania,Hodh ech Chargui,255,No Data (flag),1276.24,15831836.0,30-39,16,0,5.590000152587891,4.0
+Mauritania,Hodh ech Chargui,255,No Data (flag),1276.24,15831836.0,40-49,9,0,5.590000152587891,4.0
+Mauritania,Hodh ech Chargui,255,No Data (flag),1276.24,15831836.0,50-59,5,0,5.590000152587891,4.0
+Mauritania,Hodh ech Chargui,255,No Data (flag),1276.24,15831836.0,60-69,2,0,5.590000152587891,4.0
+Mauritania,Hodh ech Chargui,255,No Data (flag),1276.24,15831836.0,70-79,3,0,5.590000152587891,4.0
+Mauritania,Hodh ech Chargui,255,No Data (flag),1276.24,15831836.0,80-89,4,0,5.590000152587891,4.0
+Mauritania,Hodh ech Chargui,255,No Data (flag),1276.24,15831836.0,90-99,5,0,5.590000152587891,4.0
+Mauritania,Hodh el Gharbi,10,"Cropland, rainfed",306318.13,311775.73,0-9,305256,363716,9.020000457763672,4.0
+Mauritania,Hodh el Gharbi,10,"Cropland, rainfed",306318.13,311775.73,10-19,22197,42,9.020000457763672,4.0
+Mauritania,Hodh el Gharbi,10,"Cropland, rainfed",306318.13,311775.73,20-29,8498,0,9.020000457763672,4.0
+Mauritania,Hodh el Gharbi,10,"Cropland, rainfed",306318.13,311775.73,30-39,5298,0,9.020000457763672,4.0
+Mauritania,Hodh el Gharbi,10,"Cropland, rainfed",306318.13,311775.73,40-49,3828,0,9.020000457763672,4.0
+Mauritania,Hodh el Gharbi,10,"Cropland, rainfed",306318.13,311775.73,50-59,3198,0,9.020000457763672,4.0
+Mauritania,Hodh el Gharbi,10,"Cropland, rainfed",306318.13,311775.73,60-69,2714,0,9.020000457763672,4.0
+Mauritania,Hodh el Gharbi,10,"Cropland, rainfed",306318.13,311775.73,70-79,2648,0,9.020000457763672,4.0
+Mauritania,Hodh el Gharbi,10,"Cropland, rainfed",306318.13,311775.73,80-89,2846,0,9.020000457763672,4.0
+Mauritania,Hodh el Gharbi,10,"Cropland, rainfed",306318.13,311775.73,90-99,1488,0,9.020000457763672,4.0
+Mauritania,Hodh el Gharbi,11,"Cropland, rainfed",8774.32,8817.6,0-9,7996,11815,17.389999389648438,4.0
+Mauritania,Hodh el Gharbi,11,"Cropland, rainfed",8774.32,8817.6,10-19,960,1,17.389999389648438,4.0
+Mauritania,Hodh el Gharbi,11,"Cropland, rainfed",8774.32,8817.6,20-29,559,0,17.389999389648438,4.0
+Mauritania,Hodh el Gharbi,11,"Cropland, rainfed",8774.32,8817.6,30-39,453,0,17.389999389648438,4.0
+Mauritania,Hodh el Gharbi,11,"Cropland, rainfed",8774.32,8817.6,40-49,331,0,17.389999389648438,4.0
+Mauritania,Hodh el Gharbi,11,"Cropland, rainfed",8774.32,8817.6,50-59,320,0,17.389999389648438,4.0
+Mauritania,Hodh el Gharbi,11,"Cropland, rainfed",8774.32,8817.6,60-69,324,0,17.389999389648438,4.0
+Mauritania,Hodh el Gharbi,11,"Cropland, rainfed",8774.32,8817.6,70-79,330,0,17.389999389648438,4.0
+Mauritania,Hodh el Gharbi,11,"Cropland, rainfed",8774.32,8817.6,80-89,339,0,17.389999389648438,4.0
+Mauritania,Hodh el Gharbi,11,"Cropland, rainfed",8774.32,8817.6,90-99,187,0,17.389999389648438,4.0
+Mauritania,Hodh el Gharbi,20,"Cropland, irrigated or post-flooding",6758.23,6887.84,0-9,5145,8770,23.729999542236328,4.0
+Mauritania,Hodh el Gharbi,20,"Cropland, irrigated or post-flooding",6758.23,6887.84,10-19,702,0,23.729999542236328,4.0
+Mauritania,Hodh el Gharbi,20,"Cropland, irrigated or post-flooding",6758.23,6887.84,20-29,417,0,23.729999542236328,4.0
+Mauritania,Hodh el Gharbi,20,"Cropland, irrigated or post-flooding",6758.23,6887.84,30-39,318,0,23.729999542236328,4.0
+Mauritania,Hodh el Gharbi,20,"Cropland, irrigated or post-flooding",6758.23,6887.84,40-49,256,0,23.729999542236328,4.0
+Mauritania,Hodh el Gharbi,20,"Cropland, irrigated or post-flooding",6758.23,6887.84,50-59,276,0,23.729999542236328,4.0
+Mauritania,Hodh el Gharbi,20,"Cropland, irrigated or post-flooding",6758.23,6887.84,60-69,313,0,23.729999542236328,4.0
+Mauritania,Hodh el Gharbi,20,"Cropland, irrigated or post-flooding",6758.23,6887.84,70-79,379,0,23.729999542236328,4.0
+Mauritania,Hodh el Gharbi,20,"Cropland, irrigated or post-flooding",6758.23,6887.84,80-89,504,0,23.729999542236328,4.0
+Mauritania,Hodh el Gharbi,20,"Cropland, irrigated or post-flooding",6758.23,6887.84,90-99,336,0,23.729999542236328,4.0
+Mauritania,Hodh el Gharbi,30,Mosaic cropland / natural vegetation,321255.25,325815.67,0-9,343369,382372,6.309999942779541,4.0
+Mauritania,Hodh el Gharbi,30,Mosaic cropland / natural vegetation,321255.25,325815.67,10-19,20315,19,6.309999942779541,4.0
+Mauritania,Hodh el Gharbi,30,Mosaic cropland / natural vegetation,321255.25,325815.67,20-29,6139,0,6.309999942779541,4.0
+Mauritania,Hodh el Gharbi,30,Mosaic cropland / natural vegetation,321255.25,325815.67,30-39,2845,0,6.309999942779541,4.0
+Mauritania,Hodh el Gharbi,30,Mosaic cropland / natural vegetation,321255.25,325815.67,40-49,1586,0,6.309999942779541,4.0
+Mauritania,Hodh el Gharbi,30,Mosaic cropland / natural vegetation,321255.25,325815.67,50-59,994,0,6.309999942779541,4.0
+Mauritania,Hodh el Gharbi,30,Mosaic cropland / natural vegetation,321255.25,325815.67,60-69,715,0,6.309999942779541,4.0
+Mauritania,Hodh el Gharbi,30,Mosaic cropland / natural vegetation,321255.25,325815.67,70-79,554,0,6.309999942779541,4.0
+Mauritania,Hodh el Gharbi,30,Mosaic cropland / natural vegetation,321255.25,325815.67,80-89,465,0,6.309999942779541,4.0
+Mauritania,Hodh el Gharbi,30,Mosaic cropland / natural vegetation,321255.25,325815.67,90-99,260,0,6.309999942779541,4.0
+Mauritania,Hodh el Gharbi,40,Mosaic natural vegetation / cropland,246908.56,248231.62,0-9,271581,298005,6.28000020980835,4.0
+Mauritania,Hodh el Gharbi,40,Mosaic natural vegetation / cropland,246908.56,248231.62,10-19,14380,10,6.28000020980835,4.0
+Mauritania,Hodh el Gharbi,40,Mosaic natural vegetation / cropland,246908.56,248231.62,20-29,4484,0,6.28000020980835,4.0
+Mauritania,Hodh el Gharbi,40,Mosaic natural vegetation / cropland,246908.56,248231.62,30-39,2280,0,6.28000020980835,4.0
+Mauritania,Hodh el Gharbi,40,Mosaic natural vegetation / cropland,246908.56,248231.62,40-49,1357,0,6.28000020980835,4.0
+Mauritania,Hodh el Gharbi,40,Mosaic natural vegetation / cropland,246908.56,248231.62,50-59,843,0,6.28000020980835,4.0
+Mauritania,Hodh el Gharbi,40,Mosaic natural vegetation / cropland,246908.56,248231.62,60-69,532,0,6.28000020980835,4.0
+Mauritania,Hodh el Gharbi,40,Mosaic natural vegetation / cropland,246908.56,248231.62,70-79,376,0,6.28000020980835,4.0
+Mauritania,Hodh el Gharbi,40,Mosaic natural vegetation / cropland,246908.56,248231.62,80-89,351,0,6.28000020980835,4.0
+Mauritania,Hodh el Gharbi,40,Mosaic natural vegetation / cropland,246908.56,248231.62,90-99,277,0,6.28000020980835,4.0
+Mauritania,Hodh el Gharbi,100,Mosaic tree and shrub / herbaceous cover,19264.3,19293.7,0-9,21233,27160,10.850000381469727,4.0
+Mauritania,Hodh el Gharbi,100,Mosaic tree and shrub / herbaceous cover,19264.3,19293.7,10-19,2346,0,10.850000381469727,4.0
+Mauritania,Hodh el Gharbi,100,Mosaic tree and shrub / herbaceous cover,19264.3,19293.7,20-29,1093,0,10.850000381469727,4.0
+Mauritania,Hodh el Gharbi,100,Mosaic tree and shrub / herbaceous cover,19264.3,19293.7,30-39,669,0,10.850000381469727,4.0
+Mauritania,Hodh el Gharbi,100,Mosaic tree and shrub / herbaceous cover,19264.3,19293.7,40-49,488,0,10.850000381469727,4.0
+Mauritania,Hodh el Gharbi,100,Mosaic tree and shrub / herbaceous cover,19264.3,19293.7,50-59,391,0,10.850000381469727,4.0
+Mauritania,Hodh el Gharbi,100,Mosaic tree and shrub / herbaceous cover,19264.3,19293.7,60-69,321,0,10.850000381469727,4.0
+Mauritania,Hodh el Gharbi,100,Mosaic tree and shrub / herbaceous cover,19264.3,19293.7,70-79,303,0,10.850000381469727,4.0
+Mauritania,Hodh el Gharbi,100,Mosaic tree and shrub / herbaceous cover,19264.3,19293.7,80-89,220,0,10.850000381469727,4.0
+Mauritania,Hodh el Gharbi,100,Mosaic tree and shrub / herbaceous cover,19264.3,19293.7,90-99,78,0,10.850000381469727,4.0
+Mauritania,Hodh el Gharbi,110,Mosaic herbaceous cover / tree and shrub,7428.86,7431.35,0-9,8968,10104,7.420000076293945,4.0
+Mauritania,Hodh el Gharbi,110,Mosaic herbaceous cover / tree and shrub,7428.86,7431.35,10-19,562,0,7.420000076293945,4.0
+Mauritania,Hodh el Gharbi,110,Mosaic herbaceous cover / tree and shrub,7428.86,7431.35,20-29,174,0,7.420000076293945,4.0
+Mauritania,Hodh el Gharbi,110,Mosaic herbaceous cover / tree and shrub,7428.86,7431.35,30-39,98,0,7.420000076293945,4.0
+Mauritania,Hodh el Gharbi,110,Mosaic herbaceous cover / tree and shrub,7428.86,7431.35,40-49,62,0,7.420000076293945,4.0
+Mauritania,Hodh el Gharbi,110,Mosaic herbaceous cover / tree and shrub,7428.86,7431.35,50-59,71,0,7.420000076293945,4.0
+Mauritania,Hodh el Gharbi,110,Mosaic herbaceous cover / tree and shrub,7428.86,7431.35,60-69,66,0,7.420000076293945,4.0
+Mauritania,Hodh el Gharbi,110,Mosaic herbaceous cover / tree and shrub,7428.86,7431.35,70-79,31,0,7.420000076293945,4.0
+Mauritania,Hodh el Gharbi,110,Mosaic herbaceous cover / tree and shrub,7428.86,7431.35,80-89,48,0,7.420000076293945,4.0
+Mauritania,Hodh el Gharbi,110,Mosaic herbaceous cover / tree and shrub,7428.86,7431.35,90-99,24,0,7.420000076293945,4.0
+Mauritania,Hodh el Gharbi,120,Shrubland,62977.54,63355.66,0-9,65708,83320,10.680000305175781,4.0
+Mauritania,Hodh el Gharbi,120,Shrubland,62977.54,63355.66,10-19,7803,3,10.680000305175781,4.0
+Mauritania,Hodh el Gharbi,120,Shrubland,62977.54,63355.66,20-29,2817,0,10.680000305175781,4.0
+Mauritania,Hodh el Gharbi,120,Shrubland,62977.54,63355.66,30-39,1597,0,10.680000305175781,4.0
+Mauritania,Hodh el Gharbi,120,Shrubland,62977.54,63355.66,40-49,1140,0,10.680000305175781,4.0
+Mauritania,Hodh el Gharbi,120,Shrubland,62977.54,63355.66,50-59,801,0,10.680000305175781,4.0
+Mauritania,Hodh el Gharbi,120,Shrubland,62977.54,63355.66,60-69,763,0,10.680000305175781,4.0
+Mauritania,Hodh el Gharbi,120,Shrubland,62977.54,63355.66,70-79,707,0,10.680000305175781,4.0
+Mauritania,Hodh el Gharbi,120,Shrubland,62977.54,63355.66,80-89,874,0,10.680000305175781,4.0
+Mauritania,Hodh el Gharbi,120,Shrubland,62977.54,63355.66,90-99,752,0,10.680000305175781,4.0
+Mauritania,Hodh el Gharbi,130,Grassland,1932164.75,1936100.57,0-9,1884550,2083427,6.429999828338623,4.0
+Mauritania,Hodh el Gharbi,130,Grassland,1932164.75,1936100.57,10-19,109857,0,6.429999828338623,4.0
+Mauritania,Hodh el Gharbi,130,Grassland,1932164.75,1936100.57,20-29,36223,0,6.429999828338623,4.0
+Mauritania,Hodh el Gharbi,130,Grassland,1932164.75,1936100.57,30-39,18209,0,6.429999828338623,4.0
+Mauritania,Hodh el Gharbi,130,Grassland,1932164.75,1936100.57,40-49,10770,0,6.429999828338623,4.0
+Mauritania,Hodh el Gharbi,130,Grassland,1932164.75,1936100.57,50-59,7140,0,6.429999828338623,4.0
+Mauritania,Hodh el Gharbi,130,Grassland,1932164.75,1936100.57,60-69,5170,0,6.429999828338623,4.0
+Mauritania,Hodh el Gharbi,130,Grassland,1932164.75,1936100.57,70-79,4085,0,6.429999828338623,4.0
+Mauritania,Hodh el Gharbi,130,Grassland,1932164.75,1936100.57,80-89,3006,0,6.429999828338623,4.0
+Mauritania,Hodh el Gharbi,130,Grassland,1932164.75,1936100.57,90-99,1014,0,6.429999828338623,4.0
+Mauritania,Hodh el Gharbi,150,Sparse vegetation,543848.7,554526.96,0-9,647605,681310,4.800000190734863,4.0
+Mauritania,Hodh el Gharbi,150,Sparse vegetation,543848.7,554526.96,10-19,13770,0,4.800000190734863,4.0
+Mauritania,Hodh el Gharbi,150,Sparse vegetation,543848.7,554526.96,20-29,3395,0,4.800000190734863,4.0
+Mauritania,Hodh el Gharbi,150,Sparse vegetation,543848.7,554526.96,30-39,1362,0,4.800000190734863,4.0
+Mauritania,Hodh el Gharbi,150,Sparse vegetation,543848.7,554526.96,40-49,685,0,4.800000190734863,4.0
+Mauritania,Hodh el Gharbi,150,Sparse vegetation,543848.7,554526.96,50-59,362,0,4.800000190734863,4.0
+Mauritania,Hodh el Gharbi,150,Sparse vegetation,543848.7,554526.96,60-69,189,0,4.800000190734863,4.0
+Mauritania,Hodh el Gharbi,150,Sparse vegetation,543848.7,554526.96,70-79,115,0,4.800000190734863,4.0
+Mauritania,Hodh el Gharbi,150,Sparse vegetation,543848.7,554526.96,80-89,75,0,4.800000190734863,4.0
+Mauritania,Hodh el Gharbi,150,Sparse vegetation,543848.7,554526.96,90-99,36,0,4.800000190734863,4.0
+Mauritania,Hodh el Gharbi,152,Sparse vegetation,3555.26,3574.94,0-9,3850,5004,11.100000381469727,4.0
+Mauritania,Hodh el Gharbi,152,Sparse vegetation,3555.26,3574.94,10-19,448,0,11.100000381469727,4.0
+Mauritania,Hodh el Gharbi,152,Sparse vegetation,3555.26,3574.94,20-29,197,0,11.100000381469727,4.0
+Mauritania,Hodh el Gharbi,152,Sparse vegetation,3555.26,3574.94,30-39,138,0,11.100000381469727,4.0
+Mauritania,Hodh el Gharbi,152,Sparse vegetation,3555.26,3574.94,40-49,90,0,11.100000381469727,4.0
+Mauritania,Hodh el Gharbi,152,Sparse vegetation,3555.26,3574.94,50-59,79,0,11.100000381469727,4.0
+Mauritania,Hodh el Gharbi,152,Sparse vegetation,3555.26,3574.94,60-69,65,0,11.100000381469727,4.0
+Mauritania,Hodh el Gharbi,152,Sparse vegetation,3555.26,3574.94,70-79,45,0,11.100000381469727,4.0
+Mauritania,Hodh el Gharbi,152,Sparse vegetation,3555.26,3574.94,80-89,41,0,11.100000381469727,4.0
+Mauritania,Hodh el Gharbi,152,Sparse vegetation,3555.26,3574.94,90-99,23,0,11.100000381469727,4.0
+Mauritania,Hodh el Gharbi,153,Sparse vegetation,501233.19,502056.26,0-9,557279,566566,4.489999771118164,4.0
+Mauritania,Hodh el Gharbi,153,Sparse vegetation,501233.19,502056.26,10-19,5497,0,4.489999771118164,4.0
+Mauritania,Hodh el Gharbi,153,Sparse vegetation,501233.19,502056.26,20-29,1258,0,4.489999771118164,4.0
+Mauritania,Hodh el Gharbi,153,Sparse vegetation,501233.19,502056.26,30-39,645,0,4.489999771118164,4.0
+Mauritania,Hodh el Gharbi,153,Sparse vegetation,501233.19,502056.26,40-49,366,0,4.489999771118164,4.0
+Mauritania,Hodh el Gharbi,153,Sparse vegetation,501233.19,502056.26,50-59,224,0,4.489999771118164,4.0
+Mauritania,Hodh el Gharbi,153,Sparse vegetation,501233.19,502056.26,60-69,175,0,4.489999771118164,4.0
+Mauritania,Hodh el Gharbi,153,Sparse vegetation,501233.19,502056.26,70-79,120,0,4.489999771118164,4.0
+Mauritania,Hodh el Gharbi,153,Sparse vegetation,501233.19,502056.26,80-89,61,0,4.489999771118164,4.0
+Mauritania,Hodh el Gharbi,153,Sparse vegetation,501233.19,502056.26,90-99,13,0,4.489999771118164,4.0
+Mauritania,Hodh el Gharbi,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.0,18.0,0-9,25,28,5.869999885559082,4.0
+Mauritania,Hodh el Gharbi,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.0,18.0,10-19,2,0,5.869999885559082,4.0
+Mauritania,Hodh el Gharbi,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.0,18.0,20-29,0,0,5.869999885559082,4.0
+Mauritania,Hodh el Gharbi,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.0,18.0,30-39,1,0,5.869999885559082,4.0
+Mauritania,Hodh el Gharbi,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.0,18.0,40-49,0,0,5.869999885559082,4.0
+Mauritania,Hodh el Gharbi,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.0,18.0,50-59,0,0,5.869999885559082,4.0
+Mauritania,Hodh el Gharbi,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.0,18.0,60-69,0,0,5.869999885559082,4.0
+Mauritania,Hodh el Gharbi,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.0,18.0,70-79,0,0,5.869999885559082,4.0
+Mauritania,Hodh el Gharbi,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.0,18.0,80-89,0,0,5.869999885559082,4.0
+Mauritania,Hodh el Gharbi,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",18.0,18.0,90-99,0,0,5.869999885559082,4.0
+Mauritania,Hodh el Gharbi,190,Urban areas,497.16,497.16,0-9,583,657,8.34000015258789,4.0
+Mauritania,Hodh el Gharbi,190,Urban areas,497.16,497.16,10-19,21,0,8.34000015258789,4.0
+Mauritania,Hodh el Gharbi,190,Urban areas,497.16,497.16,20-29,15,0,8.34000015258789,4.0
+Mauritania,Hodh el Gharbi,190,Urban areas,497.16,497.16,30-39,10,0,8.34000015258789,4.0
+Mauritania,Hodh el Gharbi,190,Urban areas,497.16,497.16,40-49,5,0,8.34000015258789,4.0
+Mauritania,Hodh el Gharbi,190,Urban areas,497.16,497.16,50-59,6,0,8.34000015258789,4.0
+Mauritania,Hodh el Gharbi,190,Urban areas,497.16,497.16,60-69,6,0,8.34000015258789,4.0
+Mauritania,Hodh el Gharbi,190,Urban areas,497.16,497.16,70-79,5,0,8.34000015258789,4.0
+Mauritania,Hodh el Gharbi,190,Urban areas,497.16,497.16,80-89,4,0,8.34000015258789,4.0
+Mauritania,Hodh el Gharbi,190,Urban areas,497.16,497.16,90-99,2,0,8.34000015258789,4.0
+Mauritania,Hodh el Gharbi,200,Bare areas,665336.51,1055257.14,0-9,737423,1138165,4.570000171661377,4.0
+Mauritania,Hodh el Gharbi,200,Bare areas,665336.51,1055257.14,10-19,7142,0,4.570000171661377,4.0
+Mauritania,Hodh el Gharbi,200,Bare areas,665336.51,1055257.14,20-29,1316,0,4.570000171661377,4.0
+Mauritania,Hodh el Gharbi,200,Bare areas,665336.51,1055257.14,30-39,543,0,4.570000171661377,4.0
+Mauritania,Hodh el Gharbi,200,Bare areas,665336.51,1055257.14,40-49,286,0,4.570000171661377,4.0
+Mauritania,Hodh el Gharbi,200,Bare areas,665336.51,1055257.14,50-59,193,0,4.570000171661377,4.0
+Mauritania,Hodh el Gharbi,200,Bare areas,665336.51,1055257.14,60-69,102,0,4.570000171661377,4.0
+Mauritania,Hodh el Gharbi,200,Bare areas,665336.51,1055257.14,70-79,44,0,4.570000171661377,4.0
+Mauritania,Hodh el Gharbi,200,Bare areas,665336.51,1055257.14,80-89,29,0,4.570000171661377,4.0
+Mauritania,Hodh el Gharbi,200,Bare areas,665336.51,1055257.14,90-99,10,0,4.570000171661377,4.0
+Mauritania,Hodh el Gharbi,201,Bare areas,502.83,502.83,0-9,620,747,7.260000228881836,4.0
+Mauritania,Hodh el Gharbi,201,Bare areas,502.83,502.83,10-19,88,0,7.260000228881836,4.0
+Mauritania,Hodh el Gharbi,201,Bare areas,502.83,502.83,20-29,23,0,7.260000228881836,4.0
+Mauritania,Hodh el Gharbi,201,Bare areas,502.83,502.83,30-39,5,0,7.260000228881836,4.0
+Mauritania,Hodh el Gharbi,201,Bare areas,502.83,502.83,40-49,9,0,7.260000228881836,4.0
+Mauritania,Hodh el Gharbi,201,Bare areas,502.83,502.83,50-59,1,0,7.260000228881836,4.0
+Mauritania,Hodh el Gharbi,201,Bare areas,502.83,502.83,60-69,1,0,7.260000228881836,4.0
+Mauritania,Hodh el Gharbi,201,Bare areas,502.83,502.83,70-79,0,0,7.260000228881836,4.0
+Mauritania,Hodh el Gharbi,201,Bare areas,502.83,502.83,80-89,0,0,7.260000228881836,4.0
+Mauritania,Hodh el Gharbi,201,Bare areas,502.83,502.83,90-99,0,0,7.260000228881836,4.0
+Mauritania,Hodh el Gharbi,210,Water bodies,218.1,218.1,0-9,190,289,13.600000381469727,4.0
+Mauritania,Hodh el Gharbi,210,Water bodies,218.1,218.1,10-19,34,0,13.600000381469727,4.0
+Mauritania,Hodh el Gharbi,210,Water bodies,218.1,218.1,20-29,19,0,13.600000381469727,4.0
+Mauritania,Hodh el Gharbi,210,Water bodies,218.1,218.1,30-39,17,0,13.600000381469727,4.0
+Mauritania,Hodh el Gharbi,210,Water bodies,218.1,218.1,40-49,13,0,13.600000381469727,4.0
+Mauritania,Hodh el Gharbi,210,Water bodies,218.1,218.1,50-59,7,0,13.600000381469727,4.0
+Mauritania,Hodh el Gharbi,210,Water bodies,218.1,218.1,60-69,9,0,13.600000381469727,4.0
+Mauritania,Hodh el Gharbi,210,Water bodies,218.1,218.1,70-79,0,0,13.600000381469727,4.0
+Mauritania,Hodh el Gharbi,210,Water bodies,218.1,218.1,80-89,0,0,13.600000381469727,4.0
+Mauritania,Hodh el Gharbi,210,Water bodies,218.1,218.1,90-99,0,0,13.600000381469727,4.0
+Mauritania,Hodh el Gharbi,255,No Data (flag),2908.63,2826654.81,0-9,7121,11152,7.730000019073486,4.010000228881836
+Mauritania,Hodh el Gharbi,255,No Data (flag),2908.63,2826654.81,10-19,336,8,7.730000019073486,4.010000228881836
+Mauritania,Hodh el Gharbi,255,No Data (flag),2908.63,2826654.81,20-29,145,0,7.730000019073486,4.010000228881836
+Mauritania,Hodh el Gharbi,255,No Data (flag),2908.63,2826654.81,30-39,95,0,7.730000019073486,4.010000228881836
+Mauritania,Hodh el Gharbi,255,No Data (flag),2908.63,2826654.81,40-49,63,0,7.730000019073486,4.010000228881836
+Mauritania,Hodh el Gharbi,255,No Data (flag),2908.63,2826654.81,50-59,31,0,7.730000019073486,4.010000228881836
+Mauritania,Hodh el Gharbi,255,No Data (flag),2908.63,2826654.81,60-69,41,0,7.730000019073486,4.010000228881836
+Mauritania,Hodh el Gharbi,255,No Data (flag),2908.63,2826654.81,70-79,31,0,7.730000019073486,4.010000228881836
+Mauritania,Hodh el Gharbi,255,No Data (flag),2908.63,2826654.81,80-89,33,0,7.730000019073486,4.010000228881836
+Mauritania,Hodh el Gharbi,255,No Data (flag),2908.63,2826654.81,90-99,73,0,7.730000019073486,4.010000228881836
+Mauritania,Inchiri,11,"Cropland, rainfed",273.62,639.34,0-9,338,870,6.28000020980835,4.0
+Mauritania,Inchiri,11,"Cropland, rainfed",273.62,639.34,10-19,45,0,6.28000020980835,4.0
+Mauritania,Inchiri,11,"Cropland, rainfed",273.62,639.34,20-29,8,0,6.28000020980835,4.0
+Mauritania,Inchiri,11,"Cropland, rainfed",273.62,639.34,30-39,0,0,6.28000020980835,4.0
+Mauritania,Inchiri,11,"Cropland, rainfed",273.62,639.34,40-49,0,0,6.28000020980835,4.0
+Mauritania,Inchiri,11,"Cropland, rainfed",273.62,639.34,50-59,0,0,6.28000020980835,4.0
+Mauritania,Inchiri,11,"Cropland, rainfed",273.62,639.34,60-69,0,0,6.28000020980835,4.0
+Mauritania,Inchiri,11,"Cropland, rainfed",273.62,639.34,70-79,0,0,6.28000020980835,4.0
+Mauritania,Inchiri,11,"Cropland, rainfed",273.62,639.34,80-89,0,0,6.28000020980835,4.0
+Mauritania,Inchiri,11,"Cropland, rainfed",273.62,639.34,90-99,0,0,6.28000020980835,4.0
+Mauritania,Inchiri,130,Grassland,2837.29,3797.02,0-9,3447,4756,4.019999980926514,4.0
+Mauritania,Inchiri,130,Grassland,2837.29,3797.02,10-19,0,0,4.019999980926514,4.0
+Mauritania,Inchiri,130,Grassland,2837.29,3797.02,20-29,0,0,4.019999980926514,4.0
+Mauritania,Inchiri,130,Grassland,2837.29,3797.02,30-39,0,0,4.019999980926514,4.0
+Mauritania,Inchiri,130,Grassland,2837.29,3797.02,40-49,0,0,4.019999980926514,4.0
+Mauritania,Inchiri,130,Grassland,2837.29,3797.02,50-59,0,0,4.019999980926514,4.0
+Mauritania,Inchiri,130,Grassland,2837.29,3797.02,60-69,0,0,4.019999980926514,4.0
+Mauritania,Inchiri,130,Grassland,2837.29,3797.02,70-79,0,0,4.019999980926514,4.0
+Mauritania,Inchiri,130,Grassland,2837.29,3797.02,80-89,0,0,4.019999980926514,4.0
+Mauritania,Inchiri,130,Grassland,2837.29,3797.02,90-99,0,0,4.019999980926514,4.0
+Mauritania,Inchiri,150,Sparse vegetation,138955.76,146565.94,0-9,145830,154697,4.039999961853027,4.0
+Mauritania,Inchiri,150,Sparse vegetation,138955.76,146565.94,10-19,180,0,4.039999961853027,4.0
+Mauritania,Inchiri,150,Sparse vegetation,138955.76,146565.94,20-29,12,0,4.039999961853027,4.0
+Mauritania,Inchiri,150,Sparse vegetation,138955.76,146565.94,30-39,2,0,4.039999961853027,4.0
+Mauritania,Inchiri,150,Sparse vegetation,138955.76,146565.94,40-49,0,0,4.039999961853027,4.0
+Mauritania,Inchiri,150,Sparse vegetation,138955.76,146565.94,50-59,0,0,4.039999961853027,4.0
+Mauritania,Inchiri,150,Sparse vegetation,138955.76,146565.94,60-69,0,0,4.039999961853027,4.0
+Mauritania,Inchiri,150,Sparse vegetation,138955.76,146565.94,70-79,0,0,4.039999961853027,4.0
+Mauritania,Inchiri,150,Sparse vegetation,138955.76,146565.94,80-89,0,0,4.039999961853027,4.0
+Mauritania,Inchiri,150,Sparse vegetation,138955.76,146565.94,90-99,0,0,4.039999961853027,4.0
+Mauritania,Inchiri,153,Sparse vegetation,310.81,319.81,0-9,395,407,4.0,4.0
+Mauritania,Inchiri,153,Sparse vegetation,310.81,319.81,10-19,0,0,4.0,4.0
+Mauritania,Inchiri,153,Sparse vegetation,310.81,319.81,20-29,0,0,4.0,4.0
+Mauritania,Inchiri,153,Sparse vegetation,310.81,319.81,30-39,0,0,4.0,4.0
+Mauritania,Inchiri,153,Sparse vegetation,310.81,319.81,40-49,0,0,4.0,4.0
+Mauritania,Inchiri,153,Sparse vegetation,310.81,319.81,50-59,0,0,4.0,4.0
+Mauritania,Inchiri,153,Sparse vegetation,310.81,319.81,60-69,0,0,4.0,4.0
+Mauritania,Inchiri,153,Sparse vegetation,310.81,319.81,70-79,0,0,4.0,4.0
+Mauritania,Inchiri,153,Sparse vegetation,310.81,319.81,80-89,0,0,4.0,4.0
+Mauritania,Inchiri,153,Sparse vegetation,310.81,319.81,90-99,0,0,4.0,4.0
+Mauritania,Inchiri,190,Urban areas,284.12,284.12,0-9,344,345,4.099999904632568,4.0
+Mauritania,Inchiri,190,Urban areas,284.12,284.12,10-19,1,0,4.099999904632568,4.0
+Mauritania,Inchiri,190,Urban areas,284.12,284.12,20-29,0,0,4.099999904632568,4.0
+Mauritania,Inchiri,190,Urban areas,284.12,284.12,30-39,0,0,4.099999904632568,4.0
+Mauritania,Inchiri,190,Urban areas,284.12,284.12,40-49,0,0,4.099999904632568,4.0
+Mauritania,Inchiri,190,Urban areas,284.12,284.12,50-59,0,0,4.099999904632568,4.0
+Mauritania,Inchiri,190,Urban areas,284.12,284.12,60-69,0,0,4.099999904632568,4.0
+Mauritania,Inchiri,190,Urban areas,284.12,284.12,70-79,0,0,4.099999904632568,4.0
+Mauritania,Inchiri,190,Urban areas,284.12,284.12,80-89,0,0,4.099999904632568,4.0
+Mauritania,Inchiri,190,Urban areas,284.12,284.12,90-99,0,0,4.099999904632568,4.0
+Mauritania,Inchiri,200,Bare areas,109874.27,4420539.18,0-9,119099,4430806,4.050000190734863,4.0
+Mauritania,Inchiri,200,Bare areas,109874.27,4420539.18,10-19,142,0,4.050000190734863,4.0
+Mauritania,Inchiri,200,Bare areas,109874.27,4420539.18,20-29,12,0,4.050000190734863,4.0
+Mauritania,Inchiri,200,Bare areas,109874.27,4420539.18,30-39,1,0,4.050000190734863,4.0
+Mauritania,Inchiri,200,Bare areas,109874.27,4420539.18,40-49,0,0,4.050000190734863,4.0
+Mauritania,Inchiri,200,Bare areas,109874.27,4420539.18,50-59,1,0,4.050000190734863,4.0
+Mauritania,Inchiri,200,Bare areas,109874.27,4420539.18,60-69,0,0,4.050000190734863,4.0
+Mauritania,Inchiri,200,Bare areas,109874.27,4420539.18,70-79,0,0,4.050000190734863,4.0
+Mauritania,Inchiri,200,Bare areas,109874.27,4420539.18,80-89,0,0,4.050000190734863,4.0
+Mauritania,Inchiri,200,Bare areas,109874.27,4420539.18,90-99,0,0,4.050000190734863,4.0
+Mauritania,Inchiri,201,Bare areas,0.0,458.44,0-9,0,584,,4.0
+Mauritania,Inchiri,201,Bare areas,0.0,458.44,10-19,0,0,,4.0
+Mauritania,Inchiri,201,Bare areas,0.0,458.44,20-29,0,0,,4.0
+Mauritania,Inchiri,201,Bare areas,0.0,458.44,30-39,0,0,,4.0
+Mauritania,Inchiri,201,Bare areas,0.0,458.44,40-49,0,0,,4.0
+Mauritania,Inchiri,201,Bare areas,0.0,458.44,50-59,0,0,,4.0
+Mauritania,Inchiri,201,Bare areas,0.0,458.44,60-69,0,0,,4.0
+Mauritania,Inchiri,201,Bare areas,0.0,458.44,70-79,0,0,,4.0
+Mauritania,Inchiri,201,Bare areas,0.0,458.44,80-89,0,0,,4.0
+Mauritania,Inchiri,201,Bare areas,0.0,458.44,90-99,0,0,,4.0
+Mauritania,Inchiri,202,Bare areas,0.0,91.81,0-9,0,126,,4.0
+Mauritania,Inchiri,202,Bare areas,0.0,91.81,10-19,0,0,,4.0
+Mauritania,Inchiri,202,Bare areas,0.0,91.81,20-29,0,0,,4.0
+Mauritania,Inchiri,202,Bare areas,0.0,91.81,30-39,0,0,,4.0
+Mauritania,Inchiri,202,Bare areas,0.0,91.81,40-49,0,0,,4.0
+Mauritania,Inchiri,202,Bare areas,0.0,91.81,50-59,0,0,,4.0
+Mauritania,Inchiri,202,Bare areas,0.0,91.81,60-69,0,0,,4.0
+Mauritania,Inchiri,202,Bare areas,0.0,91.81,70-79,0,0,,4.0
+Mauritania,Inchiri,202,Bare areas,0.0,91.81,80-89,0,0,,4.0
+Mauritania,Inchiri,202,Bare areas,0.0,91.81,90-99,0,0,,4.0
+Mauritania,Inchiri,210,Water bodies,0.0,394.54,0-9,0,490,,4.0
+Mauritania,Inchiri,210,Water bodies,0.0,394.54,10-19,0,0,,4.0
+Mauritania,Inchiri,210,Water bodies,0.0,394.54,20-29,0,0,,4.0
+Mauritania,Inchiri,210,Water bodies,0.0,394.54,30-39,0,0,,4.0
+Mauritania,Inchiri,210,Water bodies,0.0,394.54,40-49,0,0,,4.0
+Mauritania,Inchiri,210,Water bodies,0.0,394.54,50-59,0,0,,4.0
+Mauritania,Inchiri,210,Water bodies,0.0,394.54,60-69,0,0,,4.0
+Mauritania,Inchiri,210,Water bodies,0.0,394.54,70-79,0,0,,4.0
+Mauritania,Inchiri,210,Water bodies,0.0,394.54,80-89,0,0,,4.0
+Mauritania,Inchiri,210,Water bodies,0.0,394.54,90-99,0,0,,4.0
+Mauritania,Inchiri,255,No Data (flag),82.05,1532165.83,0-9,151,9232,4.0,4.0
+Mauritania,Inchiri,255,No Data (flag),82.05,1532165.83,10-19,0,0,4.0,4.0
+Mauritania,Inchiri,255,No Data (flag),82.05,1532165.83,20-29,0,0,4.0,4.0
+Mauritania,Inchiri,255,No Data (flag),82.05,1532165.83,30-39,0,0,4.0,4.0
+Mauritania,Inchiri,255,No Data (flag),82.05,1532165.83,40-49,0,0,4.0,4.0
+Mauritania,Inchiri,255,No Data (flag),82.05,1532165.83,50-59,0,0,4.0,4.0
+Mauritania,Inchiri,255,No Data (flag),82.05,1532165.83,60-69,0,0,4.0,4.0
+Mauritania,Inchiri,255,No Data (flag),82.05,1532165.83,70-79,0,0,4.0,4.0
+Mauritania,Inchiri,255,No Data (flag),82.05,1532165.83,80-89,0,0,4.0,4.0
+Mauritania,Inchiri,255,No Data (flag),82.05,1532165.83,90-99,0,0,4.0,4.0
+Mauritania,Nouakchott,110,Mosaic herbaceous cover / tree and shrub,0.0,9.0,0-9,0,16,,4.0
+Mauritania,Nouakchott,110,Mosaic herbaceous cover / tree and shrub,0.0,9.0,10-19,0,0,,4.0
+Mauritania,Nouakchott,110,Mosaic herbaceous cover / tree and shrub,0.0,9.0,20-29,0,0,,4.0
+Mauritania,Nouakchott,110,Mosaic herbaceous cover / tree and shrub,0.0,9.0,30-39,0,0,,4.0
+Mauritania,Nouakchott,110,Mosaic herbaceous cover / tree and shrub,0.0,9.0,40-49,0,0,,4.0
+Mauritania,Nouakchott,110,Mosaic herbaceous cover / tree and shrub,0.0,9.0,50-59,0,0,,4.0
+Mauritania,Nouakchott,110,Mosaic herbaceous cover / tree and shrub,0.0,9.0,60-69,0,0,,4.0
+Mauritania,Nouakchott,110,Mosaic herbaceous cover / tree and shrub,0.0,9.0,70-79,0,0,,4.0
+Mauritania,Nouakchott,110,Mosaic herbaceous cover / tree and shrub,0.0,9.0,80-89,0,0,,4.0
+Mauritania,Nouakchott,110,Mosaic herbaceous cover / tree and shrub,0.0,9.0,90-99,0,0,,4.0
+Mauritania,Nouakchott,120,Shrubland,183.02,228.32,0-9,261,326,4.840000152587891,4.0
+Mauritania,Nouakchott,120,Shrubland,183.02,228.32,10-19,6,0,4.840000152587891,4.0
+Mauritania,Nouakchott,120,Shrubland,183.02,228.32,20-29,4,0,4.840000152587891,4.0
+Mauritania,Nouakchott,120,Shrubland,183.02,228.32,30-39,1,0,4.840000152587891,4.0
+Mauritania,Nouakchott,120,Shrubland,183.02,228.32,40-49,0,0,4.840000152587891,4.0
+Mauritania,Nouakchott,120,Shrubland,183.02,228.32,50-59,0,0,4.840000152587891,4.0
+Mauritania,Nouakchott,120,Shrubland,183.02,228.32,60-69,0,0,4.840000152587891,4.0
+Mauritania,Nouakchott,120,Shrubland,183.02,228.32,70-79,0,0,4.840000152587891,4.0
+Mauritania,Nouakchott,120,Shrubland,183.02,228.32,80-89,0,0,4.840000152587891,4.0
+Mauritania,Nouakchott,120,Shrubland,183.02,228.32,90-99,0,0,4.840000152587891,4.0
+Mauritania,Nouakchott,130,Grassland,615.21,617.38,0-9,800,850,6.28000020980835,4.0
+Mauritania,Nouakchott,130,Grassland,615.21,617.38,10-19,15,0,6.28000020980835,4.0
+Mauritania,Nouakchott,130,Grassland,615.21,617.38,20-29,6,0,6.28000020980835,4.0
+Mauritania,Nouakchott,130,Grassland,615.21,617.38,30-39,5,0,6.28000020980835,4.0
+Mauritania,Nouakchott,130,Grassland,615.21,617.38,40-49,5,0,6.28000020980835,4.0
+Mauritania,Nouakchott,130,Grassland,615.21,617.38,50-59,5,0,6.28000020980835,4.0
+Mauritania,Nouakchott,130,Grassland,615.21,617.38,60-69,4,0,6.28000020980835,4.0
+Mauritania,Nouakchott,130,Grassland,615.21,617.38,70-79,6,0,6.28000020980835,4.0
+Mauritania,Nouakchott,130,Grassland,615.21,617.38,80-89,3,0,6.28000020980835,4.0
+Mauritania,Nouakchott,130,Grassland,615.21,617.38,90-99,1,0,6.28000020980835,4.0
+Mauritania,Nouakchott,150,Sparse vegetation,6372.3,8174.59,0-9,7507,9810,4.460000038146973,4.0
+Mauritania,Nouakchott,150,Sparse vegetation,6372.3,8174.59,10-19,68,0,4.460000038146973,4.0
+Mauritania,Nouakchott,150,Sparse vegetation,6372.3,8174.59,20-29,16,0,4.460000038146973,4.0
+Mauritania,Nouakchott,150,Sparse vegetation,6372.3,8174.59,30-39,9,0,4.460000038146973,4.0
+Mauritania,Nouakchott,150,Sparse vegetation,6372.3,8174.59,40-49,5,0,4.460000038146973,4.0
+Mauritania,Nouakchott,150,Sparse vegetation,6372.3,8174.59,50-59,4,0,4.460000038146973,4.0
+Mauritania,Nouakchott,150,Sparse vegetation,6372.3,8174.59,60-69,5,0,4.460000038146973,4.0
+Mauritania,Nouakchott,150,Sparse vegetation,6372.3,8174.59,70-79,0,0,4.460000038146973,4.0
+Mauritania,Nouakchott,150,Sparse vegetation,6372.3,8174.59,80-89,0,0,4.460000038146973,4.0
+Mauritania,Nouakchott,150,Sparse vegetation,6372.3,8174.59,90-99,0,0,4.460000038146973,4.0
+Mauritania,Nouakchott,152,Sparse vegetation,48.3,52.5,0-9,27,74,25.139999389648438,4.0
+Mauritania,Nouakchott,152,Sparse vegetation,48.3,52.5,10-19,9,0,25.139999389648438,4.0
+Mauritania,Nouakchott,152,Sparse vegetation,48.3,52.5,20-29,5,0,25.139999389648438,4.0
+Mauritania,Nouakchott,152,Sparse vegetation,48.3,52.5,30-39,12,0,25.139999389648438,4.0
+Mauritania,Nouakchott,152,Sparse vegetation,48.3,52.5,40-49,13,0,25.139999389648438,4.0
+Mauritania,Nouakchott,152,Sparse vegetation,48.3,52.5,50-59,7,0,25.139999389648438,4.0
+Mauritania,Nouakchott,152,Sparse vegetation,48.3,52.5,60-69,1,0,25.139999389648438,4.0
+Mauritania,Nouakchott,152,Sparse vegetation,48.3,52.5,70-79,0,0,25.139999389648438,4.0
+Mauritania,Nouakchott,152,Sparse vegetation,48.3,52.5,80-89,0,0,25.139999389648438,4.0
+Mauritania,Nouakchott,152,Sparse vegetation,48.3,52.5,90-99,0,0,25.139999389648438,4.0
+Mauritania,Nouakchott,153,Sparse vegetation,36.9,421.23,0-9,54,606,5.039999961853027,4.0
+Mauritania,Nouakchott,153,Sparse vegetation,36.9,421.23,10-19,5,0,5.039999961853027,4.0
+Mauritania,Nouakchott,153,Sparse vegetation,36.9,421.23,20-29,0,0,5.039999961853027,4.0
+Mauritania,Nouakchott,153,Sparse vegetation,36.9,421.23,30-39,0,0,5.039999961853027,4.0
+Mauritania,Nouakchott,153,Sparse vegetation,36.9,421.23,40-49,0,0,5.039999961853027,4.0
+Mauritania,Nouakchott,153,Sparse vegetation,36.9,421.23,50-59,0,0,5.039999961853027,4.0
+Mauritania,Nouakchott,153,Sparse vegetation,36.9,421.23,60-69,0,0,5.039999961853027,4.0
+Mauritania,Nouakchott,153,Sparse vegetation,36.9,421.23,70-79,0,0,5.039999961853027,4.0
+Mauritania,Nouakchott,153,Sparse vegetation,36.9,421.23,80-89,0,0,5.039999961853027,4.0
+Mauritania,Nouakchott,153,Sparse vegetation,36.9,421.23,90-99,0,0,5.039999961853027,4.0
+Mauritania,Nouakchott,190,Urban areas,8117.99,8457.25,0-9,7120,9265,8.3100004196167,4.0
+Mauritania,Nouakchott,190,Urban areas,8117.99,8457.25,10-19,1037,0,8.3100004196167,4.0
+Mauritania,Nouakchott,190,Urban areas,8117.99,8457.25,20-29,366,0,8.3100004196167,4.0
+Mauritania,Nouakchott,190,Urban areas,8117.99,8457.25,30-39,170,0,8.3100004196167,4.0
+Mauritania,Nouakchott,190,Urban areas,8117.99,8457.25,40-49,89,0,8.3100004196167,4.0
+Mauritania,Nouakchott,190,Urban areas,8117.99,8457.25,50-59,37,0,8.3100004196167,4.0
+Mauritania,Nouakchott,190,Urban areas,8117.99,8457.25,60-69,27,0,8.3100004196167,4.0
+Mauritania,Nouakchott,190,Urban areas,8117.99,8457.25,70-79,12,0,8.3100004196167,4.0
+Mauritania,Nouakchott,190,Urban areas,8117.99,8457.25,80-89,2,0,8.3100004196167,4.0
+Mauritania,Nouakchott,190,Urban areas,8117.99,8457.25,90-99,0,0,8.3100004196167,4.0
+Mauritania,Nouakchott,200,Bare areas,22522.45,132729.71,0-9,23444,135424,5.130000114440918,4.0
+Mauritania,Nouakchott,200,Bare areas,22522.45,132729.71,10-19,957,0,5.130000114440918,4.0
+Mauritania,Nouakchott,200,Bare areas,22522.45,132729.71,20-29,196,0,5.130000114440918,4.0
+Mauritania,Nouakchott,200,Bare areas,22522.45,132729.71,30-39,74,0,5.130000114440918,4.0
+Mauritania,Nouakchott,200,Bare areas,22522.45,132729.71,40-49,42,0,5.130000114440918,4.0
+Mauritania,Nouakchott,200,Bare areas,22522.45,132729.71,50-59,16,0,5.130000114440918,4.0
+Mauritania,Nouakchott,200,Bare areas,22522.45,132729.71,60-69,7,0,5.130000114440918,4.0
+Mauritania,Nouakchott,200,Bare areas,22522.45,132729.71,70-79,2,0,5.130000114440918,4.0
+Mauritania,Nouakchott,200,Bare areas,22522.45,132729.71,80-89,0,0,5.130000114440918,4.0
+Mauritania,Nouakchott,200,Bare areas,22522.45,132729.71,90-99,0,0,5.130000114440918,4.0
+Mauritania,Nouakchott,201,Bare areas,568.85,586.54,0-9,677,772,5.929999828338623,4.0
+Mauritania,Nouakchott,201,Bare areas,568.85,586.54,10-19,51,0,5.929999828338623,4.0
+Mauritania,Nouakchott,201,Bare areas,568.85,586.54,20-29,13,0,5.929999828338623,4.0
+Mauritania,Nouakchott,201,Bare areas,568.85,586.54,30-39,6,0,5.929999828338623,4.0
+Mauritania,Nouakchott,201,Bare areas,568.85,586.54,40-49,4,0,5.929999828338623,4.0
+Mauritania,Nouakchott,201,Bare areas,568.85,586.54,50-59,0,0,5.929999828338623,4.0
+Mauritania,Nouakchott,201,Bare areas,568.85,586.54,60-69,0,0,5.929999828338623,4.0
+Mauritania,Nouakchott,201,Bare areas,568.85,586.54,70-79,0,0,5.929999828338623,4.0
+Mauritania,Nouakchott,201,Bare areas,568.85,586.54,80-89,0,0,5.929999828338623,4.0
+Mauritania,Nouakchott,201,Bare areas,568.85,586.54,90-99,0,0,5.929999828338623,4.0
+Mauritania,Nouakchott,202,Bare areas,81.9,81.9,0-9,108,114,5.289999961853027,4.0
+Mauritania,Nouakchott,202,Bare areas,81.9,81.9,10-19,6,0,5.289999961853027,4.0
+Mauritania,Nouakchott,202,Bare areas,81.9,81.9,20-29,0,0,5.289999961853027,4.0
+Mauritania,Nouakchott,202,Bare areas,81.9,81.9,30-39,0,0,5.289999961853027,4.0
+Mauritania,Nouakchott,202,Bare areas,81.9,81.9,40-49,0,0,5.289999961853027,4.0
+Mauritania,Nouakchott,202,Bare areas,81.9,81.9,50-59,0,0,5.289999961853027,4.0
+Mauritania,Nouakchott,202,Bare areas,81.9,81.9,60-69,0,0,5.289999961853027,4.0
+Mauritania,Nouakchott,202,Bare areas,81.9,81.9,70-79,0,0,5.289999961853027,4.0
+Mauritania,Nouakchott,202,Bare areas,81.9,81.9,80-89,0,0,5.289999961853027,4.0
+Mauritania,Nouakchott,202,Bare areas,81.9,81.9,90-99,0,0,5.289999961853027,4.0
+Mauritania,Nouakchott,210,Water bodies,11.58,300.91,0-9,19,331,4.199999809265137,4.0
+Mauritania,Nouakchott,210,Water bodies,11.58,300.91,10-19,0,0,4.199999809265137,4.0
+Mauritania,Nouakchott,210,Water bodies,11.58,300.91,20-29,0,0,4.199999809265137,4.0
+Mauritania,Nouakchott,210,Water bodies,11.58,300.91,30-39,0,0,4.199999809265137,4.0
+Mauritania,Nouakchott,210,Water bodies,11.58,300.91,40-49,0,0,4.199999809265137,4.0
+Mauritania,Nouakchott,210,Water bodies,11.58,300.91,50-59,0,0,4.199999809265137,4.0
+Mauritania,Nouakchott,210,Water bodies,11.58,300.91,60-69,0,0,4.199999809265137,4.0
+Mauritania,Nouakchott,210,Water bodies,11.58,300.91,70-79,0,0,4.199999809265137,4.0
+Mauritania,Nouakchott,210,Water bodies,11.58,300.91,80-89,0,0,4.199999809265137,4.0
+Mauritania,Nouakchott,210,Water bodies,11.58,300.91,90-99,0,0,4.199999809265137,4.0
+Mauritania,Nouakchott,255,No Data (flag),5.42,10816.32,0-9,19,823,4.0,4.0
+Mauritania,Nouakchott,255,No Data (flag),5.42,10816.32,10-19,0,0,4.0,4.0
+Mauritania,Nouakchott,255,No Data (flag),5.42,10816.32,20-29,0,0,4.0,4.0
+Mauritania,Nouakchott,255,No Data (flag),5.42,10816.32,30-39,0,0,4.0,4.0
+Mauritania,Nouakchott,255,No Data (flag),5.42,10816.32,40-49,0,0,4.0,4.0
+Mauritania,Nouakchott,255,No Data (flag),5.42,10816.32,50-59,0,0,4.0,4.0
+Mauritania,Nouakchott,255,No Data (flag),5.42,10816.32,60-69,0,0,4.0,4.0
+Mauritania,Nouakchott,255,No Data (flag),5.42,10816.32,70-79,0,0,4.0,4.0
+Mauritania,Nouakchott,255,No Data (flag),5.42,10816.32,80-89,0,0,4.0,4.0
+Mauritania,Nouakchott,255,No Data (flag),5.42,10816.32,90-99,0,0,4.0,4.0
+Mauritania,Tagant,10,"Cropland, rainfed",3305.21,3466.74,0-9,3295,4798,14.229999542236328,4.0
+Mauritania,Tagant,10,"Cropland, rainfed",3305.21,3466.74,10-19,400,0,14.229999542236328,4.0
+Mauritania,Tagant,10,"Cropland, rainfed",3305.21,3466.74,20-29,228,0,14.229999542236328,4.0
+Mauritania,Tagant,10,"Cropland, rainfed",3305.21,3466.74,30-39,148,0,14.229999542236328,4.0
+Mauritania,Tagant,10,"Cropland, rainfed",3305.21,3466.74,40-49,122,0,14.229999542236328,4.0
+Mauritania,Tagant,10,"Cropland, rainfed",3305.21,3466.74,50-59,86,0,14.229999542236328,4.0
+Mauritania,Tagant,10,"Cropland, rainfed",3305.21,3466.74,60-69,82,0,14.229999542236328,4.0
+Mauritania,Tagant,10,"Cropland, rainfed",3305.21,3466.74,70-79,95,0,14.229999542236328,4.0
+Mauritania,Tagant,10,"Cropland, rainfed",3305.21,3466.74,80-89,87,0,14.229999542236328,4.0
+Mauritania,Tagant,10,"Cropland, rainfed",3305.21,3466.74,90-99,37,0,14.229999542236328,4.0
+Mauritania,Tagant,11,"Cropland, rainfed",266.74,284.43,0-9,268,415,13.489999771118164,4.0
+Mauritania,Tagant,11,"Cropland, rainfed",266.74,284.43,10-19,51,0,13.489999771118164,4.0
+Mauritania,Tagant,11,"Cropland, rainfed",266.74,284.43,20-29,29,0,13.489999771118164,4.0
+Mauritania,Tagant,11,"Cropland, rainfed",266.74,284.43,30-39,13,0,13.489999771118164,4.0
+Mauritania,Tagant,11,"Cropland, rainfed",266.74,284.43,40-49,8,0,13.489999771118164,4.0
+Mauritania,Tagant,11,"Cropland, rainfed",266.74,284.43,50-59,7,0,13.489999771118164,4.0
+Mauritania,Tagant,11,"Cropland, rainfed",266.74,284.43,60-69,4,0,13.489999771118164,4.0
+Mauritania,Tagant,11,"Cropland, rainfed",266.74,284.43,70-79,8,0,13.489999771118164,4.0
+Mauritania,Tagant,11,"Cropland, rainfed",266.74,284.43,80-89,4,0,13.489999771118164,4.0
+Mauritania,Tagant,11,"Cropland, rainfed",266.74,284.43,90-99,2,0,13.489999771118164,4.0
+Mauritania,Tagant,20,"Cropland, irrigated or post-flooding",1160.16,1160.16,0-9,966,1544,17.290000915527344,4.0
+Mauritania,Tagant,20,"Cropland, irrigated or post-flooding",1160.16,1160.16,10-19,148,0,17.290000915527344,4.0
+Mauritania,Tagant,20,"Cropland, irrigated or post-flooding",1160.16,1160.16,20-29,106,0,17.290000915527344,4.0
+Mauritania,Tagant,20,"Cropland, irrigated or post-flooding",1160.16,1160.16,30-39,83,0,17.290000915527344,4.0
+Mauritania,Tagant,20,"Cropland, irrigated or post-flooding",1160.16,1160.16,40-49,71,0,17.290000915527344,4.0
+Mauritania,Tagant,20,"Cropland, irrigated or post-flooding",1160.16,1160.16,50-59,50,0,17.290000915527344,4.0
+Mauritania,Tagant,20,"Cropland, irrigated or post-flooding",1160.16,1160.16,60-69,55,0,17.290000915527344,4.0
+Mauritania,Tagant,20,"Cropland, irrigated or post-flooding",1160.16,1160.16,70-79,40,0,17.290000915527344,4.0
+Mauritania,Tagant,20,"Cropland, irrigated or post-flooding",1160.16,1160.16,80-89,22,0,17.290000915527344,4.0
+Mauritania,Tagant,20,"Cropland, irrigated or post-flooding",1160.16,1160.16,90-99,3,0,17.290000915527344,4.0
+Mauritania,Tagant,30,Mosaic cropland / natural vegetation,2020.32,2094.74,0-9,2089,2805,12.199999809265137,4.0
+Mauritania,Tagant,30,Mosaic cropland / natural vegetation,2020.32,2094.74,10-19,202,0,12.199999809265137,4.0
+Mauritania,Tagant,30,Mosaic cropland / natural vegetation,2020.32,2094.74,20-29,108,0,12.199999809265137,4.0
+Mauritania,Tagant,30,Mosaic cropland / natural vegetation,2020.32,2094.74,30-39,60,0,12.199999809265137,4.0
+Mauritania,Tagant,30,Mosaic cropland / natural vegetation,2020.32,2094.74,40-49,53,0,12.199999809265137,4.0
+Mauritania,Tagant,30,Mosaic cropland / natural vegetation,2020.32,2094.74,50-59,54,0,12.199999809265137,4.0
+Mauritania,Tagant,30,Mosaic cropland / natural vegetation,2020.32,2094.74,60-69,43,0,12.199999809265137,4.0
+Mauritania,Tagant,30,Mosaic cropland / natural vegetation,2020.32,2094.74,70-79,50,0,12.199999809265137,4.0
+Mauritania,Tagant,30,Mosaic cropland / natural vegetation,2020.32,2094.74,80-89,42,0,12.199999809265137,4.0
+Mauritania,Tagant,30,Mosaic cropland / natural vegetation,2020.32,2094.74,90-99,6,0,12.199999809265137,4.0
+Mauritania,Tagant,40,Mosaic natural vegetation / cropland,5961.1,6417.43,0-9,6471,9032,10.479999542236328,4.0
+Mauritania,Tagant,40,Mosaic natural vegetation / cropland,5961.1,6417.43,10-19,746,0,10.479999542236328,4.0
+Mauritania,Tagant,40,Mosaic natural vegetation / cropland,5961.1,6417.43,20-29,396,0,10.479999542236328,4.0
+Mauritania,Tagant,40,Mosaic natural vegetation / cropland,5961.1,6417.43,30-39,253,0,10.479999542236328,4.0
+Mauritania,Tagant,40,Mosaic natural vegetation / cropland,5961.1,6417.43,40-49,170,0,10.479999542236328,4.0
+Mauritania,Tagant,40,Mosaic natural vegetation / cropland,5961.1,6417.43,50-59,115,0,10.479999542236328,4.0
+Mauritania,Tagant,40,Mosaic natural vegetation / cropland,5961.1,6417.43,60-69,89,0,10.479999542236328,4.0
+Mauritania,Tagant,40,Mosaic natural vegetation / cropland,5961.1,6417.43,70-79,67,0,10.479999542236328,4.0
+Mauritania,Tagant,40,Mosaic natural vegetation / cropland,5961.1,6417.43,80-89,38,0,10.479999542236328,4.0
+Mauritania,Tagant,40,Mosaic natural vegetation / cropland,5961.1,6417.43,90-99,10,0,10.479999542236328,4.0
+Mauritania,Tagant,100,Mosaic tree and shrub / herbaceous cover,7392.56,8186.19,0-9,7676,11577,12.130000114440918,4.0
+Mauritania,Tagant,100,Mosaic tree and shrub / herbaceous cover,7392.56,8186.19,10-19,1024,0,12.130000114440918,4.0
+Mauritania,Tagant,100,Mosaic tree and shrub / herbaceous cover,7392.56,8186.19,20-29,572,0,12.130000114440918,4.0
+Mauritania,Tagant,100,Mosaic tree and shrub / herbaceous cover,7392.56,8186.19,30-39,346,0,12.130000114440918,4.0
+Mauritania,Tagant,100,Mosaic tree and shrub / herbaceous cover,7392.56,8186.19,40-49,258,0,12.130000114440918,4.0
+Mauritania,Tagant,100,Mosaic tree and shrub / herbaceous cover,7392.56,8186.19,50-59,192,0,12.130000114440918,4.0
+Mauritania,Tagant,100,Mosaic tree and shrub / herbaceous cover,7392.56,8186.19,60-69,168,0,12.130000114440918,4.0
+Mauritania,Tagant,100,Mosaic tree and shrub / herbaceous cover,7392.56,8186.19,70-79,103,0,12.130000114440918,4.0
+Mauritania,Tagant,100,Mosaic tree and shrub / herbaceous cover,7392.56,8186.19,80-89,91,0,12.130000114440918,4.0
+Mauritania,Tagant,100,Mosaic tree and shrub / herbaceous cover,7392.56,8186.19,90-99,24,0,12.130000114440918,4.0
+Mauritania,Tagant,110,Mosaic herbaceous cover / tree and shrub,4909.81,4941.88,0-9,6301,6885,5.840000152587891,4.0
+Mauritania,Tagant,110,Mosaic herbaceous cover / tree and shrub,4909.81,4941.88,10-19,350,0,5.840000152587891,4.0
+Mauritania,Tagant,110,Mosaic herbaceous cover / tree and shrub,4909.81,4941.88,20-29,114,0,5.840000152587891,4.0
+Mauritania,Tagant,110,Mosaic herbaceous cover / tree and shrub,4909.81,4941.88,30-39,53,0,5.840000152587891,4.0
+Mauritania,Tagant,110,Mosaic herbaceous cover / tree and shrub,4909.81,4941.88,40-49,32,0,5.840000152587891,4.0
+Mauritania,Tagant,110,Mosaic herbaceous cover / tree and shrub,4909.81,4941.88,50-59,9,0,5.840000152587891,4.0
+Mauritania,Tagant,110,Mosaic herbaceous cover / tree and shrub,4909.81,4941.88,60-69,8,0,5.840000152587891,4.0
+Mauritania,Tagant,110,Mosaic herbaceous cover / tree and shrub,4909.81,4941.88,70-79,1,0,5.840000152587891,4.0
+Mauritania,Tagant,110,Mosaic herbaceous cover / tree and shrub,4909.81,4941.88,80-89,0,0,5.840000152587891,4.0
+Mauritania,Tagant,110,Mosaic herbaceous cover / tree and shrub,4909.81,4941.88,90-99,1,0,5.840000152587891,4.0
+Mauritania,Tagant,120,Shrubland,25844.25,27626.96,0-9,28076,35610,8.5,4.0
+Mauritania,Tagant,120,Shrubland,25844.25,27626.96,10-19,2437,0,8.5,4.0
+Mauritania,Tagant,120,Shrubland,25844.25,27626.96,20-29,1067,0,8.5,4.0
+Mauritania,Tagant,120,Shrubland,25844.25,27626.96,30-39,613,0,8.5,4.0
+Mauritania,Tagant,120,Shrubland,25844.25,27626.96,40-49,361,0,8.5,4.0
+Mauritania,Tagant,120,Shrubland,25844.25,27626.96,50-59,309,0,8.5,4.0
+Mauritania,Tagant,120,Shrubland,25844.25,27626.96,60-69,219,0,8.5,4.0
+Mauritania,Tagant,120,Shrubland,25844.25,27626.96,70-79,141,0,8.5,4.0
+Mauritania,Tagant,120,Shrubland,25844.25,27626.96,80-89,134,0,8.5,4.0
+Mauritania,Tagant,120,Shrubland,25844.25,27626.96,90-99,69,0,8.5,4.0
+Mauritania,Tagant,130,Grassland,108005.95,113486.06,0-9,115362,142792,7.869999885559082,4.0
+Mauritania,Tagant,130,Grassland,108005.95,113486.06,10-19,10118,0,7.869999885559082,4.0
+Mauritania,Tagant,130,Grassland,108005.95,113486.06,20-29,3899,0,7.869999885559082,4.0
+Mauritania,Tagant,130,Grassland,108005.95,113486.06,30-39,2248,0,7.869999885559082,4.0
+Mauritania,Tagant,130,Grassland,108005.95,113486.06,40-49,1386,0,7.869999885559082,4.0
+Mauritania,Tagant,130,Grassland,108005.95,113486.06,50-59,943,0,7.869999885559082,4.0
+Mauritania,Tagant,130,Grassland,108005.95,113486.06,60-69,693,0,7.869999885559082,4.0
+Mauritania,Tagant,130,Grassland,108005.95,113486.06,70-79,420,0,7.869999885559082,4.0
+Mauritania,Tagant,130,Grassland,108005.95,113486.06,80-89,329,0,7.869999885559082,4.0
+Mauritania,Tagant,130,Grassland,108005.95,113486.06,90-99,81,0,7.869999885559082,4.0
+Mauritania,Tagant,150,Sparse vegetation,188187.53,206130.3,0-9,220513,264065,5.730000019073486,4.0
+Mauritania,Tagant,150,Sparse vegetation,188187.53,206130.3,10-19,12486,0,5.730000019073486,4.0
+Mauritania,Tagant,150,Sparse vegetation,188187.53,206130.3,20-29,3451,0,5.730000019073486,4.0
+Mauritania,Tagant,150,Sparse vegetation,188187.53,206130.3,30-39,1513,0,5.730000019073486,4.0
+Mauritania,Tagant,150,Sparse vegetation,188187.53,206130.3,40-49,735,0,5.730000019073486,4.0
+Mauritania,Tagant,150,Sparse vegetation,188187.53,206130.3,50-59,380,0,5.730000019073486,4.0
+Mauritania,Tagant,150,Sparse vegetation,188187.53,206130.3,60-69,183,0,5.730000019073486,4.0
+Mauritania,Tagant,150,Sparse vegetation,188187.53,206130.3,70-79,87,0,5.730000019073486,4.0
+Mauritania,Tagant,150,Sparse vegetation,188187.53,206130.3,80-89,43,0,5.730000019073486,4.0
+Mauritania,Tagant,150,Sparse vegetation,188187.53,206130.3,90-99,11,0,5.730000019073486,4.0
+Mauritania,Tagant,152,Sparse vegetation,5950.71,6650.46,0-9,6922,8990,7.679999828338623,4.0
+Mauritania,Tagant,152,Sparse vegetation,5950.71,6650.46,10-19,541,0,7.679999828338623,4.0
+Mauritania,Tagant,152,Sparse vegetation,5950.71,6650.46,20-29,218,0,7.679999828338623,4.0
+Mauritania,Tagant,152,Sparse vegetation,5950.71,6650.46,30-39,133,0,7.679999828338623,4.0
+Mauritania,Tagant,152,Sparse vegetation,5950.71,6650.46,40-49,80,0,7.679999828338623,4.0
+Mauritania,Tagant,152,Sparse vegetation,5950.71,6650.46,50-59,62,0,7.679999828338623,4.0
+Mauritania,Tagant,152,Sparse vegetation,5950.71,6650.46,60-69,43,0,7.679999828338623,4.0
+Mauritania,Tagant,152,Sparse vegetation,5950.71,6650.46,70-79,29,0,7.679999828338623,4.0
+Mauritania,Tagant,152,Sparse vegetation,5950.71,6650.46,80-89,16,0,7.679999828338623,4.0
+Mauritania,Tagant,152,Sparse vegetation,5950.71,6650.46,90-99,2,0,7.679999828338623,4.0
+Mauritania,Tagant,153,Sparse vegetation,26233.78,30701.86,0-9,31074,38672,5.130000114440918,4.0
+Mauritania,Tagant,153,Sparse vegetation,26233.78,30701.86,10-19,1002,0,5.130000114440918,4.0
+Mauritania,Tagant,153,Sparse vegetation,26233.78,30701.86,20-29,269,0,5.130000114440918,4.0
+Mauritania,Tagant,153,Sparse vegetation,26233.78,30701.86,30-39,123,0,5.130000114440918,4.0
+Mauritania,Tagant,153,Sparse vegetation,26233.78,30701.86,40-49,73,0,5.130000114440918,4.0
+Mauritania,Tagant,153,Sparse vegetation,26233.78,30701.86,50-59,36,0,5.130000114440918,4.0
+Mauritania,Tagant,153,Sparse vegetation,26233.78,30701.86,60-69,24,0,5.130000114440918,4.0
+Mauritania,Tagant,153,Sparse vegetation,26233.78,30701.86,70-79,13,0,5.130000114440918,4.0
+Mauritania,Tagant,153,Sparse vegetation,26233.78,30701.86,80-89,11,0,5.130000114440918,4.0
+Mauritania,Tagant,153,Sparse vegetation,26233.78,30701.86,90-99,0,0,5.130000114440918,4.0
+Mauritania,Tagant,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",5923.46,6838.55,0-9,4851,8706,14.260000228881836,4.0
+Mauritania,Tagant,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",5923.46,6838.55,10-19,1067,0,14.260000228881836,4.0
+Mauritania,Tagant,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",5923.46,6838.55,20-29,584,0,14.260000228881836,4.0
+Mauritania,Tagant,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",5923.46,6838.55,30-39,324,0,14.260000228881836,4.0
+Mauritania,Tagant,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",5923.46,6838.55,40-49,218,0,14.260000228881836,4.0
+Mauritania,Tagant,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",5923.46,6838.55,50-59,128,0,14.260000228881836,4.0
+Mauritania,Tagant,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",5923.46,6838.55,60-69,115,0,14.260000228881836,4.0
+Mauritania,Tagant,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",5923.46,6838.55,70-79,87,0,14.260000228881836,4.0
+Mauritania,Tagant,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",5923.46,6838.55,80-89,93,0,14.260000228881836,4.0
+Mauritania,Tagant,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",5923.46,6838.55,90-99,42,0,14.260000228881836,4.0
+Mauritania,Tagant,190,Urban areas,5095.47,7521.65,0-9,3734,9471,18.899999618530273,4.0
+Mauritania,Tagant,190,Urban areas,5095.47,7521.65,10-19,727,0,18.899999618530273,4.0
+Mauritania,Tagant,190,Urban areas,5095.47,7521.65,20-29,435,0,18.899999618530273,4.0
+Mauritania,Tagant,190,Urban areas,5095.47,7521.65,30-39,347,0,18.899999618530273,4.0
+Mauritania,Tagant,190,Urban areas,5095.47,7521.65,40-49,273,0,18.899999618530273,4.0
+Mauritania,Tagant,190,Urban areas,5095.47,7521.65,50-59,244,0,18.899999618530273,4.0
+Mauritania,Tagant,190,Urban areas,5095.47,7521.65,60-69,221,0,18.899999618530273,4.0
+Mauritania,Tagant,190,Urban areas,5095.47,7521.65,70-79,215,0,18.899999618530273,4.0
+Mauritania,Tagant,190,Urban areas,5095.47,7521.65,80-89,138,0,18.899999618530273,4.0
+Mauritania,Tagant,190,Urban areas,5095.47,7521.65,90-99,16,0,18.899999618530273,4.0
+Mauritania,Tagant,200,Bare areas,604334.01,9194866.93,0-9,633319,9260399,4.980000019073486,4.0
+Mauritania,Tagant,200,Bare areas,604334.01,9194866.93,10-19,20199,0,4.980000019073486,4.0
+Mauritania,Tagant,200,Bare areas,604334.01,9194866.93,20-29,5158,0,4.980000019073486,4.0
+Mauritania,Tagant,200,Bare areas,604334.01,9194866.93,30-39,2016,0,4.980000019073486,4.0
+Mauritania,Tagant,200,Bare areas,604334.01,9194866.93,40-49,919,0,4.980000019073486,4.0
+Mauritania,Tagant,200,Bare areas,604334.01,9194866.93,50-59,435,0,4.980000019073486,4.0
+Mauritania,Tagant,200,Bare areas,604334.01,9194866.93,60-69,179,0,4.980000019073486,4.0
+Mauritania,Tagant,200,Bare areas,604334.01,9194866.93,70-79,90,0,4.980000019073486,4.0
+Mauritania,Tagant,200,Bare areas,604334.01,9194866.93,80-89,59,0,4.980000019073486,4.0
+Mauritania,Tagant,200,Bare areas,604334.01,9194866.93,90-99,7,0,4.980000019073486,4.0
+Mauritania,Tagant,201,Bare areas,337.57,738.02,0-9,446,1096,5.96999979019165,4.0
+Mauritania,Tagant,201,Bare areas,337.57,738.02,10-19,29,0,5.96999979019165,4.0
+Mauritania,Tagant,201,Bare areas,337.57,738.02,20-29,4,0,5.96999979019165,4.0
+Mauritania,Tagant,201,Bare areas,337.57,738.02,30-39,6,0,5.96999979019165,4.0
+Mauritania,Tagant,201,Bare areas,337.57,738.02,40-49,1,0,5.96999979019165,4.0
+Mauritania,Tagant,201,Bare areas,337.57,738.02,50-59,2,0,5.96999979019165,4.0
+Mauritania,Tagant,201,Bare areas,337.57,738.02,60-69,0,0,5.96999979019165,4.0
+Mauritania,Tagant,201,Bare areas,337.57,738.02,70-79,1,0,5.96999979019165,4.0
+Mauritania,Tagant,201,Bare areas,337.57,738.02,80-89,0,0,5.96999979019165,4.0
+Mauritania,Tagant,201,Bare areas,337.57,738.02,90-99,0,0,5.96999979019165,4.0
+Mauritania,Tagant,202,Bare areas,18.91,36.91,0-9,28,56,4.179999828338623,4.0
+Mauritania,Tagant,202,Bare areas,18.91,36.91,10-19,0,0,4.179999828338623,4.0
+Mauritania,Tagant,202,Bare areas,18.91,36.91,20-29,0,0,4.179999828338623,4.0
+Mauritania,Tagant,202,Bare areas,18.91,36.91,30-39,0,0,4.179999828338623,4.0
+Mauritania,Tagant,202,Bare areas,18.91,36.91,40-49,0,0,4.179999828338623,4.0
+Mauritania,Tagant,202,Bare areas,18.91,36.91,50-59,0,0,4.179999828338623,4.0
+Mauritania,Tagant,202,Bare areas,18.91,36.91,60-69,0,0,4.179999828338623,4.0
+Mauritania,Tagant,202,Bare areas,18.91,36.91,70-79,0,0,4.179999828338623,4.0
+Mauritania,Tagant,202,Bare areas,18.91,36.91,80-89,0,0,4.179999828338623,4.0
+Mauritania,Tagant,202,Bare areas,18.91,36.91,90-99,0,0,4.179999828338623,4.0
+Mauritania,Tagant,210,Water bodies,842.45,3266.01,0-9,957,3616,6.760000228881836,4.0
+Mauritania,Tagant,210,Water bodies,842.45,3266.01,10-19,29,0,6.760000228881836,4.0
+Mauritania,Tagant,210,Water bodies,842.45,3266.01,20-29,7,0,6.760000228881836,4.0
+Mauritania,Tagant,210,Water bodies,842.45,3266.01,30-39,10,0,6.760000228881836,4.0
+Mauritania,Tagant,210,Water bodies,842.45,3266.01,40-49,4,0,6.760000228881836,4.0
+Mauritania,Tagant,210,Water bodies,842.45,3266.01,50-59,6,0,6.760000228881836,4.0
+Mauritania,Tagant,210,Water bodies,842.45,3266.01,60-69,7,0,6.760000228881836,4.0
+Mauritania,Tagant,210,Water bodies,842.45,3266.01,70-79,3,0,6.760000228881836,4.0
+Mauritania,Tagant,210,Water bodies,842.45,3266.01,80-89,5,0,6.760000228881836,4.0
+Mauritania,Tagant,210,Water bodies,842.45,3266.01,90-99,5,0,6.760000228881836,4.0
+Mauritania,Tagant,255,No Data (flag),1383.25,5051399.83,0-9,3333,16013,6.21999979019165,4.0
+Mauritania,Tagant,255,No Data (flag),1383.25,5051399.83,10-19,114,0,6.21999979019165,4.0
+Mauritania,Tagant,255,No Data (flag),1383.25,5051399.83,20-29,55,0,6.21999979019165,4.0
+Mauritania,Tagant,255,No Data (flag),1383.25,5051399.83,30-39,29,0,6.21999979019165,4.0
+Mauritania,Tagant,255,No Data (flag),1383.25,5051399.83,40-49,19,0,6.21999979019165,4.0
+Mauritania,Tagant,255,No Data (flag),1383.25,5051399.83,50-59,20,0,6.21999979019165,4.0
+Mauritania,Tagant,255,No Data (flag),1383.25,5051399.83,60-69,21,0,6.21999979019165,4.0
+Mauritania,Tagant,255,No Data (flag),1383.25,5051399.83,70-79,6,0,6.21999979019165,4.0
+Mauritania,Tagant,255,No Data (flag),1383.25,5051399.83,80-89,4,0,6.21999979019165,4.0
+Mauritania,Tagant,255,No Data (flag),1383.25,5051399.83,90-99,3,0,6.21999979019165,4.0
+Mauritania,Tiris Zemmour,10,"Cropland, rainfed",0.0,36.61,0-9,0,55,,4.0
+Mauritania,Tiris Zemmour,10,"Cropland, rainfed",0.0,36.61,10-19,0,0,,4.0
+Mauritania,Tiris Zemmour,10,"Cropland, rainfed",0.0,36.61,20-29,0,0,,4.0
+Mauritania,Tiris Zemmour,10,"Cropland, rainfed",0.0,36.61,30-39,0,0,,4.0
+Mauritania,Tiris Zemmour,10,"Cropland, rainfed",0.0,36.61,40-49,0,0,,4.0
+Mauritania,Tiris Zemmour,10,"Cropland, rainfed",0.0,36.61,50-59,0,0,,4.0
+Mauritania,Tiris Zemmour,10,"Cropland, rainfed",0.0,36.61,60-69,0,0,,4.0
+Mauritania,Tiris Zemmour,10,"Cropland, rainfed",0.0,36.61,70-79,0,0,,4.0
+Mauritania,Tiris Zemmour,10,"Cropland, rainfed",0.0,36.61,80-89,0,0,,4.0
+Mauritania,Tiris Zemmour,10,"Cropland, rainfed",0.0,36.61,90-99,0,0,,4.0
+Mauritania,Tiris Zemmour,11,"Cropland, rainfed",0.0,108.9,0-9,0,130,,4.0
+Mauritania,Tiris Zemmour,11,"Cropland, rainfed",0.0,108.9,10-19,0,0,,4.0
+Mauritania,Tiris Zemmour,11,"Cropland, rainfed",0.0,108.9,20-29,0,0,,4.0
+Mauritania,Tiris Zemmour,11,"Cropland, rainfed",0.0,108.9,30-39,0,0,,4.0
+Mauritania,Tiris Zemmour,11,"Cropland, rainfed",0.0,108.9,40-49,0,0,,4.0
+Mauritania,Tiris Zemmour,11,"Cropland, rainfed",0.0,108.9,50-59,0,0,,4.0
+Mauritania,Tiris Zemmour,11,"Cropland, rainfed",0.0,108.9,60-69,0,0,,4.0
+Mauritania,Tiris Zemmour,11,"Cropland, rainfed",0.0,108.9,70-79,0,0,,4.0
+Mauritania,Tiris Zemmour,11,"Cropland, rainfed",0.0,108.9,80-89,0,0,,4.0
+Mauritania,Tiris Zemmour,11,"Cropland, rainfed",0.0,108.9,90-99,0,0,,4.0
+Mauritania,Tiris Zemmour,190,Urban areas,402.32,474.92,0-9,424,561,5.570000171661377,4.0
+Mauritania,Tiris Zemmour,190,Urban areas,402.32,474.92,10-19,28,0,5.570000171661377,4.0
+Mauritania,Tiris Zemmour,190,Urban areas,402.32,474.92,20-29,4,0,5.570000171661377,4.0
+Mauritania,Tiris Zemmour,190,Urban areas,402.32,474.92,30-39,1,0,5.570000171661377,4.0
+Mauritania,Tiris Zemmour,190,Urban areas,402.32,474.92,40-49,0,0,5.570000171661377,4.0
+Mauritania,Tiris Zemmour,190,Urban areas,402.32,474.92,50-59,0,0,5.570000171661377,4.0
+Mauritania,Tiris Zemmour,190,Urban areas,402.32,474.92,60-69,0,0,5.570000171661377,4.0
+Mauritania,Tiris Zemmour,190,Urban areas,402.32,474.92,70-79,0,0,5.570000171661377,4.0
+Mauritania,Tiris Zemmour,190,Urban areas,402.32,474.92,80-89,0,0,5.570000171661377,4.0
+Mauritania,Tiris Zemmour,190,Urban areas,402.32,474.92,90-99,0,0,5.570000171661377,4.0
+Mauritania,Tiris Zemmour,200,Bare areas,13227.35,27520958.74,0-9,14035,27525481,4.079999923706055,4.0
+Mauritania,Tiris Zemmour,200,Bare areas,13227.35,27520958.74,10-19,20,0,4.079999923706055,4.0
+Mauritania,Tiris Zemmour,200,Bare areas,13227.35,27520958.74,20-29,4,0,4.079999923706055,4.0
+Mauritania,Tiris Zemmour,200,Bare areas,13227.35,27520958.74,30-39,4,0,4.079999923706055,4.0
+Mauritania,Tiris Zemmour,200,Bare areas,13227.35,27520958.74,40-49,0,0,4.079999923706055,4.0
+Mauritania,Tiris Zemmour,200,Bare areas,13227.35,27520958.74,50-59,1,0,4.079999923706055,4.0
+Mauritania,Tiris Zemmour,200,Bare areas,13227.35,27520958.74,60-69,0,0,4.079999923706055,4.0
+Mauritania,Tiris Zemmour,200,Bare areas,13227.35,27520958.74,70-79,0,0,4.079999923706055,4.0
+Mauritania,Tiris Zemmour,200,Bare areas,13227.35,27520958.74,80-89,0,0,4.079999923706055,4.0
+Mauritania,Tiris Zemmour,200,Bare areas,13227.35,27520958.74,90-99,0,0,4.079999923706055,4.0
+Mauritania,Tiris Zemmour,201,Bare areas,4707.89,5193.33,0-9,5085,5658,4.0,4.0
+Mauritania,Tiris Zemmour,201,Bare areas,4707.89,5193.33,10-19,0,0,4.0,4.0
+Mauritania,Tiris Zemmour,201,Bare areas,4707.89,5193.33,20-29,0,0,4.0,4.0
+Mauritania,Tiris Zemmour,201,Bare areas,4707.89,5193.33,30-39,0,0,4.0,4.0
+Mauritania,Tiris Zemmour,201,Bare areas,4707.89,5193.33,40-49,0,0,4.0,4.0
+Mauritania,Tiris Zemmour,201,Bare areas,4707.89,5193.33,50-59,0,0,4.0,4.0
+Mauritania,Tiris Zemmour,201,Bare areas,4707.89,5193.33,60-69,0,0,4.0,4.0
+Mauritania,Tiris Zemmour,201,Bare areas,4707.89,5193.33,70-79,0,0,4.0,4.0
+Mauritania,Tiris Zemmour,201,Bare areas,4707.89,5193.33,80-89,0,0,4.0,4.0
+Mauritania,Tiris Zemmour,201,Bare areas,4707.89,5193.33,90-99,0,0,4.0,4.0
+Mauritania,Tiris Zemmour,210,Water bodies,0.0,54.9,0-9,0,77,,4.0
+Mauritania,Tiris Zemmour,210,Water bodies,0.0,54.9,10-19,0,0,,4.0
+Mauritania,Tiris Zemmour,210,Water bodies,0.0,54.9,20-29,0,0,,4.0
+Mauritania,Tiris Zemmour,210,Water bodies,0.0,54.9,30-39,0,0,,4.0
+Mauritania,Tiris Zemmour,210,Water bodies,0.0,54.9,40-49,0,0,,4.0
+Mauritania,Tiris Zemmour,210,Water bodies,0.0,54.9,50-59,0,0,,4.0
+Mauritania,Tiris Zemmour,210,Water bodies,0.0,54.9,60-69,0,0,,4.0
+Mauritania,Tiris Zemmour,210,Water bodies,0.0,54.9,70-79,0,0,,4.0
+Mauritania,Tiris Zemmour,210,Water bodies,0.0,54.9,80-89,0,0,,4.0
+Mauritania,Tiris Zemmour,210,Water bodies,0.0,54.9,90-99,0,0,,4.0
+Mauritania,Tiris Zemmour,255,No Data (flag),0.0,31091751.62,0-9,0,25551,,4.0
+Mauritania,Tiris Zemmour,255,No Data (flag),0.0,31091751.62,10-19,0,0,,4.0
+Mauritania,Tiris Zemmour,255,No Data (flag),0.0,31091751.62,20-29,0,0,,4.0
+Mauritania,Tiris Zemmour,255,No Data (flag),0.0,31091751.62,30-39,0,0,,4.0
+Mauritania,Tiris Zemmour,255,No Data (flag),0.0,31091751.62,40-49,0,0,,4.0
+Mauritania,Tiris Zemmour,255,No Data (flag),0.0,31091751.62,50-59,0,0,,4.0
+Mauritania,Tiris Zemmour,255,No Data (flag),0.0,31091751.62,60-69,0,0,,4.0
+Mauritania,Tiris Zemmour,255,No Data (flag),0.0,31091751.62,70-79,0,0,,4.0
+Mauritania,Tiris Zemmour,255,No Data (flag),0.0,31091751.62,80-89,0,0,,4.0
+Mauritania,Tiris Zemmour,255,No Data (flag),0.0,31091751.62,90-99,0,0,,4.0
+Mauritania,Trarza,10,"Cropland, rainfed",16475.7,16582.29,0-9,16539,21835,11.239999771118164,4.0
+Mauritania,Trarza,10,"Cropland, rainfed",16475.7,16582.29,10-19,1942,0,11.239999771118164,4.0
+Mauritania,Trarza,10,"Cropland, rainfed",16475.7,16582.29,20-29,1131,0,11.239999771118164,4.0
+Mauritania,Trarza,10,"Cropland, rainfed",16475.7,16582.29,30-39,621,0,11.239999771118164,4.0
+Mauritania,Trarza,10,"Cropland, rainfed",16475.7,16582.29,40-49,420,0,11.239999771118164,4.0
+Mauritania,Trarza,10,"Cropland, rainfed",16475.7,16582.29,50-59,353,0,11.239999771118164,4.0
+Mauritania,Trarza,10,"Cropland, rainfed",16475.7,16582.29,60-69,267,0,11.239999771118164,4.0
+Mauritania,Trarza,10,"Cropland, rainfed",16475.7,16582.29,70-79,210,0,11.239999771118164,4.0
+Mauritania,Trarza,10,"Cropland, rainfed",16475.7,16582.29,80-89,154,0,11.239999771118164,4.0
+Mauritania,Trarza,10,"Cropland, rainfed",16475.7,16582.29,90-99,72,0,11.239999771118164,4.0
+Mauritania,Trarza,11,"Cropland, rainfed",801.32,882.62,0-9,513,1282,22.329999923706055,4.0
+Mauritania,Trarza,11,"Cropland, rainfed",801.32,882.62,10-19,190,0,22.329999923706055,4.0
+Mauritania,Trarza,11,"Cropland, rainfed",801.32,882.62,20-29,143,0,22.329999923706055,4.0
+Mauritania,Trarza,11,"Cropland, rainfed",801.32,882.62,30-39,86,0,22.329999923706055,4.0
+Mauritania,Trarza,11,"Cropland, rainfed",801.32,882.62,40-49,78,0,22.329999923706055,4.0
+Mauritania,Trarza,11,"Cropland, rainfed",801.32,882.62,50-59,57,0,22.329999923706055,4.0
+Mauritania,Trarza,11,"Cropland, rainfed",801.32,882.62,60-69,54,0,22.329999923706055,4.0
+Mauritania,Trarza,11,"Cropland, rainfed",801.32,882.62,70-79,28,0,22.329999923706055,4.0
+Mauritania,Trarza,11,"Cropland, rainfed",801.32,882.62,80-89,19,0,22.329999923706055,4.0
+Mauritania,Trarza,11,"Cropland, rainfed",801.32,882.62,90-99,4,0,22.329999923706055,4.0
+Mauritania,Trarza,20,"Cropland, irrigated or post-flooding",62907.67,64419.06,0-9,57157,73458,11.3100004196167,4.019999980926514
+Mauritania,Trarza,20,"Cropland, irrigated or post-flooding",62907.67,64419.06,10-19,4879,44,11.3100004196167,4.019999980926514
+Mauritania,Trarza,20,"Cropland, irrigated or post-flooding",62907.67,64419.06,20-29,2695,0,11.3100004196167,4.019999980926514
+Mauritania,Trarza,20,"Cropland, irrigated or post-flooding",62907.67,64419.06,30-39,1816,0,11.3100004196167,4.019999980926514
+Mauritania,Trarza,20,"Cropland, irrigated or post-flooding",62907.67,64419.06,40-49,1379,0,11.3100004196167,4.019999980926514
+Mauritania,Trarza,20,"Cropland, irrigated or post-flooding",62907.67,64419.06,50-59,1019,0,11.3100004196167,4.019999980926514
+Mauritania,Trarza,20,"Cropland, irrigated or post-flooding",62907.67,64419.06,60-69,906,0,11.3100004196167,4.019999980926514
+Mauritania,Trarza,20,"Cropland, irrigated or post-flooding",62907.67,64419.06,70-79,848,0,11.3100004196167,4.019999980926514
+Mauritania,Trarza,20,"Cropland, irrigated or post-flooding",62907.67,64419.06,80-89,837,0,11.3100004196167,4.019999980926514
+Mauritania,Trarza,20,"Cropland, irrigated or post-flooding",62907.67,64419.06,90-99,595,0,11.3100004196167,4.019999980926514
+Mauritania,Trarza,30,Mosaic cropland / natural vegetation,1351.81,1401.71,0-9,941,2045,22.56999969482422,4.03000020980835
+Mauritania,Trarza,30,Mosaic cropland / natural vegetation,1351.81,1401.71,10-19,302,3,22.56999969482422,4.03000020980835
+Mauritania,Trarza,30,Mosaic cropland / natural vegetation,1351.81,1401.71,20-29,156,0,22.56999969482422,4.03000020980835
+Mauritania,Trarza,30,Mosaic cropland / natural vegetation,1351.81,1401.71,30-39,144,0,22.56999969482422,4.03000020980835
+Mauritania,Trarza,30,Mosaic cropland / natural vegetation,1351.81,1401.71,40-49,121,0,22.56999969482422,4.03000020980835
+Mauritania,Trarza,30,Mosaic cropland / natural vegetation,1351.81,1401.71,50-59,99,0,22.56999969482422,4.03000020980835
+Mauritania,Trarza,30,Mosaic cropland / natural vegetation,1351.81,1401.71,60-69,75,0,22.56999969482422,4.03000020980835
+Mauritania,Trarza,30,Mosaic cropland / natural vegetation,1351.81,1401.71,70-79,53,0,22.56999969482422,4.03000020980835
+Mauritania,Trarza,30,Mosaic cropland / natural vegetation,1351.81,1401.71,80-89,73,0,22.56999969482422,4.03000020980835
+Mauritania,Trarza,30,Mosaic cropland / natural vegetation,1351.81,1401.71,90-99,10,0,22.56999969482422,4.03000020980835
+Mauritania,Trarza,40,Mosaic natural vegetation / cropland,853.59,871.59,0-9,767,1305,18.149999618530273,4.0
+Mauritania,Trarza,40,Mosaic natural vegetation / cropland,853.59,871.59,10-19,145,0,18.149999618530273,4.0
+Mauritania,Trarza,40,Mosaic natural vegetation / cropland,853.59,871.59,20-29,90,0,18.149999618530273,4.0
+Mauritania,Trarza,40,Mosaic natural vegetation / cropland,853.59,871.59,30-39,62,0,18.149999618530273,4.0
+Mauritania,Trarza,40,Mosaic natural vegetation / cropland,853.59,871.59,40-49,62,0,18.149999618530273,4.0
+Mauritania,Trarza,40,Mosaic natural vegetation / cropland,853.59,871.59,50-59,49,0,18.149999618530273,4.0
+Mauritania,Trarza,40,Mosaic natural vegetation / cropland,853.59,871.59,60-69,31,0,18.149999618530273,4.0
+Mauritania,Trarza,40,Mosaic natural vegetation / cropland,853.59,871.59,70-79,28,0,18.149999618530273,4.0
+Mauritania,Trarza,40,Mosaic natural vegetation / cropland,853.59,871.59,80-89,24,0,18.149999618530273,4.0
+Mauritania,Trarza,40,Mosaic natural vegetation / cropland,853.59,871.59,90-99,16,0,18.149999618530273,4.0
+Mauritania,Trarza,100,Mosaic tree and shrub / herbaceous cover,23904.55,23966.55,0-9,23021,31797,9.800000190734863,4.0
+Mauritania,Trarza,100,Mosaic tree and shrub / herbaceous cover,23904.55,23966.55,10-19,4922,0,9.800000190734863,4.0
+Mauritania,Trarza,100,Mosaic tree and shrub / herbaceous cover,23904.55,23966.55,20-29,1941,0,9.800000190734863,4.0
+Mauritania,Trarza,100,Mosaic tree and shrub / herbaceous cover,23904.55,23966.55,30-39,1032,0,9.800000190734863,4.0
+Mauritania,Trarza,100,Mosaic tree and shrub / herbaceous cover,23904.55,23966.55,40-49,417,0,9.800000190734863,4.0
+Mauritania,Trarza,100,Mosaic tree and shrub / herbaceous cover,23904.55,23966.55,50-59,171,0,9.800000190734863,4.0
+Mauritania,Trarza,100,Mosaic tree and shrub / herbaceous cover,23904.55,23966.55,60-69,103,0,9.800000190734863,4.0
+Mauritania,Trarza,100,Mosaic tree and shrub / herbaceous cover,23904.55,23966.55,70-79,65,0,9.800000190734863,4.0
+Mauritania,Trarza,100,Mosaic tree and shrub / herbaceous cover,23904.55,23966.55,80-89,31,0,9.800000190734863,4.0
+Mauritania,Trarza,100,Mosaic tree and shrub / herbaceous cover,23904.55,23966.55,90-99,3,0,9.800000190734863,4.0
+Mauritania,Trarza,110,Mosaic herbaceous cover / tree and shrub,1957.07,1957.07,0-9,1204,2648,18.639999389648438,4.0
+Mauritania,Trarza,110,Mosaic herbaceous cover / tree and shrub,1957.07,1957.07,10-19,544,0,18.639999389648438,4.0
+Mauritania,Trarza,110,Mosaic herbaceous cover / tree and shrub,1957.07,1957.07,20-29,364,0,18.639999389648438,4.0
+Mauritania,Trarza,110,Mosaic herbaceous cover / tree and shrub,1957.07,1957.07,30-39,193,0,18.639999389648438,4.0
+Mauritania,Trarza,110,Mosaic herbaceous cover / tree and shrub,1957.07,1957.07,40-49,142,0,18.639999389648438,4.0
+Mauritania,Trarza,110,Mosaic herbaceous cover / tree and shrub,1957.07,1957.07,50-59,79,0,18.639999389648438,4.0
+Mauritania,Trarza,110,Mosaic herbaceous cover / tree and shrub,1957.07,1957.07,60-69,63,0,18.639999389648438,4.0
+Mauritania,Trarza,110,Mosaic herbaceous cover / tree and shrub,1957.07,1957.07,70-79,34,0,18.639999389648438,4.0
+Mauritania,Trarza,110,Mosaic herbaceous cover / tree and shrub,1957.07,1957.07,80-89,19,0,18.639999389648438,4.0
+Mauritania,Trarza,110,Mosaic herbaceous cover / tree and shrub,1957.07,1957.07,90-99,6,0,18.639999389648438,4.0
+Mauritania,Trarza,120,Shrubland,88860.64,89898.11,0-9,83275,111707,10.930000305175781,4.0
+Mauritania,Trarza,120,Shrubland,88860.64,89898.11,10-19,11532,0,10.930000305175781,4.0
+Mauritania,Trarza,120,Shrubland,88860.64,89898.11,20-29,5468,0,10.930000305175781,4.0
+Mauritania,Trarza,120,Shrubland,88860.64,89898.11,30-39,3360,0,10.930000305175781,4.0
+Mauritania,Trarza,120,Shrubland,88860.64,89898.11,40-49,2292,0,10.930000305175781,4.0
+Mauritania,Trarza,120,Shrubland,88860.64,89898.11,50-59,1667,0,10.930000305175781,4.0
+Mauritania,Trarza,120,Shrubland,88860.64,89898.11,60-69,1316,0,10.930000305175781,4.0
+Mauritania,Trarza,120,Shrubland,88860.64,89898.11,70-79,867,0,10.930000305175781,4.0
+Mauritania,Trarza,120,Shrubland,88860.64,89898.11,80-89,479,0,10.930000305175781,4.0
+Mauritania,Trarza,120,Shrubland,88860.64,89898.11,90-99,184,0,10.930000305175781,4.0
+Mauritania,Trarza,130,Grassland,990107.19,1005768.43,0-9,931893,1088264,6.929999828338623,4.0
+Mauritania,Trarza,130,Grassland,990107.19,1005768.43,10-19,83212,0,6.929999828338623,4.0
+Mauritania,Trarza,130,Grassland,990107.19,1005768.43,20-29,28594,0,6.929999828338623,4.0
+Mauritania,Trarza,130,Grassland,990107.19,1005768.43,30-39,12945,0,6.929999828338623,4.0
+Mauritania,Trarza,130,Grassland,990107.19,1005768.43,40-49,6819,0,6.929999828338623,4.0
+Mauritania,Trarza,130,Grassland,990107.19,1005768.43,50-59,3827,0,6.929999828338623,4.0
+Mauritania,Trarza,130,Grassland,990107.19,1005768.43,60-69,2386,0,6.929999828338623,4.0
+Mauritania,Trarza,130,Grassland,990107.19,1005768.43,70-79,1342,0,6.929999828338623,4.0
+Mauritania,Trarza,130,Grassland,990107.19,1005768.43,80-89,744,0,6.929999828338623,4.0
+Mauritania,Trarza,130,Grassland,990107.19,1005768.43,90-99,156,0,6.929999828338623,4.0
+Mauritania,Trarza,150,Sparse vegetation,422394.46,452261.65,0-9,501298,557438,4.78000020980835,4.0
+Mauritania,Trarza,150,Sparse vegetation,422394.46,452261.65,10-19,12031,0,4.78000020980835,4.0
+Mauritania,Trarza,150,Sparse vegetation,422394.46,452261.65,20-29,2979,0,4.78000020980835,4.0
+Mauritania,Trarza,150,Sparse vegetation,422394.46,452261.65,30-39,1010,0,4.78000020980835,4.0
+Mauritania,Trarza,150,Sparse vegetation,422394.46,452261.65,40-49,439,0,4.78000020980835,4.0
+Mauritania,Trarza,150,Sparse vegetation,422394.46,452261.65,50-59,274,0,4.78000020980835,4.0
+Mauritania,Trarza,150,Sparse vegetation,422394.46,452261.65,60-69,178,0,4.78000020980835,4.0
+Mauritania,Trarza,150,Sparse vegetation,422394.46,452261.65,70-79,154,0,4.78000020980835,4.0
+Mauritania,Trarza,150,Sparse vegetation,422394.46,452261.65,80-89,116,0,4.78000020980835,4.0
+Mauritania,Trarza,150,Sparse vegetation,422394.46,452261.65,90-99,36,0,4.78000020980835,4.0
+Mauritania,Trarza,152,Sparse vegetation,23141.74,23423.28,0-9,22810,31433,10.350000381469727,4.0
+Mauritania,Trarza,152,Sparse vegetation,23141.74,23423.28,10-19,3973,0,10.350000381469727,4.0
+Mauritania,Trarza,152,Sparse vegetation,23141.74,23423.28,20-29,1878,0,10.350000381469727,4.0
+Mauritania,Trarza,152,Sparse vegetation,23141.74,23423.28,30-39,1027,0,10.350000381469727,4.0
+Mauritania,Trarza,152,Sparse vegetation,23141.74,23423.28,40-49,638,0,10.350000381469727,4.0
+Mauritania,Trarza,152,Sparse vegetation,23141.74,23423.28,50-59,328,0,10.350000381469727,4.0
+Mauritania,Trarza,152,Sparse vegetation,23141.74,23423.28,60-69,227,0,10.350000381469727,4.0
+Mauritania,Trarza,152,Sparse vegetation,23141.74,23423.28,70-79,139,0,10.350000381469727,4.0
+Mauritania,Trarza,152,Sparse vegetation,23141.74,23423.28,80-89,43,0,10.350000381469727,4.0
+Mauritania,Trarza,152,Sparse vegetation,23141.74,23423.28,90-99,4,0,10.350000381469727,4.0
+Mauritania,Trarza,153,Sparse vegetation,664005.74,671655.31,0-9,726953,756992,4.599999904632568,4.0
+Mauritania,Trarza,153,Sparse vegetation,664005.74,671655.31,10-19,15728,0,4.599999904632568,4.0
+Mauritania,Trarza,153,Sparse vegetation,664005.74,671655.31,20-29,3410,0,4.599999904632568,4.0
+Mauritania,Trarza,153,Sparse vegetation,664005.74,671655.31,30-39,1011,0,4.599999904632568,4.0
+Mauritania,Trarza,153,Sparse vegetation,664005.74,671655.31,40-49,315,0,4.599999904632568,4.0
+Mauritania,Trarza,153,Sparse vegetation,664005.74,671655.31,50-59,129,0,4.599999904632568,4.0
+Mauritania,Trarza,153,Sparse vegetation,664005.74,671655.31,60-69,56,0,4.599999904632568,4.0
+Mauritania,Trarza,153,Sparse vegetation,664005.74,671655.31,70-79,43,0,4.599999904632568,4.0
+Mauritania,Trarza,153,Sparse vegetation,664005.74,671655.31,80-89,15,0,4.599999904632568,4.0
+Mauritania,Trarza,153,Sparse vegetation,664005.74,671655.31,90-99,2,0,4.599999904632568,4.0
+Mauritania,Trarza,160,"Tree cover, flooded, fresh or brakish water",3167.27,3638.07,0-9,2150,4772,24.440000534057617,4.03000020980835
+Mauritania,Trarza,160,"Tree cover, flooded, fresh or brakish water",3167.27,3638.07,10-19,418,1,24.440000534057617,4.03000020980835
+Mauritania,Trarza,160,"Tree cover, flooded, fresh or brakish water",3167.27,3638.07,20-29,305,0,24.440000534057617,4.03000020980835
+Mauritania,Trarza,160,"Tree cover, flooded, fresh or brakish water",3167.27,3638.07,30-39,241,0,24.440000534057617,4.03000020980835
+Mauritania,Trarza,160,"Tree cover, flooded, fresh or brakish water",3167.27,3638.07,40-49,219,0,24.440000534057617,4.03000020980835
+Mauritania,Trarza,160,"Tree cover, flooded, fresh or brakish water",3167.27,3638.07,50-59,207,0,24.440000534057617,4.03000020980835
+Mauritania,Trarza,160,"Tree cover, flooded, fresh or brakish water",3167.27,3638.07,60-69,195,0,24.440000534057617,4.03000020980835
+Mauritania,Trarza,160,"Tree cover, flooded, fresh or brakish water",3167.27,3638.07,70-79,187,0,24.440000534057617,4.03000020980835
+Mauritania,Trarza,160,"Tree cover, flooded, fresh or brakish water",3167.27,3638.07,80-89,155,0,24.440000534057617,4.03000020980835
+Mauritania,Trarza,160,"Tree cover, flooded, fresh or brakish water",3167.27,3638.07,90-99,96,0,24.440000534057617,4.03000020980835
+Mauritania,Trarza,170,"Tree cover, flooded, saline water",2889.79,3804.54,0-9,3403,4497,4.690000057220459,4.050000190734863
+Mauritania,Trarza,170,"Tree cover, flooded, saline water",2889.79,3804.54,10-19,61,6,4.690000057220459,4.050000190734863
+Mauritania,Trarza,170,"Tree cover, flooded, saline water",2889.79,3804.54,20-29,28,0,4.690000057220459,4.050000190734863
+Mauritania,Trarza,170,"Tree cover, flooded, saline water",2889.79,3804.54,30-39,12,0,4.690000057220459,4.050000190734863
+Mauritania,Trarza,170,"Tree cover, flooded, saline water",2889.79,3804.54,40-49,6,0,4.690000057220459,4.050000190734863
+Mauritania,Trarza,170,"Tree cover, flooded, saline water",2889.79,3804.54,50-59,2,0,4.690000057220459,4.050000190734863
+Mauritania,Trarza,170,"Tree cover, flooded, saline water",2889.79,3804.54,60-69,2,0,4.690000057220459,4.050000190734863
+Mauritania,Trarza,170,"Tree cover, flooded, saline water",2889.79,3804.54,70-79,1,0,4.690000057220459,4.050000190734863
+Mauritania,Trarza,170,"Tree cover, flooded, saline water",2889.79,3804.54,80-89,0,0,4.690000057220459,4.050000190734863
+Mauritania,Trarza,170,"Tree cover, flooded, saline water",2889.79,3804.54,90-99,0,0,4.690000057220459,4.050000190734863
+Mauritania,Trarza,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",90342.61,93908.29,0-9,89174,108399,8.220000267028809,4.010000228881836
+Mauritania,Trarza,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",90342.61,93908.29,10-19,6572,19,8.220000267028809,4.010000228881836
+Mauritania,Trarza,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",90342.61,93908.29,20-29,2881,0,8.220000267028809,4.010000228881836
+Mauritania,Trarza,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",90342.61,93908.29,30-39,1774,0,8.220000267028809,4.010000228881836
+Mauritania,Trarza,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",90342.61,93908.29,40-49,1307,0,8.220000267028809,4.010000228881836
+Mauritania,Trarza,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",90342.61,93908.29,50-59,998,0,8.220000267028809,4.010000228881836
+Mauritania,Trarza,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",90342.61,93908.29,60-69,732,0,8.220000267028809,4.010000228881836
+Mauritania,Trarza,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",90342.61,93908.29,70-79,482,0,8.220000267028809,4.010000228881836
+Mauritania,Trarza,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",90342.61,93908.29,80-89,317,0,8.220000267028809,4.010000228881836
+Mauritania,Trarza,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",90342.61,93908.29,90-99,223,0,8.220000267028809,4.010000228881836
+Mauritania,Trarza,190,Urban areas,1981.19,2208.1,0-9,2280,2797,5.849999904632568,4.0
+Mauritania,Trarza,190,Urban areas,1981.19,2208.1,10-19,119,0,5.849999904632568,4.0
+Mauritania,Trarza,190,Urban areas,1981.19,2208.1,20-29,49,0,5.849999904632568,4.0
+Mauritania,Trarza,190,Urban areas,1981.19,2208.1,30-39,14,0,5.849999904632568,4.0
+Mauritania,Trarza,190,Urban areas,1981.19,2208.1,40-49,10,0,5.849999904632568,4.0
+Mauritania,Trarza,190,Urban areas,1981.19,2208.1,50-59,10,0,5.849999904632568,4.0
+Mauritania,Trarza,190,Urban areas,1981.19,2208.1,60-69,3,0,5.849999904632568,4.0
+Mauritania,Trarza,190,Urban areas,1981.19,2208.1,70-79,4,0,5.849999904632568,4.0
+Mauritania,Trarza,190,Urban areas,1981.19,2208.1,80-89,0,0,5.849999904632568,4.0
+Mauritania,Trarza,190,Urban areas,1981.19,2208.1,90-99,0,0,5.849999904632568,4.0
+Mauritania,Trarza,200,Bare areas,552322.45,4458607.65,0-9,608379,4532490,4.440000057220459,4.0
+Mauritania,Trarza,200,Bare areas,552322.45,4458607.65,10-19,7967,1,4.440000057220459,4.0
+Mauritania,Trarza,200,Bare areas,552322.45,4458607.65,20-29,1238,0,4.440000057220459,4.0
+Mauritania,Trarza,200,Bare areas,552322.45,4458607.65,30-39,416,0,4.440000057220459,4.0
+Mauritania,Trarza,200,Bare areas,552322.45,4458607.65,40-49,168,0,4.440000057220459,4.0
+Mauritania,Trarza,200,Bare areas,552322.45,4458607.65,50-59,66,0,4.440000057220459,4.0
+Mauritania,Trarza,200,Bare areas,552322.45,4458607.65,60-69,42,0,4.440000057220459,4.0
+Mauritania,Trarza,200,Bare areas,552322.45,4458607.65,70-79,20,0,4.440000057220459,4.0
+Mauritania,Trarza,200,Bare areas,552322.45,4458607.65,80-89,20,0,4.440000057220459,4.0
+Mauritania,Trarza,200,Bare areas,552322.45,4458607.65,90-99,10,0,4.440000057220459,4.0
+Mauritania,Trarza,201,Bare areas,9085.0,9895.17,0-9,10906,12042,4.300000190734863,4.0
+Mauritania,Trarza,201,Bare areas,9085.0,9895.17,10-19,66,0,4.300000190734863,4.0
+Mauritania,Trarza,201,Bare areas,9085.0,9895.17,20-29,22,0,4.300000190734863,4.0
+Mauritania,Trarza,201,Bare areas,9085.0,9895.17,30-39,6,0,4.300000190734863,4.0
+Mauritania,Trarza,201,Bare areas,9085.0,9895.17,40-49,5,0,4.300000190734863,4.0
+Mauritania,Trarza,201,Bare areas,9085.0,9895.17,50-59,4,0,4.300000190734863,4.0
+Mauritania,Trarza,201,Bare areas,9085.0,9895.17,60-69,3,0,4.300000190734863,4.0
+Mauritania,Trarza,201,Bare areas,9085.0,9895.17,70-79,5,0,4.300000190734863,4.0
+Mauritania,Trarza,201,Bare areas,9085.0,9895.17,80-89,3,0,4.300000190734863,4.0
+Mauritania,Trarza,201,Bare areas,9085.0,9895.17,90-99,1,0,4.300000190734863,4.0
+Mauritania,Trarza,202,Bare areas,0.0,758.77,0-9,0,986,,4.0
+Mauritania,Trarza,202,Bare areas,0.0,758.77,10-19,0,0,,4.0
+Mauritania,Trarza,202,Bare areas,0.0,758.77,20-29,0,0,,4.0
+Mauritania,Trarza,202,Bare areas,0.0,758.77,30-39,0,0,,4.0
+Mauritania,Trarza,202,Bare areas,0.0,758.77,40-49,0,0,,4.0
+Mauritania,Trarza,202,Bare areas,0.0,758.77,50-59,0,0,,4.0
+Mauritania,Trarza,202,Bare areas,0.0,758.77,60-69,0,0,,4.0
+Mauritania,Trarza,202,Bare areas,0.0,758.77,70-79,0,0,,4.0
+Mauritania,Trarza,202,Bare areas,0.0,758.77,80-89,0,0,,4.0
+Mauritania,Trarza,202,Bare areas,0.0,758.77,90-99,0,0,,4.0
+Mauritania,Trarza,210,Water bodies,17563.36,22481.2,0-9,19470,26549,7.059999942779541,4.010000228881836
+Mauritania,Trarza,210,Water bodies,17563.36,22481.2,10-19,565,2,7.059999942779541,4.010000228881836
+Mauritania,Trarza,210,Water bodies,17563.36,22481.2,20-29,300,0,7.059999942779541,4.010000228881836
+Mauritania,Trarza,210,Water bodies,17563.36,22481.2,30-39,183,0,7.059999942779541,4.010000228881836
+Mauritania,Trarza,210,Water bodies,17563.36,22481.2,40-49,159,0,7.059999942779541,4.010000228881836
+Mauritania,Trarza,210,Water bodies,17563.36,22481.2,50-59,120,0,7.059999942779541,4.010000228881836
+Mauritania,Trarza,210,Water bodies,17563.36,22481.2,60-69,105,0,7.059999942779541,4.010000228881836
+Mauritania,Trarza,210,Water bodies,17563.36,22481.2,70-79,118,0,7.059999942779541,4.010000228881836
+Mauritania,Trarza,210,Water bodies,17563.36,22481.2,80-89,85,0,7.059999942779541,4.010000228881836
+Mauritania,Trarza,210,Water bodies,17563.36,22481.2,90-99,121,0,7.059999942779541,4.010000228881836
+Mauritania,Trarza,255,No Data (flag),2266.58,6467014.68,0-9,6087,13769,6.429999828338623,4.0
+Mauritania,Trarza,255,No Data (flag),2266.58,6467014.68,10-19,170,0,6.429999828338623,4.0
+Mauritania,Trarza,255,No Data (flag),2266.58,6467014.68,20-29,73,0,6.429999828338623,4.0
+Mauritania,Trarza,255,No Data (flag),2266.58,6467014.68,30-39,53,0,6.429999828338623,4.0
+Mauritania,Trarza,255,No Data (flag),2266.58,6467014.68,40-49,43,0,6.429999828338623,4.0
+Mauritania,Trarza,255,No Data (flag),2266.58,6467014.68,50-59,38,0,6.429999828338623,4.0
+Mauritania,Trarza,255,No Data (flag),2266.58,6467014.68,60-69,23,0,6.429999828338623,4.0
+Mauritania,Trarza,255,No Data (flag),2266.58,6467014.68,70-79,17,0,6.429999828338623,4.0
+Mauritania,Trarza,255,No Data (flag),2266.58,6467014.68,80-89,29,0,6.429999828338623,4.0
+Mauritania,Trarza,255,No Data (flag),2266.58,6467014.68,90-99,15,0,6.429999828338623,4.0
+Mauritania,Dakhlet Nouadhibou,10,"Cropland, rainfed",1013.66,4905.58,0-9,1224,5565,4.019999980926514,4.0
+Mauritania,Dakhlet Nouadhibou,10,"Cropland, rainfed",1013.66,4905.58,10-19,1,0,4.019999980926514,4.0
+Mauritania,Dakhlet Nouadhibou,10,"Cropland, rainfed",1013.66,4905.58,20-29,0,0,4.019999980926514,4.0
+Mauritania,Dakhlet Nouadhibou,10,"Cropland, rainfed",1013.66,4905.58,30-39,0,0,4.019999980926514,4.0
+Mauritania,Dakhlet Nouadhibou,10,"Cropland, rainfed",1013.66,4905.58,40-49,0,0,4.019999980926514,4.0
+Mauritania,Dakhlet Nouadhibou,10,"Cropland, rainfed",1013.66,4905.58,50-59,0,0,4.019999980926514,4.0
+Mauritania,Dakhlet Nouadhibou,10,"Cropland, rainfed",1013.66,4905.58,60-69,0,0,4.019999980926514,4.0
+Mauritania,Dakhlet Nouadhibou,10,"Cropland, rainfed",1013.66,4905.58,70-79,0,0,4.019999980926514,4.0
+Mauritania,Dakhlet Nouadhibou,10,"Cropland, rainfed",1013.66,4905.58,80-89,0,0,4.019999980926514,4.0
+Mauritania,Dakhlet Nouadhibou,10,"Cropland, rainfed",1013.66,4905.58,90-99,0,0,4.019999980926514,4.0
+Mauritania,Dakhlet Nouadhibou,11,"Cropland, rainfed",105.23,1414.28,0-9,161,1734,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,11,"Cropland, rainfed",105.23,1414.28,10-19,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,11,"Cropland, rainfed",105.23,1414.28,20-29,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,11,"Cropland, rainfed",105.23,1414.28,30-39,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,11,"Cropland, rainfed",105.23,1414.28,40-49,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,11,"Cropland, rainfed",105.23,1414.28,50-59,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,11,"Cropland, rainfed",105.23,1414.28,60-69,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,11,"Cropland, rainfed",105.23,1414.28,70-79,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,11,"Cropland, rainfed",105.23,1414.28,80-89,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,11,"Cropland, rainfed",105.23,1414.28,90-99,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,20,"Cropland, irrigated or post-flooding",0.0,186.53,0-9,0,214,,4.0
+Mauritania,Dakhlet Nouadhibou,20,"Cropland, irrigated or post-flooding",0.0,186.53,10-19,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,20,"Cropland, irrigated or post-flooding",0.0,186.53,20-29,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,20,"Cropland, irrigated or post-flooding",0.0,186.53,30-39,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,20,"Cropland, irrigated or post-flooding",0.0,186.53,40-49,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,20,"Cropland, irrigated or post-flooding",0.0,186.53,50-59,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,20,"Cropland, irrigated or post-flooding",0.0,186.53,60-69,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,20,"Cropland, irrigated or post-flooding",0.0,186.53,70-79,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,20,"Cropland, irrigated or post-flooding",0.0,186.53,80-89,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,20,"Cropland, irrigated or post-flooding",0.0,186.53,90-99,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,150,Sparse vegetation,381.34,887.19,0-9,531,1156,4.070000171661377,4.0
+Mauritania,Dakhlet Nouadhibou,150,Sparse vegetation,381.34,887.19,10-19,0,0,4.070000171661377,4.0
+Mauritania,Dakhlet Nouadhibou,150,Sparse vegetation,381.34,887.19,20-29,0,0,4.070000171661377,4.0
+Mauritania,Dakhlet Nouadhibou,150,Sparse vegetation,381.34,887.19,30-39,0,0,4.070000171661377,4.0
+Mauritania,Dakhlet Nouadhibou,150,Sparse vegetation,381.34,887.19,40-49,0,0,4.070000171661377,4.0
+Mauritania,Dakhlet Nouadhibou,150,Sparse vegetation,381.34,887.19,50-59,0,0,4.070000171661377,4.0
+Mauritania,Dakhlet Nouadhibou,150,Sparse vegetation,381.34,887.19,60-69,0,0,4.070000171661377,4.0
+Mauritania,Dakhlet Nouadhibou,150,Sparse vegetation,381.34,887.19,70-79,0,0,4.070000171661377,4.0
+Mauritania,Dakhlet Nouadhibou,150,Sparse vegetation,381.34,887.19,80-89,0,0,4.070000171661377,4.0
+Mauritania,Dakhlet Nouadhibou,150,Sparse vegetation,381.34,887.19,90-99,0,0,4.070000171661377,4.0
+Mauritania,Dakhlet Nouadhibou,170,"Tree cover, flooded, saline water",0.0,245.76,0-9,0,314,,4.0
+Mauritania,Dakhlet Nouadhibou,170,"Tree cover, flooded, saline water",0.0,245.76,10-19,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,170,"Tree cover, flooded, saline water",0.0,245.76,20-29,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,170,"Tree cover, flooded, saline water",0.0,245.76,30-39,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,170,"Tree cover, flooded, saline water",0.0,245.76,40-49,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,170,"Tree cover, flooded, saline water",0.0,245.76,50-59,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,170,"Tree cover, flooded, saline water",0.0,245.76,60-69,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,170,"Tree cover, flooded, saline water",0.0,245.76,70-79,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,170,"Tree cover, flooded, saline water",0.0,245.76,80-89,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,170,"Tree cover, flooded, saline water",0.0,245.76,90-99,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",70.16,220.22,0-9,93,236,4.010000228881836,4.0
+Mauritania,Dakhlet Nouadhibou,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",70.16,220.22,10-19,0,0,4.010000228881836,4.0
+Mauritania,Dakhlet Nouadhibou,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",70.16,220.22,20-29,0,0,4.010000228881836,4.0
+Mauritania,Dakhlet Nouadhibou,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",70.16,220.22,30-39,0,0,4.010000228881836,4.0
+Mauritania,Dakhlet Nouadhibou,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",70.16,220.22,40-49,0,0,4.010000228881836,4.0
+Mauritania,Dakhlet Nouadhibou,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",70.16,220.22,50-59,0,0,4.010000228881836,4.0
+Mauritania,Dakhlet Nouadhibou,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",70.16,220.22,60-69,0,0,4.010000228881836,4.0
+Mauritania,Dakhlet Nouadhibou,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",70.16,220.22,70-79,0,0,4.010000228881836,4.0
+Mauritania,Dakhlet Nouadhibou,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",70.16,220.22,80-89,0,0,4.010000228881836,4.0
+Mauritania,Dakhlet Nouadhibou,180,"Shrub or herbaceous cover, flooded, fresh/saline/brakish water",70.16,220.22,90-99,0,0,4.010000228881836,4.0
+Mauritania,Dakhlet Nouadhibou,190,Urban areas,0.0,1297.86,0-9,0,1512,,4.0
+Mauritania,Dakhlet Nouadhibou,190,Urban areas,0.0,1297.86,10-19,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,190,Urban areas,0.0,1297.86,20-29,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,190,Urban areas,0.0,1297.86,30-39,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,190,Urban areas,0.0,1297.86,40-49,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,190,Urban areas,0.0,1297.86,50-59,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,190,Urban areas,0.0,1297.86,60-69,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,190,Urban areas,0.0,1297.86,70-79,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,190,Urban areas,0.0,1297.86,80-89,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,190,Urban areas,0.0,1297.86,90-99,0,0,,4.0
+Mauritania,Dakhlet Nouadhibou,200,Bare areas,5615.88,1762879.36,0-9,6324,1767284,4.050000190734863,4.0
+Mauritania,Dakhlet Nouadhibou,200,Bare areas,5615.88,1762879.36,10-19,4,0,4.050000190734863,4.0
+Mauritania,Dakhlet Nouadhibou,200,Bare areas,5615.88,1762879.36,20-29,0,0,4.050000190734863,4.0
+Mauritania,Dakhlet Nouadhibou,200,Bare areas,5615.88,1762879.36,30-39,1,0,4.050000190734863,4.0
+Mauritania,Dakhlet Nouadhibou,200,Bare areas,5615.88,1762879.36,40-49,1,0,4.050000190734863,4.0
+Mauritania,Dakhlet Nouadhibou,200,Bare areas,5615.88,1762879.36,50-59,1,0,4.050000190734863,4.0
+Mauritania,Dakhlet Nouadhibou,200,Bare areas,5615.88,1762879.36,60-69,0,0,4.050000190734863,4.0
+Mauritania,Dakhlet Nouadhibou,200,Bare areas,5615.88,1762879.36,70-79,0,0,4.050000190734863,4.0
+Mauritania,Dakhlet Nouadhibou,200,Bare areas,5615.88,1762879.36,80-89,0,0,4.050000190734863,4.0
+Mauritania,Dakhlet Nouadhibou,200,Bare areas,5615.88,1762879.36,90-99,0,0,4.050000190734863,4.0
+Mauritania,Dakhlet Nouadhibou,201,Bare areas,1286.11,15287.15,0-9,1548,17176,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,201,Bare areas,1286.11,15287.15,10-19,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,201,Bare areas,1286.11,15287.15,20-29,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,201,Bare areas,1286.11,15287.15,30-39,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,201,Bare areas,1286.11,15287.15,40-49,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,201,Bare areas,1286.11,15287.15,50-59,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,201,Bare areas,1286.11,15287.15,60-69,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,201,Bare areas,1286.11,15287.15,70-79,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,201,Bare areas,1286.11,15287.15,80-89,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,201,Bare areas,1286.11,15287.15,90-99,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,202,Bare areas,484.52,6642.37,0-9,571,7873,4.369999885559082,4.0
+Mauritania,Dakhlet Nouadhibou,202,Bare areas,484.52,6642.37,10-19,5,0,4.369999885559082,4.0
+Mauritania,Dakhlet Nouadhibou,202,Bare areas,484.52,6642.37,20-29,2,0,4.369999885559082,4.0
+Mauritania,Dakhlet Nouadhibou,202,Bare areas,484.52,6642.37,30-39,1,0,4.369999885559082,4.0
+Mauritania,Dakhlet Nouadhibou,202,Bare areas,484.52,6642.37,40-49,1,0,4.369999885559082,4.0
+Mauritania,Dakhlet Nouadhibou,202,Bare areas,484.52,6642.37,50-59,0,0,4.369999885559082,4.0
+Mauritania,Dakhlet Nouadhibou,202,Bare areas,484.52,6642.37,60-69,0,0,4.369999885559082,4.0
+Mauritania,Dakhlet Nouadhibou,202,Bare areas,484.52,6642.37,70-79,0,0,4.369999885559082,4.0
+Mauritania,Dakhlet Nouadhibou,202,Bare areas,484.52,6642.37,80-89,0,0,4.369999885559082,4.0
+Mauritania,Dakhlet Nouadhibou,202,Bare areas,484.52,6642.37,90-99,0,0,4.369999885559082,4.0
+Mauritania,Dakhlet Nouadhibou,210,Water bodies,137.58,3808.83,0-9,257,4656,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,210,Water bodies,137.58,3808.83,10-19,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,210,Water bodies,137.58,3808.83,20-29,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,210,Water bodies,137.58,3808.83,30-39,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,210,Water bodies,137.58,3808.83,40-49,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,210,Water bodies,137.58,3808.83,50-59,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,210,Water bodies,137.58,3808.83,60-69,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,210,Water bodies,137.58,3808.83,70-79,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,210,Water bodies,137.58,3808.83,80-89,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,210,Water bodies,137.58,3808.83,90-99,0,0,4.0,4.0
+Mauritania,Dakhlet Nouadhibou,255,No Data (flag),179.36,4844314.87,0-9,546,15050,4.239999771118164,4.0
+Mauritania,Dakhlet Nouadhibou,255,No Data (flag),179.36,4844314.87,10-19,3,0,4.239999771118164,4.0
+Mauritania,Dakhlet Nouadhibou,255,No Data (flag),179.36,4844314.87,20-29,0,0,4.239999771118164,4.0
+Mauritania,Dakhlet Nouadhibou,255,No Data (flag),179.36,4844314.87,30-39,2,0,4.239999771118164,4.0
+Mauritania,Dakhlet Nouadhibou,255,No Data (flag),179.36,4844314.87,40-49,0,0,4.239999771118164,4.0
+Mauritania,Dakhlet Nouadhibou,255,No Data (flag),179.36,4844314.87,50-59,0,0,4.239999771118164,4.0
+Mauritania,Dakhlet Nouadhibou,255,No Data (flag),179.36,4844314.87,60-69,0,0,4.239999771118164,4.0
+Mauritania,Dakhlet Nouadhibou,255,No Data (flag),179.36,4844314.87,70-79,0,0,4.239999771118164,4.0
+Mauritania,Dakhlet Nouadhibou,255,No Data (flag),179.36,4844314.87,80-89,0,0,4.239999771118164,4.0
+Mauritania,Dakhlet Nouadhibou,255,No Data (flag),179.36,4844314.87,90-99,0,0,4.239999771118164,4.0
