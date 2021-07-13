@@ -4,9 +4,7 @@ import scipy
 from scipy.sparse.linalg import splu
 import multiprocessing
 
-
 class Smoother:
-
     def __init__(self, lmbd, size, nbands = 14, dim = 128):
         self.lmbd = lmbd
         self.size = size
@@ -24,6 +22,7 @@ class Smoother:
         D = D.conj().T.dot(D) * self.lmbd
         coefmat = E + D
         self.splu_coef = splu(coefmat)
+
 
     def smooth(self, y: np.ndarray) -> np.ndarray:
         ''' 

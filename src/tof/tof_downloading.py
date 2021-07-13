@@ -15,7 +15,6 @@ import pycountry_convert as pc
 from functools import wraps
 from time import time
 
-
 def timing(f):
     @wraps(f)
     def wrap(*args, **kw):
@@ -254,7 +253,8 @@ def make_overlapping_windows(tiles: np.ndarray, diff = 7) -> np.ndarray:
     return tiles2
 
 
-def redownload_sentinel_1(dates, layer, bbox, source, api_key, data_filter):
+def redownload_sentinel_1(dates: np.ndarray, layer: str, bbox: list, 
+                          source: str, api_key: str, data_filter: np.ndarray) -> np.ndarray:
     """Worker function to redownload individual time steps if the
     preceding time step had null values, likely the case in areas with
     both ascending and descending orbits"""
