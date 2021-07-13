@@ -103,3 +103,66 @@ def get_deconv2d(inp, filter_count, num_channels, scope, is_training):
     #x = tf.nn.relu(x)
     x = Batch_Normalization(x, training=is_training, scope = scope + "bn")
     return x
+
+def calc_mask(seg):
+
+    res = np.zeros_like(seg)
+    posmask = seg.astype(np.bool)
+    loss_importance = np.array([x for x in range(0, 197, 1)])
+    loss_importance = loss_importance / 196
+    loss_importance = np.expm1(loss_importance)
+    loss_importance[:30] = 0.
+
+    if posmask.any():
+        negmask = ~posmask
+        res = distance(negmask) * negmask - (distance(posmask) - 1) * posmask
+    if np.sum(seg) == 196:
+        res = np.ones_like(seg)
+    if np.sum(seg) == 0:
+        res = np.ones_like(seg)
+    res[np.logical_and(res < 2, res > 0)] = 0.5
+    res[np.logical_or(res >= 2, res <= 0)] = 1.
+    return res
+
+def calc_mask_batch(y_true):
+    '''Applies calc_dist_map to each sample in an input batch
+    
+         Parameters:
+          y_true (arr):
+          
+         Returns:
+          loss (arr):
+    '''
+    y_true_numpy = y_true.numpy()
+    bce_batch = np.array([calc_mask(y)
+                     for y in y_true_numpy]).astype(np.float32)
+    return bce_batch
+
+
+sum_pos = np.sum(train_y[batch], axis = (1, 2))
+sum_pos = sum_pos[sum_pos != 196]
+n_pos = len(train_y) - len(sum_pos)
+sum_pos = np.sum(sum_pos)
+sum_neg = np.sum(train_y[batch], axis = (1, 2))
+sum_neg = sum_neg[sum_neg != 0]
+n_neg = len(train_y) - len(sum_neg)
+sum_neg = (len(train_y) - (n_neg + n_pos)) * 196
+print(sum_pos, sum_neg)
+beta = 0.9995
+print("Beta: {}".format(beta))
+samples_per_cls = np.array([sum_neg, sum_pos]) / 196
+print(samples_per_cls)
+effective_num = 1.0 - np.power(beta, samples_per_cls)
+print(effective_num)
+weights = (1.0 - beta) / np.array(effective_num)
+weights = weights / np.sum(weights)
+print("Neg and pos weights: {}".format(weights))
+weight = weights[1] / weights[0]
+print(weight)
+weight = 1.45
+
+print("Baseline: The positive is: {}".format(weights[0]))
+print("Baseline: The negative is: {}".format(weights[1]))
+print("\n")
+print("Balanced: The positive is: {}".format(weight*weights[0]))
+print("Balanced: The negative is: {}".format(weights[1]))
