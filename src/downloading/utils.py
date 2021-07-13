@@ -141,7 +141,7 @@ def offset_y(coord: Tuple[float, float], offset: int) -> tuple:
     return coord_utm
 
 
-def convertCoords(xy, src='', targ=''):
+def convertCoords(xy: tuple, src: str = '', targ: str = '') -> list:
 
     srcproj = osr.SpatialReference()
     srcproj.ImportFromEPSG(src)
@@ -488,3 +488,4 @@ def hist_match(source: np.ndarray, template: np.ndarray) -> np.ndarray:
     interp_t_values = np.interp(s_quantiles, t_quantiles, t_values)
 
     return interp_t_values[bin_idx].reshape(oldshape)
+    
