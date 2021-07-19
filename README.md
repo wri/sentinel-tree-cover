@@ -30,7 +30,13 @@ Utilizing this repository to generate your own data requires:
 * Sentinel-Hub API key, see [Sentinel-hub](http://sentinel-hub.com/)
 * Amazon Web Services API key
 
-The API keys should be stored as `config.yaml` in the base directory with the structure `key: "YOUR-API-KEY-HERE"`. 
+The API keys should be stored as `config.yaml` in the base directory with the structure:
+
+```
+key: "YOUR-SENTINEL-HUB-API-KEY"
+awskey: "YOUR-AWS-API-KEY"
+awssecret: "YOUR-AWS-API-SECRET"
+```
 
 ## With Docker
 
