@@ -28,7 +28,7 @@ John Brandt & Fred Stolle (2021) A global method to identify trees outside of cl
 
 Utilizing this repository to generate your own data requires:
 * Sentinel-Hub API key, see [Sentinel-hub](http://sentinel-hub.com/)
-* Amazon Web Services API key
+* Amazon Web Services API key (optional) with s3 read/write privileges 
 
 The API keys should be stored as `config.yaml` in the base directory with the structure:
 
@@ -37,6 +37,8 @@ key: "YOUR-SENTINEL-HUB-API-KEY"
 awskey: "YOUR-AWS-API-KEY"
 awssecret: "YOUR-AWS-API-SECRET"
 ```
+
+The code can be utilized without AWS by setting `--ul_flag False` in `download_and_predict_job.py`. By default, the pipeline will output satellite imagery and predictions in 6 x 6 km tiles to the `--s3_bucket` bucket.
 
 ## With Docker
 
