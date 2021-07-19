@@ -3,7 +3,7 @@ Mapping tree cover and extent with Sentinel-1 and 2
 
 # Description
 
-This project maps tree extent at the ten-meter scale using open source artificial intelligence and open source satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems. 
+This project maps tree extent at the ten-meter scale using open source artificial intelligence and satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems. 
 
 This repository contains the source code for the project. A full description of the methodology can be found [on arXiv](https://arxiv.org/abs/2005.08702). The data product specifications can be accessed on the wiki page.
 *  [Background](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#background)
@@ -24,16 +24,25 @@ John Brandt & Fred Stolle (2021) A global method to identify trees outside of cl
 ![img](references/screenshots/makueni.png?raw=true)
 ![img](references/readme/example.png?raw=true)
 
-See a time series map of gain detection [here](https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=f13510ee-b7f4-11ea-bf88-a15b6c7adf9a)
-
 # Installation
 
+Utilizing this repository to generate your own data requires:
+* Sentinel-Hub API key, see [Sentinel-hub](http://sentinel-hub.com/)
+* Amazon Web Services API key
+
+The API keys should be stored as `config.yaml` in the base directory with the structure `key: "YOUR-API-KEY-HERE"`. 
 
 ## With Docker
 
 ```
+git clone https://github.com/wri/sentinel-tree-cover
+cd sentinel-tree-cover/
+touch config.yaml
+vim config.yaml # insert your API keys here
 docker build -t sentinel_tree_cover .
 docker run -it --entrypoint /bin/bash sentinel_tree_cover:latest 
+cd src
+python3 download_and_predict_job.py --country "country" --year year
 ```
 
 ## Without docker
@@ -44,24 +53,29 @@ docker run -it --entrypoint /bin/bash sentinel_tree_cover:latest
 *  Start Jupyter notebook and navigate to `notebooks/` folder
 
 # Usage
-The bulk of this project is created around separate jupyter notebooks for each step of the pipeline. The `notebooks/` folder contains ordered notebooks for downloading training and testing data, training the model, downloading large area tiles, and generating predictions and cloud-optimized Geotiffs of tree cover.
+The `notebooks/` folder contains ordered notebooks for downloading training and testing data and training the model, as follows:
+* 1a-download-sentinel-2: downloads monthly mosaic 10 and 20 meter bands for training / testing plots
+* 1b-download-sentinel-1: downloads monthly VV-VH db sigma Sentinel-1 imagery for training / testing plots
+* 2-data-preprocessing: Combines satellite imagery for training / testing plots with labelled data from [Collect Earth Online](collect.earth)
+* 3-feature-selection: Feature selection for remote sensing indices utilizing random forests
+* 4-model: Trains and deploys tree cover model
 
-Within the `notebooks/` folder, the subfolder `baseline` additionally contains code to train a Random Forests, Support vector machine, and U-NET baseline model, and the `replicate-paper` folder contains code to generate the accuracy statistics.
+The `src/` folder contains the source code for the project, as well as the primary entrypoint for the Docker container, `download_and_predict_job.py`
 
-The project requires an API key for [Sentinel-hub](http://sentinel-hub.com/), stored as `config.yaml` in the base directory with the structure `key: "YOUR-API-KEY-HERE"`. The `notebooks/4a-download-large-area.ipynb` notebook will allow you to download and preprocess the required Sentinel-1, Sentinel-2, and DEM imagery for an input `(lat, long)` and `(x, y)` size in meters. The tiles will be saved to a named output folder, which can be referenced in `notebooks/4b-predict-large-area.ipynb` to generate a geotiff or cloud-optimized geotiff.
-
+`download_and_predict_job.py` can be used as follows, with additional optional arguments listed in the file: `python3 download_and_predict_job.py --country $COUNTRY --year $YEAR`
 
 # Methodology
 
 ## Model
-This model uses a Fully Connected Architecture with:
-*  [Convolutional GRU](https://papers.nips.cc/paper/5955-convolutional-lstm-network-a-machine-learning-approach-for-precipitation-nowcasting.pdf) encoder with [layer normalization](https://arxiv.org/abs/1607.06450)
-*  Concurrent spatial and channel squeeze excitation [decoder](https://arxiv.org/abs/1803.02579)
-*  [AdaBound](https://arxiv.org/abs/1902.09843) optimizer
-*  Binary cross entropy, weighted by effective number of samples, and boundary loss
-*  DropBlock and Zoneout for generalization
-*  Smoothed image predictions across moving windows
-*  Heavy use of skip connections to facilitate smooth loss functions
+This model uses a U-Net architecture with the following modifications:
+*  [Convolutional GRU](https://papers.nips.cc/paper/5955-convolutional-lstm-network-a-machine-learning-approach-for-precipitation-nowcasting.pdf) encoder with group normalization to develop temporal features of monthly cloud-free mosaics
+*  Concurrent spatial and channel squeeze excitation in both the encoder and decoder (https://arxiv.org/abs/1803.02579)
+*  DropBlock and Zoneout for generalization in both the encoder and decoder
+*  Group normalization and Swish activation in both the encoder and decoder
+*  [AdaBound](https://arxiv.org/abs/1902.09843) optimizer with Stochastic Weight Averaging and Sharpness Aware Minimization
+*  Binary cross entropy and boundary loss
+*  Smoothed image predictions across moving windows with Gaussian filters
+*  A much larger input (28x28) than output (14x14) at training time, with 182x182 and 168x168 input and output size in production, respectively
 
 ![img4](references/readme/new_model.png?raw=true)
 
