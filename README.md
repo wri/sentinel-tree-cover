@@ -17,12 +17,7 @@ This repository contains the source code for the project. A full description of 
 # Citation
 John Brandt & Fred Stolle (2021) A global method to identify trees outside of closed-canopy forests with medium-resolution satellite imagery, International Journal of Remote Sensing, 42:5, 1713-1737, DOI: 10.1080/01431161.2020.1841324
 
-
-
-# Examples
 ![img](references/screenshots/demo.gif?raw=true)
-![img](references/screenshots/makueni.png?raw=true)
-![img](references/readme/example.png?raw=true)
 
 # Installation
 
