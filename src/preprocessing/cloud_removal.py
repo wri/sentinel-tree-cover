@@ -524,16 +524,16 @@ def subset_contiguous_sunny_dates(dates, probs):
         if n_remaining > 14:
             probs[indices_to_rm] = 0.
             if np.max(probs) > 0.3:
-                len_to_rm = n_remaining - 17 if n_remaining > 17 else 1
+                len_to_rm = n_remaining - 16 if n_remaining > 16 else 1
             else:
-                len_to_rm = n_remaining - 18 if n_remaining > 18 else 1
+                len_to_rm = n_remaining - 17 if n_remaining > 17 else 1
             max_cloud = np.argpartition(probs, -len_to_rm)[-len_to_rm:]
             print(f"Removing cloudiest dates: {max_cloud}, {probs[max_cloud]}")
             indices_to_rm.extend(max_cloud)
         elif np.max(probs) >= 0.5:
             max_cloud = np.argmax(probs)
             print(f"Removing cloudiest date: {max_cloud}, {probs[max_cloud]}")
-            indices_to_rm.extend(max_cloud)
+            indices_to_rm.append(max_cloud)
 
         print(f"Removing {len(indices_to_rm)} sunny/cloudy dates")
     return indices_to_rm
