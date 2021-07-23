@@ -9,7 +9,6 @@ import scipy.sparse as sparse
 import yaml
 
 from collections import Counter
-from osgeo import ogr, osr
 from random import shuffle
 from scipy.sparse.linalg import splu
 from sentinelhub import WmsRequest, WcsRequest, MimeType
@@ -17,32 +16,7 @@ from sentinelhub import CRS, BBox, constants, DataSource, CustomUrlParam
 from skimage.transform import resize
 from pyproj import Proj, transform
 from typing import List, Any, Tuple
-import geopandas
 from shapely.geometry import Point, Polygon
-
-
-
-def pts_in_geojson(lats: List[float], longs: List[float], geojson: 'geojson') -> bool:  
-    """ Identifies whether candidate download tile is within an input geojson
-        
-        Parameters:
-         lats (list): list of latitudes
-         longs (list): list of longitudes
-         geojson (float): path to input geojson
-    
-        Returns:
-         bool 
-    """
-    polys = geopandas.read_file(geojson)['geometry']
-    polys = geopandas.GeoSeries(polys)
-    pnts = [Point(x, y) for x, y in zip(list(lats), list(longs))]
-    
-    def _contains(pt):
-        return polys.contains(pt)[0]
-
-    if any([_contains(pt) for pt in pnts]):
-        return True
-    else: return False
 
 def calculate_bbx_pyproj(coord: Tuple[float, float],
                          step_x: int, step_y: int,
@@ -139,23 +113,6 @@ def offset_y(coord: Tuple[float, float], offset: int) -> tuple:
     coord_utm = list(coord_utm)
     coord_utm[1] += offset 
     return coord_utm
-
-
-def convertCoords(xy: tuple, src: str = '', targ: str = '') -> list:
-
-    srcproj = osr.SpatialReference()
-    srcproj.ImportFromEPSG(src)
-    targproj = osr.SpatialReference()
-    if isinstance(targ, str):
-        targproj.ImportFromProj4(targ)
-    else:
-        targproj.ImportFromEPSG(targ)
-    transform = osr.CoordinateTransformation(srcproj, targproj)
-
-    pt = ogr.Geometry(ogr.wkbPoint)
-    pt.AddPoint(xy[0], xy[1])
-    pt.Transform(transform)
-    return([pt.GetX(), pt.GetY()])
 
 
 def bounding_box(point: Tuple[float, float],

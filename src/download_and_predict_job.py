@@ -17,10 +17,8 @@ import reverse_geocoder as rg
 import pycountry
 import pycountry_convert as pc
 import hickle as hkl
-import geopandas
 from tqdm import tnrange, tqdm_notebook
 import boto3
-from pyproj import Proj, transform
 from typing import Tuple, List
 import warnings
 from scipy.ndimage import median_filter
@@ -44,6 +42,8 @@ from downloading.io import file_in_local_or_s3, write_tif, make_subtiles
 from preprocessing.indices import evi, bi, msavi2, grndvi
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+SIZE = 168
 
 
 def superresolve_tile(arr: np.ndarray, sess) -> np.ndarray:
@@ -357,7 +357,9 @@ def process_tile(x: int, y: int, data: pd.DataFrame) -> np.ndarray:
             sentinel2[time, ..., band + 4] = resize(s2_20[time,..., band], (width, height), 1)
 
     # Identifies missing imagery (either in sentinel acquisition, or induced in preprocessing)
+    # If more than 50% of data for a time step is missing, then remove them....
     missing_px = interpolation.id_missing_px(sentinel2, 2)
+
     if len(missing_px) > 0:
         print(f"Removing {missing_px} dates due to missing data")
         clouds = np.delete(clouds, missing_px, axis = 0)
@@ -365,19 +367,20 @@ def process_tile(x: int, y: int, data: pd.DataFrame) -> np.ndarray:
         image_dates = np.delete(image_dates, missing_px)
         sentinel2 = np.delete(sentinel2, missing_px, axis = 0)
 
-    # interpolate cloud and cloud shadows linearly
-    x, interp = cloud_removal.remove_cloud_and_shadows(sentinel2, clouds, shadows, image_dates) 
+    # Otherwise... set the missing values to the median value.
+    sentinel2 = interpolation.interpolate_missing_vals(sentinel2)
 
-    dem_i = np.tile(dem[np.newaxis, :, :, np.newaxis], (x.shape[0], 1, 1, 1))
-    dem_i = dem_i / 90
-    x = np.concatenate([x, dem_i], axis = -1)
-    x = np.clip(x, 0, 1)
-    return x, image_dates, interp, s1
+    # interpolate cloud and cloud shadows linearly
+    sentinel2, interp = cloud_removal.remove_cloud_and_shadows(sentinel2, clouds, shadows, image_dates) 
+
+    dem = dem / 90
+    sentinel2 = np.clip(sentinel2, 0, 1)
+    return sentinel2, image_dates, interp, s1, dem
     
 
 def process_subtiles(x: int, y: int, s2: np.ndarray = None, 
                        dates: np.ndarray = None,
-                       interp: np.ndarray = None, s1 = None,
+                       interp: np.ndarray = None, s1 = None, dem = None,
                        sess = None,
                        gap_sess = None) -> None:
     '''Wrapper function to interpolate clouds and temporal gaps, superresolve tiles,
@@ -405,9 +408,10 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     # The tiles_folder references the folder names (w/o boundaries)
     # While the tiles_array references the arrays themselves (w/ boudnaries)
-
-    tiles_folder_x = np.hstack([np.arange(0, s1.shape[1] - 160, 120), np.array(s1.shape[1] - 160)])
-    tiles_folder_y = np.hstack([np.arange(0, s1.shape[2] - 160, 120), np.array(s1.shape[2] - 160)])
+    gap_x = int(np.ceil((s1.shape[1] - SIZE) / 4))
+    gap_y = int(np.ceil((s1.shape[2] - SIZE) / 4))
+    tiles_folder_x = np.hstack([np.arange(0, s1.shape[1] - SIZE, gap_x), np.array(s1.shape[1] - SIZE)])
+    tiles_folder_y = np.hstack([np.arange(0, s1.shape[2] - SIZE, gap_y), np.array(s1.shape[2] - SIZE)])
     print(f'There are: {len(tiles_folder_x) * len(tiles_folder_y)} subtiles')
 
     def cartesian(*arrays):
@@ -419,7 +423,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         return reshape
 
     windows = cartesian(tiles_folder_x, tiles_folder_y)
-    win_sizes = np.full_like(windows, 160)
+    win_sizes = np.full_like(windows, SIZE)
     tiles_folder = np.hstack([windows, win_sizes])
     tiles_folder = np.sort(tiles_folder, axis = 0)
     tiles_folder[:, 1] = np.tile(np.unique(tiles_folder[:, 1]), 
@@ -433,7 +437,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     gap_between_years = False
     t = 0
-    sm = Smoother(lmbd = 800, size = 72, nbands = 10, dim = 174)
+    sm = Smoother(lmbd = 800, size = 72, nbands = 10, dim = SIZE + 14)
     # Iterate over each subitle and prepare it for processing and generate predictions
     while t < len(tiles_folder):
         tile_folder = tiles_folder[t]
@@ -446,11 +450,12 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         end_y = start_y + tile_array[3]
         subset = s2[:, start_x:end_x, start_y:end_y, :]
         interp_tile = interp[:, start_x:end_x, start_y:end_y]
-        interp_tile = np.sum(interp_tile, axis = (1, 2))
+        interp_tile_sum = np.sum(interp_tile, axis = (1, 2))
         dates_tile = np.copy(dates)
+        dem_subtile = dem[np.newaxis, start_x:end_x, start_y:end_y]
 
         # Remove dates with >25% interpolation
-        to_remove = np.argwhere(interp_tile > ((160*160) / 4)).flatten()
+        to_remove = np.argwhere(interp_tile_sum > ((SIZE*SIZE) / 4)).flatten()
         if len(to_remove) > 0: 
             dates_tile = np.delete(dates_tile, to_remove)
             subset = np.delete(subset, to_remove, 0)
@@ -484,27 +489,28 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         s1_subtile = s1[:, start_x:end_x, start_y:end_y, :]
 
         # Pad the corner / edge subtiles within each tile
-        if subtile.shape[2] == 167: 
+        if subtile.shape[2] == SIZE + 7: 
             pad_u = 7 if start_y == 0 else 0
             pad_d = 7 if start_y != 0 else 0
             subtile = np.pad(subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
+            dem_subtile = np.pad(dem_subtile, ((0, 0,), (0, 0), (pad_u, pad_d)), 'reflect')
 
-        if subtile.shape[1] == 167:
+        if subtile.shape[1] == SIZE + 7:
             pad_l = 7 if start_x == 0 else 0
             pad_r = 7 if start_x != 0 else 0
             subtile = np.pad(subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
+            dem_subtile = np.pad(dem_subtile, ((0, 0,), (pad_l, pad_r), (0, 0)), 'reflect')
 
         # Interpolate (whittaker smooth) the array and superresolve 20m to 10m
-        dem = subtile[0, ..., -1]
-        subtile = sm.interpolate_array(subtile[..., :-1])
+        subtile = sm.interpolate_array(subtile)
         subtile_s2 = superresolve_tile(subtile, sess = superresolve_sess)
 
         # Concatenate the DEM and Sentinel 1 data
-        subtile = np.empty((12, 174, 174, 13))
+        subtile = np.empty((12, SIZE + 14, SIZE + 14, 13))
         subtile[..., :10] = subtile_s2
-        subtile[..., 10] = dem[np.newaxis, :, :].repeat(12, axis = 0)
+        subtile[..., 10] = dem_subtile.repeat(12, axis = 0)
         subtile[..., 11:] = s1_subtile
         
         # Create the output folders for the subtile predictions
@@ -519,14 +525,15 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         # Select between temporal and median models for prediction, based on simple logic:
         # If the first image is after June 15 or the last image is before July 15
         # or the maximum gap is >270 days or < 5 images --- then do median, otherwise temporal
-        no_images = True if len(dates_tile) < 2 else no_images
+        no_images = True if len(dates_tile) < 3 else no_images
         if no_images:
-            preds = np.full((160, 160), 255)
+            print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates -- no data")
+            preds = np.full((SIZE, SIZE), 255)
         else:
-            if dates_tile[0] >= 180 or dates_tile[-1] <= 180 or max_distance > 270 or args.model == "median":
+            if dates_tile[0] >= 180 or dates_tile[-1] <= 180 or max_distance > 270 or args.model == "median" or len(dates_tile) < 5:
                 if not gap_between_years:
                     print("Restarting the predictions with median")
-                    t = 0 
+                    t = 0 if t > 1 else t
                 gap_between_years = True
 
             if len(dates_tile) < 5 or gap_between_years:
@@ -578,7 +585,7 @@ def predict_subtile(subtile, sess) -> np.ndarray:
         if not isinstance(subtile.flat[0], np.floating):
             assert np.max(subtile) > 1
             subtile = subtile / 65535.
-        
+
         indices = np.empty((13, subtile.shape[1], subtile.shape[2], 17))
         indices[:12, ..., :13] = subtile
         indices[:12, ..., 13] = evi(subtile)
@@ -588,6 +595,7 @@ def predict_subtile(subtile, sess) -> np.ndarray:
         indices[-1] = np.median(indices[:12], axis = 0)
 
         subtile = indices
+        subtile = subtile.astype(np.float32)
         subtile = np.clip(subtile, min_all, max_all)
         subtile = (subtile - midrange) / (rng / 2)
         
@@ -600,7 +608,7 @@ def predict_subtile(subtile, sess) -> np.ndarray:
         preds = preds[1:-1, 1:-1]
         
     else:
-        preds = np.full((160, 160), 255)
+        preds = np.full((SIZE, SIZE), 255)
     
     return preds
 
@@ -634,9 +642,11 @@ def predict_gap(subtile, sess) -> np.ndarray:
         indices[-1] = np.median(indices[:12], axis = 0)
 
         subtile = indices
+        subtile = subtile.astype(np.float32)
         subtile = np.clip(subtile, min_all, max_all)
         subtile = (subtile - midrange) / (rng / 2)
-        subtile = np.median(subtile, axis = 0)
+        subtile = subtile[-1]
+
 
         batch_x = subtile[np.newaxis]
         lengths = np.full((batch_x.shape[0]), 12)
@@ -646,7 +656,7 @@ def predict_gap(subtile, sess) -> np.ndarray:
         preds = preds.squeeze()
         preds = preds[1:-1, 1:-1]
     else:
-        preds = np.full((160, 160), 255)
+        preds = np.full((SIZE, SIZE), 255)
     
     return preds
 
@@ -680,10 +690,10 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
     """
 
     x_tiles = [int(x) for x in os.listdir(out_folder) if '.DS' not in x]
-    max_x = np.max(x_tiles) + 160
+    max_x = np.max(x_tiles) + SIZE
     for x_tile in x_tiles:
         y_tiles = [int(y[:-4]) for y in os.listdir(out_folder + str(x_tile) + "/") if '.DS' not in y]
-        max_y = np.max(y_tiles) + 160
+        max_y = np.max(y_tiles) + SIZE
     predictions = np.full((max_x, max_y, len(x_tiles) * len(y_tiles)), np.nan, dtype = np.float32)
     mults = np.full((max_x, max_y, len(x_tiles) * len(y_tiles)), 0, dtype = np.float32)
     i = 0
@@ -693,10 +703,10 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
             output_file = out_folder + str(x_tile) + "/" + str(y_tile) + ".npy"
             if os.path.exists(output_file):
                 prediction = np.load(output_file)
-                if np.sum(prediction) < 160*160*255:
+                if np.sum(prediction) < SIZE*SIZE*255:
                     prediction = (prediction * 100).T.astype(np.float32)
-                    predictions[x_tile: x_tile+160, y_tile:y_tile + 160, i] = prediction
-                    mults[x_tile: x_tile+160, y_tile:y_tile + 160, i] = fspecial_gauss(160, 35)
+                    predictions[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = prediction
+                    mults[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = fspecial_gauss(SIZE, 35)
                 i += 1
 
     predictions = predictions.astype(np.float32)
@@ -743,8 +753,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/swa-174/')
-    parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/gap-174/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal/')
+    parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
     parser.add_argument("--ul_flag", dest = "ul_flag", default = False)
@@ -848,10 +858,12 @@ if __name__ == '__main__':
 
     min_all = np.array(min_all)
     max_all = np.array(max_all)
-    min_all = np.broadcast_to(min_all, (13, 174, 174, 17))
-    max_all = np.broadcast_to(max_all, (13, 174, 174, 17))
+    min_all = np.broadcast_to(min_all, (13, SIZE + 14, SIZE + 14, 17)).astype(np.float32)
+    max_all = np.broadcast_to(max_all, (13, SIZE + 14, SIZE + 14, 17)).astype(np.float32)
     midrange = (max_all + min_all) / 2
+    midrange = midrange.astype(np.float32)
     rng = max_all - min_all
+    rng = rng.astype(np.float32)
     n = 0
 
     # If downloading an individually indexed tile, go ahead and execute this code block
@@ -884,8 +896,8 @@ if __name__ == '__main__':
                 bbx = None
                 time1 = time.time()
                 bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY, year = args.year)
-                s2, dates, interp, s1 = process_tile(x = x, y = y, data = data)
-                process_subtiles(x, y, s2, dates, interp, s1, predict_sess, gap_sess)
+                s2, dates, interp, s1, dem = process_tile(x = x, y = y, data = data)
+                process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess)
                 predictions = load_mosaic_predictions(path_to_tile + "processed/")
                 if not bbx:
                     data = data[data['Y_tile'] == int(y)]
@@ -940,8 +952,8 @@ if __name__ == '__main__':
                     try:
                         time1 = time.time()
                         bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY, year = args.year)
-                        s2, dates, interp, s1 = process_tile(x = x, y = y, data = data)
-                        process_subtiles(x, y, s2, dates, interp, s1, predict_sess, gap_sess)
+                        s2, dates, interp, s1, dem = process_tile(x = x, y = y, data = data)
+                        process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess)
                         predictions = load_mosaic_predictions(path_to_tile + "processed/")
                         if not bbx:
                             data = data[data['Y_tile'] == int(y)]
@@ -963,7 +975,7 @@ if __name__ == '__main__':
                         print(f"Finished {n} in {np.around(time2 - time1, 1)} seconds")
                         n += 1
                     except Exception as e:
-                        print(f"Ran into {str(e)} error, skipping {x}/{y}/")
-                        continue
+                       print(f"Ran into {str(e)} error, skipping {x}/{y}/")
+                       continue
             else:
                 print(f'Skipping {x}, {y} as it is done')

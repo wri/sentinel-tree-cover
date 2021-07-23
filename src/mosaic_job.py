@@ -84,10 +84,10 @@ if __name__ == '__main__':
     # set color for each value
     colors.SetColorEntry(0, (237, 248, 233))
     colors.SetColorEntry(20, (237, 248, 233))
-    colors.SetColorEntry(40, (161, 220, 149))
+    colors.SetColorEntry(40, (160, 215, 150))
     colors.SetColorEntry(60, (104, 184, 105))
-    colors.SetColorEntry(80, (34, 142, 66))
-    colors.SetColorEntry(100, (7, 107, 44))
+    colors.SetColorEntry(80, (28, 138, 58))
+    colors.SetColorEntry(100, (7, 111, 46))
 
     # set color table and color interpretation
     band.SetRasterColorTable(colors)
