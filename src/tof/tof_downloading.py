@@ -87,7 +87,7 @@ def process_sentinel_1_tile(sentinel1: np.ndarray, dates: np.ndarray) -> np.ndar
     return monthly
 
 
-def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
+def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dict,
                 api_key: str,
                 year: int) -> (np.ndarray, np.ndarray, np.ndarray):
     """ Downloads and calculates cloud cover and shadow
@@ -105,7 +105,7 @@ def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
          clean_steps (np.array):
     """
     # Download 160 x 160 meter cloud masks, 0 - 255
-    box = BBox(bbox, crs = CRS.WGS84)
+    box = BBox(cloud_bbx, crs = CRS.WGS84)
     cloud_request = WcsRequest(
         layer='CLOUD_NEW',
         bbox=box, time=dates,
@@ -117,6 +117,7 @@ def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
     )
 
     # Download 160 x 160 meter bands for shadow masking, 0 - 65535
+    box = BBox(shadow_bbx, crs = CRS.WGS84)
     shadow_request = WcsRequest(
         layer='SHADOW',
         bbox=box, time=dates,
@@ -140,13 +141,27 @@ def identify_clouds(bbox: List[Tuple[float, float]], dates: dict,
     cloud_dates_dict = [x for x in cloud_request.get_dates()]
     cloud_dates = extract_dates(cloud_dates_dict, year)
     cloud_dates = [val for idx, val in enumerate(cloud_dates) if idx in clean_steps]
+
     shadow_dates_dict = [x for x in shadow_request.get_dates()]
     shadow_dates = extract_dates(shadow_dates_dict, year)
-    shadow_steps = [idx for idx, val in enumerate(shadow_dates) if val in cloud_dates]    
+    shadow_steps = [idx for idx, val in enumerate(shadow_dates) if val in cloud_dates] 
+
+    to_remove_cloud = [idx for idx, val in enumerate(cloud_dates) if val not in shadow_dates]  
+
+    if len(to_remove_cloud) > 0:
+        cloud_img = np.delete(cloud_img, to_remove_cloud, 0)
+        cloud_dates = list(np.delete(np.array(cloud_dates), to_remove_cloud))
 
     shadow_img = np.array(shadow_request.get_data(data_filter = shadow_steps))
     shadow_pus = (shadow_img.shape[1]*shadow_img.shape[2])/(512*512) * shadow_img.shape[0] * (6 / 3)
     shadow_img = shadow_img.repeat(16,axis=1).repeat(16,axis=2)
+
+    n_remove_x = (cloud_img.shape[1] - shadow_img.shape[1]) // 2
+    n_remove_y = (cloud_img.shape[2] - shadow_img.shape[2]) // 2
+    if n_remove_x > 0 and n_remove_y > 0:
+        cloud_img = cloud_img[:, n_remove_x:-n_remove_x, n_remove_y : -n_remove_y]
+    
+    print(shadow_img.shape, cloud_img.shape)
 
     # Make sure that the cloud_img and the shadow_img are the same shape
     # using the cloud_img as reference
@@ -216,6 +231,10 @@ def download_dem(bbox: List[Tuple[float, float]],
 def identify_dates_to_download(dates: list) -> list:
     """ Identify the S1 dates to download"""
     days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
+    days_per_month = np.array(days_per_month)
+    days_per_month = np.reshape(days_per_month, (4, 3))
+    days_per_month = np.sum(days_per_month, axis = 1)
+
     starting_days = np.cumsum(days_per_month)
 
     dates = np.array(dates)
@@ -320,7 +339,7 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
     print(f"The following dates will be downloaded: {dates_to_download}")
     
     # If the correct orbit is selected, download imagery
-    if len(image_request.download_list) >= 5 and len(steps_to_download) >= 5:
+    if len(image_request.download_list) >= 4 and len(steps_to_download) >= 4:
         try:
             s1 = np.array(image_request.get_data(data_filter = steps_to_download))
             if not isinstance(s1.flat[0], np.floating):
@@ -331,7 +350,7 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
             height = s1.shape[1]
             width = s1.shape[2]
 
-            s1_usage = (2/3) * s1.shape[0] * ((s1.shape[1]*s1.shape[2]) / (512*512))
+            s1_usage = (4/3) * s1.shape[0] * ((s1.shape[1]*s1.shape[2]) / (512*512))
             print(f"Sentinel 1 used {round(s1_usage, 1)} PU for "
                   f" {s1.shape[0]} out of {len(image_request.download_list)} images")
 
@@ -361,13 +380,16 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
 
             n_pix_oob = np.sum(s1 >= 1, axis = (1, 2, 3))
             print(f"N_oob: {n_pix_oob}")
-            to_remove = np.argwhere(n_pix_oob > (height*width)/5)
-
+            to_remove = np.argwhere(n_pix_oob > (height*width)/10)
+            print(to_remove)
+            print(s1.shape)
             if len(to_remove) > 0:
-                np.delete(s1, to_remove, 0)
-                np.delete(image_dates, to_remove)
-            
+                s1 = np.delete(s1, to_remove, 0)
+                image_dates = np.delete(image_dates, to_remove)
+            print(s1.shape)
             s1 = np.clip(s1, 0, 1)
+            s1 = s1.repeat(3, axis = 0)
+            image_dates = np.array(image_dates).repeat(2, axis = 0)
             s1 = s1.repeat(2,axis=1).repeat(2,axis=2)
             return s1, image_dates
 
@@ -436,6 +458,7 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
     
     # Download 20 meter bands
     box = BBox(bbox, crs = CRS.WGS84)
+
     image_request = WcsRequest(
             layer='L2A20',
             bbox=box, time=dates,
@@ -450,6 +473,27 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
     image_dates = extract_dates(image_dates_dict, year)
     steps_to_download = [i for i, val in enumerate(image_dates) if val in clean_steps]
     dates_to_download = [val for i, val in enumerate(image_dates) if val in clean_steps]
+
+    quality_request = WcsRequest(
+            layer='DATA_QUALITY',
+            bbox=box, time=dates,
+            image_format = MimeType.TIFF_d8,
+            maxcc=0.75, resx='160m', resy='160m',
+            instance_id=api_key,
+            custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+                                constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
+            time_difference=datetime.timedelta(hours=72),
+    )
+    quality_img = np.array(quality_request.get_data(data_filter = steps_to_download))
+    quality_per_img = np.mean(quality_img, axis = (1, 2)) / 255
+    print("QUALITY:", quality_per_img)
+    steps_to_rm = np.argwhere(quality_per_img > 0.2).flatten()
+    if len(steps_to_rm) > 0:
+        steps_to_download = np.array(steps_to_download)
+        steps_to_download = list(np.delete(steps_to_download, steps_to_rm))
+        dates_to_download = np.array(dates_to_download)
+        dates_to_download = list(np.delete(dates_to_download, steps_to_rm))
+    
     img_20 = np.array(image_request.get_data(data_filter = steps_to_download))
     s2_20_usage = (img_20.shape[1]*img_20.shape[2])/(512*512) * (6/3) * img_20.shape[0]
     
@@ -488,4 +532,7 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
     # Ensure output is within correct range
     img_10 = np.clip(img_10, 0, 1)
     img_20 = np.clip(img_20, 0, 1)
+
+    s2_10_usage = (img_10.shape[1]*img_10.shape[2])/(512*512) * (4/3) * img_10.shape[0]
+
     return img_10, img_20, np.array(dates_to_download)
