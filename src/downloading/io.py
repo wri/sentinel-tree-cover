@@ -191,10 +191,10 @@ def file_in_local_or_s3(file, key, apikey, apisecret, bucket):
 
 
 def write_tif(arr: np.ndarray, point: list, x: int, y: int,
-              out_folder: str) -> str:
+              out_folder: str, suffix = "_FINAL") -> str:
     #! TODO: Documentation
     
-    file = out_folder + f"{str(x)}X{str(y)}Y_POST.tif"
+    file = out_folder + f"{str(x)}X{str(y)}Y{suffix}.tif"
 
     west, east = point[0], point[2]
     north, south = point[3], point[1]
@@ -219,7 +219,7 @@ def write_tif(arr: np.ndarray, point: list, x: int, y: int,
 
 def download_folder(s3_folder, local_dir, apikey, apisecret, bucket):
     """
-    Checks to see if a file/key pair exists locally or on s3 or neither
+    Checks to see if a file/key pair exists locally or on s3 or neither, and downloads the folder
     """
 
    
@@ -228,7 +228,6 @@ def download_folder(s3_folder, local_dir, apikey, apisecret, bucket):
     bucket = s3.Bucket(bucket)
 
     for obj in bucket.objects.filter(Prefix=s3_folder):
-        print(obj)
         target = obj.key if local_dir is None \
             else os.path.join(local_dir, os.path.relpath(obj.key, s3_folder))
         if not os.path.exists(os.path.dirname(target)):
@@ -240,7 +239,8 @@ def download_folder(s3_folder, local_dir, apikey, apisecret, bucket):
 
 def download_file(s3_file, local_file, apikey, apisecret, bucket):
     """
-    Checks to see if a file/key pair exists locally or on s3 or neither
+    Checks to see if a file/key pair exists locally or on s3 or neither,
+    if exists -- download the file
     """
 
    

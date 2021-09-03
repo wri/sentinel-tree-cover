@@ -15,7 +15,6 @@ def id_missing_px(sentinel2: np.ndarray, thresh: int = 11) -> np.ndarray:
     missing_images_0 = np.sum(sentinel2[..., :10] == 0.0, axis = (1, 2, 3))
     missing_images_p = np.sum(sentinel2[..., :10] >= 1., axis = (1, 2, 3))
     missing_images = missing_images_0 + missing_images_p
-    
     missing_images = np.argwhere(missing_images >= (sentinel2.shape[1]**2) / thresh).flatten()
     return missing_images
 
