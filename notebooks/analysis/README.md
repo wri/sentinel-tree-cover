@@ -38,7 +38,7 @@ Once the resolution and extent of the rasters are equivalent, we combine the mul
 
 
 ## Data Analysis
-Tree cover statistics from the TOF and Hansen et al. data are derived by administrative district, by ESA land cover class, and by percent tree cover thresholds. Evaluating results in the context of land cover classes helps us better understand the dynamics of tree cover in open versus closed canopy forests. The value and labels associated with each ESA land cover class are illustrated below, as well as their correspondence to IPCC land categories. 
+Tree cover statistics from the TOF and Hansen et al. data are derived by administrative district, by ESA land cover class, and by percent tree cover thresholds. Evaluating results in the context of land cover classes helps us better understand the dynamics of tree cover in open versus closed canopy forests. We use the ESA LLC-CI maps, which contain 22 globally consistent classes. The value and labels associated with each ESA land cover class are illustrated below, as well as their correspondence to IPCC land categories. 
 
 ![image4](https://github.com/wri/sentinel-tree-cover/blob/jessica/tree-cover-eda/notebooks/analysis/visuals/esa_to_ipcc.png)
 
