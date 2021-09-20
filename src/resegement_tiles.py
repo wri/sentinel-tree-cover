@@ -368,6 +368,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates -- no data")
             preds = np.full((SIZE, SIZE), 255)
         else:
+            """
             #! TODO: or if start - end is > some % threshold difference for EVI suggesting deforestation
             if dates_tile[0] >= 150 or dates_tile[-1] <= 215 or max_distance > 265 or len(dates_tile) < 5:
                 n_median += 1
@@ -383,10 +384,11 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
                     f" median, {max_distance} max dist")
                 preds = predict_gap(subtile, gap_sess)
             else:
+            """
                 # Otherwise run the non-median prediction
-                print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
-                    f" time series, {max_distance} max dist")
-                preds = predict_subtile(subtile, sess)
+            print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
+                f" time series, {max_distance} max dist")
+            preds = predict_subtile(subtile, sess)
         np.save(output, preds)
         np.save(output2, preds)
         print(output2)
@@ -404,19 +406,22 @@ def load_tif(tile_id, local_path):
             smooth = 1
 
         files = [file for file in os.listdir(dir_i)  if os.path.splitext(file)[-1] == '.tif']
-        if len(files) > 1:
-            files = [x for x in files if "_FINAL" in x]
-        if len(files) == 0:
-            files = [file for file in os.listdir(dir_i)  if os.path.splitext(file)[-1] == '.tif']
-            if len(files) > 1:
-                files = [x for x in files if "_POST" in x]
+        smooth_files = [x for x in files if "_SMOOTH" in x]
+        final_files = [x for x in files if "_FINAL" in x]
+        post_files = [x for x in files if "_POST" in x]
+        if len(smooth_files) > 0:
+            files = smooth_files
+        elif len(final_files) > 0:
+            files = final_files
+        else:
+            files = post_files
+
         for file in files:
            tifs.append(os.path.join(dir_i, file))
-
+    
     tifs = tifs[0]
     tifs = rasterio.open(tifs).read(1)
     return tifs, smooth
-
 
 def resegment_border(tile_x, tile_y, edge, local_path):
 
@@ -430,6 +435,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         data_temp = data_temp[data_temp['X_tile'] == int(neighbor_id[0])]
         data_temp = data_temp[data_temp['Y_tile'] == int(neighbor_id[1])]
         processed_neighbor = True if len(data_temp) > 0 else False
+        #processed_neighbor = True
 
     if processed and processed_neighbor:
         print(f"Downloading {tile_x}, {tile_y}")
@@ -438,12 +444,12 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         tile_tif, _ = load_tif((tile_x, tile_y), local_path)
         if type(tile_tif) is not np.ndarray:
             print("Skipping because one of the TIFS doesnt exist")
-            return 0
+            return 0, None, None
 
         tile_tif = tile_tif.astype(np.float32)
         neighbor_tif, smooth = load_tif(neighbor_id, local_path)
-        if smooth == 1:
-            return 0
+        #if smooth == 1:
+        #    return 0
         neighbor_tif = neighbor_tif.astype(np.float32)
         neighbor_tif[neighbor_tif > 100] = np.nan
         tile_tif[tile_tif > 100] = np.nan
@@ -451,14 +457,14 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         left_mean = np.nanmean(tile_tif[:, -1])
         print(right_mean, left_mean)
 
-        if abs(right_mean - left_mean) > 15:
+        if abs(right_mean - left_mean) > 13:
             
             download_raw_tile((tile_x, tile_y), local_path, "processed")
             test_subtile = np.load(f"{local_path}/{tile_x}/{tile_y}/processed/0/0.npy")
             print(test_subtile.shape)
             if test_subtile.shape[0] != SIZE:
                 print("Skipping cause of subtile size")
-                return 0
+                return 0, None, None
             download_raw_tile((tile_x, tile_y), local_path, "raw")
 
             if edge == "right":
@@ -469,31 +475,36 @@ def resegment_border(tile_x, tile_y, edge, local_path):
                 print(test_subtile.shape)
                 if test_subtile.shape[0] != SIZE:
                     print("Skipping cause of subtile size")
-                    return 0
+                    return 0, None, None
         else:
             print("The tiles are pretty close, skipping")
-            return 0
+            return 0, None, None
     else:
         print("One of the tiles isn't processed, skipping.")
-        return 0
+        return 0, None, None
         
     print("Loading and processing the tile")
     s2, dates, interp, s1, dem = process_tile(tile_x, tile_y, data, local_path)
+    s2_shape = s2.shape[1:-1]
+    print(s2_shape)
     gap_y = int(np.ceil((s1.shape[1] - SIZE) / 4))
     tiles_folder_y = np.hstack([np.arange(0, s1.shape[1] - SIZE, gap_y), np.array(s1.shape[1] - SIZE)]) 
 
 
     print("Splitting the tile to border")
     s2, interp, s1, dem, tiles_folder_x = split_to_border(s2, interp, s1, dem, "tile", edge)
+   
     
     print("Loading and processing the neighbor tile")
     s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb = \
         process_tile(neighbor_id[0], neighbor_id[1], data, args.local_path)
+    s2_neighb_shape = s2_neighb.shape[1:-1]
+    print(s2_neighb_shape)
 
     print("Splitting the neighbor tile to border")
     s2_neighb, interp_neighb, s1_neighb, dem_neighb, _ = \
         split_to_border(s2_neighb, interp_neighb, s1_neighb, dem_neighb, "neighbor", edge)
-
+    
 
     print("Aligning the dates between the tiles")
     to_rm_tile, to_rm_neighb = align_dates(dates, dates_neighb)
@@ -517,7 +528,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
             interp_neighb = np.delete(interp_neighb, to_rm_neighb, 0)
             dates_neighb = np.delete(dates_neighb, to_rm_neighb)
         if len(dates_neighb) == 0 or len(dates) == 0:
-            return 0
+            return 0, None, None
 
     if edge == "right":
         print("Concatenating the files")
@@ -558,9 +569,9 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         tiles_array, tiles_folder = make_tiles_right_neighb(tiles_folder_x, tiles_folder_y)
         process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess, tiles_folder, tiles_array)
 
-    return 1
+    return 1, s2_shape, s2_neighb_shape
 
-def recreate_resegmented_tifs(out_folder: str) -> np.ndarray:
+def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
     """
     Loads the .npy subtile files in an output folder and mosaics the overlapping predictions
     to return a single .npy file of tree cover for the 6x6 km tile
@@ -572,49 +583,54 @@ def recreate_resegmented_tifs(out_folder: str) -> np.ndarray:
         Returns:
          predictions (np.ndarray): 6 x 6 km tree cover data as a uint8 from 0-100 w/ 255 no-data flag
     """
-    
-    n_border = 0
+    print(f"Recreating: {out_folder}")
+    n_up = len(glob(out_folder + "*/up*.npy"))
+    n_down = len(glob(out_folder + "*/down*.npy"))
+    n_left = len(glob(out_folder + "*/left*.npy"))
+    n_right = len(glob(out_folder + "right*/*.npy"))
 
     right = [x for x in os.listdir(out_folder) if 'right' in x]
-    if len(right) > 0:
-        n_right = len([x for x in os.listdir(out_folder + right[0]) if '.DS' not in x])
-    else:
-        n_right = 0
                       
     x_tiles = [x for x in os.listdir(out_folder) if 'right' not in x]
     x_tiles = [x for x in x_tiles if '.DS' not in x]
     x_tiles = [x for x in x_tiles if len(os.listdir(out_folder + "/" + x)) > 0]
     x_tiles = [int(x) for x in x_tiles]
-    max_x = np.max(x_tiles) + SIZE
 
+    max_x = np.max(x_tiles) + SIZE
     for x_tile in x_tiles:
         y_tiles = [y for y in os.listdir(out_folder + str(x_tile) + "/") if '.DS' not in y]
-        border = [y for y in y_tiles if 'left'  in y]
-        n_border += len(border)
-        y_tiles = [int(y[:-4]) for y in y_tiles if 'left' not in y]
-        if len(y_tiles) > 1:
-            max_y = np.max(y_tiles) + SIZE
+        y_tiles = [y for y in y_tiles if 'left' not in y]
+        y_tiles = [y for y in y_tiles if 'down' not in y]
+        y_tiles = [int(y[:-4]) for y in y_tiles if 'up' not in y]
         
     n_tiles = len(glob(out_folder + "*/*.npy"))
-    predictions = np.full((max_x, max_y, n_tiles), np.nan, dtype = np.float32)
-    mults = np.full((max_x, max_y, n_tiles), 0, dtype = np.float32)
+    n_border = n_up + n_down + n_left + n_right
+    predictions = np.full((shape[1], shape[0], n_tiles), np.nan, dtype = np.float32)
+    mults = np.full((shape[1], shape[0], n_tiles), 0, dtype = np.float32)
+    print(predictions.shape)
     i = 0
 
     for x_tile in x_tiles:
         y_tiles = [y for y in os.listdir(out_folder + str(x_tile) + "/") if '.DS' not in y]
-        y_tiles = [int(y[:-4]) for y in y_tiles if 'left' not in y]
+        y_tiles = [y for y in y_tiles if 'left' not in y]
+        y_tiles = [y for y in y_tiles if 'down' not in y]
+        y_tiles = [int(y[:-4]) for y in y_tiles if 'up' not in y]
         for y_tile in y_tiles:
             output_file = out_folder + str(x_tile) + "/" + str(y_tile) + ".npy"
             if os.path.exists(output_file):
                 prediction = np.load(output_file)
-                if np.sum(prediction) < SIZE*SIZE*255:
-                    prediction = (prediction * 100).T.astype(np.float32)
-                    predictions[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = prediction
-                    mults[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = fspecial_gauss(SIZE, 28)
-                i += 1
+                if prediction.shape[0] == SIZE:
+                    if np.sum(prediction) < SIZE*SIZE*255:
+                        prediction = (prediction * 100).T.astype(np.float32)
+                        if (x_tile + SIZE - 1) < shape[1] and (y_tile + SIZE - 1) < shape[0]:
+                            predictions[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = prediction
+                            mults[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = fspecial_gauss(SIZE, 28)
+                        else:
+                            print(f"Skipping {x_tile, y_tile} because of {predictions.shape}")
+                    i += 1
                 
     # LEFT BLOCK
-    if n_border > 0:
+    if n_left > 0:
         for x_tile in x_tiles:
             y_tiles = [y for y in os.listdir(out_folder + str(x_tile) + "/") if '.DS' not in y]
             y_tiles = [int(y[4:-4]) for y in y_tiles if 'left' in y]
@@ -630,7 +646,7 @@ def recreate_resegmented_tifs(out_folder: str) -> np.ndarray:
                     i += 1
                     
     # RIGHT BLOCK
-    if len(right) > 0:
+    if n_right > 0:
         for x_tile in right:
             x_tile_name = x_tile
             x_tile = int(x_tile[5:])
@@ -645,6 +661,36 @@ def recreate_resegmented_tifs(out_folder: str) -> np.ndarray:
                         predictions[x_tile: x_tile+SIZE // 2, y_tile:y_tile + SIZE, i] = prediction
                         mults[x_tile: x_tile+ SIZE // 2, y_tile:y_tile + SIZE, i] = fspecial_gauss(SIZE, 35)[:84, :]
                     i += 1
+                    
+    if n_up > 0:
+        for x_tile in x_tiles:
+            y_tiles = [y for y in os.listdir(out_folder + str(x_tile) + "/") if '.DS' not in y]
+            y_tiles = [int(y[2:-4]) for y in y_tiles if 'up' in y]
+            for y_tile in y_tiles:
+                output_file = out_folder + str(x_tile) + "/up" + str(y_tile) + ".npy"
+                if os.path.exists(output_file):
+                    prediction = np.load(output_file)
+                    if np.sum(prediction) < SIZE*SIZE*255:
+                        prediction = (prediction * 100).T.astype(np.float32)
+                        prediction = prediction[:, 84:]
+                        predictions[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE // 2, i] = prediction
+                        mults[x_tile: x_tile+ SIZE, y_tile:y_tile + SIZE // 2, i] = fspecial_gauss(SIZE, 35)[:, 84:]
+                    i += 1
+                    
+    if n_down > 0:
+        for x_tile in x_tiles:
+            y_tiles = [y for y in os.listdir(out_folder + str(x_tile) + "/") if '.DS' not in y]
+            y_tiles = [int(y[4:-4]) for y in y_tiles if 'down' in y]
+            for y_tile in y_tiles:
+                output_file = out_folder + str(x_tile) + "/down" + str(y_tile) + ".npy"
+                if os.path.exists(output_file):
+                    prediction = np.load(output_file)
+                    if np.sum(prediction) < SIZE*SIZE*255:
+                        prediction = (prediction * 100).T.astype(np.float32)
+                        prediction = prediction[:, :84]
+                        predictions[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE // 2, i] = prediction
+                        mults[x_tile: x_tile+ SIZE, y_tile:y_tile + SIZE // 2, i] = fspecial_gauss(SIZE, 35)[:, :84]
+                    i += 1
 
     predictions = predictions.astype(np.float32)
 
@@ -654,8 +700,9 @@ def recreate_resegmented_tifs(out_folder: str) -> np.ndarray:
     
     overpredict = True if (mean_uncertain_pred - mean_certain_pred) > 0 else False
     underpredict = True if not overpredict else False
-    
-    for i in range(predictions.shape[-1] - n_border - n_right):
+    print(f"There are: {predictions.shape[-1] - n_border} normal tiles")
+
+    for i in range(predictions.shape[-1] - n_border):
         if overpredict:
             problem_tile = True if np.nanmean(predictions[..., i]) > mean_certain_pred else False
         if underpredict:
@@ -663,13 +710,14 @@ def recreate_resegmented_tifs(out_folder: str) -> np.ndarray:
         range_i = np.copy(predictions_range)
         range_i[np.isnan(predictions[..., i])] = np.nan
         range_i = range_i[~np.isnan(range_i)]
-        if range_i.shape[0] > 0:
-            range_i = np.reshape(range_i, (168 // 56, 56, 168 // 56, 56))
-            range_i = np.mean(range_i, axis = (1, 3))
-            n_outliers = np.sum(range_i > 50)
-            if n_outliers >= 2 and problem_tile:
-                predictions[..., i] = np.nan
-                mults[..., i] = 0.
+        
+        range_i = np.reshape(range_i, (168 // 56, 56, 168 // 56, 56))
+        range_i = np.mean(range_i, axis = (1, 3))
+        n_outliers = np.sum(range_i > 50)
+        if n_outliers >= 2 and problem_tile:
+            predictions[..., i] = np.nan
+            mults[..., i] = 0.
+
     
     mults = mults / np.sum(mults, axis = -1)[..., np.newaxis]
 
@@ -711,21 +759,19 @@ def recreate_resegmented_tifs(out_folder: str) -> np.ndarray:
 
 def cleanup(path_to_tile, path_to_right, delete = True, upload = True):
 
-    for file in glob(path_to_right + "processed/0/left*"):
-        internal_folder = file[len(path_to_tile + "processed/") :]
+    for file in glob(path_to_right + "processed/*/left*"):
+        internal_folder = file[len(path_to_tile):]
         print(internal_folder)
         key = f'2020/processed/{str(int(x) + 1)}/{str(y)}/{internal_folder}'
         if upload:
             uploader.upload(bucket = 'tof-output', key = key, file = file)
 
-    for folder in glob(path_to_tile + "processed/right*/*/"):
-        for file in os.listdir(folder):
-            _file = folder + file
-            internal_folder = folder[len(path_to_right + "processed/"):]
-            print(internal_folder)
-            key = f'2020/processed/{x}/{y}/' + internal_folder
-            if upload:
-                uploader.upload(bucket = 'tof-output', key = key, file = _file)
+    for file in glob(path_to_tile + "processed/right*/*.npy"):
+        internal_folder = file[len(path_to_tile):]
+        print(internal_folder)
+        key = f'2020/processed/{x}/{y}/' + internal_folder
+        if upload:
+            uploader.upload(bucket = 'tof-output', key = key, file = file)
             #if delete:
             #    os.remove(_file)
 
@@ -752,8 +798,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-aug/')
-    parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-kenya/')
+    parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
@@ -794,7 +840,7 @@ if __name__ == "__main__":
         predict_graph_def.ParseFromString(predict_file.read())
         predict_graph = tf.import_graph_def(predict_graph_def, name='predict')
         predict_sess = tf.compat.v1.Session(graph=predict_graph)
-        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_8/Sigmoid:0")            
+        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_13/Sigmoid:0")            
         predict_inp = predict_sess.graph.get_tensor_by_name("predict/Placeholder:0")
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
     else:
@@ -806,7 +852,7 @@ if __name__ == "__main__":
         gap_graph_def.ParseFromString(gap_file.read())
         gap_graph = tf.import_graph_def(gap_graph_def, name='gap')
         gap_sess = tf.compat.v1.Session(graph=gap_graph)
-        gap_logits = gap_sess.graph.get_tensor_by_name(f"gap/conv2d_8/Sigmoid:0")
+        gap_logits = gap_sess.graph.get_tensor_by_name(f"gap/conv2d_13/Sigmoid:0")
         gap_inp = gap_sess.graph.get_tensor_by_name("gap/Placeholder:0")
     else:
         raise Exception(f"The model path {args.gap_model_path} does not exist")
@@ -829,9 +875,14 @@ if __name__ == "__main__":
     rng = max_all - min_all
     rng = rng.astype(np.float32)
 
-    data = pd.read_csv("processing_area_june_28.csv")
-    data = data[data['country'] == args.country]
-    data = data.reset_index(drop = True)
+    if os.path.exists(args.db_path):
+        data = pd.read_csv(args.db_path)
+        data = data[data['country'] == args.country]
+        data = data.reset_index(drop = True)
+        print(f"There are {len(data)} tiles for {args.country}")
+    else:
+        raise Exception(f"The database does not exist at {args.db_path}")
+
     data['X_tile'] = data['X_tile'].astype(int)
     data['Y_tile'] = data['Y_tile'].astype(int)
     data = data.sort_values(['Y_tile', 'X_tile'], ascending=[False, True])
@@ -853,31 +904,54 @@ if __name__ == "__main__":
             initial_bbx = [row['X'], row['Y'], row['X'], row['Y']]
             bbx = make_bbox(initial_bbx, expansion = 300/30)
 
-            neighb = [data['X'][index + 1], data['Y'][index + 1], data['X'][index + 1], data['Y'][index + 1]]
-            neighb_bbx = make_bbox(neighb, expansion = 300/30)
+            print(data['X_tile'][index], data['Y_tile'][index])
+            data_neighb = data.copy()
+            neighb_bbx = None
+            #if (int(x) + 1) in data['X_tile'] and int(y) in data['Y_tile']:
+            print(int(x) + 1, int(y))
             try:
-                finished = resegment_border(x, y, "right", args.local_path)
-            except:
-                print("Ran into an error!")
+                data_neighb = data_neighb[data_neighb['X_tile'] == int(x) + 1]
+                data_neighb = data_neighb[data_neighb['Y_tile'] == int(y)]
+                data_neighb = data_neighb.reset_index()
+                neighb = [data_neighb['X'][0], data_neighb['Y'][0], data_neighb['X'][0], data_neighb['Y'][0]]
+                print(data_neighb['X_tile'][0], data_neighb['Y_tile'][0])
+                neighb_bbx = make_bbox(neighb, expansion = 300/30)
+                print(neighb_bbx)
+            except KeyboardInterrupt:
+                break
+            except Exception as e:
+                print(f"Ran into {str(e)}")
+            try:
+                finished, s2_shape, s2_neighb_shape = resegment_border(x, y, "right", args.local_path)
+            except KeyboardInterrupt:
+                break
+            except Exception as e:
+                print(f"Ran into {str(e)}")
                 finished = 0
+                s2_shape = (0, 0)
+                s2_neighb_shape = (0, 0)
             #finished = 1
             if finished == 1:
                 try:
-                    predictions, _ = recreate_resegmented_tifs(path_to_tile + "processed/")
+                    predictions, _ = recreate_resegmented_tifs(path_to_tile + "processed/", s2_shape)
                     file = write_tif(predictions, bbx, x, y, path_to_tile, "_SMOOTH")
                     key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_SMOOTH.tif'
                     uploader.upload(bucket = args.s3_bucket, key = key, file = file)
 
-                    predictions, _ = recreate_resegmented_tifs(path_to_right + "processed/")
+                    predictions, _ = recreate_resegmented_tifs(path_to_right + "processed/", s2_neighb_shape)
                     file = write_tif(predictions, neighb_bbx, str(int(x) + 1), y, path_to_right, "_SMOOTH")
                     key = f'2020/tiles/{str(int(x) + 1)}/{y}/{str(int(x) + 1)}X{str(y)}Y_SMOOTH.tif'
                     uploader.upload(bucket = args.s3_bucket, key = key, file = file)
 
                     cleanup(path_to_tile, path_to_right, delete = True, upload = True)
-                except:
-                    continue
+                except KeyboardInterrupt:
+                    break
+                except Exception as e:
+                    print(f"Ran into {str(e)}")
     
     """
+    
+
     x = 2011
     y = 1079
 
@@ -911,7 +985,8 @@ if __name__ == "__main__":
     
     #try:
     
-    finished = resegment_border(x, y, "right", args.local_path)
+    #finished = resegment_border(x, y, "right", args.local_path)
+    finished = 1
     #except:
     #    print("Ran into an error!")
     #    finished = 0
@@ -927,5 +1002,6 @@ if __name__ == "__main__":
         key = f'2020/tiles/{str(int(x) + 1)}/{y}/{str(int(x) + 1)}X{str(y)}Y_SMOOTH.tif'
         uploader.upload(bucket = args.s3_bucket, key = key, file = file)
 
-        cleanup(path_to_tile, path_to_right, delete = True, upload = True)
+        cleanup(path_to_tile, path_to_right, delete = False, upload = False)
     """
+    

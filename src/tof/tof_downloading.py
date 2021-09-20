@@ -111,9 +111,9 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
         bbox=box, time=dates,
         resx='160m',resy='160m',
         image_format = MimeType.TIFF_d8,
-        maxcc=0.75, instance_id=api_key,
+        maxcc=.75, instance_id=api_key,
         custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-        time_difference=datetime.timedelta(hours=72),
+        time_difference=datetime.timedelta(hours=48),
     )
 
     # Download 160 x 160 meter bands for shadow masking, 0 - 65535
@@ -123,13 +123,16 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
         bbox=box, time=dates,
         resx='160m', resy='160m',
         image_format = MimeType.TIFF_d16,
-        maxcc=0.75, instance_id=api_key,
+        maxcc=.75, instance_id=api_key,
         custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-        time_difference=datetime.timedelta(hours=72))
+        time_difference=datetime.timedelta(hours=48))
     
     cloud_img = np.array(cloud_request.get_data())
     cloud_img = cloud_img.repeat(16,axis=1).repeat(16,axis=2).astype(np.uint8)
     print(f"Clouds: {cloud_img.shape}")
+
+    cloud_dates_dict = [x for x in cloud_request.get_dates()]
+    cloud_dates = extract_dates(cloud_dates_dict, year)
     
     # Identify steps with at least 20% cloud cover
     n_cloud_px = np.sum(cloud_img > int(0.5 * 255), axis = (1, 2))
@@ -147,7 +150,6 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
     shadow_steps = [idx for idx, val in enumerate(shadow_dates) if val in cloud_dates] 
 
     to_remove_cloud = [idx for idx, val in enumerate(cloud_dates) if val not in shadow_dates]  
-
     if len(to_remove_cloud) > 0:
         cloud_img = np.delete(cloud_img, to_remove_cloud, 0)
         cloud_dates = list(np.delete(np.array(cloud_dates), to_remove_cloud))
@@ -339,7 +341,7 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
     print(f"The following dates will be downloaded: {dates_to_download}")
     
     # If the correct orbit is selected, download imagery
-    if len(image_request.download_list) >= 4 and len(steps_to_download) >= 4:
+    if len(image_request.download_list) >= 2 and len(steps_to_download) >= 2:
         try:
             s1 = np.array(image_request.get_data(data_filter = steps_to_download))
             if not isinstance(s1.flat[0], np.floating):
@@ -388,7 +390,7 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
                 image_dates = np.delete(image_dates, to_remove)
             print(s1.shape)
             s1 = np.clip(s1, 0, 1)
-            s1 = s1.repeat(3, axis = 0)
+            s1 = s1.repeat(12 // s1.shape[0], axis = 0)
             image_dates = np.array(image_dates).repeat(2, axis = 0)
             s1 = s1.repeat(2,axis=1).repeat(2,axis=2)
             return s1, image_dates

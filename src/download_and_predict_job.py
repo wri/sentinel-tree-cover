@@ -160,10 +160,11 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
                                                             dates = dates,
                                                             api_key = api_key, 
                                                             year = year)
+        print(image_dates)
         cloud_shadows = np.mean(cloud_probs, axis = (1, 2)) + np.mean(shadows, axis = (1, 2))
         to_remove = [int(x) for x in np.argwhere(cloud_shadows > 0.5)]
         if len(to_remove) > 0:
-            print(f"Removing {len(to_remove)} timesteps with > 0.5 cloud/shadow extent")
+            print(f"Removing {len(to_remove)} {to_remove} timesteps with > 0.5 cloud/shadow extent")
             image_dates = np.delete(image_dates, to_remove)
             cloud_probs = np.delete(cloud_probs, to_remove, 0)
             shadows = np.delete(shadows, to_remove, 0)
@@ -188,7 +189,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         if n_remaining >= 13 or np.max(cloud_shadows) >= 0.20:
             cloud_shadows[to_remove] = 0.
             max_cloud = int(np.argmax(cloud_shadows))
-            print(f"Removing cloudiest date: {max_cloud}, {cloud_shadows[max_cloud]}")
+            print(f"Removing cloudiest date (master 1): {max_cloud}, {cloud_shadows[max_cloud]}")
             to_remove.append(max_cloud)
 
         if len(to_remove) > 0:
@@ -199,7 +200,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
 
         if len(clean_dates) >= 13:
             max_cloud = int(np.argmax(cloud_shadows))
-            print(f"Removing cloudiest date: {max_cloud}, {cloud_shadows[max_cloud]}")
+            print(f"Removing cloudiest date (master 2): {max_cloud}, {cloud_shadows[max_cloud]}")
             clean_dates = np.delete(clean_dates, max_cloud)
             cloud_probs = np.delete(cloud_probs, max_cloud, 0)
             shadows = np.delete(shadows, max_cloud, 0)
@@ -385,7 +386,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
         for time in range(sentinel2.shape[0]):
             sentinel2[time, ..., band + 4] = resize(s2_20[time,..., band], (width, height), 1)
 
-
     lower_thresh, upper_thresh = id_iqr_outliers(sentinel2)
     if lower_thresh is not None and upper_thresh is not None:
         above = np.sum(sentinel2 > upper_thresh, axis = (1, 2))
@@ -405,7 +405,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
     # Identifies missing imagery (either in sentinel acquisition, or induced in preprocessing)
     # If more than 50% of data for a time step is missing, then remove them....
     missing_px = interpolation.id_missing_px(sentinel2, 2)
-
     if len(missing_px) > 0:
         print(f"Removing {missing_px} dates due to missing data")
         clouds = np.delete(clouds, missing_px, axis = 0)
@@ -417,7 +416,9 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
     sentinel2 = interpolation.interpolate_missing_vals(sentinel2)
 
     # interpolate cloud and cloud shadows linearly
+    print(np.mean(sentinel2, axis = (1, 2, 3)))
     sentinel2, interp = cloud_removal.remove_cloud_and_shadows(sentinel2, clouds, shadows, image_dates)
+    print(np.mean(sentinel2, axis = (1, 2, 3)))
     to_remove_interp = np.argwhere(np.sum(interp, axis = (1, 2)) > (sentinel2.shape[1] * sentinel2.shape[2] * 0.5) ).flatten()
 
     if len(to_remove_interp > 0):
@@ -587,7 +588,8 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             preds = np.full((SIZE, SIZE), 255)
         else:
             #! TODO: or if start - end is > some % threshold difference for EVI suggesting deforestation
-            if dates_tile[0] >= 150 or dates_tile[-1] <= 215 or max_distance > 265 or args.model == "median" or len(dates_tile) < 5:
+            """
+            if dates_tile[0] >= 180 or dates_tile[-1] <= 180 or max_distance > 300 or args.model == "median" or len(dates_tile) < 2:
                 if args.model != 'time':
                     n_median += 1
                     print(f"There are {n_median}/{median_thresh} medians in tile")
@@ -596,20 +598,17 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
                             print("Restarting the predictions with median")
                             t = 0 if t > 1 else t
                         gap_between_years = True
-            #if len(dates_tile) == 3:
-            #    print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
-            #        f" median, {max_distance} max dist")
-            #    preds = predict_stc(subtile, gap_sess)
-            if (len(dates_tile) < 5 or gap_between_years) or args.model == "median":
+            if (len(dates_tile) < 2 or gap_between_years) or args.model == "median":
                 # Then run the median prediction
                 print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
                     f" median, {max_distance} max dist")
                 preds = predict_gap(subtile, gap_sess)
-            else:
+            """
+            #else:
                 # Otherwise run the non-median prediction
-                print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
-                    f" time series, {max_distance} max dist")
-                preds = predict_subtile(subtile, sess)
+            print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
+                f" time series, {max_distance} max dist")
+            preds = predict_subtile(subtile, sess)
         np.save(output, preds)
 
 
@@ -950,7 +949,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-aug/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-kenya/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
@@ -1029,7 +1028,7 @@ if __name__ == '__main__':
         predict_graph_def.ParseFromString(predict_file.read())
         predict_graph = tf.import_graph_def(predict_graph_def, name='predict')
         predict_sess = tf.compat.v1.Session(graph=predict_graph)
-        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_8/Sigmoid:0")            
+        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_13/Sigmoid:0")            
         predict_inp = predict_sess.graph.get_tensor_by_name("predict/Placeholder:0")
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
     else:

@@ -39,7 +39,7 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 docker stop $(docker ps -a -q) &&\
 docker pull 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download:latest &&\
 docker system prune -f &&\
-tmux new -s node-19
+tmux new -s node-10
 
 docker run -it --entrypoint /bin/bash 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download
 cd src 
