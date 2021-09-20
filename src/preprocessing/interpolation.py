@@ -23,13 +23,16 @@ def interpolate_missing_vals(s2: np.ndarray) -> np.ndarray:
     '''Interpolates NA values with closest time steps, to deal with
        the small potential for NA values in calculating indices
     '''
-
-    nanmedian = np.median(s2, axis = 0)
-    for time in range(s2.shape[0]):
-        s2_image = s2[time]
-        s2_image[s2_image >= 1] = nanmedian[s2_image >= 1]
-        s2_image[s2_image == 0] = nanmedian[s2_image == 0]
-        
+    print("INTERPS MSISING")
+    print(np.sum(s2 >= 1))
+    print(np.sum(s2 == 0))
+    if np.sum(np.logical_and(s2 >= 1, s2 == 0)) > 0:
+        nanmedian = np.median(s2, axis = 0)
+        for time in range(s2.shape[0]):
+            s2_image = s2[time]
+            s2_image[s2_image >= 1] = nanmedian[s2_image >= 1]
+            s2_image[s2_image == 0] = nanmedian[s2_image == 0]
+            
     return s2
 
 
@@ -37,10 +40,13 @@ def interpolate_na_vals(s2: np.ndarray) -> np.ndarray:
     '''Interpolates NA values with closest time steps, to deal with
        the small potential for NA values in calculating indices
     '''
-    nanmedian = np.nanmedian(s2, axis = 0).astype(np.float32)
-    for time in range(s2.shape[0]):
-        nanvals = np.isnan(s2[time]) # (X, Y, bands)
-        s2[time, nanvals] = nanmedian[nanvals]
-        if np.sum(nanvals) > 100:
-            print(f"There were {np.sum(nanvals)} missing values in {time} step")
+    print("INTERPS NA")
+    print(np.sum(np.isnan(s2)))
+    if np.sum(np.isnan(s2)) > 0:
+        nanmedian = np.nanmedian(s2, axis = 0).astype(np.float32)
+        for time in range(s2.shape[0]):
+            nanvals = np.isnan(s2[time]) # (X, Y, bands)
+            s2[time, nanvals] = nanmedian[nanvals]
+            if np.sum(nanvals) > 100:
+                print(f"There were {np.sum(nanvals)} missing values in {time} step")
     return s2

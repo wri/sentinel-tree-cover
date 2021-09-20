@@ -61,10 +61,13 @@ if __name__ == '__main__':
         dir_i = f"../project-monitoring/tof-output/{x}/{y}"
         if os.path.exists(dir_i):
             files = [file for file in os.listdir(dir_i)  if os.path.splitext(file)[-1] == '.tif']
-            if len(files) > 1:
-                files = [x for x in files if "_POST" in x]
-            for file in files:
-                tifs.append(os.path.join(dir_i, file))
+            files = [x for x in files if "_FINAL" in x]
+            if len(files) >= 1:
+                for file in files:
+                #if len(files) > 1:
+                #    files = [x for x in files if "_POST" in x]
+                #for file in files:
+                   tifs.append(os.path.join(dir_i, file))
 
 
     print(f'There are {len(tifs)} / {len(data)} tiles processed')
@@ -75,26 +78,26 @@ if __name__ == '__main__':
     translateoptions = gdal.TranslateOptions(gdal.ParseCommandLine("-ot Byte -co COMPRESS=LZW -a_nodata 255"))
     ds = gdal.Translate(f'{str(args.country)}.tif', ds, options=translateoptions)
 
-    ds = gdal.Open(f'{str(args.country)}.tif', 1)
-    band = ds.GetRasterBand(1)
+    #ds = gdal.Open(f'{str(args.country)}.tif', 1)
+    #band = ds.GetRasterBand(1)
 
     # create color table
-    colors = gdal.ColorTable()
+    #colors = gdal.ColorTable()
 
     # set color for each value
-    colors.SetColorEntry(0, (237, 248, 233))
-    colors.SetColorEntry(20, (237, 248, 233))
-    colors.SetColorEntry(40, (160, 215, 150))
-    colors.SetColorEntry(60, (104, 184, 105))
-    colors.SetColorEntry(80, (28, 138, 58))
-    colors.SetColorEntry(100, (7, 111, 46))
+    #colors.SetColorEntry(0, (237, 248, 233))
+    #colors.SetColorEntry(20, (237, 248, 233))
+    #colors.SetColorEntry(40, (160, 215, 150))
+    #colors.SetColorEntry(60, (104, 184, 105))
+    #colors.SetColorEntry(80, (28, 138, 58))
+    #colors.SetColorEntry(100, (7, 111, 46))
 
     # set color table and color interpretation
-    band.SetRasterColorTable(colors)
-    band.SetRasterColorInterpretation(gdal.GCI_PaletteIndex)
+    #band.SetRasterColorTable(colors)
+    #band.SetRasterColorInterpretation(gdal.GCI_PaletteIndex)
 
     # close and save file
-    del band, ds
+    #del band, ds
 
     uploader = FileUploader(awskey = AWSKEY, awssecret = AWSSECRET)
     file = f'{str(args.country)}.tif'

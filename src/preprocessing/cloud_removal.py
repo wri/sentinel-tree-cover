@@ -358,7 +358,6 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
 
     return to_remove
 
-
 def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
     """ Calculates the timesteps to remove based upon cloud cover and missing data
         
@@ -368,6 +367,7 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
         Returns:
          to_remove (arr): 
     """
+    print(dates)
     def _check_month(month, thresh):
         month_idx = np.argwhere(np.logical_and(dates >= starting[month],
                                                dates < starting[month + 1]))
@@ -419,8 +419,8 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
     
     n_cloud_px = np.sum(clouds > 0.50, axis = (1, 2))
     cloud_percent = n_cloud_px / (clouds.shape[1]**2)
-    thresh = [0.01, 0.02, 0.05, 0.10, 0.15, 0.15, 0.20, 0.25, 0.30]
-    thresh_dist = [30, 30, 60, 60, 100, 100, 100, 125, 150]
+    thresh = [0.10, 0.20, 0.25, 0.30]
+    thresh_dist = [30, 60, 125, 150]
     for month in range(0, 12):
         finished = False
         for x in range(len(thresh)):
@@ -457,7 +457,6 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
 
     print(f"Utilizing {len(good_steps_idx)}/{dates.shape[0]} steps")
     return to_remove, good_steps_idx
-
 
 def print_dates(dates, probs):
     month_days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 80]
@@ -530,7 +529,7 @@ def subset_contiguous_sunny_dates(dates, probs):
                 indices_month = np.argwhere(np.logical_and(
                     dates >= begin[month], dates < end[month])).flatten()
                 if len(indices_month) > 0:
-                    if np.max(probs[indices_month]) > 0.1:
+                    if np.max(probs[indices_month]) >= 0.15:
                         cloudiest_idx = np.argmax(probs[indices_month].flatten())
                     else:
                         cloudiest_idx = 1
@@ -546,7 +545,7 @@ def subset_contiguous_sunny_dates(dates, probs):
                 indices_month = np.argwhere(np.logical_and(
                     dates >= begin[month], dates < end[month])).flatten()
                 indices_month = [x for x in indices_month if x not in indices_to_rm]
-                if np.max(probs[indices_month]) > 0.1:
+                if np.max(probs[indices_month]) >= 0.15:
                     cloudiest_idx = np.argmax(probs[indices_month].flatten())
                 else:
                     cloudiest_idx = 1
@@ -562,42 +561,52 @@ def subset_contiguous_sunny_dates(dates, probs):
         n_remaining = len(dates) - len(indices_to_rm)
         print(f"There are {n_remaining} left, max prob is {np.max(probs)}")
 
-        if n_remaining > 13:
+        if n_remaining > 12:
             probs[indices_to_rm] = 0.
             # logic flow here to remove all steps with > 10% cloud cover that leaves 14
             # or if no are >10% cloud cover, to remove the second time step for each month
             # with at least 1 image
-            n_above_10_cloud = np.sum(probs > 0.10)
-            len_to_rm = (n_remaining - 13)
+            n_above_10_cloud = np.sum(probs >= 0.15)
+            print(f"There are {n_above_10_cloud} steps above 10%")
+            len_to_rm = (n_remaining - 12)
+            print(f"Removing {len_to_rm} steps to leave a max of 12")
             if len_to_rm < n_above_10_cloud:
+                print("Removing option 1 because {len_to_rm} is less than {n_above_10_cloud})")
                 max_cloud = np.argpartition(probs, -len_to_rm)[-len_to_rm:]
                 print(f"Removing cloudiest dates: {max_cloud}, {probs[max_cloud]}")
                 indices_to_rm.extend(max_cloud)
             else:
                 # Remove the ones that are > 10% cloud cover
-                max_cloud = np.argpartition(probs, -n_above_10_cloud)[-n_above_10_cloud:]
-                print(f"Removing cloudiest dates: {max_cloud}, {probs[max_cloud]}")
-                indices_to_rm.extend(max_cloud)
+                print(f"Removing option 2 because {len_to_rm} is greater than {n_above_10_cloud})")
+                if n_above_10_cloud > 0:
+                    max_cloud = np.argpartition(probs, -n_above_10_cloud)[-n_above_10_cloud:]
+                    print(f"Removing cloudiest dates: {max_cloud}, {probs[max_cloud]}")
+                    indices_to_rm.extend(max_cloud)
 
                 # And then remove the second time step for months with multiple images
                 #dates_out = np.copy(dates)
                 #dates_out = np.delete(dates_out, indices_to_rm)
                 
                 n_to_remove = len_to_rm - n_above_10_cloud
+                print(f"Need to remove {n_to_remove} of {n_remaining}")
                 n_removed = 0
                 for x, y in zip(begin, end):
                     indices_month = np.argwhere(np.logical_and(
                         dates >= x, dates < y)).flatten()
                     indices_month = [x for x in indices_month if x not in indices_to_rm]
                     if len(indices_month) > 1:
-                        if n_removed < n_to_remove:
-                            indices_to_rm.append(indices_month[1])
+                        if n_removed <= n_to_remove:
+                            if indices_month[1] not in indices_to_rm:
+                                indices_to_rm.append(indices_month[1])
+                            else:
+                                indices_to_rm.append(indices_month[0])
                             print(f"Removing second image in month: {x}, {indices_month[1]}")
+                            print(len(set(indices_to_rm)), len(dates))
                         n_removed += 1
 
         elif np.max(probs) >= 0.20:
             max_cloud = np.argmax(probs)
-            print(f"Removing cloudiest date: {max_cloud}, {probs[max_cloud]}")
+            print(f"Removing cloudiest date (cloud_removal): {max_cloud}, {probs[max_cloud]}")
             indices_to_rm.append(max_cloud)
 
         print(f"Removing {len(indices_to_rm)} sunny/cloudy dates")
