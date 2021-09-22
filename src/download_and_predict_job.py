@@ -416,9 +416,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
     sentinel2 = interpolation.interpolate_missing_vals(sentinel2)
 
     # interpolate cloud and cloud shadows linearly
-    print(np.mean(sentinel2, axis = (1, 2, 3)))
     sentinel2, interp = cloud_removal.remove_cloud_and_shadows(sentinel2, clouds, shadows, image_dates)
-    print(np.mean(sentinel2, axis = (1, 2, 3)))
     to_remove_interp = np.argwhere(np.sum(interp, axis = (1, 2)) > (sentinel2.shape[1] * sentinel2.shape[2] * 0.5) ).flatten()
 
     if len(to_remove_interp > 0):
@@ -675,7 +673,7 @@ def predict_subtile(subtile, sess) -> np.ndarray:
     
     return preds
 
-
+'''
 def predict_gap(subtile, sess) -> np.ndarray:
     """ Runs non-temporal predictions on a (12, 174, 174, 13) array:
         - Calculates remote sensing indices
@@ -722,6 +720,7 @@ def predict_gap(subtile, sess) -> np.ndarray:
         preds = np.full((SIZE, SIZE), 255)
     
     return preds
+'''
 
 def make_stc(subtile, sess, s1_subtile, dem_subtile):
 
@@ -949,7 +948,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-kenya/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-sept-new/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
@@ -1008,7 +1007,7 @@ if __name__ == '__main__':
     # Lots of code here to load two tensorflow graphs at once
     superresolve_graph_def = tf.compat.v1.GraphDef()
     predict_graph_def = tf.compat.v1.GraphDef()
-    gap_graph_def = tf.compat.v1.GraphDef()
+    #gap_graph_def = tf.compat.v1.GraphDef()
 
     if os.path.exists(args.superresolve_model_path):
         print(f"Loading model from {args.superresolve_model_path}")
@@ -1033,7 +1032,7 @@ if __name__ == '__main__':
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
     else:
         raise Exception(f"The model path {args.predict_model_path} does not exist")
-
+    '''
     if os.path.exists(args.gap_model_path):
         print(f"Loading gap model from {args.gap_model_path}")
         gap_file = tf.io.gfile.GFile(args.gap_model_path + "gap_graph.pb", 'rb')
@@ -1044,6 +1043,13 @@ if __name__ == '__main__':
         gap_inp = gap_sess.graph.get_tensor_by_name("gap/Placeholder:0")
     else:
         raise Exception(f"The model path {args.gap_model_path} does not exist")
+    '''
+    gap_file = None
+    gap_graph_def = None
+    gap_graph = None
+    gap_sess = None
+    gap_logits = None
+    gap_inp = None
 
     # Normalization mins and maxes for the prediction input
     min_all = [0.006576638437476157, 0.0162050812542916, 0.010040436408026246, 0.013351644159609368, 0.01965362020294499,

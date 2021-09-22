@@ -490,6 +490,12 @@ def subset_contiguous_sunny_dates(dates, probs):
     months_to_adjust_again = []
     indices_to_rm = []
     
+    def _indices_month(dates, x, y, indices_to_rm):
+        indices_month = np.argwhere(np.logical_and(
+                    dates >= x, dates < y)).flatten()
+        indices_month = [x for x in indices_month if x not in indices_to_rm]
+        return indices_month
+
     if len(dates) >= 9:
         for x, y in zip(begin, end):
             indices_month = np.argwhere(np.logical_and(
@@ -503,18 +509,14 @@ def subset_contiguous_sunny_dates(dates, probs):
             three_m_sum = np.sum(n_per_month[x:x+3])
             # If at least 4/9 images and a minimum of 0:
             if three_m_sum >= 4 and np.min(n_per_month[x:x+3]) >= 0:
-                # Add the months to be adjusted
                 months_to_adjust += [x, x+1, x+2]
 
         months_to_adjust = list(set(months_to_adjust))
 
-        # Jan - Mar, Mar - May, May - Jul, Jul - Sep, Sep - Nov, Oct - Dec
-        # This will sometimes take 3 images down to 1 image
+        # This will sometimes take 3 month windows and cap them to 2 images/month
         for x in [0, 2, 4, 6, 8, 10]:
             three_m_sum = np.sum(n_per_month[x:x+3])
-            # For windows that are 2, 2, 2 to 3, 3, 3
             if three_m_sum >= 5 and np.min(n_per_month[x:x+3]) >= 1: 
-                # Prefer to adjust the middle month if possible
                 if n_per_month[x + 1] == 3: # 3, 3, 3 or 2, 3, 2
                     months_to_adjust_again.append(x + 1)
                 elif n_per_month[x] == 3: # 3, 2, 2 
@@ -533,7 +535,6 @@ def subset_contiguous_sunny_dates(dates, probs):
                         cloudiest_idx = np.argmax(probs[indices_month].flatten())
                     else:
                         cloudiest_idx = 1
-                    # Remove the cloudiest image of the 3
                     if len(indices_month) >= 3:
                         indices_to_rm.append(indices_month[cloudiest_idx])
 
@@ -549,7 +550,6 @@ def subset_contiguous_sunny_dates(dates, probs):
                     cloudiest_idx = np.argmax(probs[indices_month].flatten())
                 else:
                     cloudiest_idx = 1
-                # Remove the cloudiest image of the 3
                 if len(indices_month) >= 2:
                     indices_to_rm.append(indices_month[cloudiest_idx])
 
@@ -558,7 +558,7 @@ def subset_contiguous_sunny_dates(dates, probs):
             print(f"Removing: {dates[to_rm]} missed cloudy dates")
             indices_to_rm.extend(to_rm)
 
-        n_remaining = len(dates) - len(indices_to_rm)
+        n_remaining = len(dates) - len(set(indices_to_rm))
         print(f"There are {n_remaining} left, max prob is {np.max(probs)}")
 
         if n_remaining > 12:
@@ -571,29 +571,22 @@ def subset_contiguous_sunny_dates(dates, probs):
             len_to_rm = (n_remaining - 12)
             print(f"Removing {len_to_rm} steps to leave a max of 12")
             if len_to_rm < n_above_10_cloud:
-                print("Removing option 1 because {len_to_rm} is less than {n_above_10_cloud})")
                 max_cloud = np.argpartition(probs, -len_to_rm)[-len_to_rm:]
                 print(f"Removing cloudiest dates: {max_cloud}, {probs[max_cloud]}")
                 indices_to_rm.extend(max_cloud)
             else:
                 # Remove the ones that are > 10% cloud cover
-                print(f"Removing option 2 because {len_to_rm} is greater than {n_above_10_cloud})")
                 if n_above_10_cloud > 0:
                     max_cloud = np.argpartition(probs, -n_above_10_cloud)[-n_above_10_cloud:]
                     print(f"Removing cloudiest dates: {max_cloud}, {probs[max_cloud]}")
                     indices_to_rm.extend(max_cloud)
 
                 # And then remove the second time step for months with multiple images
-                #dates_out = np.copy(dates)
-                #dates_out = np.delete(dates_out, indices_to_rm)
-                
                 n_to_remove = len_to_rm - n_above_10_cloud
                 print(f"Need to remove {n_to_remove} of {n_remaining}")
                 n_removed = 0
                 for x, y in zip(begin, end):
-                    indices_month = np.argwhere(np.logical_and(
-                        dates >= x, dates < y)).flatten()
-                    indices_month = [x for x in indices_month if x not in indices_to_rm]
+                    indices_month = _indices_month(dates, x, y, indices_to_rm)
                     if len(indices_month) > 1:
                         if n_removed <= n_to_remove:
                             if indices_month[1] not in indices_to_rm:
@@ -608,6 +601,47 @@ def subset_contiguous_sunny_dates(dates, probs):
             max_cloud = np.argmax(probs)
             print(f"Removing cloudiest date (cloud_removal): {max_cloud}, {probs[max_cloud]}")
             indices_to_rm.append(max_cloud)
+
+        n_remaining = len(dates) - len(set(indices_to_rm))
+        print(f"There are {n_remaining} left, max prob is {np.max(probs)}")
+        if n_remaining > 10:
+            print("Executing the new logic")
+            probs[indices_to_rm] = 0.
+
+            # This first block will then remove months 3 and 9 if there are at least 10 months with images
+            images_per_month = []
+            for x, y, month in zip(begin, end, np.arange(0, 13, 1)):
+                indices_month = _indices_month(dates, x, y, set(indices_to_rm))
+                images_per_month.append(len(indices_month))
+            print(images_per_month)
+
+            months_with_images = np.sum(np.array(images_per_month) >= 1)
+            print(months_with_images)
+            if months_with_images >= 11:
+                for x, y, month in zip(begin, end, np.arange(0, 13, 1)):
+                    indices_month = _indices_month(dates, x, y, indices_to_rm)
+                    if months_with_images >= 12 and len(indices_month) > 0:
+                        if (month == 3 or month == 9):
+                                indices_to_rm.append(indices_month[0])
+                    elif months_with_images == 11 and len(indices_month) > 0:
+                        if month == 3:
+                            if len(indices_month) > 0:
+                                indices_to_rm.append(indices_month[0])
+
+            # This second block will go back through and remove the second image from months with multiple images
+            elif np.sum(np.array(images_per_month) >= 2) >= 3:
+                n_to_remove = n_remaining - 10
+                n_removed = 0
+                for x, y in zip(begin, end):
+                    indices_month = _indices_month(dates, x, y, indices_to_rm)
+                    if len(indices_month) > 1:
+                        if n_removed < n_to_remove:
+                            if indices_month[1] not in indices_to_rm:
+                                indices_to_rm.append(indices_month[1])
+                            else:
+                                indices_to_rm.append(indices_month[0])
+                            print(f"Removing second image in month: {x}, {indices_month[1]}")
+                        n_removed += 1
 
         print(f"Removing {len(indices_to_rm)} sunny/cloudy dates")
     return indices_to_rm

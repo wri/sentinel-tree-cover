@@ -159,9 +159,9 @@ def predict_subtile(subtile, sess) -> np.ndarray:
     
     return preds
 
-
+"""
 def predict_gap(subtile, sess) -> np.ndarray:
-    """ Runs non-temporal predictions on a (12, 174, 174, 13) array:
+     Runs non-temporal predictions on a (12, 174, 174, 13) array:
         - Calculates remote sensing indices
         - Normalizes data
         - Returns predictions for subtile
@@ -173,7 +173,7 @@ def predict_gap(subtile, sess) -> np.ndarray:
     
         Returns:
          preds (np.ndarray): (160, 160) float32 [0, 1] predictions
-    """
+    
     
     if np.sum(subtile) > 0:
         if not isinstance(subtile.flat[0], np.floating):
@@ -205,7 +205,7 @@ def predict_gap(subtile, sess) -> np.ndarray:
         preds = np.full((SIZE, SIZE), 255)
     
     return preds
-
+"""
 
 def check_if_processed(tile_idx, local_path):
 
@@ -821,7 +821,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-kenya/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-sept-new/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
@@ -843,7 +843,7 @@ if __name__ == "__main__":
 
     superresolve_graph_def = tf.compat.v1.GraphDef()
     predict_graph_def = tf.compat.v1.GraphDef()
-    gap_graph_def = tf.compat.v1.GraphDef()
+    #gap_graph_def = tf.compat.v1.GraphDef()
 
     if os.path.exists(args.superresolve_model_path):
         print(f"Loading model from {args.superresolve_model_path}")
@@ -868,7 +868,7 @@ if __name__ == "__main__":
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
     else:
         raise Exception(f"The model path {args.predict_model_path} does not exist")
-
+    """
     if os.path.exists(args.gap_model_path):
         print(f"Loading gap model from {args.gap_model_path}")
         gap_file = tf.io.gfile.GFile(args.gap_model_path + "gap_graph.pb", 'rb')
@@ -879,7 +879,13 @@ if __name__ == "__main__":
         gap_inp = gap_sess.graph.get_tensor_by_name("gap/Placeholder:0")
     else:
         raise Exception(f"The model path {args.gap_model_path} does not exist")
-
+    """
+    gap_file = None
+    gap_graph_def = None
+    gap_graph = None
+    gap_sess = None
+    gap_logits = None
+    gap_inp = None
     # Normalization mins and maxes for the prediction input
     min_all = [0.006576638437476157, 0.0162050812542916, 0.010040436408026246, 0.013351644159609368, 0.01965362020294499,
                0.014229037918669413, 0.015289539940489814, 0.011993591210803388, 0.008239871824216068, 0.006546120393682765,
