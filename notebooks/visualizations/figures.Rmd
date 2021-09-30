@@ -358,3 +358,483 @@ pl = ggplot()+
 print(pl)
 ```
 
+
+## NEW 2021
+
+```{r}
+library(rgdal)
+library(raster)
+rast <- raster("../analysis/processing_area.tif")
+rast_spdf <- as(rast, "SpatialPixelsDataFrame")
+rast <- as.data.frame(rast_spdf)
+
+```
+
+```{r}
+geojson = "../../references/json/africa_lac.geojson"
+input.proj <- CRS("+proj=longlat + datum=WGS84")
+map <- readOGR(geojson)
+map.df <- fortify(map)
+```
+
+```{r}
+library(ggplot2)
+library(ggalt)
+testing_data = read.csv("../analysis/train_data.csv")
+
+testing_plots = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  geom_point(shape = 21, data = testing_data, aes(x = long, y = lat), fill = "yellow", color = "black", stroke = 0.2, size = 0.8)+
+  theme_bw(base_size = 15)+
+  xlab("")+
+  ylab("")+
+  #ggtitle("Global tree cover plots from Bastin et al. 2017")+
+  #ggtitle("Testing plots - global pixel accuracy")+
+  xlab("Longitude (°)")+
+  ylab("Latitude (°)")+
+  xlim(-115, 55)+
+  ylim(-60, 40)+
+  #scale_y_continuous(breaks= c(-50, -25, 0, 25, 50, 75),
+  #                 labels = c("-50", "-25", "0", "25", "50", "75"))+
+  #scale_x_continuous(breaks= c(-150, -100, -50, 0, 50, 100, 150),
+  #                 labels = c("-150", "-100", "-50", "0", "50", "100", "150"))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_line(color = 'grey40', size = 0.25, linetype = "dashed"),
+        text = element_text(size=15,family="Times"),
+        panel.background = element_rect(fill = NA),
+        panel.ontop = TRUE,
+        )
+
+
+ggsave("../../references/highquality/train_plot_new.pdf", testing_plots, "pdf", width = 7.4, dpi = 600, height = 4.5, units = "in")
+
+print(testing_plots)
+```
+
+```{r}
+---
+title: "Untitled"
+output: html_document
+---
+
+
+
+```{r}
+library(ggplot2)
+
+countries = c('Australia', 'Central Asia', "East South America", 'Europe', 'Horn of Africa', 'Middle East', 'North America', 'Northern Africa', 'Sahel', 'South West Asia', 'Southern Africa', 'West South America')
+# Proposed
+correlations = c(0.69, 0.80, 0.83, 0.78, 0.87, 0.83, 0.73, 0.96, 0.8, 0.71, 0.62, 0.8)
+lower_ci = c(0.52, 0.41, 0.63, 0.62, 0.8, 0.62, 0.53, 0.88, 0.69, 0.55, 0.44, 0.65)
+upper_ci = c(0.83, 0.99, 0.95, 0.89, 0.94, 0.98, 0.88, 1.0, 0.88, 0.96, 0.86, 0.89)
+df_proposed = data.frame("Countries" = countries, "Correlations" = correlations, "Lower" = lower_ci, "Upper" = upper_ci, "Model" = "Proposed")
+
+# Random Forest
+correlations = c(0.42, 0.92, 0.74, 0.77, 0.80, 0.93, 0.68, 0.87, 0.68, 0.63, 0.4, 0.82)
+lower_ci = c(0.11, 0.69, 0.45, 0.63, 0.65, 0.86, 0.5, 0.66, 0.53, 0.46, 0.22, 0.73)
+upper_ci = c(0.68, 0.97, 0.91, 0.88, 0.88, 0.97, 0.84, 1.0, 0.79, 0.82, 0.56, 0.91)
+df_rf = data.frame("Countries" = countries, "Correlations" = correlations, "Lower" = lower_ci, "Upper" = upper_ci, "Model" = "Random Forest")
+
+df = rbind(df_proposed, df_rf)
+```
+
+```{r}
+
+pl0 = ggplot(data = df, aes(x = Countries, y = Correlations, fill=Model))+
+  geom_bar(position = position_dodge(), stat = "identity")+
+  coord_flip()+theme_bw()+ylab("Pearson correlation")+
+  geom_errorbar(aes(ymin=Lower, ymax = Upper), position = position_dodge(width=0.9), width = 0.2)+
+  xlab("")
+
+pl1 = ggplot(data = df_proposed, aes(x = countries, y = Correlations))+
+  geom_col()+coord_flip()+theme_bw()+ylab("Pearson correlation")+
+  geom_errorbar(aes(ymin=Lower, ymax = Upper), width = 0.2)+
+  xlab("")
+
+pl2 = ggplot(data = df_rf, aes(x = countries, y = Correlations))+
+  geom_col()+coord_flip()+theme_bw()+ylab("Pearson correlation")+
+  geom_errorbar(aes(ymin=Lower, ymax = Upper), width = 0.2)+
+  xlab("")
+
+print(pl0)
+```
+```{r}
+print(pl1)
+```
+```{r}
+library(ggplot2)
+
+countries = c('Africa', 'Asia', 'Australia', 'Europe', 'North America', 'South America')
+# Proposed
+correlations = c(0.86, 0.85, 0.76, 0.82, 0.77, 0.90)
+upper_ci = c(0.88, 0.88, 0.81, 0.85, 0.81, 0.92)
+lower_ci = c(0.83, 0.82, 0.69, 0.78, 0.72, 0.88)
+df_proposed = data.frame("Countries" = countries, "Correlations" = correlations, "Lower" = lower_ci, "Upper" = upper_ci, "Model" = "Proposed")
+
+# Random Forest
+correlations = c(0.71, 0.87, 0.59, 0.76, 0.64, 0.89)
+lower_ci = c(0.64, 0.82, 0.45, 0.69, 0.54, 0.85)
+upper_ci = c(0.76, 0.9, 0.71, 0.81, 0.72, 0.92)
+df_rf = data.frame("Countries" = countries, "Correlations" = correlations, "Lower" = lower_ci, "Upper" = upper_ci, "Model" = "Random Forest")
+
+correlations = c(0.78, 0.81, 0.71, 0.66, 0.62, 0.85)
+lower_ci = c(0.73, 0.75, 0.61, 0.57, 0.52, 0.79)
+upper_ci = c(0.82, 0.86, 0.80, 0.74, 0.70, 0.887)
+df_unet = data.frame("Countries" = countries, "Correlations" = correlations, "Lower" = lower_ci, "Upper" = upper_ci, "Model" = "U-Net")
+
+df = rbind(df_proposed, df_rf, df_unet)
+
+library(scales)
+ggplot(data = df, aes(x = Countries, y = Correlations, fill=Model))+
+  geom_bar(position = position_dodge(), stat = "identity")+
+  theme_bw()+ylab("Pearson correlation")+
+  geom_errorbar(aes(ymin=Lower, ymax = Upper), stat = "identity", position = position_dodge(width=.9), width = 0.2)+
+  xlab("")+
+  scale_y_continuous(limits=c(0.4,1),oob = rescale_none)+
+  scale_fill_brewer(type = 'qual')
+```
+
+```{r}
+extrafont::loadfonts(device="pdf")
+library(dplyr)
+library(tidyr)
+library(rgdal)
+library(sp)
+library(sf)
+library(ggplot2)
+library(rgeos)
+library(broom)
+library(mapproj)
+```
+
+```{r}
+geojson = "../../references/json/land.geojson"
+input.proj <- CRS("+proj=longlat + datum=WGS84")
+map <- readOGR(geojson)
+map.df <- fortify(map)
+```
+
+
+```{r, fig.width=11, fig.height=7}
+library(ggalt)
+fao_data = read.csv("../../data/drylands/latlong.csv")
+
+bastin <- ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  geom_point(data = fao_data, aes(x = longs, y = lats), color = "blue4", size = 0.25)+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  theme_bw()+
+  #ggtitle("Global tree cover plots from Bastin et al. 2017")+
+  xlab("")+
+  ylab("")+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+             xlim=c(-130, 167),
+             ylim=c(-58, 80))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"))
+
+ggsave("../../references/pdf/bastin.pdf", bastin, "pdf", width = 8.75, height = 4.5, units = "in")
+#print(bastin)
+```
+
+```{r, fig.width=11, fig.height=7}
+library(ggalt)
+training_data = read.csv("../../tile_data/processed/train_plot_ids.csv")
+
+training_plots = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  geom_point(data = training_data, aes(x = long, y = lat), color = "red", size = 0.005)+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  theme_bw(base_size = 15)+
+  #ggtitle("Training plots")+
+  xlab("")+
+  ylab("")+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+             xlim=c(-130, 167),
+             ylim=c(-58, 80))+
+  scale_y_continuous(breaks= c(-50, -25, 0, 25, 50, 75),
+                   labels = c("-50", "-25", "0", "25", "50", "75"))+
+  scale_x_continuous(breaks= c(-150, -100, -50, 0, 50, 100, 150),
+                   labels = c("-150", "-100", "-50", "0", "50", "100", "150"))+
+  xlab("Longitude (°)")+
+  ylab("Latitude (°)")+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        text = element_text(size=15,family="Times"),
+        axis.line = element_line(color = 'black', size = 0.25))
+       # axis.text.x = element_text(c("-50°", "-25°", "0°", "25°", "50°", "75°")))#+
+  #scalebar(location = "bottomleft", transform = TRUE, dist = 2000, model = "WGS84", dist_unit = "km", x.min = -130, x.max = 167, y.min = -58, y.max = 80, st.bottom = TRUE)
+
+ggsave("../../references/highquality/figure1_new.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in", dpi = 600)
+```
+
+# New training samples 
+```{r}
+library(ggalt)
+training_data = read.csv("../../tile_data/processed/training_plot_ids.csv")
+
+geojson = "../../references/json/custom.geo.json"
+map <- readOGR(geojson)
+map.df <- fortify(map)
+
+training_plots = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  geom_point(data = new_data, aes(x = longs, y = lats), color = "blue", size = 0.2)+
+  geom_point(data = training_data, aes(x = longs, y = lats), color = "red", size = 0.2)+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  theme_bw(base_size = 12)+
+  ggtitle("Training plots")+
+  xlab("")+
+  ylab("")+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+             xlim=c(-100, -80), # -100, -35, -40, 25
+             ylim=c(0, 25))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"))
+
+print(training_plots)
+```
+
+
+```{r, fig.width=11, fig.height=7}
+library(ggalt)
+testing_data = read.csv("../../data/latlongs/test_bastin.csv")
+
+testing_plots = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  geom_point(data = testing_data, aes(x = longs, y = lats), color = "blue3", size = 0.25)+
+  theme_bw(base_size = 15)+
+  xlab("")+
+  ylab("")+
+  #ggtitle("Global tree cover plots from Bastin et al. 2017")+
+  #ggtitle("Testing plots - global pixel accuracy")+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+             xlim=c(-130, 167),
+             ylim=c(-58, 80))+
+  xlab("Longitude (°)")+
+  ylab("Latitude (°)")+
+  scale_y_continuous(breaks= c(-50, -25, 0, 25, 50, 75),
+                   labels = c("-50", "-25", "0", "25", "50", "75"))+
+  scale_x_continuous(breaks= c(-150, -100, -50, 0, 50, 100, 150),
+                   labels = c("-150", "-100", "-50", "0", "50", "100", "150"))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        text = element_text(size=15,family="Times"),
+        axis.line = element_line(color = 'black', size = 0.25))
+
+
+ggsave("../../references/highquality/figure7.pdf", testing_plots, "pdf", width = 9.3, dpi = 600, height = 4.5, units = "in")
+```
+
+```{r}
+library(ggalt)
+geojson = "../../references/json/custom.geo.json"
+map <- readOGR(geojson)
+map.df <- fortify(map)
+
+data = read.csv("../../project-monitoring/database.csv")
+
+ ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  geom_point(data = data, aes(x = longitude, y = latitude), color = "blue3", size = 1.3)+
+  theme_bw(base_size = 9)+
+  xlab("")+
+  ylab("")+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+             xlim=c(-130, 167),
+             ylim=c(-58, 80))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"))+
+  ggtitle("Landscape locations")
+
+```
+
+
+```{r, fig.width=5, fig.height=5}}
+library(ggsn)
+geojson = "../../references/json/custom.geo.json"
+map <- readOGR(geojson)
+map.df <- fortify(map)
+# Honduras
+y <- seq(14.1, 15.1, 0.1)  #(6, 20) #14 x 10
+x <- seq(-88.7, -87.7, 0.1) #(-90, -80)
+
+# Ghana
+y <- seq(7.4, 8.4, 0.1) #(-5, 5) # 10 x 14
+x <- seq(-1.2, -0.2, 0.1) #(-2, 12) 
+
+# Tanzania
+x <- seq(36.7, 37.7, 0.1) # 30, 40 # 10 x 14
+y <- seq(-6.2, -5.2, 0.1) # -10, 4
+
+grid <- expand.grid(x,y)
+grid$latlong <- paste(grid$Var2, grid$Var1)
+local = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.2)+
+  geom_point(data = grid, aes(x = Var1, y = Var2), color = "blue3", size = 0.05)+
+  xlab("Longitude (°)")+
+  ylab("Latitude (°)")+
+  # GHANA
+  #coord_cartesian(ylim = c(-2, 12), xlim = c(-5, 5))+ # Ghana
+  #scalebar(transform = TRUE, dist = 200, model = "WGS84", dist_unit = "km", location = "bottomleft", x.min = -5, x.max = 5, y.min = -2, y.max = 12, st.bottom = FALSE, family = "Times")+ # Ghana
+  #scale_x_continuous(breaks= c(-5.0, -2.5, 0, 2.5, 5.0), # ghana, 4.2 x 6
+  #                 labels = c("-5.0", "-2.5", "0.0", "2.5", "5.0"))+
+  #scale_y_continuous(breaks= c(0, 4, 8, 12),
+  #                 labels = c("0.0", "4.0", "8.0", "12.0"))+
+  # HONDURAS
+  #coord_cartesian(ylim = c(6, 20), xlim = c(-90, -80))+
+  #scalebar(transform = TRUE, dist = 200, model = "WGS84", dist_unit = "km", location = "bottomleft", x.min = -90, x.max = -80, y.min = 6, y.max = 20, st.bottom = FALSE, family = "Times")+
+  #scale_x_continuous(breaks= c(-90.0, -87.5, -85.0, -82.5, -80.0), # honduras, 4.2 x 6
+  #                 labels = c("-90.0", "-87.5", "-85.0", "-82.5", "-80.0"))+
+  #scale_y_continuous(breaks= c(10, 15, 20),
+  #                 labels = c("10.0", "15.0", "20.0"))+
+  # TANZANIA
+  coord_cartesian(xlim = c(30, 40), ylim = c(-10, 4))+
+  scalebar(transform = TRUE, dist = 200, model = "WGS84", dist_unit = "km", location = "bottomleft", y.min = -10, y.max = 4, x.min = 30, x.max = 40, st.bottom = FALSE, family = "Times")+
+  scale_x_continuous(breaks= c(30.0, 32.5, 35.0, 37.5, 40.0), # honduras, 4.2 x 6
+                   labels = c("30.0", "32.5", "35.0", "37.5", "40.0"))+
+  scale_y_continuous(breaks= c(-10, -5, 0),
+                   labels = c("-10.0", "-5.0", "0.0"))+
+  theme_bw(base_size = 12)+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        text = element_text(size=12,family="Times"),
+        axis.line = element_line(color = 'black', size = 0.25))+
+  ggtitle(expression('('~italic(c)~')'))
+
+print(local)
+```
+
+```{r}
+library(grid)
+library(ggmap)
+
+main +
+    inset(ggplotGrob(honduras), xmin = -76.7, xmax = 0, ymin = 20, ymax = 50)
+```
+
+```{r}
+library(ggalt)
+library(plyr)
+geojson = "../../references/json/custom.geo.json"
+mapa <- readOGR(geojson)
+mapa@data$id <- rownames(mapa@data)
+mapa@data   <- join(mapa@data, data)
+mapa.df     <- fortify(mapa)
+mapa.df     <- join(mapa.df,mapa@data, by="id")
+
+mapa.df$name_long = as.character(mapa.df$name_long)
+mapa.df$name_long[mapa.df$name_long == 'Russian Federation'] = 'Russia'
+mapa.df$name_long[mapa.df$name_long == "Côte d'Ivoire"]  = 'Ivory Coast'
+mapa.df$name_long[mapa.df$name_long == 'Republic of Congo'] = 'Democratic Republic of the Congo'
+mapa.df$name_long[mapa.df$name_long == 'Lao PDR'] = 'Laos'
+mapa.df$name_long[mapa.df$name_long == 'Bosnia and Herzegovina']  = 'Bosnia-Herzegovina'
+mapa.df$name_long[mapa.df$name_long == 'Slovakia']  = 'Slovak Republic'
+mapa.df$name_long[mapa.df$name_long == 'Republic of Korea']  = 'South Korea'
+mapa.df$name_long[mapa.df$name_long == 'Dem. Rep. Korea']  = 'North Korea'
+```
+
+```{r}
+gdelt_data = read.table("../../references/gdelt-data.txt", sep = '\t' )
+colnames(gdelt_data) = c("source", "code", "country")
+gdelt_summarized = gdelt_data %>% dplyr::group_by(country) %>% dplyr::summarize(n = dplyr::n())
+colnames(gdelt_summarized) = c('name_long', 'count')
+gdelt_summarized = plyr::join(gdelt_summarized, mapa.df, by = 'name_long', type = 'full')
+```
+
+```{r}
+my_breaks <- round_any(exp(seq(log(10), log(10000), length = 7)), 5)
+my_breaks = c(5, 25, 125,  625, 3125, 15625)
+pl = ggplot()+
+  geom_polygon(data = gdelt_summarized, aes(x = long, y = lat, group = group, fill = count), colour = "black", size = 0.1)+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  theme_bw(base_size = 9)+
+  xlab("")+
+  ylab("")+
+  scale_fill_gradient(name = "Count", trans = "log", breaks = my_breaks, labels = my_breaks)+
+  coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+             xlim=c(-130, 167),
+             ylim=c(-58, 80))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"))+
+  ggtitle("GDELT sources by country")
+
+print(pl)
+```
+
+
+## NEW 2021
+
+```{r}
+library(rgdal)
+library(raster)
+rast <- raster("../analysis/processing_area_clipped.tif")
+rast_spdf <- as(rast, "SpatialPixelsDataFrame")
+rast <- as.data.frame(rast_spdf)
+
+```
+
+```{r}
+geojson = "../../references/json/africa_lac.geojson"
+input.proj <- CRS("+proj=longlat + datum=WGS84")
+map <- readOGR(geojson)
+map.df <- fortify(map)
+```
+
+```{r}
+library(ggplot2)
+library(ggalt)
+testing_data = read.csv("../analysis/train_data.csv")
+
+rast$processing_area = as.factor(rast$processing_area)
+
+testing_plots = ggplot()+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  #geom_point(shape = 21, data = testing_data, aes(x = long, y = lat), fill = "yellow", color = "black", stroke = 0.25, size = 1.0)+
+  geom_raster(data = rast, aes_string(x = "x", y = "y", alpha = 'processing_area', fill = 'processing_area')) +
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = NA, colour = "black", size = 0.1)+
+  theme_bw(base_size = 15)+
+  xlab("")+
+  ylab("")+
+  scale_alpha_manual(values = c(0, 1.), guide = FALSE)+
+  scale_fill_manual(values = c('black', 'lightcoral'), guide = FALSE)+
+  #ggtitle("Global tree cover plots from Bastin et al. 2017")+
+  #ggtitle("Testing plots - global pixel accuracy")+
+  xlab("Longitude (°)")+
+  ylab("Latitude (°)")+
+  xlim(-119, 55)+
+  ylim(-60, 40)+
+  #scale_y_continuous(breaks= c(-50, -25, 0, 25, 50, 75),
+  #                 labels = c("-50", "-25", "0", "25", "50", "75"))+
+  #scale_x_continuous(breaks= c(-150, -100, -50, 0, 50, 100, 150),
+  #                 labels = c("-150", "-100", "-50", "0", "50", "100", "150"))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_line(color = 'grey40', size = 0.25, linetype = "dashed"),
+        text = element_text(size=15,family="Times"),
+        panel.background = element_rect(fill = NA),
+        panel.ontop = TRUE,
+        )
+
+
+ggsave("../../references/highquality/processing_area.png", testing_plots, "png", width = 7.4, dpi = 600, height = 4.5, units = "in")
+
+print(testing_plots)
+```
+```

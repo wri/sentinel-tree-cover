@@ -496,7 +496,7 @@ def subset_contiguous_sunny_dates(dates, probs):
         indices_month = [x for x in indices_month if x not in indices_to_rm]
         return indices_month
 
-    if len(dates) >= 9:
+    if len(dates) >= 8:
         for x, y in zip(begin, end):
             indices_month = np.argwhere(np.logical_and(
                 dates >= x, dates < y)).flatten()
@@ -629,7 +629,7 @@ def subset_contiguous_sunny_dates(dates, probs):
                                 indices_to_rm.append(indices_month[0])
 
             # This second block will go back through and remove the second image from months with multiple images
-            elif np.sum(np.array(images_per_month) >= 2) >= 3:
+            elif np.sum(np.array(images_per_month) >= 2) >= 2:
                 n_to_remove = n_remaining - 10
                 n_removed = 0
                 for x, y in zip(begin, end):
