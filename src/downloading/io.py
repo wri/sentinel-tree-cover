@@ -237,6 +237,18 @@ def download_folder(s3_folder, local_dir, apikey, apisecret, bucket):
         bucket.download_file(obj.key, target)
 
 
+def delete_folder(s3_folder, apikey, apisecret, bucket):
+    """
+    Checks to see if a file/key pair exists locally or on s3 or neither, and downloads the folder
+    """
+
+   
+    s3 = boto3.resource('s3', aws_access_key_id=apikey,
+         aws_secret_access_key= apisecret)
+    bucket = s3.Bucket(bucket)
+    bucket.objects.filter(Prefix=s3_folder).delete()
+
+
 def download_file(s3_file, local_file, apikey, apisecret, bucket):
     """
     Checks to see if a file/key pair exists locally or on s3 or neither,
