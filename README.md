@@ -80,7 +80,7 @@ This model uses a U-Net architecture with the following modifications:
 *  Smoothed image predictions across moving windows with Gaussian filters
 *  A much larger input (28x28) than output (14x14) at training time, with 182x182 and 168x168 input and output size in production, respectively
 
-![img4](references/readme/new_model.png?raw=true)
+![img4](references/readme/model_diagram.png?raw=true)
 
 ## Data
 This project uses Sentinel 1 and Sentinel 2 imagery. Monthly composites of Sentinel 1 VV-VH imagery are fused with the nearest Sentinel 2 10- and 20-meter bands. These images are preprocessed by:
