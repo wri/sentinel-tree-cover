@@ -645,7 +645,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         np.save(output, preds)
 
 
-
 def convert_to_db(x: np.ndarray, min_db: int) -> np.ndarray:
     """ Converts unitless backscatter coefficient
         to db with a min_db lower threshold
@@ -708,55 +707,6 @@ def predict_subtile(subtile, sess) -> np.ndarray:
         preds = np.full((SIZE, SIZE), 255)
     
     return preds
-
-'''
-def predict_gap(subtile, sess) -> np.ndarray:
-    """ Runs non-temporal predictions on a (12, 174, 174, 13) array:
-        - Calculates remote sensing indices
-        - Normalizes data
-        - Returns predictions for subtile
-
-        Parameters:
-         subtile (np.ndarray): monthly sentinel 2 + sentinel 1 mosaics
-                               that will be median aggregated for model input
-         sess (tf.Session): tensorflow session for prediction
-    
-        Returns:
-         preds (np.ndarray): (160, 160) float32 [0, 1] predictions
-    """
-    
-    if np.sum(subtile) > 0:
-        if not isinstance(subtile.flat[0], np.floating):
-            assert np.max(subtile) > 1
-            subtile = subtile / 65535.
-        
-        indices = np.empty((13, subtile.shape[1], subtile.shape[2], 17))
-        indices[:12, ..., :13] = subtile
-        indices[:12, ..., 13] = evi(subtile)
-        indices[:12, ...,  14] = bi(subtile)
-        indices[:12, ...,  15] = msavi2(subtile)
-        indices[:12, ...,  16] = grndvi(subtile)
-        indices[-1] = np.median(indices[:12], axis = 0)
-
-        subtile = indices
-        subtile = subtile.astype(np.float32)
-        subtile = np.clip(subtile, min_all, max_all)
-        subtile = (subtile - midrange) / (rng / 2)
-        subtile = subtile[-1]
-
-
-        batch_x = subtile[np.newaxis]
-        lengths = np.full((batch_x.shape[0]), 12)
-        preds = sess.run(gap_logits,
-                              feed_dict={gap_inp:batch_x})
-
-        preds = preds.squeeze()
-        preds = preds[1:-1, 1:-1]
-    else:
-        preds = np.full((SIZE, SIZE), 255)
-    
-    return preds
-'''
 
 
 def fspecial_gauss(size, sigma):
@@ -988,12 +938,6 @@ if __name__ == '__main__':
     else:
         raise Exception(f"The model path {args.predict_model_path} does not exist")
 
-    gap_file = None
-    gap_graph_def = None
-    gap_graph = None
-    gap_sess = None
-    gap_logits = None
-    gap_inp = None
 
     # Normalization mins and maxes for the prediction input
     min_all = [0.006576638437476157, 0.0162050812542916, 0.010040436408026246, 0.013351644159609368, 0.01965362020294499,
