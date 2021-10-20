@@ -3,7 +3,8 @@ sys.path.append('../')
 from src.preprocessing.cloud_removal import mcm_shadow_mask
 from src.preprocessing.slope import calcSlope
 from src.downloading.utils import calculate_and_save_best_images
-from sentinelhub import WmsRequest, WcsRequest, MimeType, CRS, BBox, constants, DataSource, CustomUrlParam
+from sentinelhub import WmsRequest, WcsRequest, MimeType, CRS, BBox, constants, DataSource, CustomUrlParam, SentinelHubRequest
+from sentinelhub.geo_utils import bbox_to_dimensions
 from typing import Tuple, List
 import numpy as np
 import datetime
@@ -107,11 +108,11 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
     # Download 160 x 160 meter cloud masks, 0 - 255
     box = BBox(cloud_bbx, crs = CRS.WGS84)
     cloud_request = WcsRequest(
-        layer='CLOUD_NEW',
+        layer='CLOUD_NEWEST',
         bbox=box, time=dates,
         resx='160m',resy='160m',
-        image_format = MimeType.TIFF_d8,
-        maxcc=.75, instance_id=api_key,
+        image_format = MimeType.TIFF,
+        maxcc=.9, config=api_key,
         custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
         time_difference=datetime.timedelta(hours=48),
     )
@@ -122,8 +123,8 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
         layer='SHADOW',
         bbox=box, time=dates,
         resx='160m', resy='160m',
-        image_format = MimeType.TIFF_d16,
-        maxcc=.75, instance_id=api_key,
+        image_format = MimeType.TIFF,
+        maxcc=.9, config=api_key,
         custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
         time_difference=datetime.timedelta(hours=48))
     
@@ -206,8 +207,8 @@ def download_dem(bbox: List[Tuple[float, float]],
         layer='DEM',
         bbox=box, 
         resx='10m', resy='10m',
-        image_format = MimeType.TIFF_d16,
-        maxcc=0.75, instance_id=api_key,
+        image_format = MimeType.TIFF,
+        maxcc=0.75, config=api_key,
         custom_url_params = {CustomUrlParam.SHOWLOGO: False,
                             constants.CustomUrlParam.UPSAMPLING: 'NEAREST'})
 
@@ -274,31 +275,12 @@ def make_overlapping_windows(tiles: np.ndarray, diff = 7) -> np.ndarray:
     return tiles2
 
 
-def redownload_sentinel_1(dates: np.ndarray, layer: str, bbox: list, 
-                          source: str, api_key: str, data_filter: np.ndarray) -> np.ndarray:
-    """Worker function to redownload individual time steps if the
-    preceding time step had null values, likely the case in areas with
-    both ascending and descending orbits"""
-
-    image_request = WcsRequest(
-            layer=layer, bbox=bbox,
-            time=dates,
-            image_format = MimeType.TIFF_d16,
-            data_source=source, maxcc=1.0,
-            resx='20m', resy='20m',
-            instance_id=api_key,
-            custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
-                                constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-            time_difference=datetime.timedelta(hours=72),
-        )
-    return np.array(image_request.get_data(data_filter = data_filter))
-
-
-def download_sentinel_1(bbox: List[Tuple[float, float]],
+def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
                         api_key,
                         year: int,
                         dates: dict,
-                        layer: str = "SENT"
+                        size,
+                        layer: str = "SENT",
                         ) -> (np.ndarray, np.ndarray):
     """ Downloads the GRD Sentinel 1 VV-VH layer from Sentinel Hub
         
@@ -314,36 +296,134 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
          s1 (arr):
          image_dates (arr): 
     """
-    days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
-    starting_days = np.cumsum(days_per_month)
 
     # Identify the S1 orbit, imagery dates
     source = DataSource.SENTINEL1_IW_DES if layer == "SENT_DESC" else DataSource.SENTINEL1_IW_ASC
     box = BBox(bbox, crs = CRS.WGS84)
-
-    image_request = WcsRequest(
-            layer=layer, bbox=box,
-            time=dates,
-            image_format = MimeType.TIFF_d16,
-            data_source=source, maxcc=1.0,
-            resx='20m', resy='20m',
-            instance_id=api_key,
-            custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
-                                constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-            time_difference=datetime.timedelta(hours=72),
-        )
-    
-    s1_dates_dict = [x for x in image_request.get_dates()]
-    s1_dates = extract_dates(s1_dates_dict, year)
-    dates_to_download = identify_dates_to_download(s1_dates)
-
-    steps_to_download = [i for i, val in enumerate(s1_dates) if val in dates_to_download]
-    print(f"The following dates will be downloaded: {dates_to_download}")
+    #size = bbox_to_dimensions(box, resolution=20)
     
     # If the correct orbit is selected, download imagery
-    if len(image_request.download_list) >= 2 and len(steps_to_download) >= 2:
-        try:
-            s1 = np.array(image_request.get_data(data_filter = steps_to_download))
+    s1_all = []
+    image_dates = []
+    image_date = 45
+
+    dates_q1 = (f'{str(year)}-01-15' , f'{str(year)}-03-15')
+    dates_q2 = (f'{str(year)}-04-15' , f'{str(year)}-06-15')
+    dates_q3 = (f'{str(year)}-07-15' , f'{str(year)}-09-15')
+    dates_q4 = (f'{str(year)}-10-15' , f'{str(year)}-12-15')
+
+    try:
+        for date in [dates_q1, dates_q2, dates_q3, dates_q4]:
+            evalscript = """
+            //VERSION3
+            function mean(values) {
+                var total = 0, i;
+                for (i = 0; i < values; i += 1) {
+                    total += values[i];
+                }
+                return total / values.length;
+            }
+
+
+
+            function median(values) {
+                if (values.length === 0) return 0;
+                if (values.length === 1) return values[0];
+
+                values.sort(function(a, b) {
+                    return a - b;
+                });
+
+                var half = Math.floor(values.length / 2);
+                if (values.length % 2 === 0) {
+                    return (values[half - 1] + values[half]) / 2;
+                }
+
+                return values[half];
+            }
+
+
+            function evaluatePixel(samples) {
+                // Initialise arrays
+                var VV_samples = [];
+                var VH_samples = [];
+                
+                // Loop through orbits and add data
+                for (let i=0; i<samples.length; i++){
+                  // Ignore noData
+                  if (samples[i].dataMask != 0){
+                    VV_samples.push(samples[i].VV);
+                    VH_samples.push(samples[i].VH);
+                   }
+                }  
+                
+                const factor = 65535;
+                
+                if (VV_samples.length == 0){
+                  var VV_median = [factor];
+                } else {
+                  var VV_median = median(VV_samples) * factor;
+                }
+                if (VH_samples.length == 0){
+                  var VH_median = [factor];
+                } else{
+                  var VH_median = median(VH_samples) * factor;
+                }
+                
+                return [VV_median, VH_median];
+            }
+
+            function setup() {
+              return {
+                input: [{
+                  bands: [
+                    "VV",
+                    "VH",
+                    "dataMask",
+                         ]
+                }],
+                output: {
+                  bands: 2,
+                  sampleType:"UINT16"
+                },
+                mosaicking: "ORBIT"
+              }
+            }
+            """
+
+            request = SentinelHubRequest(
+                evalscript=evalscript,
+                input_data=[
+                    SentinelHubRequest.input_data(
+                        data_collection=source,          
+                        time_interval=date,
+                        other_args={
+                            "processing": {
+                                "backCoeff": "GAMMA0_TERRAIN",
+                                "orthorectify": "true",
+                                "speckleFilter": {
+                                    "type": "NONE"
+                                },
+                                "orthorectify": "true",
+                                "demInstance": "MAPZEN",
+                                "type": "S1GRD",
+                                "resolution": "HIGH",
+                                "polarization": "DV",
+                            }
+                        },         
+                    ),
+                ],
+                responses=[
+                SentinelHubRequest.output_response('default', MimeType.TIFF)
+                ],
+                bbox=box,
+                size = [size[1] // 2, size[0] // 2],
+                config=api_key
+            )
+
+            s1 = np.array(request.get_data())
+            print(f"Shape of returned images for {date} = {s1[0].shape[0:2]}")
+
             if not isinstance(s1.flat[0], np.floating):
                 assert np.max(s1) > 1
                 s1 = np.float32(s1) / 65535.
@@ -353,53 +433,28 @@ def download_sentinel_1(bbox: List[Tuple[float, float]],
             width = s1.shape[2]
 
             s1_usage = (4/3) * s1.shape[0] * ((s1.shape[1]*s1.shape[2]) / (512*512))
-            print(f"Sentinel 1 used {round(s1_usage, 1)} PU for "
-                  f" {s1.shape[0]} out of {len(image_request.download_list)} images")
+            print(f"Sentinel 1 used {round(s1_usage, 1)} PU for {image_date}")
 
-            image_dates_dict = [x for x in image_request.get_dates()]
-            image_dates = extract_dates(image_dates_dict, year)
-            image_dates = [val for idx, val in enumerate(image_dates) if idx in steps_to_download]
-            image_dates = np.array(image_dates)
+            if np.sum(s1 == 1) < (height * width / 10):
+                s1_all.append(s1)
+                image_dates.append(image_date)
+            elif date == dates_q1 and np.sum(s1 == 1) >= (height * width):
+                return np.empty((0,)), np.empty((0,))
 
-            n_pix_oob = np.sum(s1 >= 1, axis = (1, 2, 3))
-            print(f"N_oob: {n_pix_oob}")
-            to_remove = np.argwhere(n_pix_oob > (height*width)/5)
-            
-            if len(to_remove) > 0:
-                for index in to_remove:
+            image_date += 90
 
-                    index = index[0]
-                    step = steps_to_download[index]
-                    new_step = step + 1
+        s1 = np.concatenate(s1_all, axis = 0)
+        s1 = np.clip(s1, 0, 1)
+        image_dates = np.array(image_dates).repeat(12 // s1.shape[0], axis = 0)
+        print(image_dates)
 
-                    print(f'Redownloading {new_step} because {step} had '
-                          f'{n_pix_oob[index]} missing or null values')
-                    new_s1 = redownload_sentinel_1(dates, layer, box, source, api_key, [new_step])
-                    new_s1 = np.float32(new_s1) / 65535.
-                    print(f"The new step has {np.sum(new_s1 >= 1)} and is {new_s1.shape}")
-                    s1[index] = new_s1
-                    image_dates[index] = image_dates[index] + 5
+        s1 = s1.repeat(12 // s1.shape[0], axis = 0)
+        s1 = s1.repeat(4,axis=1).repeat(4,axis=2)
+        return s1, image_dates
 
-            n_pix_oob = np.sum(s1 >= 1, axis = (1, 2, 3))
-            print(f"N_oob: {n_pix_oob}")
-            to_remove = np.argwhere(n_pix_oob > (height*width)/10)
-            print(to_remove)
-            print(s1.shape)
-            if len(to_remove) > 0:
-                s1 = np.delete(s1, to_remove, 0)
-                image_dates = np.delete(image_dates, to_remove)
-            print(s1.shape)
-            s1 = np.clip(s1, 0, 1)
-            s1 = s1.repeat(12 // s1.shape[0], axis = 0)
-            image_dates = np.array(image_dates).repeat(2, axis = 0)
-            s1 = s1.repeat(2,axis=1).repeat(2,axis=2)
-            return s1, image_dates
-
-        except:
-            return np.empty((0,)), np.empty((0,))
-    else: 
+    except:
         return np.empty((0,)), np.empty((0,))
-
+   
 
 def identify_s1_layer(coords: Tuple[float, float]) -> str:
     """ Identifies whether to download ascending or descending 
@@ -464,9 +519,9 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
     image_request = WcsRequest(
             layer='L2A20',
             bbox=box, time=dates,
-            image_format = MimeType.TIFF_d16,
-            maxcc=0.75, resx='20m', resy='20m',
-            instance_id=api_key,
+            image_format = MimeType.TIFF,
+            maxcc=0.9, resx='20m', resy='20m',
+            config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
                                 constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
             time_difference=datetime.timedelta(hours=72),
@@ -479,9 +534,9 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
     quality_request = WcsRequest(
             layer='DATA_QUALITY',
             bbox=box, time=dates,
-            image_format = MimeType.TIFF_d8,
-            maxcc=0.75, resx='160m', resy='160m',
-            instance_id=api_key,
+            image_format = MimeType.TIFF,
+            maxcc=0.9, resx='160m', resy='160m',
+            config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
                                 constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
             time_difference=datetime.timedelta(hours=72),
@@ -512,9 +567,9 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
     image_request = WcsRequest(
             layer='L2A10',
             bbox=box, time=dates,
-            image_format = MimeType.TIFF_d16,
-            maxcc=0.75, resx='10m', resy='10m',
-            instance_id=api_key,
+            image_format = MimeType.TIFF,
+            maxcc=0.9, resx='10m', resy='10m',
+            config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'BICUBIC',
                                 constants.CustomUrlParam.UPSAMPLING: 'BICUBIC'},
             time_difference=datetime.timedelta(hours=72),

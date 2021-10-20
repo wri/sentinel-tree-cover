@@ -166,3 +166,90 @@ print("Baseline: The negative is: {}".format(weights[1]))
 print("\n")
 print("Balanced: The positive is: {}".format(weight*weights[0]))
 print("Balanced: The negative is: {}".format(weights[1]))
+
+
+def make_stc(subtile, sess, s1_subtile, dem_subtile):
+
+    b2 = subtile[..., 0]
+    b3 = subtile[..., 1]
+    b4 = subtile[..., 2]
+    b8 = subtile[..., 3]
+    b8a = subtile[..., 7]
+    b11 = subtile[..., 8]
+    b12 = subtile[..., 9]
+
+    mndwi = (b3 - b11) / (b3 + b11)
+    ndvi = (b8 - b4) / (b8 + b4)
+    tcb = ((0.3029 * b2) + (0.2786 * b3) + (0.47 * b4) + (0.5599 * b8a) +\
+    (0.508 * b11) + (0.1872 * b12))
+
+    stc = np.nan((SIZE, SIZE, 10))
+
+    first_criteria = np.logical_and(np.mean(mndwi, axis = 0) < -0.55, (ndvi[ndvi_argmax] - np.mean(ndvi, axis = 0)) < 0.05)
+    second_criteria = np.logical_and(np.mean(ndvi, axis = 0) < -0.3, (np.mean(mndwi, axis = 0) - np.min(ndvi, axis = 0)) < 0.05)
+    third_criteria = np.logical_and(np.mean(ndvi, axis = 0) > 0.6, np.mean(tcb, axis = 0) < 0.45)
+    fourth_criteria = np.mean(ndvi, axis = 0) < - 0.2
+
+    # pixels with the max NDVI
+    # argmax of ndvi for each pixel
+    # argmax 
+
+    stc[first_criteria] = maxndvi
+    stc[np.logical_and(second_criteria, np.isnan(stc))] = maxndwi
+    stc[np.logical_and(third_criteria, np.isnan(stc))] = maxndvi
+    stc[np.logical_and(fourth_criteria, np.isnan(stc))] = maxndwi
+    stc[np.isnan(stc)] = maxndvi
+    stc = superresolve(stc, sess)
+    stc_tile = np.empty((SIZE, SIZE, 13))
+    stc_tile[..., :10] = stc
+    stc_tile[..., 10] = dem_subtile.repeat(12, axis = 0)
+    subtile[..., 11:] = s1_subtile
+    return stc
+
+
+
+def predict_stc(subtile, sess) -> np.ndarray:
+    """ Runs non-temporal predictions on a (12, 174, 174, 13) array:
+        - Calculates remote sensing indices
+        - Normalizes data
+        - Returns predictions for subtile
+
+        Parameters:
+         subtile (np.ndarray): monthly sentinel 2 + sentinel 1 mosaics
+                               that will be median aggregated for model input
+         sess (tf.Session): tensorflow session for prediction
+    
+        Returns:
+         preds (np.ndarray): (160, 160) float32 [0, 1] predictions
+    """
+    
+    if np.sum(subtile) > 0:
+        if not isinstance(subtile.flat[0], np.floating):
+            assert np.max(subtile) > 1
+            subtile = subtile / 65535.
+        
+        indices = np.empty((subtile.shape[1], subtile.shape[2], 17))
+        indices[..., :13] = subtile
+        indices[..., 13] = evi(subtile)
+        indices[...,  14] = bi(subtile)
+        indices[...,  15] = msavi2(subtile)
+        indices[...,  16] = grndvi(subtile)
+
+        subtile = indices
+        subtile = subtile.astype(np.float32)
+        subtile = np.clip(subtile, min_all, max_all)
+        subtile = (subtile - midrange) / (rng / 2)
+        subtile = subtile[-1]
+
+
+        batch_x = subtile[np.newaxis]
+        lengths = np.full((batch_x.shape[0]), 12)
+        preds = sess.run(gap_logits,
+                              feed_dict={gap_inp:batch_x})
+
+        preds = preds.squeeze()
+        preds = preds[1:-1, 1:-1]
+    else:
+        preds = np.full((SIZE, SIZE), 255)
+    
+    return preds

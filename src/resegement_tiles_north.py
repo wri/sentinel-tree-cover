@@ -369,7 +369,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         # Select between temporal and median models for prediction, based on simple logic:
         # If the first image is after June 15 or the last image is before July 15
         # or the maximum gap is >270 days or < 5 images --- then do median, otherwise temporal
-        no_images = True if len(dates_tile) < 3 else no_images
+        no_images = True if len(dates_tile) < 2 else no_images
         if no_images:
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates -- no data")
             preds = np.full((SIZE, SIZE), 255)
@@ -465,7 +465,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         left_mean = np.nanmean(tile_tif[0, :])
         print(right_mean, left_mean)
 
-        if abs(right_mean - left_mean) > 13:
+        if abs(right_mean - left_mean) > 10:
             
             download_raw_tile((tile_x, tile_y), local_path, "processed")
             test_subtile = np.load(f"{local_path}/{tile_x}/{tile_y}/processed/0/0.npy")
@@ -514,7 +514,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
 
     print("Aligning the dates between the tiles")
     to_rm_tile, to_rm_neighb = align_dates(dates, dates_neighb)
-    if ((len(dates) - len(to_rm_tile)) < 5) or ((len(dates_neighb) - len(to_rm_neighb)) < 5):
+    if ((len(dates) - len(to_rm_tile)) < 6) or ((len(dates_neighb) - len(to_rm_neighb)) < 6):
         dates = dates[:len(dates_neighb)]
         s2 = s2[:len(dates_neighb)]
         interp = interp[:len(dates_neighb)]
@@ -821,7 +821,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-sept-new/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-oct-finetune/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")

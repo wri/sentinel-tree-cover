@@ -80,6 +80,7 @@ if __name__ == "__main__":
     else:
         raise Exception(f"The database does not exist at {args.db_path}")
 
+    country = str(args.country).replace(" ", "_").lower()
     for index, row in data.iterrows():
         try:
             x = str(int(row['X_tile']))
@@ -89,7 +90,7 @@ if __name__ == "__main__":
             
             path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/raw/'
             path_to_tile_s3 = f'2020/raw/{str(x)}/{str(y)}/'
-            path_to_tile_archive = f'2020/raw-archive/{str(args.country).lower()}/{str(x)}/{str(y)}/'
+            path_to_tile_archive = f'2020/raw-archive/{country}/{str(x)}/{str(y)}/'
             path_to_local_archive = f"{str(x)}X{str(y)}Y"
 
 

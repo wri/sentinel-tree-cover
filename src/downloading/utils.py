@@ -185,7 +185,7 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
             prior_flag = 0
             prior_mult = 1
             if len(prior) == 0:
-                if np.min(satisfactory_dates) >= 70: # this doesn't quite work because its an iterative
+                if np.min(satisfactory_dates) >= 90: # this doesn't quite work because its an iterative
                     #print(f"No previous image: {i}, using last first 3 images: {i + distances[-3:]}")
                     prior = distances[-3:]
                     prior_flag = 365
@@ -193,7 +193,7 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
                 else:
                     prior = after
             if len(after) == 0:
-                if np.max(satisfactory_dates) <= 295:
+                if np.max(satisfactory_dates) <= 270:
                     # check if the date is after 275
                     #print(f"No after image: {i}, using the first 3 images: {i + distances[:3]}")
                     after = distances[:3]

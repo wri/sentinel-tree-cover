@@ -363,7 +363,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         # Select between temporal and median models for prediction, based on simple logic:
         # If the first image is after June 15 or the last image is before July 15
         # or the maximum gap is >270 days or < 5 images --- then do median, otherwise temporal
-        no_images = True if len(dates_tile) < 3 else no_images
+        no_images = True if len(dates_tile) < 2 else no_images
         if no_images:
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates -- no data")
             preds = np.full((SIZE, SIZE), 255)
@@ -457,7 +457,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         left_mean = np.nanmean(tile_tif[:, -1])
         print(right_mean, left_mean)
 
-        if abs(right_mean - left_mean) > 13:
+        if abs(right_mean - left_mean) > 10:
             
             download_raw_tile((tile_x, tile_y), local_path, "processed")
             test_subtile = np.load(f"{local_path}/{tile_x}/{tile_y}/processed/0/0.npy")
@@ -508,7 +508,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
 
     print("Aligning the dates between the tiles")
     to_rm_tile, to_rm_neighb = align_dates(dates, dates_neighb)
-    if ((len(dates) - len(to_rm_tile)) < 5) or ((len(dates_neighb) - len(to_rm_neighb)) < 5):
+    if ((len(dates) - len(to_rm_tile)) < 6) or ((len(dates_neighb) - len(to_rm_neighb)) < 6):
         dates = dates[:len(dates_neighb)]
         s2 = s2[:len(dates_neighb)]
         interp = interp[:len(dates_neighb)]
@@ -703,20 +703,21 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
     print(f"There are: {predictions.shape[-1] - n_border} normal tiles")
 
     for i in range(predictions.shape[-1] - n_border):
-        if overpredict:
-            problem_tile = True if np.nanmean(predictions[..., i]) > mean_certain_pred else False
-        if underpredict:
-            problem_tile = True if np.nanmean(predictions[..., i]) < mean_certain_pred else False
-        range_i = np.copy(predictions_range)
-        range_i[np.isnan(predictions[..., i])] = np.nan
-        range_i = range_i[~np.isnan(range_i)]
-        
-        range_i = np.reshape(range_i, (168 // 56, 56, 168 // 56, 56))
-        range_i = np.mean(range_i, axis = (1, 3))
-        n_outliers = np.sum(range_i > 50)
-        if n_outliers >= 2 and problem_tile:
-            predictions[..., i] = np.nan
-            mults[..., i] = 0.
+        if np.sum(~np.isnan(predictions[..., i])  > 0):
+            if overpredict:
+                problem_tile = True if np.nanmean(predictions[..., i]) > mean_certain_pred else False
+            if underpredict:
+                problem_tile = True if np.nanmean(predictions[..., i]) < mean_certain_pred else False
+            range_i = np.copy(predictions_range)
+            range_i[np.isnan(predictions[..., i])] = np.nan
+            range_i = range_i[~np.isnan(range_i)]
+            
+            range_i = np.reshape(range_i, (168 // 56, 56, 168 // 56, 56))
+            range_i = np.mean(range_i, axis = (1, 3))
+            n_outliers = np.sum(range_i > 50)
+            if n_outliers >= 2 and problem_tile:
+                predictions[..., i] = np.nan
+                mults[..., i] = 0.
 
     
     mults = mults / np.sum(mults, axis = -1)[..., np.newaxis]
@@ -798,7 +799,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-sept-new/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-oct-finetune/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
@@ -889,7 +890,7 @@ if __name__ == "__main__":
     print(len(data))
     
     for index, row in data.iterrows(): # We want to sort this by the X so that it goes from left to right
-        if index > int(args.start_id):
+        if index >= int(args.start_id):
             x = str(int(row['X_tile']))
             y = str(int(row['Y_tile']))
             x = x[:-2] if ".0" in x else x
