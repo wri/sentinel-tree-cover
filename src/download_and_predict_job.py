@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from random import shuffle
 from sentinelhub import WmsRequest, WcsRequest, MimeType, CRS, BBox, constants
+from sentinelhub.config import SHConfig
 import logging
 import datetime
 import os
@@ -72,7 +73,8 @@ def superresolve_tile(arr: np.ndarray, sess) -> np.ndarray:
     return arr
 
 
-def id_iqr_outliers(arr):
+def id_iqr_outliers(arr: np.ndarray) -> (np.ndarray, np.ndarray):
+    """Identifies 2 IQR upper and lower threshold"""
     if arr.shape[0] > 6:
         lower_qr = np.percentile(arr, 25, axis = 0)
         upper_qr = np.percentile(arr, 75, axis = 0)
@@ -82,7 +84,6 @@ def id_iqr_outliers(arr):
         return lower_thresh, upper_thresh
     else:
         return None, None
-
         
 
 def make_bbox(initial_bbx: list, expansion: int = 10) -> list:
@@ -103,7 +104,51 @@ def make_bbox(initial_bbx: list, expansion: int = 10) -> list:
     bbx[2] += expansion * multiplier
     bbx[3] += expansion * multiplier
     return bbx
-    
+
+
+def download_s1_tile(data, bbx, api_key, year, dates_sentinel_1, size, s1_file, s1_dates_file):
+    """Downloads the sentinel 1 data for a tile
+       
+       Parameters:
+            data (pd.DataFrame): dataframe of tile to be downloaded
+            bbx (list): bounding box for tile
+            api_key (sentinelhub.shconfig): API keys for sentinel hub
+            year (int): year of imagery
+            dates_sentinel_1 (list):
+            size (tuple): size of array to make
+            s1_file (str): path to save s1 data
+            s1_dates_file (str): path to save s1 dates data
+
+       Returns:
+            None
+
+    """
+    print(f"Downloading {s1_file}")
+    s1_layer = tof_downloading.identify_s1_layer((data['Y'][0], data['X'][0]))
+    s1, s1_dates = tof_downloading.download_sentinel_1_composite(bbx,
+                                       layer = s1_layer,
+                                       api_key = api_key,
+                                       year = year,
+                                       dates = dates_sentinel_1,
+                                       size = size,
+                                       )
+
+    if s1.shape[0] == 0: # If the first attempt receives no images, swap orbit
+        s1_layer = "SENT_DESC" if s1_layer == "SENT" else "SENT_DESC"
+        print(f'Switching to {s1_layer}')
+        s1, s1_dates = tof_downloading.download_sentinel_1_composite(bbx,
+                                           layer = s1_layer,
+                                           api_key = api_key,
+                                           year = year,
+                                           dates = dates_sentinel_1,
+                                           size = size,
+                                           )
+                                           #config = api_key)
+    # Convert s1 to monthly mosaics, and write to disk
+    s1 = tof_downloading.process_sentinel_1_tile(s1, s1_dates)
+    hkl.dump(to_int16(s1), s1_file, mode='w', compression='gzip')
+    hkl.dump(s1_dates, s1_dates_file, mode='w', compression='gzip')
+
 
 def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
     """Downloads the data for an input x, y tile centroid
@@ -206,11 +251,15 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             shadows = np.delete(shadows, max_cloud, 0)
             cloud_shadows = np.delete(cloud_shadows, max_cloud, 0)
 
+        if len(clean_dates) >= 11:
+            clean_dates = np.delete(clean_dates, 5)
+            cloud_probs = np.delete(cloud_probs, 5, 0)
+            shadows = np.delete(shadows, 5, 0)
+            cloud_shadows = np.delete(cloud_shadows, 5, 0)
+
         cloud_removal.print_dates(clean_dates, cloud_shadows)
 
         print(f"Overall using {len(clean_dates)}/{len(clean_dates)+len(to_remove)} steps")
-        print(clean_dates)
-
         hkl.dump(cloud_probs, clouds_file, mode='w', compression='gzip')
         hkl.dump(shadows, shadows_file, mode='w', compression='gzip')
         hkl.dump(clean_dates, clean_steps_file, mode='w', compression='gzip')
@@ -242,33 +291,53 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         hkl.dump(to_int16(s2_10), s2_10_file, mode='w', compression='gzip')
         hkl.dump(to_int16(s2_20), s2_20_file, mode='w', compression='gzip')
         hkl.dump(s2_dates, s2_dates_file, mode='w', compression='gzip')
+        size = s2_20.shape[1:3]
             
     if not (os.path.exists(s1_file)):
-        print(f"Downloading {s1_file}")
-        s1_layer = tof_downloading.identify_s1_layer((data['Y'][0], data['X'][0]))
-        s1, s1_dates = tof_downloading.download_sentinel_1(bbx,
-                                           layer = s1_layer,
-                                           api_key = api_key,
-                                           year = year,
-                                           dates = dates_sentinel_1)
-        if s1.shape[0] == 0: # If the first attempt receives no images, swap orbit
-            s1_layer = "SENT_DESC" if s1_layer == "SENT" else "SENT"
-            print(f'Switching to {s1_layer}')
-            s1, s1_dates = tof_downloading.download_sentinel_1(bbx,
-                                               layer = s1_layer,
-                                               api_key = api_key,
-                                               year = year,
-                                               dates = dates_sentinel_1)
-        # Convert s1 to monthly mosaics, and write to disk
-        s1 = tof_downloading.process_sentinel_1_tile(s1, s1_dates)
-        hkl.dump(to_int16(s1), s1_file, mode='w', compression='gzip')
-        hkl.dump(s1_dates, s1_dates_file, mode='w', compression='gzip')
-                
+        download_s1_tile(data = data, 
+                         bbx = bbx,
+                         api_key = api_key,
+                         year = year, 
+                         dates_sentinel_1 = dates_sentinel_1, 
+                         size = size, 
+                         s1_file = s1_file, 
+                         s1_dates_file = s1_dates_file)
+
     if not os.path.exists(dem_file):
         print(f'Downloading {dem_file}')
-        dem = tof_downloading.download_dem(dem_bbx, api_key = API_KEY)
+        dem = tof_downloading.download_dem(dem_bbx, api_key = api_key)
         hkl.dump(dem, dem_file, mode='w', compression='gzip')
+
     return bbx
+
+
+def adjust_shape(arr, width, height):
+    print(f"Input array shape: {arr.shape}")
+    if len(arr.shape) == 3:
+        arr = arr[:, :, :, np.newaxis]
+
+    if len(arr.shape) == 2:
+        arr = arr[np.newaxis, :, :, np.newaxis]
+
+    if arr.shape[1] < width:
+        pad_amt = (width - arr.shape[1]) // 2
+        arr = np.pad(arr, ((0, 0), (pad_amt, pad_amt), (0,0), (0, 0)), 'edge')
+
+    if arr.shape[2] < height:
+        pad_amt = (width - arr.shape[2]) // 2
+        arr = np.pad(arr, ((0, 0), (0,0), (pad_amt, pad_amt), (0, 0)), 'edge')
+
+    if arr.shape[1] > width:
+        pad_amt =  (arr.shape[1] - width) // 2
+        arr = arr[:, pad_amt:-pad_amt, ...]
+
+    if arr.shape[2] > height:
+        pad_amt = (arr.shape[2] - height) // 2
+        arr = arr[:, :, pad_amt:-pad_amt, ...]
+
+    arr = arr.squeeze()
+    print(f"Output array shape: {arr.shape}")
+    return arr
 
 
 def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
@@ -324,7 +393,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
     s2_10 = to_float32(hkl.load(s2_10_file))
     s2_20 = to_float32(hkl.load(s2_20_file))
 
-
     dem = hkl.load(dem_file)
     dem = median_filter(dem, size = 5)
     image_dates = hkl.load(s2_dates_file)
@@ -332,21 +400,16 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
     # The below code is somewhat ugly, but it is geared to ensure that the
     # Different data sources are all the same shape, as they are downloaded
     # with varying resolutions (10m, 20m, 60m, 160m)
-    width = s2_10.shape[1]
+    width = s2_20.shape[1] * 2
     height = s2_20.shape[2] * 2
-    
-    if clouds.shape[1] < width:
-        pad_amt =  (width - clouds.shape[1]) // 2
-        clouds = np.pad(clouds, ((0, 0), (pad_amt, pad_amt), (0,0)), 'edge')
-        
-    if shadows.shape[1] < width:
-        pad_amt =  (width - shadows.shape[1]) // 2
-        shadows = np.pad(shadows, ((0, 0), (pad_amt, pad_amt), (0,0)), 'edge')
-        
-    if dem.shape[0] < width:
-        pad_amt =  (width - dem.shape[0]) // 2
-        dem = np.pad(dem, ((pad_amt, pad_amt), (0, 0)), 'edge')
-        
+
+    # Clouds
+    clouds = adjust_shape(clouds, width, height)
+    shadows = adjust_shape(shadows, width, height)
+    s1 = adjust_shape(s1, width, height)
+    dem = adjust_shape(dem, width, height)
+
+    # S2 10
     if s2_10.shape[2] < height:
         pad_amt =  (height - s2_10.shape[2]) / 2
         if pad_amt % 2 == 0:
@@ -359,18 +422,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
         pad_amt =  abs(height - s2_10.shape[2])
         s2_10 = s2_10[:, :, :-pad_amt, :]
         print(s2_10.shape)
-       
-    if dem.shape[1] < height:
-        pad_amt =  (height - dem.shape[1]) / 2
-        if pad_amt % 2 == 0:
-            pad_amt = int(pad_amt)
-            dem = np.pad(dem, ((0, 0), (pad_amt, pad_amt)), 'edge')
-        else:
-            dem = np.pad(dem, ( (0, 0), (0, int(pad_amt * 2))), 'edge')
-            
-    if dem.shape[1] > height:
-        pad_amt =  abs(height - dem.shape[1])
-        dem = dem[:, :-pad_amt]
         
     print(f'Clouds: {clouds.shape}, \nShadows: {shadows.shape} \n'
           f'S1: {s1.shape} \nS2: {s2_10.shape}, {s2_20.shape} \nDEM: {dem.shape}')
@@ -418,8 +469,8 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
     # interpolate cloud and cloud shadows linearly
     sentinel2, interp = cloud_removal.remove_cloud_and_shadows(sentinel2, clouds, shadows, image_dates)
     to_remove_interp = np.argwhere(np.sum(interp, axis = (1, 2)) > (sentinel2.shape[1] * sentinel2.shape[2] * 0.5) ).flatten()
-
-    if len(to_remove_interp > 0):
+    #to_remove_interp = [2]
+    if len(to_remove_interp) > 0:
         print(f"Removing: {to_remove_interp}")
         sentinel2 = np.delete(sentinel2, to_remove_interp, 0)
         image_dates = np.delete(image_dates, to_remove_interp)
@@ -488,7 +539,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     gap_between_years = False
     t = 0
-    sm = Smoother(lmbd = 800, size = 72, nbands = 10, dim = SIZE + 14)
+    sm = Smoother(lmbd = 800, size = 72, nbands = 10, dim = SIZE + 14, outsize = 12)
     n_median = 0
     median_thresh = 5
     # Iterate over each subitle and prepare it for processing and generate predictions
@@ -558,8 +609,11 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             dem_subtile = np.pad(dem_subtile, ((0, 0,), (pad_l, pad_r), (0, 0)), 'reflect')
 
         # Interpolate (whittaker smooth) the array and superresolve 20m to 10m
+        #subtile = np.concatenate([subtile[:18], subtile, subtile[-18:]], axis = 0)
         subtile = sm.interpolate_array(subtile)
-        #subtile_stc = make_stc(subtile, superresolve_sess, dem_subtile, s1_subtile)
+        #subtile = subtile[3:-3, ...]
+        print(subtile.shape)
+
         subtile_s2 = superresolve_tile(subtile, sess = superresolve_sess)
 
         # Concatenate the DEM and Sentinel 1 data
@@ -585,29 +639,11 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates -- no data")
             preds = np.full((SIZE, SIZE), 255)
         else:
-            #! TODO: or if start - end is > some % threshold difference for EVI suggesting deforestation
-            """
-            if dates_tile[0] >= 180 or dates_tile[-1] <= 180 or max_distance > 300 or args.model == "median" or len(dates_tile) < 2:
-                if args.model != 'time':
-                    n_median += 1
-                    print(f"There are {n_median}/{median_thresh} medians in tile")
-                    if not gap_between_years and n_median >= median_thresh:
-                        if t > n_median:
-                            print("Restarting the predictions with median")
-                            t = 0 if t > 1 else t
-                        gap_between_years = True
-            if (len(dates_tile) < 2 or gap_between_years) or args.model == "median":
-                # Then run the median prediction
-                print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
-                    f" median, {max_distance} max dist")
-                preds = predict_gap(subtile, gap_sess)
-            """
-            #else:
-                # Otherwise run the non-median prediction
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
                 f" time series, {max_distance} max dist")
             preds = predict_subtile(subtile, sess)
         np.save(output, preds)
+
 
 
 def convert_to_db(x: np.ndarray, min_db: int) -> np.ndarray:
@@ -721,92 +757,6 @@ def predict_gap(subtile, sess) -> np.ndarray:
     
     return preds
 '''
-
-def make_stc(subtile, sess, s1_subtile, dem_subtile):
-
-    b2 = subtile[..., 0]
-    b3 = subtile[..., 1]
-    b4 = subtile[..., 2]
-    b8 = subtile[..., 3]
-    b8a = subtile[..., 7]
-    b11 = subtile[..., 8]
-    b12 = subtile[..., 9]
-
-    mndwi = (b3 - b11) / (b3 + b11)
-    ndvi = (b8 - b4) / (b8 + b4)
-    tcb = ((0.3029 * b2) + (0.2786 * b3) + (0.47 * b4) + (0.5599 * b8a) +\
-    (0.508 * b11) + (0.1872 * b12))
-
-    stc = np.nan((SIZE, SIZE, 10))
-
-    first_criteria = np.logical_and(np.mean(mndwi, axis = 0) < -0.55, (ndvi[ndvi_argmax] - np.mean(ndvi, axis = 0)) < 0.05)
-    second_criteria = np.logical_and(np.mean(ndvi, axis = 0) < -0.3, (np.mean(mndwi, axis = 0) - np.min(ndvi, axis = 0)) < 0.05)
-    third_criteria = np.logical_and(np.mean(ndvi, axis = 0) > 0.6, np.mean(tcb, axis = 0) < 0.45)
-    fourth_criteria = np.mean(ndvi, axis = 0) < - 0.2
-
-    # pixels with the max NDVI
-    # argmax of ndvi for each pixel
-    # argmax 
-
-    stc[first_criteria] = maxndvi
-    stc[np.logical_and(second_criteria, np.isnan(stc))] = maxndwi
-    stc[np.logical_and(third_criteria, np.isnan(stc))] = maxndvi
-    stc[np.logical_and(fourth_criteria, np.isnan(stc))] = maxndwi
-    stc[np.isnan(stc)] = maxndvi
-    stc = superresolve(stc, sess)
-    stc_tile = np.empty((SIZE, SIZE, 13))
-    stc_tile[..., :10] = stc
-    stc_tile[..., 10] = dem_subtile.repeat(12, axis = 0)
-    subtile[..., 11:] = s1_subtile
-    return stc
-
-
-
-def predict_stc(subtile, sess) -> np.ndarray:
-    """ Runs non-temporal predictions on a (12, 174, 174, 13) array:
-        - Calculates remote sensing indices
-        - Normalizes data
-        - Returns predictions for subtile
-
-        Parameters:
-         subtile (np.ndarray): monthly sentinel 2 + sentinel 1 mosaics
-                               that will be median aggregated for model input
-         sess (tf.Session): tensorflow session for prediction
-    
-        Returns:
-         preds (np.ndarray): (160, 160) float32 [0, 1] predictions
-    """
-    
-    if np.sum(subtile) > 0:
-        if not isinstance(subtile.flat[0], np.floating):
-            assert np.max(subtile) > 1
-            subtile = subtile / 65535.
-        
-        indices = np.empty((subtile.shape[1], subtile.shape[2], 17))
-        indices[..., :13] = subtile
-        indices[..., 13] = evi(subtile)
-        indices[...,  14] = bi(subtile)
-        indices[...,  15] = msavi2(subtile)
-        indices[...,  16] = grndvi(subtile)
-
-        subtile = indices
-        subtile = subtile.astype(np.float32)
-        subtile = np.clip(subtile, min_all, max_all)
-        subtile = (subtile - midrange) / (rng / 2)
-        subtile = subtile[-1]
-
-
-        batch_x = subtile[np.newaxis]
-        lengths = np.full((batch_x.shape[0]), 12)
-        preds = sess.run(gap_logits,
-                              feed_dict={gap_inp:batch_x})
-
-        preds = preds.squeeze()
-        preds = preds[1:-1, 1:-1]
-    else:
-        preds = np.full((SIZE, SIZE), 255)
-    
-    return preds
 
 
 def fspecial_gauss(size, sigma):
@@ -948,7 +898,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-sept-new/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-oct-finetune/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
@@ -988,10 +938,16 @@ if __name__ == '__main__':
         with open(args.yaml_path, 'r') as stream:
             key = (yaml.safe_load(stream))
             API_KEY = key['key']
+            SHUB_SECRET = key['shub_secret']
+            SHUB_KEY = key['shub_id']
             AWSKEY = key['awskey']
             AWSSECRET = key['awssecret']
         print(f"Successfully loaded key from {args.yaml_path}")
         uploader = FileUploader(awskey = AWSKEY, awssecret = AWSSECRET, overwrite = True)
+        shconfig = SHConfig()
+        shconfig.instance_id = API_KEY
+        shconfig.sh_client_id = SHUB_KEY
+        shconfig.sh_client_secret = SHUB_SECRET
     else:
         raise Exception(f"The API keys do not exist in {args.yaml_path}")
 
@@ -1007,7 +963,6 @@ if __name__ == '__main__':
     # Lots of code here to load two tensorflow graphs at once
     superresolve_graph_def = tf.compat.v1.GraphDef()
     predict_graph_def = tf.compat.v1.GraphDef()
-    #gap_graph_def = tf.compat.v1.GraphDef()
 
     if os.path.exists(args.superresolve_model_path):
         print(f"Loading model from {args.superresolve_model_path}")
@@ -1032,18 +987,7 @@ if __name__ == '__main__':
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
     else:
         raise Exception(f"The model path {args.predict_model_path} does not exist")
-    '''
-    if os.path.exists(args.gap_model_path):
-        print(f"Loading gap model from {args.gap_model_path}")
-        gap_file = tf.io.gfile.GFile(args.gap_model_path + "gap_graph.pb", 'rb')
-        gap_graph_def.ParseFromString(gap_file.read())
-        gap_graph = tf.import_graph_def(gap_graph_def, name='gap')
-        gap_sess = tf.compat.v1.Session(graph=gap_graph)
-        gap_logits = gap_sess.graph.get_tensor_by_name(f"gap/conv2d_13/Sigmoid:0")             # CONV2d_8 is master model
-        gap_inp = gap_sess.graph.get_tensor_by_name("gap/Placeholder:0")
-    else:
-        raise Exception(f"The model path {args.gap_model_path} does not exist")
-    '''
+
     gap_file = None
     gap_graph_def = None
     gap_graph = None
@@ -1075,10 +1019,10 @@ if __name__ == '__main__':
         print(f"Downloading an individual tile: {args.x}X{args.y}Y")
         x = args.x
         y = args.y
-
         
         dates = (f'{str(args.year - 1)}-11-15' , f'{str(args.year + 1)}-02-15')
         dates_sentinel_1 = (f'{str(args.year)}-01-01' , f'{str(args.year)}-12-31')
+        print(dates_sentinel_1)
         days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
         starting_days = np.cumsum(days_per_month)
 
@@ -1098,11 +1042,7 @@ if __name__ == '__main__':
                 below = True
             if below:
                 bbx = None
-                time1 = time.time()
-                bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY, year = args.year)
-                s2, dates, interp, s1, dem = process_tile(x = x, y = y, data = data, local_path = args.local_path)
-                process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess)
-                predictions = load_mosaic_predictions(path_to_tile + "processed/")
+
                 if not bbx:
                     data = data[data['Y_tile'] == int(y)]
                     data = data[data['X_tile'] == int(x)]
@@ -1115,6 +1055,31 @@ if __name__ == '__main__':
                     initial_bbx = [data['X'][0], data['Y'][0], data['X'][0], data['Y'][0]]
                     bbx = make_bbox(initial_bbx, expansion = 300/30)
 
+                time1 = time.time()
+                if not args.redownload:
+                    bbx = download_tile(x = x, y = y, data = data, api_key = shconfig, year = args.year)
+                else:
+                    download_raw_tile((x, y), args.local_path, "raw")
+                    folder = f"{args.local_path}{str(x)}/{str(y)}/"
+                    tile_idx = f'{str(x)}X{str(y)}Y'
+                    s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
+                    s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
+                    s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
+                    size = hkl.load(s2_20_file)
+                    size = size.shape[1:3]
+                    download_s1_tile(data = data, 
+                         bbx = bbx,
+                         api_key = shconfig,
+                         year = args.year, 
+                         dates_sentinel_1 = dates_sentinel_1, 
+                         size = size, 
+                         s1_file = s1_file, 
+                         s1_dates_file = s1_dates_file)
+
+                s2, dates, interp, s1, dem = process_tile(x = x, y = y, data = data, local_path = args.local_path)
+                process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess)
+                predictions = load_mosaic_predictions(path_to_tile + "processed/")
+                
                 file = write_tif(predictions, bbx, x, y, path_to_tile)
                 key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_FINAL.tif'
                 uploader.upload(bucket = args.s3_bucket, key = key, file = file)
@@ -1154,15 +1119,7 @@ if __name__ == '__main__':
                     below = True
                 if below:
                     try:
-                        time1 = time.time()
-                        if not args.redownload:
-                            bbx = download_tile(x = x, y = y, data = data, api_key = API_KEY, year = args.year)
-                        else:
-                            download_raw_tile((x, y), args.local_path, "raw")
-
-                        s2, dates, interp, s1, dem = process_tile(x = x, y = y, data = data, local_path = args.local_path)
-                        process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess)
-                        predictions = load_mosaic_predictions(path_to_tile + "processed/")
+                        bbox = None
                         if not bbx:
                             data2 = data.copy()
                             data2 = data2[data2['Y_tile'] == int(y)]
@@ -1174,6 +1131,30 @@ if __name__ == '__main__':
                             y = y[:-2] if ".0" in y else y
                             initial_bbx = [data2['X'][0], data2['Y'][0], data2['X'][0], data2['Y'][0]]
                             bbx = make_bbox(initial_bbx, expansion = 300/30)
+                        time1 = time.time()
+                        if not args.redownload:
+                            bbx = download_tile(x = x, y = y, data = data, api_key = shconfig, year = args.year)
+                        else:
+                            download_raw_tile((x, y), args.local_path, "raw")
+                            folder = f"{args.local_path}{str(x)}/{str(y)}/"
+                            tile_idx = f'{str(x)}X{str(y)}Y'
+                            s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
+                            s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
+                            s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
+                            size = hkl.load(s2_20_file)
+                            size = size.shape[1:3]
+                            download_s1_tile(data = data, 
+                                 bbx = bbx,
+                                 api_key = shconfig,
+                                 year = args.year, 
+                                 dates_sentinel_1 = dates_sentinel_1, 
+                                 size = size, 
+                                 s1_file = s1_file, 
+                                 s1_dates_file = s1_dates_file)
+
+                        s2, dates, interp, s1, dem = process_tile(x = x, y = y, data = data, local_path = args.local_path)
+                        process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess)
+                        predictions = load_mosaic_predictions(path_to_tile + "processed/")
 
                         file = write_tif(predictions, bbx, x, y, path_to_tile)
                         key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_FINAL.tif'

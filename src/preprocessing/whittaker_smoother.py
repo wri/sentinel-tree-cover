@@ -5,11 +5,12 @@ from scipy.sparse.linalg import splu
 import multiprocessing
 
 class Smoother:
-    def __init__(self, lmbd, size, nbands = 14, dim = 128):
+    def __init__(self, lmbd, size, nbands = 14, dim = 128, outsize = 12):
         self.lmbd = lmbd
         self.size = size
         self.nbands = nbands
         self.dim = dim
+        self.outsize = outsize
         diagonals = np.zeros(2*2+1)
         diagonals[2] = 1.
         for i in range(2):
@@ -37,10 +38,11 @@ class Smoother:
         x = np.reshape(x, (self.size, self.dim, self.dim, self.nbands))
 
         # median of zip(range(0, 72, 6), range(6, 72, 6))
-        monthly = np.empty((12, self.dim, self.dim, self.nbands))
+
+        monthly = np.empty((self.outsize, self.dim, self.dim, self.nbands))
         index = 0
-        for start, end in zip(range(0, self.size + 6, self.size // 12), #0, 72, 6
-                              range(self.size // 12, self.size + 6, self.size // 12)): # 6, 72, 6
+        for start, end in zip(range(0, self.size + 6, self.size // self.outsize), #0, 72, 6
+                              range(self.size // self.outsize, self.size + 6, self.size // self.outsize)): # 6, 72, 6
             monthly[index] = np.median(x[start:end], axis = 0)
             index += 1
         

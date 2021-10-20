@@ -236,11 +236,11 @@ def mcm_shadow_mask(arr: np.ndarray,
         ri = np.median(arr[lower:upper], axis = 0).astype(np.float32)
 
         deltab2 = (arr[time, ..., 0] - ri[..., 0]) > int(0.10 * 65535)
-        deltab8a = (arr[time, ..., 3] - ri[..., 3]) < int(-0.06 * 65535)
-        deltab11 = (arr[time, ..., 5] - ri[..., 5]) < int(-0.06 * 65535)
+        deltab8a = (arr[time, ..., 3] - ri[..., 3]) < int(-0.05 * 65535)
+        deltab11 = (arr[time, ..., 5] - ri[..., 5]) < int(-0.05 * 65535)
         deltab3 = (arr[time, ..., 1] - ri[..., 1]) > int(0.08 * 65535)
         deltab4 = (arr[time, ..., 2] - ri[..., 2]) > int(0.08 * 65535)
-        ti0 = arr[time, ..., 0] < int(0.12 * 65535)
+        ti0 = arr[time, ..., 0] < int(0.11 * 65535)
         ti10 = arr[time, ..., 4] > int(0.01 * 65535)
         clouds_i = (deltab2 * deltab3 * deltab4) + ti10
         clouds_i = clouds_i * 1
@@ -255,24 +255,28 @@ def mcm_shadow_mask(arr: np.ndarray,
     # Iterate through clouds, shadows, remove cloud/shadow where
     # The same px is positive in subsequent time steps (likely FP)
     clouds_new = np.copy(clouds)
-    for time in range(1, clouds.shape[-1], 1):
+    for time in range(1, clouds.shape[0] - 2, 1):
         moving_sums = np.sum(clouds[time - 1:time + 2], axis = (0))
         moving_sums = moving_sums >= 3
         clouds_new[time - 1:time + 2, moving_sums] = 0.
     clouds = clouds_new
 
+
     # Remove shadows if multiple time steps are shadows
-    """
     shadows_new = np.copy(shadows)
-    for time in range(1, shadows.shape[-1], 1):
-        moving_sums = np.sum(shadows[time - 1:time + 1], axis = 0)
-        moving_sums = moving_sums >= 2
+    for time in range(1, shadows.shape[0] - 2, 1):
+        moving_sums = np.sum(shadows[time - 1:time + 2], axis = 0)
+        moving_sums = moving_sums == 3
         if np.sum(moving_sums > 0):
         	print(f"Removing {np.sum(moving_sums)}, time {time}")
-        shadows_new[time - 1:time + 1, moving_sums] = 0.
+        shadows_new[time, moving_sums] = 0.
     shadows = shadows_new
     print(np.sum(shadows), np.sum(clouds))
-    """
+
+    mean_clouds = np.mean(clouds, axis = (1, 2))
+    no_clouds = mean_clouds < 0.05
+    shadows[no_clouds] = 0.
+
     
     # Combine cloud and shadow
     shadows = shadows + clouds
@@ -629,7 +633,7 @@ def subset_contiguous_sunny_dates(dates, probs):
                                 indices_to_rm.append(indices_month[0])
 
             # This second block will go back through and remove the second image from months with multiple images
-            elif np.sum(np.array(images_per_month) >= 2) >= 2:
+            elif np.sum(np.array(images_per_month) >= 2) >= 1:
                 n_to_remove = n_remaining - 10
                 n_removed = 0
                 for x, y in zip(begin, end):
