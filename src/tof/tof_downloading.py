@@ -399,7 +399,6 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
                 // Initialise arrays
                 var VV_samples = [];
                 var VH_samples = [];
-
                 // Loop through orbits and add data
                 for (let i=0; i<samples.length; i++){
                   // Ignore noData
@@ -421,7 +420,6 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
                 } else{
                   var VH_median = median(VH_samples) * factor;
                 }
-
                 return [VV_median, VH_median];
             }
 
@@ -507,6 +505,13 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
     except:
         return np.empty((0,)), np.empty((0,))
 
+        s1 = s1.repeat(12 // s1.shape[0], axis = 0)
+        s1 = s1.repeat(4,axis=1).repeat(4,axis=2)
+        return s1, image_dates
+
+    except:
+        return np.empty((0,)), np.empty((0,))
+   
 
 def identify_s1_layer(coords: Tuple[float, float]) -> str:
     """ Identifies whether to download ascending or descending

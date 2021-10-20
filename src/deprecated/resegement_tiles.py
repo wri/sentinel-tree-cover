@@ -422,7 +422,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         # Select between temporal and median models for prediction, based on simple logic:
         # If the first image is after June 15 or the last image is before July 15
         # or the maximum gap is >270 days or < 5 images --- then do median, otherwise temporal
-        no_images = True if len(dates_tile) < 3 else no_images
+        no_images = True if len(dates_tile) < 2 else no_images
         if no_images:
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates -- no data")
             preds = np.full((SIZE, SIZE), 255)
@@ -844,7 +844,6 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
             range_i = np.copy(predictions_range)
             range_i[np.isnan(predictions[..., i])] = np.nan
             range_i = range_i[~np.isnan(range_i)]
-
             range_i = np.reshape(range_i, (168 // 56, 56, 168 // 56, 56))
             range_i = np.mean(range_i, axis = (1, 3))
             n_outliers = np.sum(range_i > 50)

@@ -268,7 +268,6 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             clean_dates, np.mean(cloud_probs, axis = (1, 2))
         )
         print(f"Overall using {len(clean_dates)}/{len(clean_dates)+len(to_remove)} steps")
-
         hkl.dump(cloud_probs, clouds_file, mode='w', compression='gzip')
         hkl.dump(clean_dates, clean_steps_file, mode='w', compression='gzip')
 
@@ -834,6 +833,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         np.save(output, preds)
 
 
+
 def convert_to_db(x: np.ndarray, min_db: int) -> np.ndarray:
     """ Converts unitless backscatter coefficient
         to db with a min_db lower threshold
@@ -1166,6 +1166,7 @@ if __name__ == '__main__':
         year = args.year
         dates = (f'{str(args.year - 1)}-11-15' , f'{str(args.year + 1)}-02-15')
         dates_sentinel_1 = (f'{str(args.year)}-01-01' , f'{str(args.year)}-12-31')
+        print(dates_sentinel_1)
         days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
         starting_days = np.cumsum(days_per_month)
 
@@ -1222,6 +1223,31 @@ if __name__ == '__main__':
                 print(f"Finished making tif in {np.around(time2 - time1, 1)} seconds")
 
 
+                time1 = time.time()
+                if not args.redownload:
+                    bbx = download_tile(x = x, y = y, data = data, api_key = shconfig, year = args.year)
+                else:
+                    download_raw_tile((x, y), args.local_path, "raw")
+                    folder = f"{args.local_path}{str(x)}/{str(y)}/"
+                    tile_idx = f'{str(x)}X{str(y)}Y'
+                    s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
+                    s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
+                    s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
+                    size = hkl.load(s2_20_file)
+                    size = size.shape[1:3]
+                    download_s1_tile(data = data, 
+                         bbx = bbx,
+                         api_key = shconfig,
+                         year = args.year, 
+                         dates_sentinel_1 = dates_sentinel_1, 
+                         size = size, 
+                         s1_file = s1_file, 
+                         s1_dates_file = s1_dates_file)
+
+                s2, dates, interp, s1, dem = process_tile(x = x, y = y, data = data, local_path = args.local_path)
+                process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess)
+                predictions = load_mosaic_predictions(path_to_tile + "processed/")
+                
                 file = write_tif(predictions, bbx, x, y, path_to_tile)
                 key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_FINAL.tif'
                 uploader.upload(bucket = args.s3_bucket, key = key, file = file)

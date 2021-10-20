@@ -227,7 +227,6 @@ def predict_stc(subtile, sess) -> np.ndarray:
         if not isinstance(subtile.flat[0], np.floating):
             assert np.max(subtile) > 1
             subtile = subtile / 65535.
-
         indices = np.empty((subtile.shape[1], subtile.shape[2], 17))
         indices[..., :13] = subtile
         indices[..., 13] = evi(subtile)
@@ -251,5 +250,4 @@ def predict_stc(subtile, sess) -> np.ndarray:
         preds = preds[1:-1, 1:-1]
     else:
         preds = np.full((SIZE, SIZE), 255)
-
     return preds

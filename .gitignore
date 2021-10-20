@@ -32,3 +32,6 @@ data_diffs.csv
 *.npy
 notebooks/*/*.csv
 *.qml
+*.csv
+config.json
+
