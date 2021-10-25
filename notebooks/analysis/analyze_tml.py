@@ -611,8 +611,7 @@ def calculate_stats(country):
 
             # iterate through the thresholds (0-10, 10-20, 20-30)
             for lower, upper in zip(lower_rng, upper_rng):
-                print('Thresholding values.')
-                # calculate total ha for that threshold
+                # calculate total ha for that threshold 
                 tof_bin = np.sum((tof_class_mean_per_ha >= lower) & (tof_class_mean_per_ha < upper))
                 hans_bin = np.sum((hans_class_mean_per_ha >= lower) & (hans_class_mean_per_ha < upper))
                 bin_name = (f'{str(lower)}-{str(upper - 1)}')
