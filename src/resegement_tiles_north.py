@@ -278,7 +278,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     gap_between_years = False
     t = 0
-    sm = Smoother(lmbd = 800, size = 72, nbands = 10, dim = SIZE + 14)
+    sm = Smoother(lmbd = 1600, size = 72, nbands = 10, dim = SIZE + 14)
     n_median = 0
     median_thresh = 5
     # Iterate over each subitle and prepare it for processing and generate predictions
@@ -465,7 +465,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         left_mean = np.nanmean(tile_tif[0, :])
         print(right_mean, left_mean)
 
-        if abs(right_mean - left_mean) > 10:
+        if abs(right_mean - left_mean) > 9:
             
             download_raw_tile((tile_x, tile_y), local_path, "processed")
             test_subtile = np.load(f"{local_path}/{tile_x}/{tile_y}/processed/0/0.npy")
@@ -821,7 +821,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-oct-finetune/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-oct-regularized/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")

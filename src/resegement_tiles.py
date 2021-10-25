@@ -272,7 +272,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     gap_between_years = False
     t = 0
-    sm = Smoother(lmbd = 800, size = 72, nbands = 10, dim = SIZE + 14)
+    sm = Smoother(lmbd = 1600, size = 72, nbands = 10, dim = SIZE + 14)
     n_median = 0
     median_thresh = 5
     # Iterate over each subitle and prepare it for processing and generate predictions
@@ -456,8 +456,12 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         right_mean = np.nanmean(neighbor_tif[:, 0])
         left_mean = np.nanmean(tile_tif[:, -1])
         print(right_mean, left_mean)
+        right = neighbor_tif[:, 0]
+        left = tile_tif[:, -1]
+        left_right_diff = np.mean(abs(right - left))
+        print(f"The differences is: {left_right_diff}")
 
-        if abs(right_mean - left_mean) > 10:
+        if abs(right_mean - left_mean) > 9 or left_right_diff > 25:
             
             download_raw_tile((tile_x, tile_y), local_path, "processed")
             test_subtile = np.load(f"{local_path}/{tile_x}/{tile_y}/processed/0/0.npy")
@@ -799,7 +803,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-oct-finetune/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-oct-regularized/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
@@ -846,7 +850,7 @@ if __name__ == "__main__":
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
     else:
         raise Exception(f"The model path {args.predict_model_path} does not exist")
-
+    """
     if os.path.exists(args.gap_model_path):
         print(f"Loading gap model from {args.gap_model_path}")
         gap_file = tf.io.gfile.GFile(args.gap_model_path + "gap_graph.pb", 'rb')
@@ -857,6 +861,12 @@ if __name__ == "__main__":
         gap_inp = gap_sess.graph.get_tensor_by_name("gap/Placeholder:0")
     else:
         raise Exception(f"The model path {args.gap_model_path} does not exist")
+    """
+    gap_file = None
+    gap_graph = None
+    gap_sess = None
+    gap_logits = None
+    gap_inp = None
 
     # Normalization mins and maxes for the prediction input
     min_all = [0.006576638437476157, 0.0162050812542916, 0.010040436408026246, 0.013351644159609368, 0.01965362020294499,

@@ -75,10 +75,10 @@ def superresolve_tile(arr: np.ndarray, sess) -> np.ndarray:
 
 def id_iqr_outliers(arr: np.ndarray) -> (np.ndarray, np.ndarray):
     """Identifies 2 IQR upper and lower threshold"""
-    if arr.shape[0] > 6:
+    if arr.shape[0] > 8:
         lower_qr = np.percentile(arr, 25, axis = 0)
         upper_qr = np.percentile(arr, 75, axis = 0)
-        iqr = (upper_qr - lower_qr) * 2
+        iqr = (upper_qr - lower_qr) * 2.5
         lower_thresh = lower_qr - iqr
         upper_thresh = upper_qr + iqr        
         return lower_thresh, upper_thresh
@@ -206,7 +206,11 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
                                                             api_key = api_key, 
                                                             year = year)
         print(image_dates)
-        cloud_shadows = np.mean(cloud_probs, axis = (1, 2)) + np.mean(shadows, axis = (1, 2))
+
+        sentinel2 = np.zeros_like(shadows)[..., np.newaxis]
+        _, cloud_shadows = cloud_removal.remove_cloud_and_shadows(sentinel2, cloud_probs, shadows, image_dates)
+        cloud_shadows = np.mean(cloud_shadows, axis = (1, 2))
+
         to_remove = [int(x) for x in np.argwhere(cloud_shadows > 0.5)]
         if len(to_remove) > 0:
             print(f"Removing {len(to_remove)} {to_remove} timesteps with > 0.5 cloud/shadow extent")
@@ -214,7 +218,9 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             cloud_probs = np.delete(cloud_probs, to_remove, 0)
             shadows = np.delete(shadows, to_remove, 0)
 
-        to_remove, _ = cloud_removal.calculate_cloud_steps(cloud_probs, image_dates)
+        cloud_shadows = np.mean(cloud_probs, axis = (1, 2)) + np.mean(shadows, axis = (1, 2))
+        """
+        to_remove, _ = cloud_removal.calculate_cloud_steps(cloud_shadows, image_dates)
 
         # Remove cloudy images
         if len(to_remove) > 0:
@@ -225,18 +231,29 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             clean_dates = image_dates
         
         cloud_shadows = np.mean(cloud_probs, axis = (1, 2)) + np.mean(shadows, axis = (1, 2))
+        #sentinel2 = np.zeros_like(shadows)[..., np.newaxis]
+        #_, cloud_shadows = cloud_removal.remove_cloud_and_shadows(sentinel2, cloud_probs, shadows, image_dates)
+        #cloud_shadows = np.mean(cloud_shadows, axis = (1, 2))
+        """
         # Remove contiguous dates that are sunny, to reduce IO needs
-        to_remove = cloud_removal.subset_contiguous_sunny_dates(clean_dates,
+        to_remove = cloud_removal.subset_contiguous_sunny_dates(image_dates,
                                                                cloud_shadows)
+        if len(to_remove) > 0:
+            clean_dates = np.delete(image_dates, to_remove)
+            cloud_probs = np.delete(cloud_probs, to_remove, 0)
+            shadows = np.delete(shadows, to_remove, 0)
+            cloud_shadows = np.delete(cloud_shadows, to_remove)
+        #cloud_removal.print_dates(clean_dates, cloud_shadows)
+
         # Remove the cloudiest date if at least 15 images
-        n_remaining = (len(clean_dates) - len(to_remove))
-        cloud_shadows[to_remove] = 0.
+        #n_remaining = (len(clean_dates))
+        #cloud_shadows[to_remove] = 0.
+        """
         if n_remaining >= 13 or np.max(cloud_shadows) >= 0.20:
             cloud_shadows[to_remove] = 0.
             max_cloud = int(np.argmax(cloud_shadows))
             print(f"Removing cloudiest date (master 1): {max_cloud}, {cloud_shadows[max_cloud]}")
             to_remove.append(max_cloud)
-
         if len(to_remove) > 0:
             clean_dates = np.delete(clean_dates, to_remove)
             cloud_probs = np.delete(cloud_probs, to_remove, 0)
@@ -250,7 +267,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             cloud_probs = np.delete(cloud_probs, max_cloud, 0)
             shadows = np.delete(shadows, max_cloud, 0)
             cloud_shadows = np.delete(cloud_shadows, max_cloud, 0)
-
+        """
         if len(clean_dates) >= 11:
             clean_dates = np.delete(clean_dates, 5)
             cloud_probs = np.delete(cloud_probs, 5, 0)
@@ -317,26 +334,61 @@ def adjust_shape(arr, width, height):
         arr = arr[:, :, :, np.newaxis]
 
     if len(arr.shape) == 2:
+        #print(f"Converting shape: {arr.shape}")
         arr = arr[np.newaxis, :, :, np.newaxis]
+        #print(f"to shape: {arr.shape}")
 
     if arr.shape[1] < width:
+        
         pad_amt = (width - arr.shape[1]) // 2
-        arr = np.pad(arr, ((0, 0), (pad_amt, pad_amt), (0,0), (0, 0)), 'edge')
+        #print("Less than width", pad_amt, arr.shape[1], width)
+        if pad_amt == 0:
+            arr = np.pad(arr, ((0, 0), (1, pad_amt), (0,0), (0, 0)), 'edge')
+        else:
+            arr = np.pad(arr, ((0, 0), (pad_amt, pad_amt), (0,0), (0, 0)), 'edge')
 
     if arr.shape[2] < height:
-        pad_amt = (width - arr.shape[2]) // 2
-        arr = np.pad(arr, ((0, 0), (0,0), (pad_amt, pad_amt), (0, 0)), 'edge')
+        
+        pad_amt = (height - arr.shape[2]) // 2
+        #print("Less than height", pad_amt, arr.shape[2], height)
+        if pad_amt == 0:
+            arr = np.pad(arr, ((0, 0), (0,0), (1, 0), (0, 0)), 'edge')
+        else:
+            arr = np.pad(arr, ((0, 0), (0,0), (pad_amt, pad_amt), (0, 0)), 'edge')
 
     if arr.shape[1] > width:
+        
         pad_amt =  (arr.shape[1] - width) // 2
-        arr = arr[:, pad_amt:-pad_amt, ...]
+        #print("Greater than width", pad_amt, arr.shape[1], width)
+        pad_amt_even = (arr.shape[1] - width) % 2 == 0
+        if pad_amt == 0:
+            arr = arr[:, 1:, ...]
+        elif pad_amt_even:
+            pad_amt = int(pad_amt)
+            arr = arr[:, pad_amt:-pad_amt, ...]
+        else:
+            pad_left = int(np.floor(pad_amt / 2))
+            pad_right = int(np.ceil(pad_amt / 2))
+            arr = arr[:, pad_left:-pad_right, ...]
 
     if arr.shape[2] > height:
+
         pad_amt = (arr.shape[2] - height) // 2
-        arr = arr[:, :, pad_amt:-pad_amt, ...]
+        #print("Greater than height", pad_amt, arr.shape[2], height)
+        pad_amt_even = (arr.shape[2] - height) % 2 == 0
+        if pad_amt == 0:
+            arr = arr[:, :, 1:, :]
+        elif pad_amt_even:
+            pad_amt = int(pad_amt)
+            arr = arr[:, :, pad_amt:-pad_amt, ...]
+        else:
+            pad_left = int(np.floor(pad_amt / 2))
+            pad_right = int(np.ceil(pad_amt / 2))
+            arr = arr[:, :, pad_left:-pad_right, ...]
 
     arr = arr.squeeze()
     print(f"Output array shape: {arr.shape}")
+    print("\n")
     return arr
 
 
@@ -444,7 +496,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
         probs = above + below
         n_bands_outlier = (np.sum(probs > (0.5 * sentinel2.shape[1] * sentinel2.shape[2]), axis = (1)))
         print(n_bands_outlier)
-        to_remove = np.argwhere(n_bands_outlier >= 1)
+        to_remove = np.argwhere(n_bands_outlier >= 2)
         if len(to_remove) > 0:
             print(f"Removing {to_remove} dates due to IQR threshold")
             clouds = np.delete(clouds, to_remove, axis = 0)
@@ -468,6 +520,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
 
     # interpolate cloud and cloud shadows linearly
     sentinel2, interp = cloud_removal.remove_cloud_and_shadows(sentinel2, clouds, shadows, image_dates)
+    np.save("interp.npy", interp)
     to_remove_interp = np.argwhere(np.sum(interp, axis = (1, 2)) > (sentinel2.shape[1] * sentinel2.shape[2] * 0.5) ).flatten()
     #to_remove_interp = [2]
     if len(to_remove_interp) > 0:
@@ -479,13 +532,37 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
     dem = dem / 90
     sentinel2 = np.clip(sentinel2, 0, 1)
     return sentinel2, image_dates, interp, s1, dem
+
+
+def rolling_mean(arr):
+    if arr.shape[0] > 4:
+        mean_arr = np.zeros_like(arr)
+        start = np.arange(0, arr.shape[0] - 3, 1)
+        start = np.concatenate([
+            np.array([0]),
+            start,
+            np.full((2,), arr.shape[0] - 3)
+        ])
+        end = start + 3
+        i = 0
+        for s, e in zip(start, end):
+            array_to_meean = arr[s:e]
+            mean_arr[i] = np.median(array_to_meean, axis = 0)
+            i += 1
+        return mean_arr
+    elif arr.shape[0] == 3 or arr.shape[0] == 4:
+        mean_arr = np.median(arr, axis = 0)
+        arr[0] = mean_arr
+        arr[-1] = mean_arr
+        return arr
+    else:
+        return arr
     
 
 def process_subtiles(x: int, y: int, s2: np.ndarray = None, 
                        dates: np.ndarray = None,
                        interp: np.ndarray = None, s1 = None, dem = None,
-                       sess = None,
-                       gap_sess = None) -> None:
+                       sess = None,) -> None:
     '''Wrapper function to interpolate clouds and temporal gaps, superresolve tiles,
        calculate relevant indices, and save predicted tree cover as a .npy
        
@@ -539,7 +616,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     gap_between_years = False
     t = 0
-    sm = Smoother(lmbd = 800, size = 72, nbands = 10, dim = SIZE + 14, outsize = 12)
+    sm = Smoother(lmbd = 1600, size = 72, nbands = 10, dim = SIZE + 14, outsize = 12)
     n_median = 0
     median_thresh = 5
     # Iterate over each subitle and prepare it for processing and generate predictions
@@ -559,17 +636,18 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         dem_subtile = dem[np.newaxis, start_x:end_x, start_y:end_y]
 
         # Remove dates with >25% interpolation
-        to_remove = np.argwhere(interp_tile_sum > ((SIZE*SIZE) / 4)).flatten()
-        
+        to_remove = np.argwhere(interp_tile_sum > ((SIZE*SIZE) / 3)).flatten()
         if len(to_remove) > 0: 
             dates_tile = np.delete(dates_tile, to_remove)
             subset = np.delete(subset, to_remove, 0)
+            interp_tile = np.delete(interp_tile, to_remove, 0)
 
         # Remove dates with >1% missing data
         missing_px = interpolation.id_missing_px(subset, 100)
         if len(missing_px) > 0:
             dates_tile = np.delete(dates_tile, missing_px)
             subset = np.delete(subset, missing_px, 0)
+            interp_tile = np.delete(interp_tile, missing_px, 0)
             print(f"Removing {len(missing_px)} missing images, leaving {len(dates_tile)} / {len(dates)}")
 
         # Remove dates with high likelihood of missed cloud or shadow (false negatives)
@@ -577,10 +655,27 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         if len(to_remove) > 0:
             subset = np.delete(subset, to_remove, axis = 0)
             dates_tile = np.delete(dates_tile, to_remove)
-            print(f"Removing {to_remove} missed clouds, leaving {len(dates_tile)} / {len(dates)}")
+            interp_tile = np.delete(interp_tile, to_remove, 0)
+            print(f"Removing {to_remove} missed clouds, leaving {len(dates_tile)} / {len(dates)} for: {dates_tile}")
 
+        
         # Transition (n, 160, 160, ...) array to (72, 160, 160, ...)
         no_images = False
+        subtile_copy = np.copy(subset)
+        subtile_median = np.median(subtile_copy, axis = 0)
+        subtile_median = subtile_median[np.newaxis]
+
+        # This step reduces the noise because the whittaker smoother doesn't 
+        # really smooth out of bounds, so the first and last image date
+        # can end up inserting a LOT of noise into the data
+        # And for CONVGRU, the first and last step are extra important
+        subset = rolling_mean(subset)
+        #if subset.shape[0] >= 3:
+            #med_start = np.median(subset[:3], axis = 0)
+           # med_end = np.median(subset[-3:], axis = 0)
+            #subset[0] = med_start
+            #subset[-1] = med_end
+
         try:
             subtile, max_distance = calculate_and_save_best_images(subset, dates_tile)
         except:
@@ -600,6 +695,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subtile = np.pad(subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
             dem_subtile = np.pad(dem_subtile, ((0, 0,), (0, 0), (pad_u, pad_d)), 'reflect')
+            subtile_median = np.pad(subtile_median, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
 
         if subtile.shape[1] == SIZE + 7:
             pad_l = 7 if start_x == 0 else 0
@@ -607,20 +703,22 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subtile = np.pad(subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
             dem_subtile = np.pad(dem_subtile, ((0, 0,), (pad_l, pad_r), (0, 0)), 'reflect')
+            subtile_median = np.pad(subtile_median, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
 
         # Interpolate (whittaker smooth) the array and superresolve 20m to 10m
         #subtile = np.concatenate([subtile[:18], subtile, subtile[-18:]], axis = 0)
         subtile = sm.interpolate_array(subtile)
         #subtile = subtile[3:-3, ...]
-        print(subtile.shape)
 
         subtile_s2 = superresolve_tile(subtile, sess = superresolve_sess)
 
         # Concatenate the DEM and Sentinel 1 data
-        subtile = np.empty((12, SIZE + 14, SIZE + 14, 13))
-        subtile[..., :10] = subtile_s2
-        subtile[..., 10] = dem_subtile.repeat(12, axis = 0)
-        subtile[..., 11:] = s1_subtile
+        subtile = np.empty((13, SIZE + 14, SIZE + 14, 13))
+        subtile[:-1, ..., :10] = subtile_s2
+        subtile[:, ..., 10] = dem_subtile.repeat(13, axis = 0)
+        subtile[:-1, ..., 11:] = s1_subtile
+        subtile[-1, ..., :10] = subtile_median
+        subtile[-1, ..., 11:] = np.median(s1_subtile, axis = (0))
         
         # Create the output folders for the subtile predictions
         output_folder = "/".join(output.split("/")[:-1])
@@ -629,7 +727,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         
         subtile = np.clip(subtile, 0, 1)
         assert subtile.shape[1] >= 145, f"subtile shape is {subtile.shape}"
-        assert subtile.shape[0] == 12, f"subtile shape is {subtile.shape}"
+        assert subtile.shape[0] == 13, f"subtile shape is {subtile.shape}"
 
         # Select between temporal and median models for prediction, based on simple logic:
         # If the first image is after June 15 or the last image is before July 15
@@ -640,9 +738,10 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             preds = np.full((SIZE, SIZE), 255)
         else:
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
-                f" time series, {max_distance} max dist")
+                f"for: {dates_tile}, {max_distance} max dist")
             preds = predict_subtile(subtile, sess)
         np.save(output, preds)
+        #np.save(f"subtile_{str(t)}.npy", subtile)
 
 
 def convert_to_db(x: np.ndarray, min_db: int) -> np.ndarray:
@@ -683,12 +782,12 @@ def predict_subtile(subtile, sess) -> np.ndarray:
             subtile = subtile / 65535.
 
         indices = np.empty((13, subtile.shape[1], subtile.shape[2], 17))
-        indices[:12, ..., :13] = subtile
-        indices[:12, ..., 13] = evi(subtile)
-        indices[:12, ...,  14] = bi(subtile)
-        indices[:12, ...,  15] = msavi2(subtile)
-        indices[:12, ...,  16] = grndvi(subtile)
-        indices[-1] = np.median(indices[:12], axis = 0)
+        indices[:, ..., :13] = subtile
+        indices[:, ..., 13] = evi(subtile)
+        indices[:, ...,  14] = bi(subtile)
+        indices[:, ...,  15] = msavi2(subtile)
+        indices[:, ...,  16] = grndvi(subtile)
+        #indices[-1] = np.median(indices[:12], axis = 0)
 
         subtile = indices
         subtile = subtile.astype(np.float32)
@@ -848,7 +947,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-oct-finetune/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/182-temporal-oct-regularized/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
@@ -1021,7 +1120,7 @@ if __name__ == '__main__':
                          s1_dates_file = s1_dates_file)
 
                 s2, dates, interp, s1, dem = process_tile(x = x, y = y, data = data, local_path = args.local_path)
-                process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess)
+                process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess)
                 predictions = load_mosaic_predictions(path_to_tile + "processed/")
                 
                 file = write_tif(predictions, bbx, x, y, path_to_tile)
@@ -1097,7 +1196,7 @@ if __name__ == '__main__':
                                  s1_dates_file = s1_dates_file)
 
                         s2, dates, interp, s1, dem = process_tile(x = x, y = y, data = data, local_path = args.local_path)
-                        process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess)
+                        process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess)
                         predictions = load_mosaic_predictions(path_to_tile + "processed/")
 
                         file = write_tif(predictions, bbx, x, y, path_to_tile)
