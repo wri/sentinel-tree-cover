@@ -65,7 +65,6 @@ def create_hansen_tif(country):
     ----------
     country : str
         a string indicating the country files to import
-
     '''
     gdal.UseExceptions()
     shapefile = gpd.read_file(f'{country}/{country}_adminboundaries.geojson')
@@ -111,7 +110,6 @@ def create_hansen_tif(country):
             except urllib.error.HTTPError as err:
                 if err.code == 404:
                     print(f'HTTP Error 404: {cover_url}')
-
             loss_url =  f'https://storage.googleapis.com/earthenginepartners-hansen/GFC-2020-v1.8/Hansen_GFC-2020-v1.8_lossyear_' \
                          f'{str(y_grid).zfill(2)}{lon}_{str(np.absolute(x_grid)).zfill(3)}{lat}.tif'
             loss_dest = f'hansen_lossyear2020/{str(y_grid).zfill(2)}{lon}_{str(np.absolute(x_grid)).zfill(3)}{lat}.tif'
@@ -143,19 +141,16 @@ def create_hansen_tif(country):
                                               noData=255,
                                               creationOptions=['COMPRESS=LZW'],
                                               resampleAlg='nearest')
-
     source = gdal.Open(f'{country}/{country}_hansen_treecover2010.vrt', )
     ds = gdal.Translate(f'{country}/{country}_hansen_treecover2010.tif', source, options=translateoptions)
     os.remove(f'{country}/{country}_hansen_treecover2010.vrt')
     source = None
     ds = None
-
     source = gdal.Open(f'{country}/{country}_hansen_loss2020.vrt')
     ds = gdal.Translate(f'{country}/{country}_hansen_loss2020.tif', source, options=translateoptions)
     os.remove(f'{country}/{country}_hansen_loss2020.vrt')
     source = None
     ds = None
-
     assert os.path.exists(f'{country}/{country}_hansen_treecover2010.tif')
     assert os.path.exists(f'{country}/{country}_hansen_loss2020.tif')
 
@@ -230,7 +225,6 @@ def pad_tcl_raster(country):
     country : str
         a string indicating the country files to import
     '''
-
     shapefile = gpd.read_file(f'{country}/{country}_adminboundaries.geojson')
 
     # identify min/max bounds for the country
@@ -337,12 +331,10 @@ def create_clippings(country):
                 #print(f"Clipping {admin}: {file_type}")
                 mask_raster(polygon, admin, raster, file_type)
 
-
     # delete Tof and Hansen files once clippings created
     os.remove(f'{country}/{country}_hansen_treecover2010_wloss.tif')
     os.remove(f'{country}/{country}_tof_padded.tif')
     os.remove(f'{country}/{country}_tof_padded.tfw')
-
     print(f"{country}'s rasters clipped and saved.")
     return None
 
@@ -364,7 +356,6 @@ def match_extent_and_res(source, reference, out_filename, tof=False, esa=False):
     ref_ds = gdal.Open(reference, gdalconst.GA_ReadOnly)
     ref_proj = ref_ds.GetProjection()
     ref_geotrans = ref_ds.GetGeoTransform()
-
     # create height/width for the interpolation (ref dataset except for tof)
     width = ref_ds.RasterXSize if not tof else src.RasterXSize
     height = ref_ds.RasterYSize if not tof else src.RasterYSize
@@ -450,7 +441,6 @@ def merge_polygons(country):
     Takes in a country's resampled rasters and identifies
     which admin boundaries are composed of multipolygons. Combines individual files
     into one for the admin district, then deletes the individual files.
-
     Attributes
     ----------
     country : str
@@ -473,7 +463,6 @@ def merge_polygons(country):
     print(f'{len(no_ints)} admins will be merged: {no_ints}')
 
     datasets = ['tof', 'hansen', 'esa']
-
     for data in datasets:
         for admin_2 in no_ints:
 
@@ -581,7 +570,6 @@ def calculate_stats(country):
         tof = rs.open(f'{country}/resampled_rasters/tof/{file}').read(1).astype(np.float32)
         hans = rs.open(f'{country}/resampled_rasters/hansen/{file}').read(1).astype(np.float32)
         esa = rs.open(f'{country}/resampled_rasters/esa/{file}').read(1).astype(np.float32)
-
         lower_rng = [x for x in range(0, 100, 10)]
         upper_rng = [x for x in range(10, 110, 10)]
 
