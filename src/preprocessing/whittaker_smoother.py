@@ -43,7 +43,10 @@ class Smoother:
         index = 0
         for start, end in zip(range(0, self.size + 6, self.size // self.outsize), #0, 72, 6
                               range(self.size // self.outsize, self.size + 6, self.size // self.outsize)): # 6, 72, 6
+            start = np.max([start - 3, 0])
+            end = np.min([end + 3, self.size])
             monthly[index] = np.median(x[start:end], axis = 0)
             index += 1
+
         
         return monthly
