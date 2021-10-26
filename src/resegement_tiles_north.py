@@ -22,7 +22,7 @@ from downloading.io import FileUploader,  get_folder_prefix, make_output_and_tem
 from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder
 from preprocessing.indices import evi, bi, msavi2, grndvi
 from download_and_predict_job import process_tile, make_bbox, convert_to_db
-from download_and_predict_job import id_iqr_outliers, fspecial_gauss
+from download_and_predict_job import id_iqr_outliers, fspecial_gauss, rolling_mean
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -316,6 +316,8 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subset = np.delete(subset, to_remove, axis = 0)
             dates_tile = np.delete(dates_tile, to_remove)
             print(f"Removing {to_remove} missed clouds, leaving {len(dates_tile)} / {len(dates)}")
+
+        subset = rolling_mean(subset)
 
         # Transition (n, 160, 160, ...) array to (72, 160, 160, ...)
         no_images = False

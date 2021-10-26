@@ -43,7 +43,6 @@ from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, downlo
 from preprocessing.indices import evi, bi, msavi2, grndvi
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
 SIZE = 168
 
 
@@ -205,7 +204,6 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
                                                             dates = dates,
                                                             api_key = api_key, 
                                                             year = year)
-        print(image_dates)
 
         sentinel2 = np.zeros_like(shadows)[..., np.newaxis]
         _, cloud_shadows = cloud_removal.remove_cloud_and_shadows(sentinel2, cloud_probs, shadows, image_dates)
@@ -219,22 +217,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             shadows = np.delete(shadows, to_remove, 0)
 
         cloud_shadows = np.mean(cloud_probs, axis = (1, 2)) + np.mean(shadows, axis = (1, 2))
-        """
-        to_remove, _ = cloud_removal.calculate_cloud_steps(cloud_shadows, image_dates)
 
-        # Remove cloudy images
-        if len(to_remove) > 0:
-            clean_dates = np.delete(image_dates, to_remove)
-            cloud_probs = np.delete(cloud_probs, to_remove, 0)
-            shadows = np.delete(shadows, to_remove, 0)
-        else:
-            clean_dates = image_dates
-        
-        cloud_shadows = np.mean(cloud_probs, axis = (1, 2)) + np.mean(shadows, axis = (1, 2))
-        #sentinel2 = np.zeros_like(shadows)[..., np.newaxis]
-        #_, cloud_shadows = cloud_removal.remove_cloud_and_shadows(sentinel2, cloud_probs, shadows, image_dates)
-        #cloud_shadows = np.mean(cloud_shadows, axis = (1, 2))
-        """
         # Remove contiguous dates that are sunny, to reduce IO needs
         to_remove = cloud_removal.subset_contiguous_sunny_dates(image_dates,
                                                                cloud_shadows)
@@ -243,37 +226,14 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             cloud_probs = np.delete(cloud_probs, to_remove, 0)
             shadows = np.delete(shadows, to_remove, 0)
             cloud_shadows = np.delete(cloud_shadows, to_remove)
-        #cloud_removal.print_dates(clean_dates, cloud_shadows)
+        else:
+            clean_dates = image_dates
 
-        # Remove the cloudiest date if at least 15 images
-        #n_remaining = (len(clean_dates))
-        #cloud_shadows[to_remove] = 0.
-        """
-        if n_remaining >= 13 or np.max(cloud_shadows) >= 0.20:
-            cloud_shadows[to_remove] = 0.
-            max_cloud = int(np.argmax(cloud_shadows))
-            print(f"Removing cloudiest date (master 1): {max_cloud}, {cloud_shadows[max_cloud]}")
-            to_remove.append(max_cloud)
-        if len(to_remove) > 0:
-            clean_dates = np.delete(clean_dates, to_remove)
-            cloud_probs = np.delete(cloud_probs, to_remove, 0)
-            shadows = np.delete(shadows, to_remove, 0)
-            cloud_shadows = np.delete(cloud_shadows, to_remove, 0)
-
-        if len(clean_dates) >= 13:
-            max_cloud = int(np.argmax(cloud_shadows))
-            print(f"Removing cloudiest date (master 2): {max_cloud}, {cloud_shadows[max_cloud]}")
-            clean_dates = np.delete(clean_dates, max_cloud)
-            cloud_probs = np.delete(cloud_probs, max_cloud, 0)
-            shadows = np.delete(shadows, max_cloud, 0)
-            cloud_shadows = np.delete(cloud_shadows, max_cloud, 0)
-        """
         if len(clean_dates) >= 11:
             clean_dates = np.delete(clean_dates, 5)
             cloud_probs = np.delete(cloud_probs, 5, 0)
             shadows = np.delete(shadows, 5, 0)
             cloud_shadows = np.delete(cloud_shadows, 5, 0)
-
         cloud_removal.print_dates(clean_dates, cloud_shadows)
 
         print(f"Overall using {len(clean_dates)}/{len(clean_dates)+len(to_remove)} steps")
@@ -334,32 +294,24 @@ def adjust_shape(arr, width, height):
         arr = arr[:, :, :, np.newaxis]
 
     if len(arr.shape) == 2:
-        #print(f"Converting shape: {arr.shape}")
         arr = arr[np.newaxis, :, :, np.newaxis]
-        #print(f"to shape: {arr.shape}")
 
     if arr.shape[1] < width:
-        
         pad_amt = (width - arr.shape[1]) // 2
-        #print("Less than width", pad_amt, arr.shape[1], width)
         if pad_amt == 0:
             arr = np.pad(arr, ((0, 0), (1, pad_amt), (0,0), (0, 0)), 'edge')
         else:
             arr = np.pad(arr, ((0, 0), (pad_amt, pad_amt), (0,0), (0, 0)), 'edge')
 
     if arr.shape[2] < height:
-        
         pad_amt = (height - arr.shape[2]) // 2
-        #print("Less than height", pad_amt, arr.shape[2], height)
         if pad_amt == 0:
             arr = np.pad(arr, ((0, 0), (0,0), (1, 0), (0, 0)), 'edge')
         else:
             arr = np.pad(arr, ((0, 0), (0,0), (pad_amt, pad_amt), (0, 0)), 'edge')
 
     if arr.shape[1] > width:
-        
         pad_amt =  (arr.shape[1] - width) // 2
-        #print("Greater than width", pad_amt, arr.shape[1], width)
         pad_amt_even = (arr.shape[1] - width) % 2 == 0
         if pad_amt == 0:
             arr = arr[:, 1:, ...]
@@ -372,9 +324,7 @@ def adjust_shape(arr, width, height):
             arr = arr[:, pad_left:-pad_right, ...]
 
     if arr.shape[2] > height:
-
         pad_amt = (arr.shape[2] - height) // 2
-        #print("Greater than height", pad_amt, arr.shape[2], height)
         pad_amt_even = (arr.shape[2] - height) % 2 == 0
         if pad_amt == 0:
             arr = arr[:, :, 1:, :]
@@ -479,10 +429,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
           f'S1: {s1.shape} \nS2: {s2_10.shape}, {s2_20.shape} \nDEM: {dem.shape}')
             
     # The 20m bands must be bilinearly upsampled to 10m as input to superresolve_tile
-    #! TODO: Parallelize this function such that
-         # sentinel2 = np.reshape(sentinel2, sentinel2.shape[0]*sentinel2.shape[-1], width, height)
-         # parallel_apply_along_axis(resize, sentinel2, 0)
-         # sentinel2 = np.reshape(sentinel2, ...)
     sentinel2 = np.empty((s2_10.shape[0], width, height, 10))
     sentinel2[..., :4] = s2_10
     for band in range(6):
@@ -522,7 +468,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
     sentinel2, interp = cloud_removal.remove_cloud_and_shadows(sentinel2, clouds, shadows, image_dates)
     np.save("interp.npy", interp)
     to_remove_interp = np.argwhere(np.sum(interp, axis = (1, 2)) > (sentinel2.shape[1] * sentinel2.shape[2] * 0.5) ).flatten()
-    #to_remove_interp = [2]
+
     if len(to_remove_interp) > 0:
         print(f"Removing: {to_remove_interp}")
         sentinel2 = np.delete(sentinel2, to_remove_interp, 0)
@@ -617,13 +563,11 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     gap_between_years = False
     t = 0
     sm = Smoother(lmbd = 1600, size = 72, nbands = 10, dim = SIZE + 14, outsize = 12)
-    n_median = 0
-    median_thresh = 5
+
     # Iterate over each subitle and prepare it for processing and generate predictions
-    while t < len(tiles_folder):
+    for t in range(len(tiles_folder)):
         tile_folder = tiles_folder[t]
         tile_array = tiles_array[t]
-        t += 1
         
         start_x, start_y = tile_array[0], tile_array[1]
         folder_x, folder_y = tile_folder[0], tile_folder[1]
@@ -657,7 +601,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             dates_tile = np.delete(dates_tile, to_remove)
             interp_tile = np.delete(interp_tile, to_remove, 0)
             print(f"Removing {to_remove} missed clouds, leaving {len(dates_tile)} / {len(dates)} for: {dates_tile}")
-
         
         # Transition (n, 160, 160, ...) array to (72, 160, 160, ...)
         no_images = False
@@ -670,11 +613,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         # can end up inserting a LOT of noise into the data
         # And for CONVGRU, the first and last step are extra important
         subset = rolling_mean(subset)
-        #if subset.shape[0] >= 3:
-            #med_start = np.median(subset[:3], axis = 0)
-           # med_end = np.median(subset[-3:], axis = 0)
-            #subset[0] = med_start
-            #subset[-1] = med_end
 
         try:
             subtile, max_distance = calculate_and_save_best_images(subset, dates_tile)
@@ -706,10 +644,9 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subtile_median = np.pad(subtile_median, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
 
         # Interpolate (whittaker smooth) the array and superresolve 20m to 10m
-        #subtile = np.concatenate([subtile[:18], subtile, subtile[-18:]], axis = 0)
         subtile = sm.interpolate_array(subtile)
-        #subtile = subtile[3:-3, ...]
-
+        # Note: because of pipeline updates, the median is currently not superresolved
+        # It makes a very small diff, but should be added back in
         subtile_s2 = superresolve_tile(subtile, sess = superresolve_sess)
 
         # Concatenate the DEM and Sentinel 1 data
@@ -741,7 +678,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
                 f"for: {dates_tile}, {max_distance} max dist")
             preds = predict_subtile(subtile, sess)
         np.save(output, preds)
-        #np.save(f"subtile_{str(t)}.npy", subtile)
 
 
 def convert_to_db(x: np.ndarray, min_db: int) -> np.ndarray:
@@ -787,7 +723,6 @@ def predict_subtile(subtile, sess) -> np.ndarray:
         indices[:, ...,  14] = bi(subtile)
         indices[:, ...,  15] = msavi2(subtile)
         indices[:, ...,  16] = grndvi(subtile)
-        #indices[-1] = np.median(indices[:12], axis = 0)
 
         subtile = indices
         subtile = subtile.astype(np.float32)
@@ -858,7 +793,6 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
                 i += 1
 
     predictions = predictions.astype(np.float32)
-
     predictions_range = np.nanmax(predictions, axis=-1) - np.nanmin(predictions, axis=-1)
     mean_certain_pred = np.nanmean(predictions[predictions_range < 50])
     mean_uncertain_pred = np.nanmean(predictions[predictions_range > 50])
