@@ -375,6 +375,9 @@ def match_extent_and_res(source, reference, out_filename, tof=False, esa=False):
     interpolation = gdalconst.GRA_NearestNeighbour
     gdal.ReprojectImage(src, out, src_proj, ref_proj, interpolation)
 
+    src = None
+    ref_ds = None
+    
     return None
 
 
@@ -432,7 +435,6 @@ def apply_extent_res(country):
         # assert no data value added correctly in tof rasters
         tof = rs.open(f'{country}/resampled_rasters/tof/{admin}.tif').read(1)
         assert tof.max() <= 255
-
     return None
 
 
@@ -638,6 +640,7 @@ def calculate_stats(country):
                                'hans_mean': hans_class_mean},
                                 ignore_index=True)
             print('Appended to dataframe.')
+        
         # map ESA id numbers to lcc labels
         esa_legend = {0: 'ESA No Data',
                 10: 'Cropland, rainfed',
