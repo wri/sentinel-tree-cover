@@ -384,6 +384,9 @@ def match_extent_and_res(source, reference, out_filename, tof=False, esa=False):
     interpolation = gdalconst.GRA_NearestNeighbour
     gdal.ReprojectImage(src, out, src_proj, ref_proj, interpolation)
 
+    src = None
+    ref_ds = None
+    
     return None
 
 
@@ -441,6 +444,7 @@ def apply_extent_res(country):
         # assert no data value added correctly in tof rasters
         tof = rs.open(f'{country}/resampled_rasters/tof/{admin}.tif').read(1)
         assert tof.max() <= 255
+        tof.close()
         
     return None
 
@@ -621,7 +625,7 @@ def calculate_stats(country):
 
             # iterate through the thresholds (0-10, 10-20, 20-30)
             for lower, upper in zip(lower_rng, upper_rng):
-                print('Thresholding values.')
+
                 # calculate total ha for that threshold 
                 tof_bin = np.sum((tof_class_mean_per_ha >= lower) & (tof_class_mean_per_ha < upper))
                 hans_bin = np.sum((hans_class_mean_per_ha >= lower) & (hans_class_mean_per_ha < upper))
@@ -650,6 +654,7 @@ def calculate_stats(country):
                                'hans_mean': hans_class_mean},
                                 ignore_index=True)
             print('Appended to dataframe.')
+        
         # map ESA id numbers to lcc labels
         esa_legend = {0: 'ESA No Data',
                 10: 'Cropland, rainfed',
@@ -680,6 +685,11 @@ def calculate_stats(country):
      
         df['esa_class'] = df['esa_id'].map(esa_legend)
         
+        # close datasets to save mem
+        tof.close()
+        hans.close()
+        esa.close()
+
         if counter % 3 == 0:
             print(f'{counter}/{len(folder_contents)} admins processed...')
     
