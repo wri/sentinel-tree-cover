@@ -94,6 +94,16 @@ This project uses Sentinel 1 and Sentinel 2 imagery. Monthly composites of Senti
 ![img](references/screenshots/datasmooth.png?raw=true)
 *  Calculating vegetation indices, including EVI, BI, and MSAVI2
 
+The cloud / shadow removal and temporal mosaicing algorithm is summarized below:
+*  Select all images with <30% cloud cover
+*  Select up to two images per month with <30% cloud cover, closest to beginning and middle of month
+*  Select least cloudy image if max CC > 15%, otherwise select the image closest to the middle of the month
+*  Linearly interpolate clouds and cloud shadows with a rolling median
+*  Smooth time series data with a rolling median
+*  Linearly interpolate image stack to a 5 day timestep
+*  Smooth time stack with Whittaker smoother
+*  Go back through and remove clouds, cloud shadows one final time
+
 # License
 
 The code is released under the GNU General Public License v3.0.
