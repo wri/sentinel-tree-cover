@@ -9,6 +9,10 @@ from tqdm import tnrange, tqdm_notebook
 import math
 from copy import deepcopy
 import time
+from scipy.ndimage import label
+from scipy.ndimage.morphology import binary_dilation
+from scipy.ndimage.filters import gaussian_filter
+
 
 def hist_norm(source: np.ndarray, template: np.ndarray) -> np.ndarray:
     '''
@@ -87,35 +91,72 @@ def adjust_interpolated_areas(array: np.ndarray,
 
 def adjust_interpolated_areas(array: np.ndarray, 
                               interp: np.ndarray) -> np.ndarray:
+    interp_binary = interp > 0
     for time in range(array.shape[0]):
-        std_ref_all = np.nanstd(array[time][interp[time] == 0], axis = (0, 1))
-        mean_ref_all = np.nanmean(array[time][interp[time] == 0], axis = (0, 1))
-        for local_x in [x for x in range(0, array.shape[1] - 200, 200)] + [array.shape[1] - 200]:
-            for local_y in [x for x in range(0, array.shape[2] - 200, 200)] + [array.shape[2] - 200]:
-                interp_i = interp[time, local_x:local_x + 200, local_y:local_y + 200]
-                array_i = array[time, local_x:local_x + 200, local_y:local_y + 200]
+        if np.sum(interp[time] == 0) > 0:
+            std_ref_all = np.nanstd(array[time][interp[time] == 0], axis = (0))
+            mean_ref_all = np.nanmean(array[time][interp[time] == 0], axis = (0))
+            
+            interp_i = interp_binary[time]
+            interp_map = interp[time]
+            array_i = array[time]
 
-                if np.sum(interp_i) > 0 and np.sum(interp_i) < (200*200*0.5):
-                    std_src = np.nanstd(array_i[interp_i == 1], axis = (0, 1))
-                    std_ref = np.nanstd(array_i[interp_i == 0], axis = (0, 1))
+            if np.sum(interp_i) > 0:# and np.sum(interp_i) < (216*216*0.90):
+                labels, numL = label(interp_i)
+                for section in range(1, numL + 1):
+                    std_src = np.nanstd(array_i[labels == section], axis = (0))
+                    std_ref = np.nanstd(array_i[interp_i == 0], axis = (0))
 
-                    mean_src = np.nanmean(array_i[interp_i == 1], axis = (0, 1))
-                    mean_ref = np.nanmean(array_i[interp_i == 0], axis = (0, 1))
+                    mean_src = np.nanmean(array_i[labels == section], axis = (0))
+                    mean_ref = np.nanmean(array_i[interp_i == 0], axis = (0))
+                    std_mult = (std_ref / std_src)
+                    #std_mult = np.clip(std_mult, 0.5, 1.5)
 
-                    array_i[interp_i == 1] = \
-                            array_i[interp_i == 1] * (std_ref / std_src) + (mean_ref - (mean_src * (std_ref / std_src)))
-                    array[time, local_x:local_x + 200, local_y:local_y + 200] = array_i
+                    addition = (mean_ref - (mean_src * (std_mult)))
+                    #addition = np.clip(addition, -0.25, 0.25)
 
-                elif np.sum(interp_i) > 0 and np.sum(interp_i) > (200*200*0.5):
-                    std_src = np.nanstd(array_i[interp_i == 1], axis = (0, 1))
-                    std_ref = std_ref_all
+                    array_i[labels == section] = (
+                            ((1 - interp_map[labels == section][..., np.newaxis]) * array_i[labels == section]) + \
+                            (interp_map[labels == section][..., np.newaxis] * (array_i[labels == section] * std_mult + addition))
+                    )
+                    array[time] = array_i
 
-                    mean_src = np.nanmean(array_i[interp_i == 1], axis = (0, 1))
-                    mean_ref = mean_ref_all
+    return array
 
-                    array_i[interp_i == 1] = \
-                            array_i[interp_i == 1] * (std_ref / std_src) + (mean_ref - (mean_src * (std_ref / std_src)))
-                    array[time, local_x:local_x + 200, local_y:local_y + 200] = array_i
+def adjust_interpolated_groups(array: np.ndarray, 
+                              interp: np.ndarray) -> np.ndarray:
+    for time in range(array.shape[0]):
+        #for group in range(interp.shape[-1]):
+        if np.sum(interp[time] > 0) > 0 and np.sum(interp[time] == 0) > 0:
+
+            interp_map = interp[time, ...]
+            interp_all = interp_map#np.max(interp[time], axis = -1)
+            array_i = array[time]
+            aboves = [0.4, 0.6, 0.8, 1.]
+            belows = [0.0, 0.4, 0.6, 0.8,]
+            for above, below in zip(aboves, belows):
+                interp_areas = array_i[np.logical_and(interp_map > below, interp_map <= above)]
+                non_interp_areas = array_i[interp_all == 0]
+
+                std_src = np.nanstd(interp_areas, axis = (0))
+                std_ref = np.nanstd(non_interp_areas, axis = (0))
+
+                mean_src = np.nanmean(interp_areas, axis = (0))
+                mean_ref = np.nanmean(non_interp_areas, axis = (0))
+                std_mult = (std_ref / std_src)
+                #std_mult = np.clip(std_mult, 0.5, 1.5)
+
+                addition = (mean_ref - (mean_src * (std_mult)))
+                #addition = np.clip(addition, -0.25, 0.25)
+                new_mult = interp_map[np.logical_and(interp_map > below, interp_map <= above)][..., np.newaxis] ** 0.1
+                original_mult = (1 - new_mult)
+                
+                array_i[np.logical_and(interp_map > below, interp_map <= above)] = (
+                        (original_mult * array_i[np.logical_and(interp_map > below, interp_map <= above)]) + \
+                        ((array_i[np.logical_and(interp_map > below, interp_map <= above)] * std_mult + addition) * new_mult)
+                    )
+                array[time] = array_i
+
     return array
 
 
@@ -123,7 +164,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                              probs: np.ndarray, 
                              shadows: np.ndarray,
                              image_dates: List[int], 
-                             wsize: int = 24) -> np.ndarray:
+                             wsize: int = 36, step = 8, thresh = 100) -> np.ndarray:
     """ Interpolates clouds and shadows for each time step with 
         linear combination of proximal clean time steps for each
         region of specified window size
@@ -143,36 +184,71 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
         g = np.exp(-((x**2 + y**2)/(2.0*sigma**2)))
         return g
 
-    # Subtract the median cloud binary mask, to remove pixels
-    #  that are always clouds (false positive)
-    #median_probs = np.percentile(probs, 66, axis = 0)
-    #median_probs[median_probs < 0.10] = 0.
+    def _fspecial_gauss_x(size, sigma):
+        x, y = np.mgrid[-size//2 + 1:size//2 + 1, -size//2 + 1:size//2 + 1]
+        g = np.exp(-((x**1 + y**2)/(2.0*sigma**2)))
+        return g
+    
+    n_arr = _fspecial_gauss(wsize, 6.5)[..., np.newaxis]
+    interp_gauss = _fspecial_gauss(wsize,6.5)[..., np.newaxis]
+    left = _fspecial_gauss_x(wsize, 6.5)
+    left[:, :wsize // 2] = 1.
+    left = left * _fspecial_gauss_x(wsize, 6.5).T
+    right = np.flip(left, 1)
+    top = left.T
+    down = right.T
+    top = top[..., np.newaxis]
+    down = down[..., np.newaxis]
+    left = left[..., np.newaxis]
+    right = right[..., np.newaxis]
+
+    o_arr = 1 - n_arr
+
     c_probs = np.copy(probs)# - median_probs
-    c_probs[np.where(c_probs >= 0.45)] = 1.
-    c_probs[np.where(c_probs < 0.45)] = 0.
+    c_probs[np.where(c_probs >= 0.4)] = 1.
+    c_probs[np.where(c_probs < 0.4)] = 0.
     
     if shadows.shape[1] != c_probs.shape[1]:
         shadows = shadows[:, 1:-1, 1:-1]
     c_probs += shadows
     c_probs[np.where(c_probs >= 1.)] = 1.
-    
+
     areas_interpolated = np.zeros((tiles.shape[0], tiles.shape[1], tiles.shape[2]))
-    x_range = [x for x in range(0, tiles.shape[1] - (wsize), 8)] + [tiles.shape[1] - wsize]
-    y_range = [x for x in range(0, tiles.shape[2] - (wsize), 8)] + [tiles.shape[2] - wsize]
+    dates_interpolated = np.zeros((tiles.shape[0], tiles.shape[1], tiles.shape[2], 10))
+    #date_interp_lookup = np.empty()
+
+    x_range = [x for x in range(0, tiles.shape[1] - (wsize), step)] + [tiles.shape[1] - wsize]
+    y_range = [x for x in range(0, tiles.shape[2] - (wsize), step)] + [tiles.shape[2] - wsize]
+    dates_interp = []
+
     for x in x_range:
         for y in y_range:
             subs = c_probs[:, x:x + wsize, y:y+wsize]
-            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) == 0)
+            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize*0.05))
+
+            if y == 0:
+                array_to_use = left
+            elif y == np.max(x_range):
+                array_to_use = right
+            elif x == 0:
+                array_to_use = top
+            elif x == np.max(y_range):
+                array_to_use = down
+            else:
+                array_to_use = n_arr
+
             if len(satisfactory) == 0:
                 print("Using median because there might only be cloudy images")
-                areas_interpolated[:, x:x+wsize, y:y+wsize] = 1.
+                areas_interpolated[date, x:x+wsize, y:y+wsize] = (
+                    np.maximum(areas_interpolated[date, x:x+wsize, y:y+wsize], np.squeeze(n_arr)))
+
                 median_retile = np.median(tiles[:, x:x+wsize, y:y+wsize, : ], axis = 0)
                 median_retile = np.broadcast_to(median_retile, (tiles.shape[0], wsize, wsize, tiles.shape[-1]))
-                tiles[:, x:x+wsize, y:y+wsize, : ] = median_retile
+                tiles[date, x:x+wsize, y:y+wsize, : ] = (tiles[date, x:x+wsize, y:y+wsize, : ] * (1 - array_to_use)) + (array_to_use * median_retile)
+
             if len(satisfactory) > 0:
                 for date in range(0, tiles.shape[0]):
-                    if np.sum(subs[date]) >= 20:
-                        #before, after = calculate_proximal_steps(date, satisfactory)
+                    if np.sum(subs[date]) >= thresh:
                         before2, after2 = calculate_proximal_steps_two(date, satisfactory)
 
                         before = date + before2
@@ -180,15 +256,127 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                         before = np.concatenate([before.flatten(), after.flatten()], axis = 0)
                         before[before < 0] = 0.
                         before[before > tiles.shape[0] - 1] = tiles.shape[0] - 1
+                        before = np.unique(before)
+                        if len(before) == 1:
+                            if before == date:
+                                before = np.arange(0, tiles.shape[0], 1)
+
+                        is_center = False
 
                         candidate = np.median(tiles[before, x:x+wsize, y:y+wsize, :], axis = 0)
-                        tiles[date, x:x+wsize, y:y+wsize, : ] = candidate 
+                        original = np.copy(tiles[date, x:x+wsize, y:y+wsize, : ])
+                        if not is_center:
+                            tiles[date, x:x+wsize, y:y+wsize, : ] = (original * (1 - array_to_use)) + (array_to_use * candidate) 
+                            interp_window = areas_interpolated[date, x:x+wsize, y:y+wsize] 
+                            areas_interpolated[date, x:x+wsize, y:y+wsize] = (
+                                np.maximum(areas_interpolated[date, x:x+wsize, y:y+wsize], np.squeeze(array_to_use)))
+                            dates_interpolated[date, x - 4:x+wsize + 4, y - 4:y+wsize + 4, 0] = 1.
 
+    #tiles = adjust_interpolated_areas(tiles, areas_interpolated)
+    print(f"Interpolated {np.sum(areas_interpolated > 0)} px"
+          f" {np.sum(areas_interpolated) / (632 * 632 * tiles.shape[0])}%")
+
+    x_range = [x for x in range(0, tiles.shape[1] - (wsize), step)] + [tiles.shape[1] - wsize]
+    y_range = [x for x in range(0, tiles.shape[2] - (wsize), step)] + [tiles.shape[2] - wsize]
+    for date in range(areas_interpolated.shape[0]):
+        for x in x_range:
+            for y in y_range:
+                subs = areas_interpolated[date, x:x+wsize, y:y+wsize]
+                if np.argmin(subs) == 105: #51 for 16x16
+                    areas_interpolated[date, x:x + wsize, y:y+wsize] = 1.
+
+    for date in range(dates_interpolated.shape[0]):
+        for time in range(dates_interpolated.shape[-1]):
+            dates_interpolated[date] = gaussian_filter(dates_interpolated[date], sigma=4)
+
+    np.save("interp_dates.npy", dates_interpolated)
+    return tiles, areas_interpolated
+
+
+def remove_cloud_and_shadows(tiles: np.ndarray,
+                             probs: np.ndarray, 
+                             shadows: np.ndarray,
+                             image_dates: List[int], 
+                             wsize: int = 36, step = 8, thresh = 100) -> np.ndarray:
+    """ Interpolates clouds and shadows for each time step with 
+        linear combination of proximal clean time steps for each
+        region of specified window size
+        
+        Parameters:
+         tiles (arr):
+         probs (arr): 
+         shadows (arr):
+         image_dates (list):
+         wsize (int): 
+    
+        Returns:
+         tiles (arr): 
+    """
+    c_probs = shadows
+
+    areas_interpolated = np.zeros((tiles.shape[0], tiles.shape[1], tiles.shape[2]), dtype = np.float32)
+    x_range = [x for x in range(0, tiles.shape[1] - (wsize), step)] + [tiles.shape[1] - wsize]
+    y_range = [x for x in range(0, tiles.shape[2] - (wsize), step)] + [tiles.shape[2] - wsize]
+
+    time1 = time.time()
+
+    for x in x_range:
+        for y in y_range:
+            subs = c_probs[:, x:x + wsize, y:y+wsize]
+            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize*0.2))
+
+            if len(satisfactory) > 0:
+                for date in range(0, tiles.shape[0]):
+                    if np.sum(subs[date]) >= thresh:
                         areas_interpolated[date, x:x+wsize, y:y+wsize] = 1.
 
-    tiles = adjust_interpolated_areas(tiles, areas_interpolated)
-    print(f"Interpolated {np.sum(areas_interpolated)} px"
-          f" {np.sum(areas_interpolated) / (632 * 632 * tiles.shape[0])}%")
+            else:
+                areas_interpolated[:, x:x+wsize, y:y+wsize] = 1.
+
+
+    for date in range(areas_interpolated.shape[0]):
+        blurred = gaussian_filter(areas_interpolated[date, ...], sigma=5, truncate = 2.)
+        blurred[blurred < 0.2] = 0.
+        areas_interpolated[date] = blurred
+        
+    areas_interpolated = areas_interpolated.astype(np.float32)
+
+    for x in x_range:
+        for y in y_range:
+            subs = c_probs[:, x:x + wsize, y:y+wsize]
+            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize*0.2))
+
+            if len(satisfactory) > 0:
+                for date in range(0, tiles.shape[0]):
+                    if np.sum(blurred[date] > 0.1) >= 0:
+                        before2, after2 = calculate_proximal_steps_two(date, satisfactory)
+
+                        before = date + before2
+                        after = date + after2
+                        before = np.concatenate([before.flatten(), after.flatten()], axis = 0)
+                        before[before < 0] = 0.
+                        before[before > tiles.shape[0] - 1] = tiles.shape[0] - 1
+                        before = np.unique(before)
+                        if len(before) <= 1:
+                            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize*0.5))
+                            before2, after2 = calculate_proximal_steps_two(date, satisfactory)
+                            before = date + before2
+                            after = date + after2
+                            before = np.concatenate([before.flatten(), after.flatten()], axis = 0)
+                            before[before < 0] = 0.
+                            before[before > tiles.shape[0] - 1] = tiles.shape[0] - 1
+                            before = np.unique(before)
+                           # print(before)
+                        if len(before) == 0:
+                            before = np.arange(0, tiles.shape[0], 1)
+
+                        #array_to_use = areas_interpolated[date, x:x+wsize, y:y+wsize][..., np.newaxis]
+                        tiles[date, x:x+wsize, y:y+wsize, : ] = (
+                            (tiles[date, x:x+wsize, y:y+wsize, : ] * (1 - areas_interpolated[date, x:x+wsize, y:y+wsize][..., np.newaxis])) + \
+                            (areas_interpolated[date, x:x+wsize, y:y+wsize][..., np.newaxis] * np.median(tiles[before, x:x+wsize, y:y+wsize, :], axis = 0))
+                        )
+    time2 = time.time()
+    #print(f"Finished interp in {np.around(time2 - time1, 1)} seconds")
     return tiles, areas_interpolated
 
 
@@ -208,16 +396,6 @@ def mcm_shadow_mask(arr: np.ndarray,
     import time
     imsize = arr.shape[1]
 
-    if imsize % 8 != 0:
-        pad_amt = 1 #int((imsize % 8) // 2)
-
-        arr = np.pad(arr, ((0, 0), (pad_amt, pad_amt), (pad_amt, pad_amt), (0, 0)))
-        c_probs = np.pad(c_probs, ((0, 0), (pad_amt, pad_amt), (pad_amt, pad_amt)))
-
-    assert arr.dtype == np.uint16
-    assert arr.shape[1] == c_probs.shape[1]
-    size = arr.shape[1]
-
     # Create empty arrays for shadows, clouds
     shadows = np.empty_like(arr)[..., 0]
     clouds = np.empty_like(shadows)
@@ -233,9 +411,9 @@ def mcm_shadow_mask(arr: np.ndarray,
         deltab11 = (arr[time, ..., 5] - ri[..., 5]) < int(-0.04 * 65535)
         deltab3 = (arr[time, ..., 1] - ri[..., 1]) > int(0.08 * 65535)
         deltab4 = (arr[time, ..., 2] - ri[..., 2]) > int(0.08 * 65535)
-        ti0 = arr[time, ..., 0] < int(0.11 * 65535)
-        ti10 = arr[time, ..., 4] > int(0.01 * 65535)
-        clouds_i = (deltab2 * deltab3 * deltab4) + ti10
+        ti0 = arr[time, ..., 0] < int(0.10 * 65535)
+        ti10 = arr[time, ..., 4] > int(0.005 * 65535)
+        clouds_i = (deltab2 * deltab3 * deltab4)
         clouds_i = clouds_i * 1
         clouds_i[clouds_i > 1] = 1.
 
@@ -245,35 +423,7 @@ def mcm_shadow_mask(arr: np.ndarray,
         clouds[time] = clouds_i
         shadows[time] = shadows_i
 
-    # Iterate through clouds, shadows, remove cloud/shadow where
-    # The same px is positive in subsequent time steps (likely FP)
-    clouds_new = np.copy(clouds)
-    for time in range(1, clouds.shape[0] - 2, 1):
-        moving_sums = np.sum(clouds[time - 1:time + 2], axis = (0))
-        moving_sums = moving_sums >= 3
-        clouds_new[time - 1:time + 2, moving_sums] = 0.
-    clouds = clouds_new
-
-
-    # Remove shadows if multiple time steps are shadows
-    shadows_new = np.copy(shadows)
-    for time in range(1, shadows.shape[0] - 2, 1):
-        moving_sums = np.sum(shadows[time - 1:time + 2], axis = 0)
-        moving_sums = moving_sums == 3
-        if np.sum(moving_sums > 0):
-        	print(f"Removing {np.sum(moving_sums)}, time {time}")
-        shadows_new[time, moving_sums] = 0.
-    shadows = shadows_new
-    print(np.sum(shadows), np.sum(clouds))
-
-    mean_clouds = np.mean(clouds, axis = (1, 2))
-    no_clouds = mean_clouds < 0.05
-    shadows[no_clouds] = 0.
-
-    
-    # Combine cloud and shadow
-    shadows = shadows + clouds
-    shadows[shadows > 1] = 1.
+    shadows = np.maximum(shadows, clouds)
     return shadows
 
 
@@ -296,64 +446,28 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
     for time in range(img.shape[0]):
         lower = np.max([0, time - 3])
         upper = np.min([img.shape[0], time + 4])
-        ri = np.median(img[lower:upper], axis = 0)
+        ri = np.percentile(img[lower:upper], 25, axis = 0)
 
-        deltab2 = (img[time, ..., 0] - ri[..., 0]) > 0.12
-        deltab8a = (img[time, ..., 7] - ri[..., 7]) < -0.06
-        deltab11 = (img[time, ..., 8] - ri[..., 8]) < -0.06
-        deltab3 = (img[time, ..., 1] - ri[..., 1]) > 0.10
-        deltab4 = (img[time, ..., 2] - ri[..., 2]) > 0.10
-        ti0 = (img[time, ..., 0] < 0.09)
+        deltab2 = (img[time, ..., 0] - ri[..., 0]) > 0.10#*(10/65)
+        deltab8a = (img[time, ..., 7] - ri[..., 7]) < -0.04#*(10/65)
+        deltab11 = (img[time, ..., 8] - ri[..., 8]) < -0.04#*(10/65)
+        deltab3 = (img[time, ..., 1] - ri[..., 1]) > 0.08#*(10/65)
+        deltab4 = (img[time, ..., 2] - ri[..., 2]) > 0.08#*(10/65)
+        ti0 = (img[time, ..., 0] < 0.10)# * (10/65)
         clouds_i = (deltab2 * deltab3 * deltab4)
         clouds_i = clouds_i * 1
 
         shadows_i = ((1 - clouds_i) * deltab11 * deltab8a * ti0)
         shadows_i = shadows_i * 1
 
-        if np.mean(clouds_i) > 0.1:
-            print(f"Missed cloud {time}: {np.mean(clouds_i)}")
-        if np.mean(shadows_i) > 0.1:
-            print(f"Missed shadow {time}: {np.mean(shadows_i)}")
-
         clouds[time] = clouds_i
         shadows[time] = shadows_i
 
-    clouds_new = np.copy(clouds)
-    for time in range(1, clouds.shape[-1], 1):
-        moving_sums = np.sum(clouds[time - 1:time + 2], axis = (0))
-        moving_sums = moving_sums >= 3
-        clouds_new[time - 1:time + 2, moving_sums] = 0.
-    clouds = clouds_new
+    clouds = np.maximum(clouds, shadows)
+    for timestep in range(clouds.shape[0]):
+        clouds[timestep] = binary_dilation(clouds[timestep], iterations = 5)
+    return clouds
 
-    shadows_new = np.copy(shadows)
-    for time in range(1, shadows.shape[-1], 1):
-        moving_sums = np.sum(shadows[time - 1:time + 1], axis = 0)
-        moving_sums = moving_sums >= 2
-        shadows_new[time - 1:time + 1, moving_sums] = 0.
-    shadows = shadows_new
-
-    clouds = clouds + shadows
-    clouds[clouds > 1] = 1.
-    clouds = np.mean(clouds, axis = (1, 2))
-    clouds[clouds < 0.05] = 0.
-
-    to_remove = np.argwhere(clouds > 0.33)
-
-    delete_to_remove = []
-    if len(to_remove) > 2:
-        for i in range(1, len(to_remove) - 1):
-            if to_remove[i - 1] == to_remove[i] - 1:
-                if to_remove[i + 1] == to_remove[i] + 1:
-                    delete_to_remove.append(i)
-                    delete_to_remove.append(i - 1)
-                    delete_to_remove.append(i + 1)
-
-    if len(delete_to_remove) > 0:
-        delete_to_remove = list(set(delete_to_remove))
-        print(f"Removing: {delete_to_remove}")
-        to_remove = np.delete(to_remove, delete_to_remove)
-
-    return to_remove
 
 def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
     """ Calculates the timesteps to remove based upon cloud cover and missing data
@@ -601,7 +715,6 @@ def subset_contiguous_sunny_dates(dates, probs):
         n_remaining = len(dates) - len(set(indices_to_rm))
         print(f"There are {n_remaining} left, max prob is {np.max(probs)}")
         if n_remaining > 10:
-            print("Executing the new logic")
             probs[indices_to_rm] = 0.
 
             # This first block will then remove months 3 and 9 if there are at least 10 months with images
@@ -612,7 +725,6 @@ def subset_contiguous_sunny_dates(dates, probs):
             print(images_per_month)
 
             months_with_images = np.sum(np.array(images_per_month) >= 1)
-            print(months_with_images)
             if months_with_images >= 11:
                 for x, y, month in zip(begin, end, np.arange(0, 13, 1)):
                     indices_month = _indices_month(dates, x, y, indices_to_rm)
@@ -674,8 +786,8 @@ def subset_contiguous_sunny_dates(dates, probs):
 
         month_dates = dates[indices_month]
         month_clouds = probs[indices_month]
-        month_good_dates = month_dates[month_clouds < 0.3]
-        indices_month = indices_month[month_clouds < 0.3]
+        month_good_dates = month_dates[month_clouds < 0.15]
+        indices_month = indices_month[month_clouds < 0.15]
 
         if len(month_good_dates) >= 2:
             if x > 0:
@@ -696,9 +808,7 @@ def subset_contiguous_sunny_dates(dates, probs):
             second_image = indices_month[closest_to_second_img]
             best_two_per_month.append(first_image)
             best_two_per_month.append(second_image)
-            
-            print(x, first_image, second_image)
-        
+                    
         elif len(month_good_dates) >= 1:
             if x > 0:
                 ideal_dates = [x, x + 15]
@@ -718,9 +828,11 @@ def subset_contiguous_sunny_dates(dates, probs):
     # We select the least cloudy image if the most cloudy has >15% cloud cover
     # Otherwise we select the second image
     if len(dates_round_2) > 10:
+        n_to_rm = len(dates_round_2) - 10
         monthly_dates = []
         monthly_probs = []
         monthly_dates_date = []
+        removed = 0
         for x, y in zip(begin, end):
             indices_month = np.argwhere(np.logical_and(
                 dates >= x, dates < y)).flatten()
@@ -729,13 +841,20 @@ def subset_contiguous_sunny_dates(dates, probs):
             if len(indices_month) > 1:
                 month_dates = dates[indices_month]
                 month_clouds = probs[indices_month]
-                if np.max(month_clouds) > 0.15:
-                    month_best_date = indices_month[np.argmin(month_clouds)]
+                subset_month = True if x not in [-60, 334] else False
+                if subset_month:
+                    subset_month = True if removed <= n_to_rm else False
+                if subset_month:
+                    if np.max(month_clouds) >= 0.10:
+                        month_best_date = [indices_month[np.argmin(month_clouds)]]
+                    else:
+                        month_best_date = [indices_month[1]]
                 else:
-                    month_best_date = indices_month[1]
-                monthly_dates.append(month_best_date)
-                monthly_probs.append(probs[month_best_date])
-                monthly_dates_date.append(dates[month_best_date])
+                    month_best_date = indices_month
+                monthly_dates.extend(month_best_date)
+                monthly_probs.extend(probs[month_best_date])
+                monthly_dates_date.extend(dates[month_best_date])
+                removed += 1
             elif len(indices_month) == 1:
                 monthly_dates.append(indices_month[0])
                 monthly_probs.append(probs[indices_month[0]])
@@ -748,7 +867,6 @@ def subset_contiguous_sunny_dates(dates, probs):
 
     dates_round_3 = dates[monthly_dates]
     probs_round_3 = probs[monthly_dates]
-    print_dates(dates_round_3, probs_round_3)
     
     if len(dates_round_3) > 10:
         delete_max = False

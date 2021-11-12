@@ -11,14 +11,14 @@ class Smoother:
         self.nbands = nbands
         self.dim = dim
         self.outsize = outsize
-        diagonals = np.zeros(2*2+1)
+        diagonals = np.zeros(2*2+1, dtype = np.float32)
         diagonals[2] = 1.
         for i in range(2):
             diff = diagonals[:-1] - diagonals[1:]
             diagonals = diff
         offsets = np.arange(2+1)
         shape = (self.size-2, self.size)
-        E = sparse.eye(self.size, format = 'csc')
+        E = sparse.eye(self.size, format = 'csc', dtype = np.float32)
         D = scipy.sparse.diags(diagonals, offsets, shape)
         D = D.conj().T.dot(D) * self.lmbd
         coefmat = E + D
@@ -39,14 +39,10 @@ class Smoother:
 
         # median of zip(range(0, 72, 6), range(6, 72, 6))
 
-        monthly = np.empty((self.outsize, self.dim, self.dim, self.nbands))
+        monthly = np.empty((self.outsize, self.dim, self.dim, self.nbands), dtype = np.float32)
         index = 0
-        for start, end in zip(range(0, self.size + 6, self.size // self.outsize), #0, 72, 6
-                              range(self.size // self.outsize, self.size + 6, self.size // self.outsize)): # 6, 72, 6
-            start = np.max([start - 3, 0])
-            end = np.min([end + 3, self.size])
+        for start, end in zip(range(0, self.size + 3, self.size // self.outsize), #0, 72, 6
+                              range(self.size // self.outsize, self.size + 3, self.size // self.outsize)): # 6, 72, 6
             monthly[index] = np.median(x[start:end], axis = 0)
             index += 1
-
-        
         return monthly

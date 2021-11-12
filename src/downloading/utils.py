@@ -160,7 +160,7 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
          keep_steps (arr):
          max_distance (int)
     """
-    biweekly_dates = [day for day in range(0, 360, 5)] # ideal imagery dates are every 15 days
+    biweekly_dates = [day for day in range(0, 360, 10)] # ideal imagery dates are every 15 days
     
     # Identify the dates where there is < 20% cloud cover
     satisfactory_ids = [x for x in range(0, img_bands.shape[0])]
@@ -173,14 +173,14 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
         closest = np.min(abs(distances))
         closest_id = np.argmin(abs(distances))
         # If there is imagery within 10 days, select it
-        if closest <= 10:
+        if closest <= 30:
             date = satisfactory_dates[closest_id]
             image_idx = int(np.argwhere(np.array(image_dates) == date)[0])
             selected_images[i] = {'image_date': [date], 'image_ratio': [1], 'image_idx': [image_idx]}
         else:
             # If there is not imagery within 10 days, look for the closest above and below imagery
-            prior = distances[np.where(distances < 0)][-3:]
-            after = distances[np.where(distances > 0)][:3]
+            prior = distances[np.where(distances < 0)][-1:]
+            after = distances[np.where(distances > 0)][:1]
             after_flag = 0
             prior_flag = 0
             prior_mult = 1
@@ -212,7 +212,7 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
                 prior_abs = (prior_mult * abs(np.mean(prior))) + prior_flag
                 after_abs = abs(abs(np.mean(after)) - after_flag)
                 # (20 / (20 + 80)) = 0.2
-                after_ratio = prior_abs / (prior_abs + after_abs)
+                after_ratio = (prior_abs) / (prior_abs + after_abs)
                 assert after_ratio <= 1.
                 prior_ratio = 1 - after_ratio
             else:
@@ -295,28 +295,46 @@ def calculate_proximal_steps_two(date: int, satisfactory: list) -> (int, int):
     arg_before, arg_after = [], []
     if date > 0:
         idx_before = satisfactory - date
+
         arg_before = np.array(np.where(idx_before < 0, idx_before, -np.inf).flatten())
-        if np.sum(arg_before > -np.inf) > 2:
-            arg_before = np.argpartition(arg_before, -2)[-2:]
+        to_print = np.copy(arg_before)
+        n_before = 2#if date < np.max(satisfactory) else 3
+
+        if np.sum(arg_before > -np.inf) == 0:
+            arg_before = np.empty((0))
+        elif np.sum(arg_before > -np.inf) > n_before:
+            arg_before = np.argpartition(arg_before, -n_before)[-n_before:]
+        elif np.sum(arg_before > -np.inf) == n_before:
+            arg_before = np.argwhere(arg_before > -np.inf).flatten()
         else:
-            arg_before = arg_before.argmax()
-        arg_before = list(idx_before[arg_before])
+            arg_before = np.array(arg_before.argmax())
+        if arg_before != np.empty((0)):
+            arg_before = list(idx_before[arg_before])
     if date < np.max(satisfactory):
         idx_after = satisfactory - date
         arg_after = np.array(np.where(idx_after > 0, idx_after, np.inf).flatten())
-        if np.sum(arg_after < np.inf) > 2:
-            arg_after = np.argpartition(arg_after, 2)[:2]
+        n_after = 2# if date > 0 else 3
+
+        if np.sum(arg_after < np.inf) == 0:
+            arg_after = np.empty((0))
+        if np.sum(arg_after < np.inf) > n_after:
+            arg_after = np.argpartition(arg_after, n_after)[:n_after]
+        elif np.sum(arg_after < np.inf) == n_after:
+            arg_after = np.argwhere(arg_after < np.inf).flatten()
         else:
-            arg_after = arg_after.argmin()
-        arg_after = list(idx_after[arg_after])
-    if len(arg_after) == 0 and len(arg_before) == 0:
+            arg_after = np.array(arg_after.argmin())
+        if arg_after != np.empty((0)):
+            arg_after = list(idx_after[arg_after])
+            
+    if arg_after == np.empty((0)) and arg_before == np.empty((0)):
         arg_after = date
         arg_before = date
-    elif len(arg_after) == 0:
+    elif arg_after == np.empty((0)):
         arg_after = arg_before
-    elif len(arg_before) == 0:
+    elif arg_before == np.empty((0)):
         arg_before = arg_after
-    return np.array(arg_before), np.array(arg_after)
+
+    return np.array(arg_before).astype(int), np.array(arg_after).astype(int)
 
 
 def tile_window(h: int, w: int, tile_width: int=None,
