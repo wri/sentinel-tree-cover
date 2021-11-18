@@ -23,17 +23,10 @@ def hist_norm(source: np.ndarray, template: np.ndarray) -> np.ndarray:
     source = source.ravel()
     template = template.ravel()
 
-    '''
-    # convert the input to be 0 - 256
-    '''
     if source.dtype != np.int:
         source = np.trunc(source * 256).astype(int)
         template = np.trunc(template * 256).astype(int)
-    '''
-        the np.unique funcitons should be fine as long as we only do it on the masked sections
-        # the np.cumsum functions are fine as well
-        # the np.interp is where i'm not sure! 
-    '''
+
     s_values, bin_idx, s_counts = np.unique(source, return_inverse=True,
                                             return_counts=True)
     t_values, t_counts = np.unique(template, return_counts=True)
@@ -45,48 +38,6 @@ def hist_norm(source: np.ndarray, template: np.ndarray) -> np.ndarray:
     interp_t_values = np.interp(s_quantiles, t_quantiles, t_values)
 
     return interp_t_values[bin_idx].reshape(oldshape)
-
-
-def adjust_interpolated_areas_new(array: np.ndarray, 
-                                  interp: np.ndarray) -> np.ndarray:
-    '''
-    Aligns the histograms of the interpolated areas of an array with the 
-    histograms of the non-interpolated areas
-    '''
-    for time in range(array.shape[0]):
-        for band in range(array.shape[-1]):
-            interp_i = interp[time, :, :, band]
-            array_i = array[time, :, :, band]
-            if np.sum(interp_i) > 0:
-                to_adjust = array_i[interp_i == 1]
-                target = array_i[interp_i == 0]
-                adjusted = hist_norm(to_adjust, array_i[interp_i == 0])
-                adjusted = adjusted.astype(np.float32) / 256
-                adjusted_idx = np.argwhere(interp_i.flatten() == 1).flatten()
-                array_i = array_i.flatten()
-                array_i[adjusted_idx] = adjusted
-                array_i = np.reshape(array_i, (646, 646))
-                array[time, :, :, band] = array_i
-    return array
-
-
-def adjust_interpolated_areas(array: np.ndarray, 
-                              interp: np.ndarray) -> np.ndarray:
-    for time in range(array.shape[0]):
-        for band in range(array.shape[-1]):
-            interp_i = interp[time]
-            array_i = array[time, :, :, band]
-            if np.sum(interp_i) > 0:
-                adj = (np.median(array_i[interp_i == 0]) -  # 0.2
-                      (np.median(array_i[interp_i == 1]))) # 0.
-                if adj < 0:
-                    adj = np.max([adj, -0.05])
-                if adj > 0:
-                    adj = np.min([adj, 0.05])
-
-                array_i[interp_i == 1] += adj # - 0.1
-                array[time, :, :, band] = array_i
-    return array
 
 
 def adjust_interpolated_areas(array: np.ndarray, 
@@ -215,7 +166,6 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
 
     areas_interpolated = np.zeros((tiles.shape[0], tiles.shape[1], tiles.shape[2]))
     dates_interpolated = np.zeros((tiles.shape[0], tiles.shape[1], tiles.shape[2], 10))
-    #date_interp_lookup = np.empty()
 
     x_range = [x for x in range(0, tiles.shape[1] - (wsize), step)] + [tiles.shape[1] - wsize]
     y_range = [x for x in range(0, tiles.shape[2] - (wsize), step)] + [tiles.shape[2] - wsize]
@@ -376,7 +326,6 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                             (areas_interpolated[date, x:x+wsize, y:y+wsize][..., np.newaxis] * np.median(tiles[before, x:x+wsize, y:y+wsize, :], axis = 0))
                         )
     time2 = time.time()
-    #print(f"Finished interp in {np.around(time2 - time1, 1)} seconds")
     return tiles, areas_interpolated
 
 
@@ -478,7 +427,6 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
         Returns:
          to_remove (arr): 
     """
-    print(dates)
     def _check_month(month, thresh):
         month_idx = np.argwhere(np.logical_and(dates >= starting[month],
                                                dates < starting[month + 1]))
@@ -567,6 +515,7 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
 
     print(f"Utilizing {len(good_steps_idx)}/{dates.shape[0]} steps")
     return to_remove, good_steps_idx
+
 
 def print_dates(dates, probs):
     month_days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 80]
@@ -821,8 +770,6 @@ def subset_contiguous_sunny_dates(dates, probs):
                 
     dates_round_2 = dates[best_two_per_month]
     probs_round_2 = probs[best_two_per_month]
-
-    print_dates(dates_round_2, probs_round_2)
     
     # We then select between those two images to keep a max of one per month
     # We select the least cloudy image if the most cloudy has >15% cloud cover
@@ -872,7 +819,6 @@ def subset_contiguous_sunny_dates(dates, probs):
         delete_max = False
         if np.max(probs_round_3) >= 0.15:
             delete_max = True
-            print("Deleting the max")
             indices_to_rm.append(monthly_dates[np.argmax(probs_round_3)])
         for x, y in zip(begin, end):
             indices_month = np.argwhere(np.logical_and(
@@ -888,5 +834,4 @@ def subset_contiguous_sunny_dates(dates, probs):
                 elif len(monthly_dates) >= 12:
                     if x == 90 or x == 273:
                         indices_to_rm.append(indices_month[0])
-                    
     return indices_to_rm

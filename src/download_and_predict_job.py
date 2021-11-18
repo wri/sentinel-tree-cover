@@ -37,7 +37,7 @@ from preprocessing import cloud_removal
 from preprocessing import interpolation
 from preprocessing.whittaker_smoother import Smoother
 from tof import tof_downloading
-from tof.tof_downloading import to_int16, to_float32, identify_shadow_small_bbx
+from tof.tof_downloading import to_int16, to_float32
 from downloading.io import FileUploader,  get_folder_prefix, make_output_and_temp_folders, upload_raw_processed_s3
 from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder
 from preprocessing.indices import evi, bi, msavi2, grndvi
@@ -100,6 +100,8 @@ def superresolve_large_tile(arr: np.ndarray, sess) -> np.ndarray:
             if x != x_range[-1] and y != y_range[-1]:
                 to_resolve = arr[:, x:x+wsize, y:y+wsize, ...]
                 arr[:, x:x+wsize, y:y+wsize, ...] = superresolve_tile(to_resolve, sess)
+            # The end x and y subtiles need to be done separately
+            # So that a partially resolved tile isnt served as input
             elif x == x_range[-1]:
                 to_resolve = x_end[:, :, y:y+wsize, ...]
                 arr[:, x:x+wsize, y:y+wsize, ...] = superresolve_tile(to_resolve, sess)
@@ -132,7 +134,9 @@ def make_bbox(initial_bbx: list, expansion: int = 10) -> list:
     return bbx
 
 
-def download_s1_tile(data, bbx, api_key, year, dates_sentinel_1, size, s1_file, s1_dates_file):
+def download_s1_tile(data: np.ndarray, bbx: list, api_key, year: int,
+                     dates_sentinel_1: list, size: tuple, 
+                     s1_file: str, s1_dates_file: str) -> None:
     """Downloads the sentinel 1 data for a tile
        
        Parameters:
@@ -248,7 +252,9 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             clean_dates = np.delete(clean_dates, 5)
             cloud_probs = np.delete(cloud_probs, 5, 0)
 
-        cloud_removal.print_dates(clean_dates, np.mean(cloud_probs, axis = (1, 2)))
+        cloud_removal.print_dates(
+            clean_dates, np.mean(cloud_probs, axis = (1, 2))
+        )
         print(f"Overall using {len(clean_dates)}/{len(clean_dates)+len(to_remove)} steps")
 
         hkl.dump(cloud_probs, clouds_file, mode='w', compression='gzip')
@@ -258,7 +264,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         print(f"Downloading {s2_10_file}")
         clean_steps = list(hkl.load(clean_steps_file))
         cloud_probs = hkl.load(clouds_file)
-        s2_10, s2_20, s2_dates = tof_downloading.download_sentinel_2(bbx,
+        s2_10, s2_20, s2_dates = tof_downloading.download_sentinel_2_new(bbx,
                                                      clean_steps = clean_steps,
                                                      api_key = api_key, dates = dates,
                                                      year = year)
@@ -269,10 +275,6 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
               f" S2, {s2_10.shape}, S2d, {s2_dates.shape}")
         to_remove_clouds = [i for i, val in enumerate(clean_steps) if val not in s2_dates]
         to_remove_dates = [val for i, val in enumerate(clean_steps) if val not in s2_dates]
-        #if len(to_remove_clouds) >= 1:
-        #    print(f"Removing {to_remove_dates} from clouds because not in S2")
-        #    cloud_probs = np.delete(cloud_probs, to_remove_clouds, 0)
-        #    hkl.dump(cloud_probs, clouds_file, mode='w', compression='gzip')
 
         hkl.dump(to_int16(s2_10), s2_10_file, mode='w', compression='gzip')
         hkl.dump(to_int16(s2_20), s2_20_file, mode='w', compression='gzip')
@@ -297,7 +299,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
     return bbx
 
 
-def adjust_shape(arr, width, height):
+def adjust_shape(arr: np.ndarray, width: int, height: int) -> np.ndarray:
     print(f"Input array shape: {arr.shape}")
     if len(arr.shape) == 3:
         arr = arr[:, :, :, np.newaxis]
@@ -350,7 +352,8 @@ def adjust_shape(arr, width, height):
     return arr
 
 
-def process_tile(x: int, y: int, data: pd.DataFrame, local_path, make_shadow = False) -> np.ndarray:
+def process_tile(x: int, y: int, data: pd.DataFrame, 
+                 local_path: str, make_shadow: bool = False) -> np.ndarray:
     """
     Processes raw data structure (in temp/raw/*) to processed data structure
         - align shapes of different data sources (clouds / shadows / s1 / s2 / dem)
@@ -390,11 +393,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path, make_shadow = F
     
     clouds = hkl.load(clouds_file)
     s1 = hkl.load(s1_file)
-
-    # The S1 data here needs to be bilinearly upsampled as it is in training time! 
-    s1 = s1.reshape((s1.shape[0], s1.shape[1] // 2, 2, s1.shape[2] // 2, 2, 2))
-    s1 = np.mean(s1, (2, 4))
-    s1 = resize(s1, (s1.shape[0], s1.shape[1] * 2, s1.shape[2] * 2, 2), order = 1)
     s1 = s1 / 65535
     s1[..., -1] = convert_to_db(s1[..., -1], 22)
     s1[..., -2] = convert_to_db(s1[..., -2], 22)
@@ -406,36 +404,55 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path, make_shadow = F
     dem = median_filter(dem, size = 5)
     image_dates = hkl.load(s2_dates_file)
     
-    # The below code ensures that different data
-    # sources are all the same shape, as they are downloaded
-    # with varying resolutions (10m, 20m, 60m, 160m)
+    # Ensure arrays are the same dims
     width = s2_20.shape[1] * 2
     height = s2_20.shape[2] * 2
     s1 = adjust_shape(s1, width, height)
+    s2_10 = adjust_shape(s2_10, width, height)
     dem = adjust_shape(dem, width, height)
 
-    # S2 10
-    if s2_10.shape[2] < height:
-        pad_amt =  (height - s2_10.shape[2]) / 2
-        if pad_amt % 2 == 0:
-            pad_amt = int(pad_amt)
-            s2_10 = np.pad(s2_10, ((0, 0), (0, 0), (pad_amt, pad_amt), (0,0)), 'edge')
-        else:
-            s2_10 = np.pad(s2_10, ((0, 0), (0, 0), (0, int(pad_amt * 2)), (0,0)), 'edge')
-    
-    if s2_10.shape[2] > height:
-        pad_amt =  abs(height - s2_10.shape[2])
-        s2_10 = s2_10[:, :, :-pad_amt, :]
-        
     print(f'Clouds: {clouds.shape}, \n'
           f'S1: {s1.shape} \nS2: {s2_10.shape}, {s2_20.shape} \nDEM: {dem.shape}')
             
     # The 20m bands must be bilinearly upsampled to 10m as input to superresolve_tile
     sentinel2 = np.empty((s2_10.shape[0], width, height, 10), np.float32)
     sentinel2[..., :4] = s2_10
-    for band in range(6):
+    for band in range(4):
         for step in range(sentinel2.shape[0]):
-            sentinel2[step, ..., band + 4] = resize(s2_20[step,..., band], (width, height), 1)
+            sentinel2[step, ..., band + 4] = resize(
+                s2_20[step,..., band], (width, height), 1
+            )
+
+    for band in range(4, 6):
+        for step in range(sentinel2.shape[0]):
+            mid = s2_20[step,..., band]
+            if (mid.shape[0] % 2 == 0) and (mid.shape[1] % 2) == 0:
+                mid = mid.reshape(mid.shape[0] // 2, 2, mid.shape[1] // 2, 2)
+                mid = np.mean(mid, axis = (1, 3))
+                sentinel2[step, ..., band + 4] = resize(mid, (width, height), 1)
+            if mid.shape[0] %2 != 0 and mid.shape[1] %2 != 0:
+                mid_misaligned_x = mid[0, :]
+                mid_misaligned_y = mid[:, 0]
+                mid = mid[1:, 1:].reshape(
+                    np.int(np.floor(mid.shape[0] / 2)), 2,
+                    np.int(np.floor(mid.shape[1] / 2)), 2)
+                mid = np.mean(mid, axis = (1, 3))
+                sentinel2[step, 1:, 1:, band + 4] = resize(mid, (width - 1, height - 1), 1)
+                sentinel2[step, 0, :, band + 4] = mid_misaligned_x.repeat(2)
+                sentinel2[step, :, 0, band + 4] = mid_misaligned_y.repeat(2)
+            elif mid.shape[0] % 2 != 0:
+                mid_misaligned = mid[0, :]
+                mid = mid[1:].reshape(np.int(np.floor(mid.shape[0] / 2)), 2, mid.shape[1] // 2, 2)
+                mid = np.mean(mid, axis = (1, 3))
+                sentinel2[step, 1:, :, band + 4] = resize(mid, (width - 1, height), 1)
+                sentinel2[step, 0, :, band + 4] = mid_misaligned.repeat(2)
+            elif mid.shape[1] % 2 != 0:
+                mid_misaligned = mid[:, 0]
+                mid = mid[:, 1:]
+                mid = mid.reshape(mid.shape[0] // 2, 2, np.int(np.floor(mid.shape[1] / 2)), 2)
+                mid = np.mean(mid, axis = (1, 3))
+                sentinel2[step, :, 1:, band + 4] = resize(mid, (width, height - 1), 1)
+                sentinel2[step, :, 0, band + 4] = mid_misaligned.repeat(2)
 
     # Identifies missing imagery (either in sentinel acquisition, or induced in preprocessing)
     # If more than 50% of data for a time step is missing, then remove them....
@@ -452,14 +469,19 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path, make_shadow = F
     if make_shadow:
         time1 = time.time()
         cloudshad = cloud_removal.remove_missed_clouds(sentinel2)
-        sentinel2, interp = cloud_removal.remove_cloud_and_shadows(sentinel2, cloudshad, cloudshad, image_dates,
-                                                                 wsize = 20, step = 10, thresh = 100)
+        sentinel2, interp = cloud_removal.remove_cloud_and_shadows(
+            sentinel2, cloudshad, cloudshad, image_dates, wsize = 20, step = 10, thresh = 100
+        )
         time2 = time.time()
         print(f"Cloud/shadow interp:{np.around(time2 - time1, 1)} seconds, "
             f" {100*np.sum(interp > 0)/np.prod(interp.shape)}%")
     else:
-        interp = np.zeros((sentinel2.shape[0], sentinel2.shape[1], sentinel2.shape[2]), dtype = np.float32)
-        cloudshad = np.zeros((sentinel2.shape[0], sentinel2.shape[1], sentinel2.shape[2]), dtype = np.float32)
+        interp = np.zeros(
+            (sentinel2.shape[0], sentinel2.shape[1], sentinel2.shape[2]), dtype = np.float32
+        )
+        cloudshad = np.zeros(
+            (sentinel2.shape[0], sentinel2.shape[1], sentinel2.shape[2]), dtype = np.float32
+        )
 
     dem = dem / 90
     sentinel2 = np.clip(sentinel2, 0, 1)
@@ -608,9 +630,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subset = np.delete(subset, to_remove, 0)
             interp_tile = np.delete(interp_tile, to_remove, 0)
 
-        #if subset.shape[0] > 0:
-        #    subset = superresolve_tile(subset, sess = superresolve_sess)
-
         # Transition (n, 160, 160, ...) array to (72, 160, 160, ...)
         subtile_copy = np.copy(subset)
         subtile_median = np.median(subtile_copy, axis = 0)
@@ -700,7 +719,7 @@ def convert_to_db(x: np.ndarray, min_db: int) -> np.ndarray:
     return np.clip(x, 0, 1)
  
 
-def predict_subtile(subtile, sess) -> np.ndarray:
+def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
     """ Runs temporal (convGRU + UNET) predictions on a (12, 174, 174, 13) array:
         - Calculates remote sensing indices
         - Normalizes data
@@ -745,7 +764,7 @@ def predict_subtile(subtile, sess) -> np.ndarray:
     return preds
 
 
-def fspecial_gauss(size, sigma):
+def fspecial_gauss(size: int, sigma: int) -> np.ndarray:
     """Function to mimic the 'fspecial' gaussian MATLAB function
 
         Parameters:
@@ -854,7 +873,8 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
     return predictions
 
 
-def download_raw_tile(tile_idx, local_path, subfolder = "raw"):
+def download_raw_tile(tile_idx: tuple, local_path: str,
+                      subfolder: str = "raw") -> None:
     x = tile_idx[0]
     y = tile_idx[1]
 
@@ -883,7 +903,7 @@ if __name__ == '__main__':
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
     parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/202-temporal-oct-regularized/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
-    parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k/')
+    parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
     parser.add_argument("--ul_flag", dest = "ul_flag", default = False)
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")

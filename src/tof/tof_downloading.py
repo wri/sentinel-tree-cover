@@ -255,35 +255,6 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
     return cloud_img, clean_steps, np.array(cloud_dates)
 
 
-def identify_shadow_small_bbx(shadow_bbx: List[Tuple[float, float]], dates: dict,
-                api_key: str,
-                year: int,
-                cloud_img) -> (np.ndarray, np.ndarray, np.ndarray):
-    warnings.warn("identify_shadow_small_bbx is deprecated", warnings.DeprecationWarning)
-
-    box = BBox(shadow_bbx, crs = CRS.WGS84)
-    all_dates = (f'{str(year - 1)}-11-15' , f'{str(year + 1)}-02-15')
-    shadow_request = WcsRequest(
-        layer='SHADOW',
-        bbox=box, time=all_dates,
-        resx='60m', resy='60m',
-        image_format = MimeType.TIFF,
-        maxcc=.9, config=api_key,
-        custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-        time_difference=datetime.timedelta(hours=48))
-
-    dates_dict = [x for x in shadow_request.get_dates()]
-    dates_str = extract_dates(dates_dict, year)
-    steps_to_download = [idx for idx, val in enumerate(dates_str) if val in dates] 
-
-    shadow_img = np.array(shadow_request.get_data(data_filter = steps_to_download))
-    shadow_pus = (shadow_img.shape[1]*shadow_img.shape[2])/(512*512) * shadow_img.shape[0] * (6 / 3)
-    shadow_img = shadow_img.repeat(6,axis=1).repeat(6,axis=2)
-
-    shadows = mcm_shadow_mask(shadow_img, shadow_img)
-    return shadows
-
-
 def download_dem(bbox: List[Tuple[float, float]],
                  api_key: str) -> np.ndarray:
     """ Downloads the DEM layer from Sentinel hub
@@ -677,4 +648,158 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
 
     s2_10_usage = (img_10.shape[1]*img_10.shape[2])/(512*512) * (4/3) * img_10.shape[0]
 
+    return img_10, img_20, np.array(dates_to_download)
+
+
+def download_sentinel_2_new(bbox: List[Tuple[float, float]],
+                   clean_steps: np.ndarray, api_key,
+                   dates: dict, year: int) -> (np.ndarray, np.ndarray):
+    """ Downloads the L2A sentinel layer with 10 and 20 meter bands
+        
+        Parameters:
+         bbox (list): output of calc_bbox
+         clean_steps (list): list of steps to filter download request
+         epsg (float): EPSG associated with bbox 
+         time (tuple): YY-MM-DD - YY-MM-DD bounds for downloading 
+    
+        Returns:
+         img (arr):
+         img_request (obj): 
+    """
+    
+    # Download 20 meter bands
+    box = BBox(bbox, crs = CRS.WGS84)
+
+    image_request = WcsRequest(
+            layer='L2A_20_NEW',
+            bbox=box, time=dates,
+            image_format = MimeType.TIFF,
+            maxcc=1., resx='20m', resy='20m',
+            config=api_key,
+            custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+                                constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
+            time_difference=datetime.timedelta(hours=48),
+        )
+    image_dates_dict = [x for x in image_request.get_dates()]
+    image_dates = extract_dates(image_dates_dict, year)
+
+    steps_to_download = []
+    dates_to_download = []
+    for i, val in enumerate(clean_steps):
+        closest_image = np.argmin(abs(val - image_dates))
+        if np.min(abs(val - image_dates)) < 3:
+            steps_to_download.append(closest_image)
+            dates_to_download.append(image_dates[closest_image])
+        else:
+            print(f"There is a date/orbit mismatch, and the closest image is"
+                  f" {np.min(abs(val - image_dates))} days away")
+
+    quality_request = WcsRequest(
+            layer='DATA_QUALITY',
+            bbox=box, time=dates,
+            image_format = MimeType.TIFF,
+            maxcc=1., resx='160m', resy='160m',
+            config=api_key,
+            custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+                                constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
+            time_difference=datetime.timedelta(hours=48),
+    )
+
+    quality_img = np.array(quality_request.get_data(data_filter = steps_to_download))
+    quality_per_img = np.mean(quality_img, axis = (1, 2)) / 255
+    print("Image quality:", quality_per_img)
+    steps_to_rm = np.argwhere(quality_per_img > 0.2).flatten()
+    if len(steps_to_rm) > 0:
+        steps_to_download = np.array(steps_to_download)
+        steps_to_download = list(np.delete(steps_to_download, steps_to_rm))
+        dates_to_download = np.array(dates_to_download)
+        dates_to_download = list(np.delete(dates_to_download, steps_to_rm))
+    
+    img_20 = np.array(image_request.get_data(data_filter = steps_to_download))
+    s2_20_usage = (img_20.shape[1]*img_20.shape[2])/(512*512) * (4/3) * img_20.shape[0]
+    
+    # Convert 20m bands to np.float32, ensure correct dimensions
+    if not isinstance(img_20.flat[0], np.floating):
+        assert np.max(img_20) > 1
+        img_20 = np.float32(img_20) / 65535.
+        assert np.max(img_20) <= 1
+        assert img_20.dtype == np.float32
+
+    image_request = WcsRequest(
+            layer='L2A_40',
+            bbox=box, time=dates,
+            image_format = MimeType.TIFF,
+            maxcc=1., resx='40m', resy='40m',
+            config=api_key,
+            custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+                                constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
+            time_difference=datetime.timedelta(hours=48),
+        )
+    img_40 = np.array(image_request.get_data(data_filter = steps_to_download))
+
+    if not isinstance(img_40.flat[0], np.floating):
+        assert np.max(img_40) > 1
+        img_40 = np.float32(img_40) / 65535.
+        assert np.max(img_40) <= 1
+        assert img_40.dtype == np.float32
+
+    s2_40_usage = (img_40.shape[1]*img_40.shape[2])/(512*512) * (2/3) * img_40.shape[0] 
+    img_40 = img_40.repeat(2, axis = 1).repeat(2, axis = 2)
+    print(img_40.shape, img_20.shape)
+
+    if (img_20.shape[1] > img_40.shape[1]) or (img_20.shape[2] > img_40.shape[2]):
+        img_40 = resize(img_40, (img_20.shape[0], img_20.shape[1], img_20.shape[2], 2), order = 0)
+
+    if img_40.shape[1] > img_20.shape[1]:
+        to_remove = (img_40.shape[1] - img_20.shape[1])
+        if to_remove == 2:
+            img_40 = img_40[:, 1:-1, ...]
+        if to_remove == 1:
+            img_40 = img_40.repeat(2, axis = 1).repeat(2, axis = 2)
+            img_40 = img_40[:, 1:-1, ...]
+            img_40 = np.reshape(img_40, (img_40.shape[0], img_40.shape[1] // 2, 2, img_40.shape[2] // 2, 2, 2))
+            img_40 = np.mean(img_40, axis = (2, 4))
+ 
+
+    if img_40.shape[2] > img_20.shape[2]:
+        to_remove = (img_40.shape[2] - img_20.shape[2])
+        if to_remove == 2:
+            img_40 = img_40[:, :, 1:-1, ...]
+        if to_remove == 1:
+            img_40 = img_40.repeat(2, axis = 1).repeat(2, axis = 2)
+            img_40 = img_40[:, :, 1:-1, ...]
+            img_40 = np.reshape(img_40, (img_40.shape[0], img_40.shape[1] // 2, 2, img_40.shape[2] // 2, 2, 2))
+            img_40 = np.mean(img_40, axis = (2, 4))
+    print(img_40.shape, img_20.shape)
+
+    img_20 = np.concatenate([img_20, img_40], axis = -1)
+    print(f"Original 20 meter bands size: {img_20.shape}, using {round(s2_20_usage + s2_40_usage, 1)} PU")
+    # Download 10 meter bands
+    image_request = WcsRequest(
+            layer='L2A10',
+            bbox=box, time=dates,
+            image_format = MimeType.TIFF,
+            maxcc=1., resx='10m', resy='10m',
+            config=api_key,
+            custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'BICUBIC',
+                                constants.CustomUrlParam.UPSAMPLING: 'BICUBIC'},
+            time_difference=datetime.timedelta(hours=48),
+    )
+    img_10 = np.array(image_request.get_data(data_filter = steps_to_download))
+    s2_10_usage = (img_10.shape[1]*img_10.shape[2])/(512*512) * (4/3) * img_10.shape[0]
+    
+    # Convert 10 meter bands to np.float32, ensure correct dimensions
+    if not isinstance(img_10.flat[0], np.floating):
+        print(f"Converting S2, 10m to float32, with {np.max(img_10)} max and"
+                  f" {s2_10_usage} PU")
+        assert np.max(img_10) > 1
+        img_10 = np.float32(img_10) / 65535.
+        assert np.max(img_10) <= 1
+        assert img_10.dtype == np.float32
+
+    # Ensure output is within correct range
+    img_10 = np.clip(img_10, 0, 1)
+    img_20 = np.clip(img_20, 0, 1)
+
+    s2_10_usage = (img_10.shape[1]*img_10.shape[2])/(512*512) * (4/3) * img_10.shape[0]
     return img_10, img_20, np.array(dates_to_download)
