@@ -38,12 +38,10 @@ def extract_dates(date_dict: dict, year: int) -> List:
     days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
     starting_days = np.cumsum(days_per_month)
     for date in date_dict:
-        if date.year == year - 1:
-            dates.append(-365 + starting_days[(date.month-1)] + date.day)
-        if date.year == year:
-            dates.append(starting_days[(date.month-1)] + date.day)
-        if date.year == year + 1:
-            dates.append(365 + starting_days[(date.month-1)]+date.day)
+        #if date.year == year:
+        dates.append(((date.year - year)*365) + starting_days[(date.month-1)] + date.day)
+       # if date.year == year + 1:
+        #    dates.append(365 + starting_days[(date.month-1)]+date.day)
     return dates
 
 
@@ -93,7 +91,8 @@ def process_sentinel_1_tile(sentinel1: np.ndarray, dates: np.ndarray) -> np.ndar
 
 def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dict,
                 api_key: str,
-                year: int) -> (np.ndarray, np.ndarray, np.ndarray):
+                year: int,
+                maxcc = 0.9) -> (np.ndarray, np.ndarray, np.ndarray):
     """ DEPRECATED: This version of the cloud identification is currently deprecated
         because it can cause tile artifacts between neighboring tiles, if the
         imagery selection is done entirely independently!
@@ -120,9 +119,9 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
         bbox=box, time=dates,
         resx='160m',resy='160m',
         image_format = MimeType.TIFF,
-        maxcc=.9, config=api_key,
+        maxcc=maxcc, config=api_key,
         custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-        time_difference=datetime.timedelta(hours=48),
+        time_difference=datetime.timedelta(hours=24),
     )
 
     # Download 160 x 160 meter bands for shadow masking, 0 - 65535
@@ -132,9 +131,9 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
         bbox=box, time=dates,
         resx='160m', resy='160m',
         image_format = MimeType.TIFF,
-        maxcc=.9, config=api_key,
+        maxcc=maxcc, config=api_key,
         custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-        time_difference=datetime.timedelta(hours=48))
+        time_difference=datetime.timedelta(hours=24))
     
     cloud_img = np.array(cloud_request.get_data())
     cloud_img = cloud_img.repeat(16,axis=1).repeat(16,axis=2).astype(np.uint8)
@@ -199,7 +198,8 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
 
 def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dict,
                 api_key: str,
-                year: int) -> (np.ndarray, np.ndarray, np.ndarray):
+                year: int,
+                maxclouds = 0.2) -> (np.ndarray, np.ndarray, np.ndarray):
     """ Downloads and calculates cloud cover and shadow
         This downloads cartesian WGS 84 coords that are snapped to the 
         ESA LULC pixels -- so it will not return a square! 
@@ -219,9 +219,9 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
     cloud_request = WcsRequest(
         layer='CLOUD_PREVIEW',
         bbox=box, time=dates,
-        resx='600m', resy='600m',
+        resx='620m', resy='620m',
         image_format = MimeType.TIFF,
-        maxcc=.75, config=api_key,
+        maxcc=0.67, config=api_key,
         custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST',
                              constants.CustomUrlParam.PREVIEW: 'TILE_PREVIEW'},
         time_difference=datetime.timedelta(hours=96),
@@ -233,11 +233,16 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
     cloud_dates_dict = [x for x in cloud_request.get_dates()]
     cloud_dates = extract_dates(cloud_dates_dict, year)
     
+    
     # Remove steps with at least 15% cloud cover
-    n_cloud_px = np.sum(cloud_img > int(0.4 * 255), axis = (1, 2))
-    print(n_cloud_px)
-    print(n_cloud_px / (cloud_img.shape[1]*cloud_img.shape[2]))
-    cloud_steps = np.argwhere(n_cloud_px >= (cloud_img.shape[1]*cloud_img.shape[2] * 0.15))
+    n_cloud_px = np.sum(cloud_img > int(0.5 * 255), axis = (1, 2))
+    cloud_percent = n_cloud_px / (cloud_img.shape[1]*cloud_img.shape[2])
+
+    for date, prob in zip(cloud_dates, cloud_percent):
+        if prob < 0.4:
+            print(date, prob)
+
+    cloud_steps = np.argwhere(n_cloud_px >= (cloud_img.shape[1]*cloud_img.shape[2] * maxclouds))
     clean_steps = [x for x in range(cloud_img.shape[0]) if x not in cloud_steps]
     cloud_img = np.delete(cloud_img, cloud_steps, 0)
     
@@ -249,7 +254,7 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
     if not isinstance(cloud_img.flat[0], np.floating):
         assert np.max(cloud_img) > 1
         cloud_img = np.float32(cloud_img) / 255.
-    assert np.max(cloud_img) <= 1
+    assert np.max(cloud_img) <= 1, np.max(cloud_img)
     assert cloud_img.dtype == np.float32
     
     return cloud_img, clean_steps, np.array(cloud_dates)
@@ -352,15 +357,15 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
     # If the correct orbit is selected, download imagery
     s1_all = []
     image_dates = []
-    image_date = 45
+    image_date = 60
 
-    dates_q1 = (f'{str(year)}-01-15' , f'{str(year)}-03-15')
-    dates_q2 = (f'{str(year)}-04-15' , f'{str(year)}-06-15')
-    dates_q3 = (f'{str(year)}-07-15' , f'{str(year)}-09-15')
-    dates_q4 = (f'{str(year)}-10-15' , f'{str(year)}-12-15')
+    dates_q1 = (f'{str(year)}-01-15' , f'{str(year)}-04-15')
+    dates_q2 = (f'{str(year)}-05-15' , f'{str(year)}-08-15')
+    dates_q3 = (f'{str(year)}-09-15' , f'{str(year)}-12-15')
+    #dates_q4 = (f'{str(year)}-10-15' , f'{str(year)}-12-15')
 
     try:
-        for date in [dates_q1, dates_q2, dates_q3, dates_q4]:
+        for date in [dates_q1, dates_q2, dates_q3]:
             evalscript = """
             //VERSION3
             function mean(values) {
@@ -488,7 +493,7 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
             elif date == dates_q1 and np.sum(s1 == 1) >= (height * width):
                 return np.empty((0,)), np.empty((0,))
 
-            image_date += 90
+            image_date += 120
 
         s1 = np.concatenate(s1_all, axis = 0)
         s1 = np.clip(s1, 0, 1)
@@ -546,7 +551,7 @@ def identify_s1_layer(coords: Tuple[float, float]) -> str:
 
 def download_sentinel_2(bbox: List[Tuple[float, float]],
                    clean_steps: np.ndarray, api_key,
-                   dates: dict, year: int) -> (np.ndarray, np.ndarray):
+                   dates: dict, year: int, maxclouds: float) -> (np.ndarray, np.ndarray):
     """ Downloads the L2A sentinel layer with 10 and 20 meter bands
         
         Parameters:
@@ -567,41 +572,43 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
             layer='L2A20',
             bbox=box, time=dates,
             image_format = MimeType.TIFF,
-            maxcc=1., resx='20m', resy='20m',
+            maxcc=maxclouds, resx='20m', resy='20m',
             config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
                                 constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-            time_difference=datetime.timedelta(hours=48),
+            time_difference=datetime.timedelta(hours=24),
         )
     image_dates_dict = [x for x in image_request.get_dates()]
     image_dates = extract_dates(image_dates_dict, year)
 
     steps_to_download = []
     dates_to_download = []
-    for i, val in enumerate(clean_steps):
-        closest_image = np.argmin(abs(val - image_dates))
-        if np.min(abs(val - image_dates)) < 3:
-            steps_to_download.append(closest_image)
-            dates_to_download.append(image_dates[closest_image])
-        else:
-            print(f"There is a date/orbit mismatch, and the closest image is"
-                  f" {np.min(abs(val - image_dates))} days away")
+    for min_thresh in [1, 2, 3]:
+        if len(steps_to_download) < 3:
+            for i, val in enumerate(clean_steps):
+                closest_image = np.argmin(abs(val - image_dates))
+                if np.min(abs(val - image_dates)) < 1:
+                    steps_to_download.append(closest_image)
+                    dates_to_download.append(image_dates[closest_image])
+                else:
+                    print(f"There is a date/orbit mismatch, and the closest image is"
+                          f" {np.min(abs(val - image_dates))} days away")
 
     quality_request = WcsRequest(
             layer='DATA_QUALITY',
             bbox=box, time=dates,
             image_format = MimeType.TIFF,
-            maxcc=1., resx='160m', resy='160m',
+            maxcc=maxclouds, resx='160m', resy='160m',
             config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
                                 constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-            time_difference=datetime.timedelta(hours=48),
+            time_difference=datetime.timedelta(hours=24),
     )
 
     quality_img = np.array(quality_request.get_data(data_filter = steps_to_download))
     quality_per_img = np.mean(quality_img, axis = (1, 2)) / 255
     print("Image quality:", quality_per_img)
-    steps_to_rm = np.argwhere(quality_per_img > 0.2).flatten()
+    steps_to_rm = np.argwhere(quality_per_img > 0.1).flatten()
     if len(steps_to_rm) > 0:
         steps_to_download = np.array(steps_to_download)
         steps_to_download = list(np.delete(steps_to_download, steps_to_rm))
@@ -624,11 +631,11 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
             layer='L2A10',
             bbox=box, time=dates,
             image_format = MimeType.TIFF,
-            maxcc=1., resx='10m', resy='10m',
+            maxcc=maxclouds, resx='10m', resy='10m',
             config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'BICUBIC',
                                 constants.CustomUrlParam.UPSAMPLING: 'BICUBIC'},
-            time_difference=datetime.timedelta(hours=48),
+            time_difference=datetime.timedelta(hours=24),
     )
     img_10 = np.array(image_request.get_data(data_filter = steps_to_download))
     s2_10_usage = (img_10.shape[1]*img_10.shape[2])/(512*512) * (4/3) * img_10.shape[0]
@@ -653,7 +660,7 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
 
 def download_sentinel_2_new(bbox: List[Tuple[float, float]],
                    clean_steps: np.ndarray, api_key,
-                   dates: dict, year: int) -> (np.ndarray, np.ndarray):
+                   dates: dict, year: int, maxclouds:float = 1.) -> (np.ndarray, np.ndarray):
     """ Downloads the L2A sentinel layer with 10 and 20 meter bands
         
         Parameters:
@@ -674,17 +681,18 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
             layer='L2A_20_NEW',
             bbox=box, time=dates,
             image_format = MimeType.TIFF,
-            maxcc=1., resx='20m', resy='20m',
+            maxcc=maxclouds, resx='20m', resy='20m',
             config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
                                 constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-            time_difference=datetime.timedelta(hours=48),
+            time_difference=datetime.timedelta(hours=24),
         )
     image_dates_dict = [x for x in image_request.get_dates()]
     image_dates = extract_dates(image_dates_dict, year)
 
     steps_to_download = []
     dates_to_download = []
+
     for i, val in enumerate(clean_steps):
         closest_image = np.argmin(abs(val - image_dates))
         if np.min(abs(val - image_dates)) < 3:
@@ -693,16 +701,35 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         else:
             print(f"There is a date/orbit mismatch, and the closest image is"
                   f" {np.min(abs(val - image_dates))} days away")
-
+    """
+    for min_thresh in [1, 2, 3]:
+        #if len(steps_to_download) < 3:
+        potential_append = []
+        for i, val in enumerate(clean_steps):
+            closest_image = np.argmin(abs(val - image_dates))
+            if np.min(abs(val - image_dates)) < min_thresh:
+                potential_append.append(closest_image)
+                #steps_to_download.append(closest_image)
+                #dates_to_download.append(image_dates[closest_image])
+            else:
+                print(f"There is a date/orbit mismatch, and the closest image is"
+                      f" {np.min(abs(val - image_dates))} days away")
+            if len(potential_append) > 1:
+                for i in potential_append:
+                    steps_to_download.append(i)
+                    dates_to_download.append(image_dates[i])
+                    print("Appending:", i)
+        print(f"There are {len(steps_to_download)} steps within {min_thresh} days")
+    """
     quality_request = WcsRequest(
             layer='DATA_QUALITY',
             bbox=box, time=dates,
             image_format = MimeType.TIFF,
-            maxcc=1., resx='160m', resy='160m',
+            maxcc=maxclouds, resx='160m', resy='160m',
             config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
                                 constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-            time_difference=datetime.timedelta(hours=48),
+            time_difference=datetime.timedelta(hours=24),
     )
 
     quality_img = np.array(quality_request.get_data(data_filter = steps_to_download))
@@ -729,11 +756,11 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
             layer='L2A_40',
             bbox=box, time=dates,
             image_format = MimeType.TIFF,
-            maxcc=1., resx='40m', resy='40m',
+            maxcc=maxclouds, resx='40m', resy='40m',
             config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
                                 constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
-            time_difference=datetime.timedelta(hours=48),
+            time_difference=datetime.timedelta(hours=24),
         )
     img_40 = np.array(image_request.get_data(data_filter = steps_to_download))
 
@@ -783,7 +810,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
             config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'BICUBIC',
                                 constants.CustomUrlParam.UPSAMPLING: 'BICUBIC'},
-            time_difference=datetime.timedelta(hours=48),
+            time_difference=datetime.timedelta(hours=24),
     )
     img_10 = np.array(image_request.get_data(data_filter = steps_to_download))
     s2_10_usage = (img_10.shape[1]*img_10.shape[2])/(512*512) * (4/3) * img_10.shape[0]

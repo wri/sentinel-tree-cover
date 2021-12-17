@@ -210,7 +210,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         
     initial_bbx = [data['X'][0], data['Y'][0], data['X'][0], data['Y'][0]]
 
-    cloud_bbx = make_bbox(initial_bbx, expansion = 3000/30)
+    cloud_bbx = make_bbox(initial_bbx, expansion = 450/30)
     bbx = make_bbox(initial_bbx, expansion = 300/30)
     dem_bbx = make_bbox(initial_bbx, expansion = 301/30)
         
@@ -237,27 +237,24 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
                                                             shadow_bbx = cloud_bbx,
                                                             dates = dates,
                                                             api_key = api_key, 
-                                                            year = year)
+                                                            year = year,
+                                                            maxclouds = 0.3)
 
-        # Remove contiguous dates that are sunny, to reduce IO needs
-        cloud_percent = np.mean(cloud_probs > 0.4, axis = (1, 2))
-        #cloud_percent = np.mean(cloud_probs, axis = (1, 2)
-        to_remove = cloud_removal.subset_contiguous_sunny_dates(image_dates,
-                                                               cloud_percent)
-        if len(to_remove) > 0:
-            clean_dates = np.delete(image_dates, to_remove)
-            cloud_probs = np.delete(cloud_probs, to_remove, 0)
-        else:
-            clean_dates = image_dates
-
-        if len(clean_dates) >= 11:
-            clean_dates = np.delete(clean_dates, 5)
-            cloud_probs = np.delete(cloud_probs, 5, 0)
-
-        _ = cloud_removal.print_dates(
+        clean_dates = image_dates
+        
+        to_remove = cloud_removal.print_dates(
             clean_dates, np.mean(cloud_probs, axis = (1, 2))
         )
-        print(f"Overall using {len(clean_dates)}/{len(clean_dates)+len(to_remove)} steps")
+
+        if len(to_remove) > 0 and len(clean_dates) > 8:
+            clean_dates = np.delete(image_dates, to_remove)
+            cloud_probs = np.delete(cloud_probs, to_remove, 0)
+
+            _ = cloud_removal.print_dates(
+                clean_dates, np.mean(cloud_probs, axis = (1, 2))
+            )
+            
+        print(f"Overall using {len(clean_dates)} steps")
 
         hkl.dump(cloud_probs, clouds_file, mode='w', compression='gzip')
         hkl.dump(clean_dates, clean_steps_file, mode='w', compression='gzip')
@@ -269,7 +266,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         s2_10, s2_20, s2_dates = tof_downloading.download_sentinel_2_new(bbx,
                                                      clean_steps = clean_steps,
                                                      api_key = api_key, dates = dates,
-                                                     year = year, maxclouds = 1.0)
+                                                     year = year)
 
         # Ensure that L2A, L1C derived products have exact matching dates
         # As sometimes the L1C data has more dates than L2A if processing bug from provider
@@ -479,8 +476,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         time2 = time.time()
         print(f"Cloud/shadow interp:{np.around(time2 - time1, 1)} seconds, "
             f" {100*np.sum(interp > 0)/np.prod(interp.shape)}%")
-       # np.save("after.npy", sentinel2)
-        #np.save("interp.npy", interp)
     else:
         interp = np.zeros(
             (sentinel2.shape[0], sentinel2.shape[1], sentinel2.shape[2]), dtype = np.float32
@@ -493,120 +488,32 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     sentinel2 = np.clip(sentinel2, 0, 1)
     return sentinel2, image_dates, interp, s1, dem, cloudshad
 
-def normalize_first_last_quarter(arr, dates):
 
-    """
-    dates_first_third = np.argwhere(dates < 90)
-    dates_second_third = np.argwhere(np.logical_and(dates >= 90, dates < 180))
-    dates_last_third = np.argwhere(np.logical_and(dates >= 180, dates < 270))
-    dates_last_third2 = np.argwhere(dates > 270)
+def rolling_mean(arr):
+    if arr.shape[0] > 4:
+        mean_arr = np.zeros_like(arr)
+        start = np.arange(0, arr.shape[0] - 3, 1)
+        start = np.concatenate([
+            np.array([0]),
+            start,
+            np.full((2,), arr.shape[0] - 3)
+        ])
+        end = start + 3
+        i = 0
 
-    arr[dates_first_third] = np.mean(arr[dates_first_third], axis = 0)
-    arr[dates_second_third] = np.mean(arr[dates_second_third], axis = 0)
-    arr[dates_last_third] = np.mean(arr[dates_last_third], axis = 0)
-    arr[dates_last_third2] = np.mean(arr[dates_last_third2], axis = 0)
+        for s, e in zip(start, end):
+            array_to_mean = arr[s:e]
+            mean_arr[i] = np.median(array_to_mean, axis = 0)
+            i += 1
+        return mean_arr
 
-    dates[dates_first_third] = 45
-    dates[dates_second_third] = 135
-    dates[dates_last_third] = 225
-    dates[dates_last_third2] = 315
-    """
-    dates_first_quarter = np.argwhere(dates < 90)
-    dates_last_quarter = np.argwhere(dates > 270)
-
-    #print(np.mean(arr[-1, ..., 3]))
-
-    arr[0]  = np.mean(arr[dates_first_quarter], axis = 0)
-    arr[-1] = np.mean(arr[dates_last_quarter], axis = 0)
-    #print(np.mean(arr[-1, ..., 3]))
-    return arr, dates
-
-def fit_upper_curve(arr, dates):
-    upper_curve = np.zeros_like(arr)
-
-    for image in range(arr.shape[0]):
-        date = dates[image]
-        distances = abs(date - dates)
-        bimonthly_window = np.argwhere(np.logical_and(
-            distances >= 0, distances <= 60)).flatten()
-
-        candidate = arr[image]
-        candidate_min = np.amin(arr[bimonthly_window], axis = 0)
-        candidate_max = np.amin(arr[bimonthly_window], axis = 0)
-        med = np.median(arr[bimonthly_window], axis = 0)
-
-        candidate[candidate == candidate_min] = med[candidate == candidate_min]
-        candidate[candidate == candidate_max] = med[candidate == candidate_max]
-        upper_curve[image] = candidate
-    return upper_curve
-
-
-
-def rolling_mean(arr, dates):
-    arr = np.array(arr)
-    # go through each date and say
-    # if it is the image before a gap > 90 days
-    # then carry forward the median of 3 images, rather than one image
-    # otherwise, let the algorithm carry forward just that one image
-    if arr.shape[0] <= 4:
+    elif arr.shape[0] == 3 or arr.shape[0] == 4:
         mean_arr = np.median(arr, axis = 0)
         arr[0] = mean_arr
         arr[-1] = mean_arr
         return arr
-
-
-
-    if arr.shape[0] > 4:
-
-        #rolling_average = np.zeros_like(arr)
-        for image in range(arr.shape[0]):
-            date = dates[image]
-            distances = abs(date - dates)
-            bimonthly_window = np.argwhere(np.logical_and(
-                distances >= 0, distances <= 60)).flatten()
-            distances = ((365 - distances) / 365) ** 3
-            print(f"Taking the rolling average of {bimonthly_window} for {image}")
-            #if i == 0 or i == mean_arr.shape[0] - 1:
-            #    mean_arr[i] = np.median(array_to_mean, axis = 0)
-            #else:
-            arr[image] = np.average(
-                arr[bimonthly_window], axis = 0, weights = distances[bimonthly_window]
-            )
-           # rolling_average[image] = np.mean(arr[bimonthly_window], axis = 0)
-
+    else:
         return arr
-        #return arr
-    """
-    if arr.shape[0] > 4:
-        mean_arr = np.zeros_like(arr)
-        start = np.arange(0, arr.shape[0] - 2, 1)
-        start = np.concatenate([
-            np.array([0]),
-            start,
-            np.full((1,), arr.shape[0] - 2)
-        ])
-        end = start + 2
-        i = 0
-        for s, e in zip(start, end):
-            distances = dates[s:e]
-            distances = abs(dates[i] - distances)
-            distances = ((365 - distances) / 365) ** 3
-            print(distances, dates[s:e], dates[i])
-            array_to_mean = arr[s:e]
-            #if i == 0 or i == mean_arr.shape[0] - 1:
-            #    mean_arr[i] = np.median(array_to_mean, axis = 0)
-            #else:
-            mean_arr[i] = np.average(array_to_mean, axis = 0, weights = distances)
-            i += 1
-        return mean_arr
-    """
-    
-
-#def rolling_mean(arr):
-#    if arr.shape[0] >= 3:
-#        arr[0] = np.median(arr[:3], axis = 0)
-#        arr[-1] = np.median(arr[-3:], axis = 0)
-#    return arr
     
 
 def process_subtiles(x: int, y: int, s2: np.ndarray = None, 
@@ -669,7 +576,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     t = 0
     sm = Smoother(lmbd = 150, size = 36, nbands = 10, dimx = SIZE + 14, dimy = SIZE + 14, outsize = 12)
     # Iterate over each subitle and prepare it for processing and generate predictions
-    for t in range(len(tiles_folder)):
+    for t in range(0, len(tiles_folder)):
         time1 = time.time()
         tile_folder = tiles_folder[t]
         tile_array = tiles_array[t]
@@ -713,12 +620,11 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         #np.save("before.npy", subset)
         subset = cloud_removal.adjust_interpolated_groups(subset, interp_tile)
-        #np.save("adjusted.npy", subset)
         
         #np.save("interp.npy", interp_tile)
         min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
         no_images = False
-        if np.percentile(min_clear_images_per_date, 30) < 2 or np.percentile(min_clear_images_per_date, 15) < 1:
+        if np.percentile(min_clear_images_per_date, 20) < 1:
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subset), axis = (1, 2, 3)) > 0).flatten()
@@ -745,13 +651,9 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             #print(f"Taking the median of {dates_tile[dates_to_median]}")
             subset[dates_to_median] = np.median(subset[dates_to_median], axis = 0)
         """
-        #np.save("before_mean.npy", subset)
-        #subset = rolling_mean(subset, dates_tile)
-        subtile, dates_tile = normalize_first_last_quarter(subset, dates_tile)
-        #np.save("after_mean.npy", subset)
+        subset = rolling_mean(subset)
         try:
             subtile, max_distance = calculate_and_save_best_images(subset, dates_tile)
-            #np.save("grid_left.npy", subtile)
         except:
             # If there are no images for the tile, just make them zeros
             # So that they will be picked up by the no-data flag
@@ -782,7 +684,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         # Interpolate (whittaker smooth) the array and superresolve 20m to 10m
         subtile = sm.interpolate_array(subtile)
-        #np.save("smooth.npy", subtile)
 
         # Concatenate the DEM and Sentinel 1 data
         subtile_all = np.empty((13, SIZE + 14, SIZE + 14, 13), dtype = np.float32)
@@ -1022,7 +923,7 @@ if __name__ == '__main__':
     parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/202-temporal-oct-regularized/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
-    parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
+    parser.add_argument("--db_path", dest = "db_path", default = "processing_area_nov_10.csv")
     parser.add_argument("--ul_flag", dest = "ul_flag", default = False)
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
     parser.add_argument("--yaml_path", dest = "yaml_path", default = "../config.yaml")
@@ -1144,7 +1045,7 @@ if __name__ == '__main__':
         y = y[:-2] if ".0" in y else y
         bbx = None
         year = args.year
-        dates = (f'{str(args.year - 1)}-11-15' , f'{str(args.year + 1)}-02-15')
+        dates = (f'{2017}-01-01' , f'{2020}-12-31')
         dates_sentinel_1 = (f'{str(args.year)}-01-01' , f'{str(args.year)}-12-31')
         days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
         starting_days = np.cumsum(days_per_month)
@@ -1184,14 +1085,14 @@ if __name__ == '__main__':
                     s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
                     size = hkl.load(s2_20_file)
                     size = size.shape[1:3]
-                    #download_s1_tile(data = data, 
-                    #     bbx = bbx,
-                    #     api_key = shconfig,
-                    #     year = args.year, 
-                    #     dates_sentinel_1 = dates_sentinel_1, 
-                    #     size = size, 
-                    #     s1_file = s1_file, 
-                    #     s1_dates_file = s1_dates_file)
+                    download_s1_tile(data = data, 
+                         bbx = bbx,
+                         api_key = shconfig,
+                         year = args.year, 
+                         dates_sentinel_1 = dates_sentinel_1, 
+                         size = size, 
+                         s1_file = s1_file, 
+                         s1_dates_file = s1_dates_file)
 
                 s2, dates, interp, s1, dem, cloudshad = process_tile(x = x, y = y, data = data, local_path = args.local_path, make_shadow = True)
                 s2 = superresolve_large_tile(s2, superresolve_sess)

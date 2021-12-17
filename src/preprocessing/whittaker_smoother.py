@@ -5,11 +5,12 @@ from scipy.sparse.linalg import splu
 import multiprocessing
 
 class Smoother:
-    def __init__(self, lmbd, size, nbands = 14, dim = 128, outsize = 12):
+    def __init__(self, lmbd, size, nbands = 14, dimx = 128, dimy = 128, outsize = 12):
         self.lmbd = lmbd
         self.size = size
         self.nbands = nbands
-        self.dim = dim
+        self.dimx = dimx
+        self.dimy = dimy
         self.outsize = outsize
         diagonals = np.zeros(2*2+1, dtype = np.float32)
         diagonals[2] = 1.
@@ -33,13 +34,13 @@ class Smoother:
 
 
     def interpolate_array(self, x) -> np.ndarray:
-        x = np.reshape(x, (self.size, self.dim*self.dim*self.nbands))
+        x = np.reshape(x, (self.size, self.dimx*self.dimy*self.nbands))
         x = self.smooth(x)
-        x = np.reshape(x, (self.size, self.dim, self.dim, self.nbands))
+        x = np.reshape(x, (self.size, self.dimx, self.dimy, self.nbands))
 
         # median of zip(range(0, 72, 6), range(6, 72, 6))
 
-        monthly = np.empty((self.outsize, self.dim, self.dim, self.nbands), dtype = np.float32)
+        monthly = np.empty((self.outsize, self.dimx, self.dimy, self.nbands), dtype = np.float32)
         index = 0
         for start, end in zip(range(0, self.size + 3, self.size // self.outsize), #0, 72, 6
                               range(self.size // self.outsize, self.size + 3, self.size // self.outsize)): # 6, 72, 6

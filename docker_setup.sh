@@ -40,10 +40,9 @@ tmux attach
 # Steps to start a new container and load into the image
 sudo service docker start &&\
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 838255262149.dkr.ecr.us-east-1.amazonaws.com &&\
-docker stop $(docker ps -a -q) &&\
 docker pull 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download:latest &&\
 docker system prune -f &&\
-tmux new -s node-spot-3
+tmux new -s node-node-7
 
 docker run -it --entrypoint /bin/bash 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download
 cd src 
