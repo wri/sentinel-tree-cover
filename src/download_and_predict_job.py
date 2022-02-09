@@ -43,7 +43,7 @@ from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, downlo
 from preprocessing.indices import evi, bi, msavi2, grndvi
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-SIZE = 208
+SIZE = 216
 
 
 def superresolve_tile(arr: np.ndarray, sess) -> np.ndarray:
@@ -511,13 +511,15 @@ def normalize_first_last_quarter(arr, dates):
     dates[dates_last_third] = 225
     dates[dates_last_third2] = 315
     """
-    dates_first_quarter = np.argwhere(dates < 90)
-    dates_last_quarter = np.argwhere(dates > 270)
 
-    #print(np.mean(arr[-1, ..., 3]))
+    dates_first_quarter = np.argwhere(np.logical_and(dates < 90, dates > -30))
+    if len(dates_first_quarter) > 0:
+        dates_first_quarter = np.argwhere(np.logical_and(dates < 90, dates > -30))
+        arr[0]  = np.mean(arr[dates_first_quarter], axis = 0)
 
-    arr[0]  = np.mean(arr[dates_first_quarter], axis = 0)
-    arr[-1] = np.mean(arr[dates_last_quarter], axis = 0)
+    if len(np.argwhere(dates > 270)) > 0:
+        dates_last_quarter = np.argwhere(dates > 270)
+        arr[-1] = np.mean(arr[dates_last_quarter], axis = 0)
     #print(np.mean(arr[-1, ..., 3]))
     return arr, dates
 
@@ -639,8 +641,8 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     # The tiles_folder references the folder names (w/o boundaries)
     # While the tiles_array references the arrays themselves (w/ boudnaries)
-    gap_x = int(np.ceil((s1.shape[1] - SIZE) / 5))
-    gap_y = int(np.ceil((s1.shape[2] - SIZE) / 5))
+    gap_x = int(np.ceil((s1.shape[1] - SIZE) / 4))
+    gap_y = int(np.ceil((s1.shape[2] - SIZE) / 4))
     tiles_folder_x = np.hstack([np.arange(0, s1.shape[1] - SIZE, gap_x), np.array(s1.shape[1] - SIZE)])
     tiles_folder_y = np.hstack([np.arange(0, s1.shape[2] - SIZE, gap_y), np.array(s1.shape[2] - SIZE)])
     print(f'There are: {len(tiles_folder_x) * len(tiles_folder_y)} subtiles')
@@ -683,6 +685,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         dates_tile = np.copy(dates)
         dem_subtile = dem[np.newaxis, start_x:end_x, start_y:end_y]
 
+        time1 = time.time()
         missing_px = interpolation.id_missing_px(subset, 10)
 
         if len(missing_px) > 0:
@@ -710,9 +713,12 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subset = np.delete(subset, missing_px, 0)
             interp_tile = np.delete(interp_tile, missing_px, 0)
             print(f"Removing {len(missing_px)} missing images, leaving {len(dates_tile)} / {len(dates)}")
+        time2 = time.time()
+        print(f"Interpolation in {time2 - time1} seconds")
 
         #np.save("before.npy", subset)
         subset = cloud_removal.adjust_interpolated_groups(subset, interp_tile)
+        
         #np.save("adjusted.npy", subset)
         
         #np.save("interp.npy", interp_tile)
@@ -732,26 +738,16 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         subtile_copy = np.copy(subset)
         subtile_median = np.median(subtile_copy, axis = 0)
         subtile_median = subtile_median[np.newaxis]
-        """
-        begin_dates = [-60, 90, 180, 270]
-        end_dates = [90, 180, 270, 390]
 
-        for begin, end in zip(begin_dates, end_dates):
-            dates_to_median = np.argwhere(np.logical_and(dates_tile > begin, dates_tile < end)).flatten()
-            if len(dates_to_median) == 1:
-                dates_to_median = [dates_to_median - 1, dates_to_median, dates_to_median + 1]
-                dates_to_median = np.clip(dates_to_median, 0, len(dates_tile) - 1)
-                dates_to_median = dates_to_median.flatten()
-            #print(f"Taking the median of {dates_tile[dates_to_median]}")
-            subset[dates_to_median] = np.median(subset[dates_to_median], axis = 0)
-        """
-        #np.save("before_mean.npy", subset)
-        #subset = rolling_mean(subset, dates_tile)
         subtile, dates_tile = normalize_first_last_quarter(subset, dates_tile)
         #np.save("after_mean.npy", subset)
+        time1 = time.time()
         try:
             subtile, max_distance = calculate_and_save_best_images(subset, dates_tile)
             #np.save("grid_left.npy", subtile)
+            time2 = time.time()
+            print(f"Calc and save in {time2 - time1} seconds, {np.sum(np.isnan(subtile))}")
+
         except:
             # If there are no images for the tile, just make them zeros
             # So that they will be picked up by the no-data flag
@@ -781,16 +777,22 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subtile_median = np.pad(subtile_median, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
 
         # Interpolate (whittaker smooth) the array and superresolve 20m to 10m
+        time1 = time.time()
         subtile = sm.interpolate_array(subtile)
+        time2 = time.time()
+        print(f"Smoothing in {time2 - time1} seconds, {np.sum(np.isnan(subtile))}")
         #np.save("smooth.npy", subtile)
 
         # Concatenate the DEM and Sentinel 1 data
+        time1 = time.time()
         subtile_all = np.empty((13, SIZE + 14, SIZE + 14, 13), dtype = np.float32)
         subtile_all[:-1, ..., :10] = subtile
         subtile_all[:, ..., 10] = dem_subtile.repeat(13, axis = 0)
         subtile_all[:-1, ..., 11:] = s1_subtile
         subtile_all[-1, ..., :10] = subtile_median
         subtile_all[-1, ..., 11:] = np.median(s1_subtile, axis = (0))
+        time2 = time.time()
+        print(f"Concat in {time2 - time1} seconds")
         
         # Create the output folders for the subtile predictions
         output_folder = "/".join(output.split("/")[:-1])
@@ -808,6 +810,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             preds = np.full((SIZE, SIZE), 255)
         else:
             preds = predict_subtile(subtile_all, sess)
+            #np.save("feats.npy", feats)
             time2 = time.time()
             subtile_time = np.around(time2 - time1, 1)
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
@@ -847,12 +850,10 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         Returns:
          preds (np.ndarray): (160, 160) float32 [0, 1] predictions
     """
-    
     if np.sum(subtile) > 0:
         if not isinstance(subtile.flat[0], np.floating):
             assert np.max(subtile) > 1
             subtile = subtile / 65535.
-
         indices = np.empty((13, subtile.shape[1], subtile.shape[2], 17))
         indices[:, ..., :13] = subtile
         indices[:, ..., 13] = evi(subtile)
@@ -872,13 +873,22 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         preds = sess.run(predict_logits,
                               feed_dict={predict_inp:batch_x, 
                                          predict_length:lengths})
+        
+        #features = sess.run(feature_extraction,
+        #                      feed_dict={predict_inp:batch_x, 
+        #                                 predict_length:lengths})
+        #features = features.squeeze()
+        #print(features.shape)
+        #np.save("features.npy", features)
+        #print("saving features")
         preds = preds.squeeze()
         preds = preds[1:-1, 1:-1]
         
     else:
         preds = np.full((SIZE, SIZE), 255)
+        #features = np.full((SIZE, SIZE), 255)
     
-    return preds
+    return preds#, features
 
 
 def fspecial_gauss(size: int, sigma: int) -> np.ndarray:
@@ -926,7 +936,7 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
                 if np.sum(prediction) < SIZE*SIZE*255:
                     prediction = (prediction * 100).T.astype(np.float32)
                     predictions[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = prediction
-                    mults[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = fspecial_gauss(SIZE, 40) # or 44
+                    mults[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = fspecial_gauss(SIZE, 44) # or 44
                 i += 1
 
     predictions = predictions.astype(np.float32)
@@ -936,23 +946,7 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
     
     overpredict = True if (mean_uncertain_pred - mean_certain_pred) > 0 else False
     underpredict = True if not overpredict else False
-    """
-    for i in range(predictions.shape[-1]):
-        if overpredict:
-            problem_tile = True if np.nanmean(predictions[..., i]) > mean_certain_pred else False
-        if underpredict:
-            problem_tile = True if np.nanmean(predictions[..., i]) < mean_certain_pred else False
-        range_i = np.copy(predictions_range)
-        range_i[np.isnan(predictions[..., i])] = np.nan
-        range_i = range_i[~np.isnan(range_i)]
-        if range_i.shape[0] > 0:
-            range_i = np.reshape(range_i, (188 // 47, 47, 188 // 47, 47))
-            range_i = np.mean(range_i, axis = (1, 3))
-            n_outliers = np.sum(range_i > 50)
-            if n_outliers >= 5 and problem_tile:
-                predictions[..., i] = np.nan
-                mults[..., i] = 0.
-    """
+
     mults = mults / np.sum(mults, axis = -1)[..., np.newaxis]
     predictions[predictions > 100] = np.nan
     out = np.copy(predictions)
@@ -962,9 +956,9 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
     predictions[out == n_preds] = np.nan
     predictions[np.isnan(predictions)] = 255.
     predictions = predictions.astype(np.uint8)
-                
-    original_preds = np.copy(predictions)
     
+    """
+    original_preds = np.copy(predictions)
     for x_i in range(0, predictions.shape[0] - 3):
         for y_i in range(0, predictions.shape[1] - 3):
             window = original_preds[x_i:x_i+3, y_i:y_i+3]
@@ -986,6 +980,7 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
                         window[:, 2] = 0
     
     predictions = original_preds 
+    """
     predictions[predictions <= .20*100] = 0.        
     predictions[predictions > 100] = 255.
     return predictions
@@ -1019,7 +1014,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/202-temporal-oct-regularized/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/224-temporal-jan/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
@@ -1103,7 +1098,10 @@ if __name__ == '__main__':
         predict_graph_def.ParseFromString(predict_file.read())
         predict_graph = tf.import_graph_def(predict_graph_def, name='predict')
         predict_sess = tf.compat.v1.Session(graph=predict_graph)
-        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_13/Sigmoid:0")            
+        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_13/Sigmoid:0") 
+        #print([n.name for n in predict_sess.graph.as_graph_def().node])
+        feature_extraction = predict_sess.graph.get_tensor_by_name(f"predict/csse_out_mul/mul:0")  
+        print(feature_extraction.shape)         
         predict_inp = predict_sess.graph.get_tensor_by_name("predict/Placeholder:0")
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
     else:
@@ -1194,7 +1192,10 @@ if __name__ == '__main__':
                     #     s1_dates_file = s1_dates_file)
 
                 s2, dates, interp, s1, dem, cloudshad = process_tile(x = x, y = y, data = data, local_path = args.local_path, make_shadow = True)
+                print(np.sum(np.isnan(s2)))
+                print(np.sum(np.isnan(s2)))
                 s2 = superresolve_large_tile(s2, superresolve_sess)
+                print(np.sum(np.isnan(s2)))
                 process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess)
                 predictions = load_mosaic_predictions(path_to_tile + "processed/")
 

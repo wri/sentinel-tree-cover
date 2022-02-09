@@ -215,7 +215,7 @@ def mcm_shadow_mask(arr: np.ndarray,
          shadows_new (arr): cloud mask after Candra et al. 2020 and cloud matching 
          shadows_original (arr): cloud mask after Candra et al. 2020
     """
-    warnings.warn("mcm_shadow_mask is deprecated; use remove_missed_clouds", warnings.DeprecationWarning)
+    warnings.warn("mcm_shadow_mask is deprecated; use remove_missed_clouds", category=DeprecationWarning)
     import time
     imsize = arr.shape[1]
 
@@ -423,10 +423,15 @@ def print_dates(dates, probs):
 
 def subset_contiguous_sunny_dates(dates, probs):
     """
-    Potential problems:
-
-       1. One tile has an image at 0.28, the next has 0.34 - date mismatch
-       2. A month has [0.28, 0.26, 0.02] and the [0.28, 0.26] get selected
+    The general imagery subsetting strategy is as below:
+        - Select all images with < 30% cloud cover
+        - For each month, select up to 2 images that are <30% CC and are the closest to
+          the beginning and the midde of the month
+        - Select only one image per month for each month if the following criteria are met
+              - Within Q1 and Q4, apply if at least 3 images in quarter
+              - Otherwise, apply if at least 8 total images for year
+              - Select the second image if max CC < 15%, otherwise select least-cloudy image
+        - If more than 10 images remain, remove any images for April and September
 
     """
     begin = [-60, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
@@ -491,8 +496,11 @@ def subset_contiguous_sunny_dates(dates, probs):
     # We then select between those two images to keep a max of one per month
     # We select the least cloudy image if the most cloudy has >15% cloud cover
     # Otherwise we select the second image
-    if len(dates_round_2) > 10:
-        n_to_rm = len(dates_round_2) - 10
+
+    # If there are more than 8 images, subset so only 1 image per month,
+    # To bring down to a min of 8 images
+    if len(dates_round_2) >= 7:
+        n_to_rm = len(dates_round_2) - 7
         monthly_dates = []
         monthly_probs = []
         monthly_dates_date = []
@@ -505,7 +513,17 @@ def subset_contiguous_sunny_dates(dates, probs):
             if len(indices_month) > 1:
                 month_dates = dates[indices_month]
                 month_clouds = probs[indices_month]
-                subset_month = True if x not in [-60, 334] else False
+
+                subset_month = True
+                if x == -60:
+                    feb_mar = np.argwhere(np.logical_and(
+                        dates >= 31, dates < 90)).flatten()
+                    subset_month = False if len(feb_mar) < 1 else True
+                if x == 334:
+                    oct_nov = np.argwhere(np.logical_and(
+                        dates >= 273, dates < 334)).flatten()
+                    subset_month = False if len(oct_nov) < 1 else True
+
                 if subset_month:
                     subset_month = True if removed <= n_to_rm else False
                 if subset_month:
@@ -531,8 +549,8 @@ def subset_contiguous_sunny_dates(dates, probs):
 
     dates_round_3 = dates[monthly_dates]
     probs_round_3 = probs[monthly_dates]
-    
-    if len(dates_round_3) > 10:
+
+    if len(dates_round_3) >= 10:
         delete_max = False
         if np.max(probs_round_3) >= 0.15:
             delete_max = True
@@ -542,33 +560,13 @@ def subset_contiguous_sunny_dates(dates, probs):
                 dates >= x, dates < y)).flatten()
             dates_month = dates[indices_month]
             indices_month = [x for x in indices_month if x in monthly_dates]
-            if len(indices_month) > 0:
+
+            n_removed = 0
+            if len(indices_month) >= 1:
                 if len(monthly_dates) == 11 and delete_max:
                     continue
-                elif len(monthly_dates) == 11 or (len(monthly_dates) == 12 and delete_max):
-                    if x == 90:
-                        indices_to_rm.append(indices_month[0])
-                elif len(monthly_dates) >= 12:
-                    if x == 90 or x == 273:
+                elif len(monthly_dates) >= 11:
+                    if x in [90, 243]:
                         indices_to_rm.append(indices_month[0])
 
-    # This section is actually really importaant:
-    # If you have an image that is right at the border for removal due to cloud cover
-    # And it is the only image for at least 2/3 months in one direction
-    #
-    """
-    dates_round_4 = dates_round_3
-    probs_round_4 = probs_round_3
-    for date, prob in zip(dates_round_3, probs_round_3):
-        distances = np.array([(day - date) for day in dates_round_3 if day != date])
-        closest = np.min(abs(distances))
-        if closest > 90 and prob > 0.15:
-            print(distances, date)
-            indices_to_rm.append(np.argwhere(dates == date))
-            dates_round_4 = [x for x in dates_round_4 if x != date]
-            print(indices_to_rm)
-        elif closest > 60 and prob > 0.17:
-            indices_to_rm.append(np.argwhere(dates == date))
-            dates_round_4 = [x for x in dates_round_4 if x != date]
-    """
     return indices_to_rm

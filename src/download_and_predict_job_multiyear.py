@@ -43,7 +43,7 @@ from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, downlo
 from preprocessing.indices import evi, bi, msavi2, grndvi
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-SIZE = 208
+SIZE = 216
 
 
 def superresolve_tile(arr: np.ndarray, sess) -> np.ndarray:
@@ -210,7 +210,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         
     initial_bbx = [data['X'][0], data['Y'][0], data['X'][0], data['Y'][0]]
 
-    cloud_bbx = make_bbox(initial_bbx, expansion = 450/30)
+    cloud_bbx = make_bbox(initial_bbx, expansion = 300/30)
     bbx = make_bbox(initial_bbx, expansion = 300/30)
     dem_bbx = make_bbox(initial_bbx, expansion = 301/30)
         
@@ -546,8 +546,8 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     # The tiles_folder references the folder names (w/o boundaries)
     # While the tiles_array references the arrays themselves (w/ boudnaries)
-    gap_x = int(np.ceil((s1.shape[1] - SIZE) / 5))
-    gap_y = int(np.ceil((s1.shape[2] - SIZE) / 5))
+    gap_x = int(np.ceil((s1.shape[1] - SIZE) / 4))
+    gap_y = int(np.ceil((s1.shape[2] - SIZE) / 4))
     tiles_folder_x = np.hstack([np.arange(0, s1.shape[1] - SIZE, gap_x), np.array(s1.shape[1] - SIZE)])
     tiles_folder_y = np.hstack([np.arange(0, s1.shape[2] - SIZE, gap_y), np.array(s1.shape[2] - SIZE)])
     print(f'There are: {len(tiles_folder_x) * len(tiles_folder_y)} subtiles')
@@ -624,7 +624,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         #np.save("interp.npy", interp_tile)
         min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
         no_images = False
-        if np.percentile(min_clear_images_per_date, 20) < 1:
+        if np.percentile(min_clear_images_per_date, 33) < 1:
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subset), axis = (1, 2, 3)) > 0).flatten()
@@ -920,7 +920,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/202-temporal-oct-regularized/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/224-temporal-jan/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_nov_10.csv")
