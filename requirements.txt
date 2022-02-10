@@ -12,7 +12,7 @@ python-dotenv>=0.5.1
 scipy==1.2.1
 sentinelhub==3.4.0
 scikit-image
-tensorflow==1.15.5
+tensorflow==2.5.3
 keras==2.2.4
 tqdm
 pandas
