@@ -1204,12 +1204,27 @@ if __name__ == "__main__":
                         smooth_diff = abs(right_mean - left_mean)
                         print(f"Before smooth: {diff}, after smooth: {smooth_diff}")
                         if smooth_diff < (diff + 100):
-                            file = write_tif(predictions_left, bbx, x, y, path_to_tile, "_SMOOTH")
-                            key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_SMOOTH.tif'
+
+                            # check to see if the left is _SMOOTH_X or _SMOOTH
+                            # If _SMOOTH -> _SMOOTH_Y
+                            # If _SMOOTH_X -> _SMOOTH_XY
+                            if os.path.exists(f"{path_to_tile}/{str(x)}X{str(y)}Y_SMOOTH_X.tif"):
+                                suffix = "_SMOOTH_XY"
+                            else:
+                                suffix = "_SMOOTH_Y"
+                            file = write_tif(predictions_left, bbx, x, y, path_to_tile, suffix)
+                            key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y{suffix}.tif'
                             uploader.upload(bucket = args.s3_bucket, key = key, file = file)
 
-                            file = write_tif(predictions_right, neighb_bbx, x, str(int(y) + 1), path_to_right, "_SMOOTH")
-                            key = f'2020/tiles/{x}/{str(int(y) + 1)}/{x}X{str(int(y) + 1)}Y_SMOOTH.tif'
+                            # check to see if the right is _SMOOTH_X or _SMOOTH
+                            # If _SMOOTH -> _SMOOTH_Y
+                            # If _SMOOTH_X -> _SMOOTH_XY
+                            if os.path.exists(f"{path_to_right}/{str(x)}X{str(int(y) + 1)}Y_SMOOTH_X.tif"):
+                                suffix = "_SMOOTH_XY"
+                            else:
+                                suffix = "_SMOOTH_Y"
+                            file = write_tif(predictions_right, neighb_bbx, x, str(int(y) + 1), path_to_right, suffix)
+                            key = f'2020/tiles/{x}/{str(int(y) + 1)}/{x}X{str(int(y) + 1)}Y{suffix}.tif'
                             uploader.upload(bucket = args.s3_bucket, key = key, file = file)
 
                             cleanup(path_to_tile, path_to_right, delete = True, upload = True)

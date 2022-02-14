@@ -519,7 +519,10 @@ def load_tif(tile_id, local_path):
         post_files = [x for x in files if "_POST" in x]
         if len(smooth_files) > 0:
             files = smooth_files
-        elif len(final_files) > 0:
+            if len(smooth_files) > 1:
+                print(f"More than 1 smooth file for {dir_i}")
+                files = [file for file in smooth_files if "_X" in file]
+        if len(final_files) > 0:
             files = final_files
         else:
             files = post_files
@@ -1124,12 +1127,12 @@ if __name__ == "__main__":
                     print(f"Before smooth: {diff}, after smooth: {smooth_diff}")
                     if smooth_diff < (diff + 2):
 
-                        file = write_tif(predictions_left, bbx, x, y, path_to_tile, "_SMOOTH")
-                        key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_SMOOTH.tif'
+                        file = write_tif(predictions_left, bbx, x, y, path_to_tile, "_SMOOTH_X")
+                        key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_SMOOTH_X.tif'
                         uploader.upload(bucket = args.s3_bucket, key = key, file = file)
 
-                        file = write_tif(predictions_right, neighb_bbx, str(int(x) + 1), y, path_to_right, "_SMOOTH")
-                        key = f'2020/tiles/{str(int(x) + 1)}/{y}/{str(int(x) + 1)}X{str(y)}Y_SMOOTH.tif'
+                        file = write_tif(predictions_right, neighb_bbx, str(int(x) + 1), y, path_to_right, "_SMOOTH_X")
+                        key = f'2020/tiles/{str(int(x) + 1)}/{y}/{str(int(x) + 1)}X{str(y)}Y_SMOOTH_X.tif'
                         uploader.upload(bucket = args.s3_bucket, key = key, file = file)
 
                         cleanup(path_to_tile, path_to_right, delete = True, upload = True)

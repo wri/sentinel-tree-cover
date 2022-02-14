@@ -238,9 +238,9 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
     n_cloud_px = np.sum(cloud_img > int(0.5 * 255), axis = (1, 2))
     cloud_percent = n_cloud_px / (cloud_img.shape[1]*cloud_img.shape[2])
 
-    for date, prob in zip(cloud_dates, cloud_percent):
-        if prob < 0.4:
-            print(date, prob)
+    #for date, prob in zip(cloud_dates, cloud_percent):
+    #    if prob < 0.4:
+    #        print(date, prob)
 
     cloud_steps = np.argwhere(n_cloud_px >= (cloud_img.shape[1]*cloud_img.shape[2] * maxclouds))
     clean_steps = [x for x in range(cloud_img.shape[0]) if x not in cloud_steps]

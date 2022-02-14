@@ -549,24 +549,37 @@ def subset_contiguous_sunny_dates(dates, probs):
 
     dates_round_3 = dates[monthly_dates]
     probs_round_3 = probs[monthly_dates]
+    remove_next_month = False
+
+    _ = print_dates(dates_round_3, probs_round_3)
 
     if len(dates_round_3) >= 10:
         delete_max = False
+        n_removed = 0
+        n_to_remove = len(dates_round_3) - 9
+
         if np.max(probs_round_3) >= 0.15:
             delete_max = True
             indices_to_rm.append(monthly_dates[np.argmax(probs_round_3)])
+            n_removed += 1
         for x, y in zip(begin, end):
             indices_month = np.argwhere(np.logical_and(
                 dates >= x, dates < y)).flatten()
             dates_month = dates[indices_month]
             indices_month = [x for x in indices_month if x in monthly_dates]
-
-            n_removed = 0
-            if len(indices_month) >= 1:
-                if len(monthly_dates) == 11 and delete_max:
-                    continue
-                elif len(monthly_dates) >= 11:
-                    if x in [90, 243]:
+            
+            #print(f"Need to remove {n_to_remove} dates")
+            if (len(indices_month) >= 1) and (len(monthly_dates) >= 10) and (n_removed < n_to_remove):
+                to_remove = [90, 181, 243] #if len(monthly_dates) >= 10 else [90, 243]
+                if x in to_remove or remove_next_month:
+                    if len(indices_month) > 0:
                         indices_to_rm.append(indices_month[0])
+                        remove_next_month = False
+                        n_removed += 1
+                        print(f"Removed {x}, {n_removed}")
+                    else:
+                        print("Removing the next month instead")
+                        remove_next_month = True if not remove_next_month else False
+
 
     return indices_to_rm

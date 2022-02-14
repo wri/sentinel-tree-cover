@@ -417,6 +417,11 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
           f'S1: {s1.shape} \nS2: {s2_10.shape}, {s2_20.shape} \nDEM: {dem.shape}')
             
     # The 20m bands must be bilinearly upsampled to 10m as input to superresolve_tile
+    if len(s2_10.shape) == 3:
+        s2_10 = s2_10[np.newaxis]
+    if len(s2_20.shape) == 3:
+        s2_20 = s2_20[np.newaxis]
+
     sentinel2 = np.empty((s2_10.shape[0], width, height, 10), np.float32)
     sentinel2[..., :4] = s2_10
     for band in range(4):
