@@ -42,8 +42,8 @@ class Smoother:
 
         monthly = np.empty((self.outsize, self.dimx, self.dimy, self.nbands), dtype = np.float32)
         index = 0
-        for start, end in zip(range(0, self.size + 3, self.size // self.outsize), #0, 72, 6
-                              range(self.size // self.outsize, self.size + 3, self.size // self.outsize)): # 6, 72, 6
-            monthly[index] = np.median(x[start:end], axis = 0)
+        for start, end in zip(range(0, self.size + 2, self.size // self.outsize), #0, 72, 6
+                              range(self.size // self.outsize, self.size + 2, self.size // self.outsize)): # 6, 72, 6
+            monthly[index] = np.mean(x[start:end], axis = 0)
             index += 1
         return monthly

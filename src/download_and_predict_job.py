@@ -25,7 +25,7 @@ import warnings
 from scipy.ndimage import median_filter
 import time
 import copy
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from glob import glob
 import rasterio
 from rasterio.transform import from_origin
@@ -41,6 +41,9 @@ from tof.tof_downloading import to_int16, to_float32
 from downloading.io import FileUploader,  get_folder_prefix, make_output_and_temp_folders, upload_raw_processed_s3
 from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder
 from preprocessing.indices import evi, bi, msavi2, grndvi
+
+#tf.config.optimizer.set_jit(True)
+tf.disable_v2_behavior()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 SIZE = 216
@@ -674,7 +677,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     gap_between_years = False
     t = 0
-    sm = Smoother(lmbd = 150, size = 36, nbands = 10, dimx = SIZE + 14, dimy = SIZE + 14, outsize = 12)
+    sm = Smoother(lmbd = 100, size = 24, nbands = 10, dimx = SIZE + 14, dimy = SIZE + 14, outsize = 12)
     # Iterate over each subitle and prepare it for processing and generate predictions
     for t in range(len(tiles_folder)):
         time1 = time.time()
@@ -729,7 +732,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         #np.save("interp.npy", interp_tile)
         min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
         no_images = False
-        if np.percentile(min_clear_images_per_date, 30) < 2 or np.percentile(min_clear_images_per_date, 15) < 1:
+        if np.percentile(min_clear_images_per_date, 35) < 2 or np.percentile(min_clear_images_per_date, 20) < 1:
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subset), axis = (1, 2, 3)) > 0).flatten()
@@ -859,12 +862,16 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         if not isinstance(subtile.flat[0], np.floating):
             assert np.max(subtile) > 1
             subtile = subtile / 65535.
+
+        time1 = time.time()
         indices = np.empty((13, subtile.shape[1], subtile.shape[2], 17))
         indices[:, ..., :13] = subtile
         indices[:, ..., 13] = evi(subtile)
         indices[:, ...,  14] = bi(subtile)
         indices[:, ...,  15] = msavi2(subtile)
         indices[:, ...,  16] = grndvi(subtile)
+        time2 = time.time()
+        print(f"Indices in {time2 - time1} seconds")
 
         subtile = indices
         subtile = subtile.astype(np.float32)
@@ -875,6 +882,7 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         
         batch_x = subtile[np.newaxis]
         lengths = np.full((batch_x.shape[0]), 12)
+        time1 = time.time()
         preds = sess.run(predict_logits,
                               feed_dict={predict_inp:batch_x, 
                                          predict_length:lengths})
@@ -888,6 +896,8 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         #print("saving features")
         preds = preds.squeeze()
         preds = preds[1:-1, 1:-1]
+        time2 = time.time()
+        print(f"Preds in {time2 - time1} seconds")
         
     else:
         preds = np.full((SIZE, SIZE), 255)
@@ -1124,8 +1134,8 @@ if __name__ == '__main__':
 
     min_all = np.array(min_all)
     max_all = np.array(max_all)
-    min_all = np.broadcast_to(min_all, (13, SIZE + 14, SIZE + 14, 17)).astype(np.float32)
-    max_all = np.broadcast_to(max_all, (13, SIZE + 14, SIZE + 14, 17)).astype(np.float32)
+    min_all = np.broadcast_to(min_all, (1, SIZE + 14, SIZE + 14, 17)).astype(np.float32)
+    max_all = np.broadcast_to(max_all, (1, SIZE + 14, SIZE + 14, 17)).astype(np.float32)
     midrange = (max_all + min_all) / 2
     midrange = midrange.astype(np.float32)
     rng = max_all - min_all
@@ -1175,9 +1185,12 @@ if __name__ == '__main__':
                     y = y[:-2] if ".0" in y else y
                     initial_bbx = [data2['X'][0], data2['Y'][0], data2['X'][0], data2['Y'][0]]
                     bbx = make_bbox(initial_bbx, expansion = 300/30)
-                time1 = time.time()
+                time0 = time.time()
                 if not args.redownload:
+                    time1 = time.time()
                     bbx = download_tile(x = x, y = y, data = data, api_key = shconfig, year = args.year)
+                    time2 = time.time()
+                    print(f"Finished downloading imagery in {np.around(time2 - time0, 1)} seconds")
                 else:
                     download_raw_tile((x, y), args.local_path, "raw")
                     folder = f"{args.local_path}{str(x)}/{str(y)}/"
@@ -1187,22 +1200,20 @@ if __name__ == '__main__':
                     s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
                     size = hkl.load(s2_20_file)
                     size = size.shape[1:3]
-                    #download_s1_tile(data = data, 
-                    #     bbx = bbx,
-                    #     api_key = shconfig,
-                    #     year = args.year, 
-                    #     dates_sentinel_1 = dates_sentinel_1, 
-                    #     size = size, 
-                    #     s1_file = s1_file, 
-                    #     s1_dates_file = s1_dates_file)
 
                 s2, dates, interp, s1, dem, cloudshad = process_tile(x = x, y = y, data = data, local_path = args.local_path, make_shadow = True)
-                print(np.sum(np.isnan(s2)))
-                print(np.sum(np.isnan(s2)))
                 s2 = superresolve_large_tile(s2, superresolve_sess)
-                print(np.sum(np.isnan(s2)))
+
+                time1 = time.time()
                 process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess)
+                time2 = time.time()
+                print(f"Finished processing subtiles in {np.around(time2 - time1, 1)} seconds")
+
+                time1 = time.time()
                 predictions = load_mosaic_predictions(path_to_tile + "processed/")
+                time2 = time.time()
+                print(f"Finished making tif in {np.around(time2 - time1, 1)} seconds")
+
 
                 file = write_tif(predictions, bbx, x, y, path_to_tile)
                 key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_FINAL.tif'
@@ -1210,7 +1221,7 @@ if __name__ == '__main__':
                 if args.ul_flag:
                     upload_raw_processed_s3(path_to_tile, x, y, uploader)
                 time2 = time.time()
-                print(f"Finished {n} in {np.around(time2 - time1, 1)} seconds")
+                print(f"Finished {n} in {np.around(time2 - time0, 1)} seconds")
                 n += 1
             except Exception as e:
                 print(f"Ran into {str(e)} error, skipping {x}/{y}/")

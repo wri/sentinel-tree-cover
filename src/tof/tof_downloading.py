@@ -82,9 +82,9 @@ def process_sentinel_1_tile(sentinel1: np.ndarray, dates: np.ndarray) -> np.ndar
     s1, _ = calculate_and_save_best_images(sentinel1, dates)
     monthly = np.empty((12, sentinel1.shape[1], sentinel1.shape[2], 2))
     index = 0
-    for start, end in zip(range(0, 36 + 3, 36 // 12), #0, 72, 6
-                          range(36 // 12, 36 + 3, 36 // 12)): # 6, 72, 6
-        monthly[index] = np.median(s1[start:end], axis = 0)
+    for start, end in zip(range(0, 24 + 2, 24 // 12), #0, 72, 6
+                          range(24 // 12, 24 + 2, 24 // 12)): # 6, 72, 6
+        monthly[index] = np.mean(s1[start:end], axis = 0)
         index += 1
     return monthly
 
