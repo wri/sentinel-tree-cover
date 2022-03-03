@@ -683,10 +683,6 @@ def resegment_border(tile_x, tile_y, edge, local_path):
     time2 = time.time()
     print(f"Finished preprocess tile in {np.around(time2 - time1, 1)} seconds")
 
-
-    print(len(dates), s2.shape)
-    print(len(dates_neighb), s2_neighb.shape)
-    
     print("Aligning the dates")
     to_rm_tile, to_rm_neighb, min_images = align_dates(dates, dates_neighb)
     print(to_rm_tile, to_rm_neighb)
@@ -700,15 +696,6 @@ def resegment_border(tile_x, tile_y, edge, local_path):
             interp_neighb = np.delete(interp_neighb, to_rm_neighb, 0)
             dates_neighb = np.delete(dates_neighb, to_rm_neighb)
 
-    print(len(dates), s2.shape)
-    print(len(dates_neighb), s2_neighb.shape)
-    print(dates)
-    print(dates_neighb)
-    print(s2.shape)
-    print(s2_neighb.shape)
-
-    #np.save("s2_left.npy", s2)
-    #np.save("s2_right.npy", s2)
 
     sm = Smoother(lmbd = 100, size = 24, nbands = 10, dimx = s2.shape[1], dimy = s2.shape[2])
     smneighb = Smoother(lmbd = 100, size = 24, nbands = 10, dimx = s2_neighb.shape[1], dimy = s2_neighb.shape[2])
@@ -1024,8 +1011,6 @@ def cleanup(path_to_tile, path_to_right, delete = True, upload = True):
         key = f'2020/processed/{x}/{y}/' + internal_folder
         if upload:
             uploader.upload(bucket = 'tof-output', key = key, file = file)
-            #if delete:
-            #    os.remove(_file)
 
     for folder in glob(path_to_tile + "processed/*"):
         for file in os.listdir(folder):
@@ -1042,6 +1027,19 @@ def cleanup(path_to_tile, path_to_right, delete = True, upload = True):
             os.remove(folder + "/" + file)
 
     return None
+
+
+def cleanup_row_or_col(idx, current_idx, local_path):
+    if int(idx) < current_idx:
+        print("Emptying the working directory")
+        current_idx = int(idx)
+        try:
+            shutil.rmtree(local_path)
+            os.makedirs(local_path)
+        except Exception as e:
+            print(f"Ran into {str(e)}")
+    return current_idx
+        
 
 if __name__ == "__main__":
     SIZE = 620
@@ -1150,16 +1148,9 @@ if __name__ == "__main__":
         x = x[:-2] if ".0" in x else x
         y = y[:-2] if ".0" in y else y
 
-        if int(y) < current_y:
-            print("Emptying the working directory")
-            current_y = int(y)
-            try:
-                shutil.rmtree(args.local_path)
-                os.makedirs(args.local_path)
-            except Exception as e:
-                print(f"Ran into {str(e)}")
-                finished = 0
-                s2_shape = (0, 0)
+        current_y = cleanup_row_or_col(idx = y,
+                              current_idx = current_y,
+                              local_path = args.local_path)
 
         if int(y) < int(args.start_y):
             path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/'

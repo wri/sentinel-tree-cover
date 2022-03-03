@@ -25,7 +25,7 @@ import warnings
 from scipy.ndimage import median_filter
 import time
 import copy
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from glob import glob
 import rasterio
 from rasterio.transform import from_origin
@@ -44,6 +44,9 @@ from preprocessing.indices import evi, bi, msavi2, grndvi
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 SIZE = 216
+
+tf.disable_v2_behavior()
+
 
 
 def superresolve_tile(arr: np.ndarray, sess) -> np.ndarray:
@@ -574,7 +577,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     gap_between_years = False
     t = 0
-    sm = Smoother(lmbd = 150, size = 36, nbands = 10, dimx = SIZE + 14, dimy = SIZE + 14, outsize = 12)
+    sm = Smoother(lmbd = 100, size = 24, nbands = 10, dimx = SIZE + 14, dimy = SIZE + 14, outsize = 12)
     # Iterate over each subitle and prepare it for processing and generate predictions
     for t in range(0, len(tiles_folder)):
         time1 = time.time()
@@ -659,7 +662,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             # So that they will be picked up by the no-data flag
             print("Skipping because of no images")
             no_images = True
-            subtile = np.zeros((36, end_x-start_x, end_y - start_y, 10), dtype = np.float32)
+            subtile = np.zeros((24, end_x-start_x, end_y - start_y, 10), dtype = np.float32)
             dates_tile = [0,]
 
         output = f"{path}{str(folder_y)}/{str(folder_x)}.npy"
@@ -1022,8 +1025,8 @@ if __name__ == '__main__':
 
     min_all = np.array(min_all)
     max_all = np.array(max_all)
-    min_all = np.broadcast_to(min_all, (13, SIZE + 14, SIZE + 14, 17)).astype(np.float32)
-    max_all = np.broadcast_to(max_all, (13, SIZE + 14, SIZE + 14, 17)).astype(np.float32)
+    min_all = np.broadcast_to(min_all, (1, SIZE + 14, SIZE + 14, 17)).astype(np.float32)
+    max_all = np.broadcast_to(max_all, (1, SIZE + 14, SIZE + 14, 17)).astype(np.float32)
     midrange = (max_all + min_all) / 2
     midrange = midrange.astype(np.float32)
     rng = max_all - min_all
