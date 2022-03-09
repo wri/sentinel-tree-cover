@@ -486,8 +486,8 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
 
             s1_usage = (4/3) * s1.shape[0] * ((s1.shape[1]*s1.shape[2]) / (512*512))
             print(f"Sentinel 1 used {round(s1_usage, 1)} PU for {image_date}")
-
-            if np.sum(s1 == 1) < (height * width / 10):
+            print(np.sum(s1 == 1) / (height * width))
+            if np.sum(s1 == 1) < (height * width / 4):
                 s1_all.append(s1)
                 image_dates.append(image_date)
             elif date == dates_q1 and np.sum(s1 == 1) >= (height * width):

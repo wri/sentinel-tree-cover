@@ -8,6 +8,7 @@ import hickle as hkl
 import boto3
 from scipy.ndimage import median_filter
 import tensorflow.compat.v1 as tf
+#import tensorflow as tf
 from glob import glob
 import rasterio
 from rasterio.transform import from_origin
@@ -130,8 +131,8 @@ def superresolve_large_tile(arr: np.ndarray, sess) -> np.ndarray:
             superresolved (arr): (?, X, Y, 10) array
     """
     # Pad the input images to avoid border artifacts
-    wsize = 100
-    step = 100
+    wsize = 110
+    step = 110
     x_range = [x for x in range(0, arr.shape[1] - (wsize), step)] + [arr.shape[1] - wsize]
     y_range = [x for x in range(0, arr.shape[2] - (wsize), step)] + [arr.shape[2] - wsize]
     x_end = np.copy(arr[:, x_range[-1]:, ...])
@@ -244,8 +245,6 @@ def make_tiles_right_neighb(tiles_folder_x, tiles_folder_y):
     tiles_array[:, 2] = SIZE + 14.
     tiles_array[:, 3] = SIZE_Y + 7.
     tiles_array[1:-1, 3] += 7
-    print(tiles_array)
-    print(tiles_folder)
     return tiles_array, tiles_folder
 
 
@@ -311,8 +310,11 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     x = x[:-2] if ".0" in x else x
     y = y[:-2] if ".0" in y else y
     
+    time1 = time.time()
     s2 = interpolation.interpolate_na_vals(s2)
     s2 = np.float32(s2)
+    time2 = time.time()
+    print(f"Finished interpolate subtile in {np.around(time2 - time1, 1)} seconds")
     make_subtiles(f'{args.local_path}{str(x)}/{str(y)}/processed/',
                   tiles_folder)
     path = f'{args.local_path}{str(x)}/{str(y)}/processed/'
@@ -414,7 +416,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
                 f"for: {dates_tile}")
             preds = predict_subtile(subtile, sess)
-        print(preds.shape)
         
         left_mean = np.mean(preds[:,  (SIZE - 8) // 2 : (SIZE) // 2])
         right_mean = np.mean(preds[:, (SIZE) // 2 : (SIZE + 8) // 2])
@@ -435,7 +436,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         left_mean = np.mean(preds[:,  (SIZE - 8) // 2 : (SIZE) // 2])
         right_mean = np.mean(preds[:, (SIZE) // 2 : (SIZE + 8) // 2])
 
-        print(left_mean, right_mean)
         if abs(left_mean - right_mean) > 0.15:
             print("ADJUSTING first round")
             left = preds[:, : (SIZE) // 2]
@@ -522,6 +522,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         
 
 def preprocess_tile(arr, dates, interp):
+    time1 = time.time()
     if np.sum(arr == 0) > 0:
         arr[arr == 0.] = np.tile(np.median(arr, axis = 0)[np.newaxis], (arr.shape[0], 1, 1, 1))[arr == 0]
 
@@ -533,10 +534,12 @@ def preprocess_tile(arr, dates, interp):
         arr = np.delete(arr, missing_px, 0)
         interp = np.delete(interp, missing_px, 0)
         print(f"Removing {len(missing_px)} missing images")
+    time2 = time.time()
+    print(f"Finished missing px in preprocess_tile in {np.around(time2 - time1, 1)} seconds")
 
         # Remove dates with high likelihood of missed cloud or shadow (false negatives)
     cld = cloud_removal.remove_missed_clouds(arr)
-    arr, interp2 = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, wsize = 8, step = 8, thresh = 8 )
+    arr, interp2 = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, wsize = 12, step = 12, thresh = 18)
     interp = np.maximum(interp, interp2)
     arr = cloud_removal.adjust_interpolated_groups(arr, interp)
     return arr, interp, dates
@@ -654,26 +657,30 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         print("One of the tiles isn't processed, skipping.")
         return 0, None, None, 0
         
-    print("Loading and processing the tile")
     time1 = time.time()
     s2, dates, interp, s1, dem, _ = process_tile(tile_x, tile_y, data, local_path)
     s2_shape = s2.shape[1:-1]
     time2 = time.time()
     print(f"Finished process tile in {np.around(time2 - time1, 1)} seconds")
 
-    print("Splitting the tile to border")
+    time1 = time.time()
     s2, interp, s1, dem, tiles_folder_x = split_to_border(s2, interp, s1, dem, "tile", edge)
+    time2 = time.time()
+    print(f"Finished split to border in {np.around(time2 - time1, 1)} seconds")
    
-    print("Loading and processing the neighbor tile")
+    time1 = time.time()
     s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb, _ = \
         process_tile(neighbor_id[0], neighbor_id[1], data, args.local_path)
     s2_neighb_shape = s2_neighb.shape[1:-1]
+    time2 = time.time()
+    print(f"Finished process tile in {np.around(time2 - time1, 1)} seconds")
 
-    print("Splitting the neighbor tile to border")
+    time1 = time.time()
     s2_neighb, interp_neighb, s1_neighb, dem_neighb, _ = \
         split_to_border(s2_neighb, interp_neighb, s1_neighb, dem_neighb, "neighbor", edge)
+    time2 = time.time()
+    print(f"Finished split to border in {np.around(time2 - time1, 1)} seconds")
 
-    print("Aligning the dates between the tiles")
     time1 = time.time()
     s2, interp, dates = preprocess_tile(s2, dates, interp)
     s2_neighb, interp_neighb, dates_neighb = preprocess_tile(s2_neighb, dates_neighb, interp_neighb)
@@ -697,6 +704,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
             dates_neighb = np.delete(dates_neighb, to_rm_neighb)
 
 
+    time1 = time.time()
     sm = Smoother(lmbd = 100, size = 24, nbands = 10, dimx = s2.shape[1], dimy = s2.shape[2])
     smneighb = Smoother(lmbd = 100, size = 24, nbands = 10, dimx = s2_neighb.shape[1], dimy = s2_neighb.shape[2])
     try:
@@ -710,6 +718,8 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         no_images = True
     s2 = sm.interpolate_array(s2)
     s2_neighb = smneighb.interpolate_array(s2_neighb)
+    time2 = time.time()
+    print(f"Finished smoothing in {np.around(time2 - time1, 1)} seconds")
 
     if edge == "right":
         print("Concatenating the files")
@@ -740,17 +750,20 @@ def resegment_border(tile_x, tile_y, edge, local_path):
                     s1_indices = [0, 1, 3, 5]
                     s1_neighb = s1_neighb[s1_indices]
 
-        print(s1.shape, s1_neighb.shape)
         time1 = time.time()
         s2 = np.concatenate([s2, s2_neighb], axis = 2)
-        time2 = time.time()
-        print(f"Finished concat tile in {np.around(time2 - time1, 1)} seconds")
-        s2 = superresolve_large_tile(s2, superresolve_sess)
         s1 = np.concatenate([s1, s1_neighb], axis = 2)
         dem = np.concatenate([dem, dem_neighb], axis = 1)
         interp = np.concatenate([interp[:interp_neighb.shape[0]],
                                  interp_neighb[:interp.shape[0]]], axis = 2)
+        time2 = time.time()
+        print(f"Finished concat tile in {np.around(time2 - time1, 1)} seconds")
 
+        time1 = time.time()
+        s2 = superresolve_large_tile(s2, superresolve_sess)
+        time2 = time.time()
+        print(f"Finished superresolve tile in {np.around(time2 - time1, 1)} seconds")
+        
         s2_neighb = None
         dem_neighb = None
         interp_neighb = None
@@ -1149,8 +1162,8 @@ if __name__ == "__main__":
         y = y[:-2] if ".0" in y else y
 
         current_y = cleanup_row_or_col(idx = y,
-                              current_idx = current_y,
-                              local_path = args.local_path)
+                            current_idx = current_y,
+                            local_path = args.local_path)
 
         if int(y) < int(args.start_y):
             path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/'

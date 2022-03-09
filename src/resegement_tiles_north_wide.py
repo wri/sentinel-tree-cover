@@ -133,8 +133,8 @@ def superresolve_large_tile(arr: np.ndarray, sess) -> np.ndarray:
             superresolved (arr): (?, X, Y, 10) array
     """
     # Pad the input images to avoid border artifacts
-    wsize = 100
-    step = 100
+    wsize = 110
+    step = 110
     x_range = [x for x in range(0, arr.shape[1] - (wsize), step)] + [arr.shape[1] - wsize]
     y_range = [x for x in range(0, arr.shape[2] - (wsize), step)] + [arr.shape[2] - wsize]
     x_end = np.copy(arr[:, x_range[-1]:, ...])
@@ -1075,7 +1075,7 @@ def cleanup_row_or_col(idx, current_idx, local_path):
             os.makedirs(local_path)
         except Exception as e:
             print(f"Ran into {str(e)}")
-    return None
+    return current_idx
 
 
 if __name__ == "__main__":

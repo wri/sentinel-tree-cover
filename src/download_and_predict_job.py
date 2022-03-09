@@ -25,6 +25,7 @@ import warnings
 from scipy.ndimage import median_filter
 import time
 import copy
+#import tensorflow as tf
 import tensorflow.compat.v1 as tf
 from glob import glob
 import rasterio
@@ -90,8 +91,8 @@ def superresolve_large_tile(arr: np.ndarray, sess) -> np.ndarray:
             superresolved (arr): (?, X, Y, 10) array
     """
     # Pad the input images to avoid border artifacts
-    wsize = 100
-    step = 100
+    wsize = 110
+    step = 110
     x_range = [x for x in range(0, arr.shape[1] - (wsize), step)] + [arr.shape[1] - wsize]
     y_range = [x for x in range(0, arr.shape[2] - (wsize), step)] + [arr.shape[2] - wsize]
     x_end = np.copy(arr[:, x_range[-1]:, ...])
@@ -732,7 +733,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         #np.save("interp.npy", interp_tile)
         min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
         no_images = False
-        if np.percentile(min_clear_images_per_date, 35) < 2 or np.percentile(min_clear_images_per_date, 20) < 1:
+        if np.percentile(min_clear_images_per_date, 50) < 2 or np.percentile(min_clear_images_per_date, 25) < 1:
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subset), axis = (1, 2, 3)) > 0).flatten()
