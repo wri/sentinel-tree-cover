@@ -7,10 +7,11 @@ from skimage.transform import resize
 import hickle as hkl
 import boto3
 from scipy.ndimage import median_filter
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from glob import glob
 import rasterio
 from rasterio.transform import from_origin
+import shutil
 
 from preprocessing import slope
 from downloading.utils import calculate_and_save_best_images
@@ -25,6 +26,9 @@ from download_and_predict_job import process_tile, make_bbox, convert_to_db
 from download_and_predict_job import fspecial_gauss, rolling_mean
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+tf.disable_v2_behavior()
+
 
 
 def download_raw_tile(tile_idx, local_path, subfolder = "raw"):
@@ -129,8 +133,8 @@ def superresolve_large_tile(arr: np.ndarray, sess) -> np.ndarray:
             superresolved (arr): (?, X, Y, 10) array
     """
     # Pad the input images to avoid border artifacts
-    wsize = 100
-    step = 100
+    wsize = 110
+    step = 110
     x_range = [x for x in range(0, arr.shape[1] - (wsize), step)] + [arr.shape[1] - wsize]
     y_range = [x for x in range(0, arr.shape[2] - (wsize), step)] + [arr.shape[2] - wsize]
     x_end = np.copy(arr[:, x_range[-1]:, ...])
@@ -529,14 +533,13 @@ def preprocess_tile(arr, dates, interp):
 
     missing_px = interpolation.id_missing_px(arr, 100)
     if len(missing_px) > 0:
-        #print(np.sum(arr == 0, axis = (1, 2)))
-        #print(np.sum(arr >= 1, axis = (1, 2)))
+
         dates = np.delete(dates, missing_px)
         arr = np.delete(arr, missing_px, 0)
         interp = np.delete(interp, missing_px, 0)
         print(f"Removing {len(missing_px)} missing images")
 
-        # Remove dates with high likelihood of missed cloud or shadow (false negatives)
+    # Remove dates with high likelihood of missed cloud or shadow (false negatives)
     cld = cloud_removal.remove_missed_clouds(arr)
     arr, interp2 = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, wsize = 8, step = 8, thresh = 8 )
     interp = np.maximum(interp, interp2)
@@ -591,7 +594,6 @@ def resegment_border(tile_x, tile_y, edge, local_path):
 
     processed = check_if_processed((tile_x, tile_y), local_path)
     neighbor_id = [tile_x, str(int(tile_y)+ 1 )]
-    #print(neighbor_id)
 
     processed_neighbor = check_if_processed(neighbor_id, local_path)
     if processed_neighbor:
@@ -599,10 +601,8 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         data_temp = data_temp[data_temp['X_tile'] == int(neighbor_id[0])]
         data_temp = data_temp[data_temp['Y_tile'] == int(neighbor_id[1])]
         processed_neighbor = True if len(data_temp) > 0 else False
-        #rocessed_neighbor = True
 
     if processed and processed_neighbor:
-        #print(f"Downloading {tile_x}, {tile_y}")
         download_raw_tile((tile_x, tile_y), local_path, "tiles")
         download_raw_tile(neighbor_id, local_path, "tiles")
         tile_tif, _ = load_tif((tile_x, tile_y), local_path)
@@ -616,32 +616,35 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         neighbor_tif[neighbor_tif > 100] = np.nan
         tile_tif[tile_tif > 100] = np.nan
 
-        right_mean = np.nanmean(neighbor_tif[-2:])
-        left_mean = np.nanmean(tile_tif[:2])
-        right = np.nanmean(neighbor_tif[-2:], axis = 0)
-        left = np.nanmean(tile_tif[:2], axis = 0)
+        right_mean = np.nanmean(neighbor_tif[-6:])
+        left_mean = np.nanmean(tile_tif[:6])
+        right = np.nanmean(neighbor_tif[-6:], axis = 0)
+        left = np.nanmean(tile_tif[:6], axis = 0)
         right = right[:left.shape[0]]
         left = left[:right.shape[0]]
 
         right_all = np.mean(neighbor_tif[-(SIZE // 2):], axis = 0)
         left_all = np.mean(tile_tif[:(SIZE // 2)], axis = 0)
 
-        print(f"The left median is {np.mean(left_all)} and the right median is {np.mean(right_all)}")
-
         left_right_diff = abs(right_mean - left_mean)
         fraction_diff = np.nanmean(abs(right - left) > 25)
-        other_metrics = (fraction_diff > 0.20) and left_right_diff > 2
-        #print(other_metrics)
+        print(f"The left median is {np.mean(left_all)} and the right median is {np.mean(right_all)}")
+
+        other0 = (left_right_diff > 10) or np.isnan(left_right_diff)
+    
+        other = fraction_diff > 0.3
+        other = np.logical_and(other, (left_right_diff > 6) )
+
+        other2 = fraction_diff > 0.4
+        other2 = np.logical_and(other2, (left_right_diff > 3) )
+
         print(f"The differences is: {left_right_diff} and fraction {fraction_diff}")
 
-        if left_right_diff > 7.25 or other_metrics or np.isnan(left_right_diff):
+        if other0 or other or other2:
             
             download_raw_tile((tile_x, tile_y), local_path, "processed")
             test_subtile = np.load(f"{local_path}/{tile_x}/{tile_y}/processed/0/0.npy")
-            #print(test_subtile.shape)
-            #if test_subtile.shape[0] != SIZE:
-            #    print("Skipping cause of subtile size")
-            #    return 0, None, None
+
             download_raw_tile((tile_x, tile_y), local_path, "raw")
 
             if edge == "up":
@@ -650,9 +653,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
                 download_raw_tile(neighbor_id, local_path, "processed")
                 test_subtile = np.load(f"{local_path}/{neighbor_id[0]}/{neighbor_id[1]}/processed/0/0.npy")
                 print(test_subtile.shape)
-                #if test_subtile.shape[0] != SIZE:
-                #    print("Skipping cause of subtile size")
-                #    return 0, None, None
+
         else:
             print("The tiles are pretty close, skipping")
             return 0, None, None, 0
@@ -665,11 +666,6 @@ def resegment_border(tile_x, tile_y, edge, local_path):
     s2_shape = s2.shape[1:-1]
 
     n_tiles_x, n_tiles_y = check_n_tiles(tile_x, tile_y)
-    #print(f"There are {n_tiles_x} x tiles")
-
-    #gap_x = int(np.ceil((s1.shape[2] - SIZE) / n_tiles_x))
-    #tiles_folder_x = np.hstack([np.arange(0, s1.shape[2] - SIZE, gap_x), np.array(s1.shape[2] - SIZE)]) 
-    #print(tiles_folder_x)
 
     print("Splitting the tile to border")
     s2, interp, s1, dem, _ = split_to_border(s2, interp, s1, dem, "tile", edge)
@@ -1052,8 +1048,6 @@ def cleanup(path_to_tile, path_to_right, delete = True, upload = True):
             key = f'2020/processed/{x}/{y}/' + internal_folder
             if upload:
                 uploader.upload(bucket = 'tof-output', key = key, file = _file)
-            #if delete:
-            #    os.remove(_file)
 
     for folder in glob(path_to_tile + "processed/*"):
         for file in os.listdir(folder):
@@ -1070,6 +1064,19 @@ def cleanup(path_to_tile, path_to_right, delete = True, upload = True):
             os.remove(folder + "/" + file)
 
     return None
+
+
+def cleanup_row_or_col(idx, current_idx, local_path):
+    if int(idx) < current_idx:
+        print("Emptying the working directory")
+        current_idx = int(idx)
+        try:
+            shutil.rmtree(local_path)
+            os.makedirs(local_path)
+        except Exception as e:
+            print(f"Ran into {str(e)}")
+    return current_idx
+
 
 if __name__ == "__main__":
     SIZE = 620
@@ -1102,7 +1109,6 @@ if __name__ == "__main__":
 
     superresolve_graph_def = tf.compat.v1.GraphDef()
     predict_graph_def = tf.compat.v1.GraphDef()
-    #gap_graph_def = tf.compat.v1.GraphDef()
 
     if os.path.exists(args.superresolve_model_path):
         print(f"Loading model from {args.superresolve_model_path}")
@@ -1127,18 +1133,7 @@ if __name__ == "__main__":
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
     else:
         raise Exception(f"The model path {args.predict_model_path} does not exist")
-    """
-    if os.path.exists(args.gap_model_path):
-        print(f"Loading gap model from {args.gap_model_path}")
-        gap_file = tf.io.gfile.GFile(args.gap_model_path + "gap_graph.pb", 'rb')
-        gap_graph_def.ParseFromString(gap_file.read())
-        gap_graph = tf.import_graph_def(gap_graph_def, name='gap')
-        gap_sess = tf.compat.v1.Session(graph=gap_graph)
-        gap_logits = gap_sess.graph.get_tensor_by_name(f"gap/conv2d_13/Sigmoid:0")
-        gap_inp = gap_sess.graph.get_tensor_by_name("gap/Placeholder:0")
-    else:
-        raise Exception(f"The model path {args.gap_model_path} does not exist")
-    """
+
     gap_file = None
     gap_graph_def = None
     gap_graph = None
@@ -1171,15 +1166,15 @@ if __name__ == "__main__":
     else:
         raise Exception(f"The database does not exist at {args.db_path}")
 
-    data['X_tile'] = data['X_tile'].str.extract('(\d+)', expand=False)
-    data['Y_tile'] = data['Y_tile'].str.extract('(\d+)', expand=False)
+    #data['X_tile'] = data['X_tile'].str.extract('(\d+)', expand=False)
+    #data['Y_tile'] = data['Y_tile'].str.extract('(\d+)', expand=False)
 
     data['X_tile'] = data['X_tile'].astype(int)
     data['Y_tile'] = data['Y_tile'].astype(int)
     data = data.sort_values(['X_tile', 'Y_tile'], ascending=[False, True])
 
-    print(data.head(5))
     print(len(data))
+    current_x = 10000
     n = 0
     for index, row in data.iterrows(): # We want to sort this by the X so that it goes from left to right
         if index > int(args.start_id):
@@ -1187,6 +1182,11 @@ if __name__ == "__main__":
             y = str(int(row['Y_tile']))
             x = x[:-2] if ".0" in x else x
             y = y[:-2] if ".0" in y else y
+
+            current_x = cleanup_row_or_col(idx = x,
+                              current_idx = current_x,
+                              local_path = args.local_path)
+
             if int(x) < int(args.start_x):
                 path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/'
                 path_to_right = f'{args.local_path}{str(x)}/{str(int(y) + 1)}/'
@@ -1196,11 +1196,9 @@ if __name__ == "__main__":
                 initial_bbx = [row['X'], row['Y'], row['X'], row['Y']]
                 bbx = make_bbox(initial_bbx, expansion = 300/30)
 
-                #print(data['X_tile'][index], data['Y_tile'][index])
                 data_neighb = data.copy()
                 neighb_bbx = None
 
-               # print(int(x), int(y) + 1)
                 try:
                     data_neighb = data_neighb[data_neighb['X_tile'] == int(x)]
                     data_neighb = data_neighb[data_neighb['Y_tile'] == int(y) + 1]
