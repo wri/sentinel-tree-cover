@@ -23,31 +23,31 @@ def calculate_bbx_pyproj(coord: Tuple[float, float],
                          expansion: int, multiplier: int = 1.) -> (Tuple[float, float], 'CRS'):
     ''' Calculates the four corners of a bounding box
         [bottom left, top right] as well as the UTM EPSG using Pyproj
-        
+
         Note: The input for this function is (x, y), not (lat, long)
-        
+
         Parameters:
          coord (tuple): Initial (long, lat) coord
          step_x (int): X tile number of a 6300x6300 meter tile
          step_y (int): Y tile number of a 6300x6300 meter tile
          expansion (int): Typically 10 meters - the size of the border for the predictions
          multiplier (int): Currently deprecated
-         
+
         Returns:
          coords (tuple):
          CRS (int):
     '''
-    
+
     inproj = Proj('epsg:4326')
     outproj_code = calculate_epsg(coord)
     outproj = Proj('epsg:' + str(outproj_code))
-    
-    
-    
+
+
+
     coord_utm =  transform(inproj, outproj, coord[1], coord[0])
     coord_utm_bottom_left = (coord_utm[0] + step_x*6300 - expansion,
                              coord_utm[1] + step_y*6300 - expansion)
-    
+
     coord_utm_top_right = (coord_utm[0] + (step_x+multiplier) * 6300 + expansion,
                            coord_utm[1] + (step_y+multiplier) * 6300 + expansion)
 
@@ -62,7 +62,7 @@ def calculate_epsg(points: Tuple[float, float]) -> int:
 
         Parameters:
          points (tuple): input longitiude, latitude tuple
-    
+
         Returns:
          epsg_code (int): integer form of associated UTM EPSG
     """
@@ -75,7 +75,7 @@ def calculate_epsg(points: Tuple[float, float]) -> int:
     else:
         epsg_code = '327' + utm_band
     return int(epsg_code)
-    
+
 
 def PolygonArea(corners: Tuple[float, float]) -> float:
     """ Calculates the area in meters squared of an input bounding box
@@ -88,7 +88,7 @@ def PolygonArea(corners: Tuple[float, float]) -> float:
         area -= corners[j][0] * corners[i][1]
     area = abs(area)
     return area
-    
+
 
 def offset_x(coord: Tuple[float, float], offset: int) -> tuple:
     ''' Converts a WGS 84 to UTM, adds meters, and converts back'''
@@ -96,50 +96,50 @@ def offset_x(coord: Tuple[float, float], offset: int) -> tuple:
     inproj = Proj('epsg:4326')
     outproj_code = calculate_epsg(coord)
     outproj = Proj('epsg:' + str(outproj_code))
-    
+
     coord_utm = transform(inproj, outproj, coord[1], coord[0])
     coord_utm = list(coord_utm)
-    coord_utm[0] += offset 
+    coord_utm[0] += offset
     return coord_utm
-    
+
 
 def offset_y(coord: Tuple[float, float], offset: int) -> tuple:
     ''' Converts a WGS 84 to UTM, adds meters, and converts back'''
     inproj = Proj('epsg:4326')
     outproj_code = calculate_epsg(coord)
     outproj = Proj('epsg:' + str(outproj_code))
-    
+
     coord_utm = transform(inproj, outproj, coord[1], coord[0])
     coord_utm = list(coord_utm)
-    coord_utm[1] += offset 
+    coord_utm[1] += offset
     return coord_utm
 
 
 def bounding_box(point: Tuple[float, float],
-                 x_offset_max: int = 140, 
+                 x_offset_max: int = 140,
                  y_offset_max: int = 140,
                  expansion: int = 10) -> Tuple[float, float]:
 
     tl = point
-    
+
     epsg = calculate_epsg(tl)
     tl = convertCoords(tl, 4326, epsg)
-    
+
     br = (tl[0], tl[1])
     tl = ((tl[0] + (x_offset_max)), (tl[1] + (y_offset_max )))
     distance1 = tl[0] - br[0]
     distance2 = tl[1] - br[1]
-    
+
     br = [a - expansion for a in br]
     tl = [a + expansion for a in tl]
-    
+
     after = [b - a for a,b in zip(br, tl)]
     br = convertCoords(br, epsg, 4326)
     tl = convertCoords(tl, epsg, 4326)
-    
+
     min_x = tl[0] # original X offset - 10 meters
     max_x = br[0] # original X offset + 10*GRID_SIZE meters
-    
+
     min_y = tl[1] # original Y offset - 10 meters
     max_y = br[1] # original Y offset + 10 meters + 140 meters
     # (min_x, min_y), (max_x, max_y)
@@ -151,21 +151,21 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
                                    image_dates: np.ndarray) -> (np.ndarray, int):
     """ Interpolate input data of (Time, X, Y, Band) to a constant
         (72, X, Y, Band) shape with one time step every five days
-        
+
         Parameters:
          img_bands (arr):
          image_dates (list):
-         
+
         Returns:
          keep_steps (arr):
          max_distance (int)
     """
     biweekly_dates = [day for day in range(0, 360, 15)] # ideal imagery dates are every 15 days
-    
+
     # Identify the dates where there is < 20% cloud cover
     satisfactory_ids = [x for x in range(0, img_bands.shape[0])]
     satisfactory_dates = [value for idx, value in enumerate(image_dates) if idx in satisfactory_ids]
-    
+
     selected_images = {}
     for i in biweekly_dates:
         distances = np.array([(date - i) for date in satisfactory_dates])
@@ -210,7 +210,7 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
             if prior[0] != after[0]: # check this
                 # example, prior
                 # date = 35
-                # prior = -300, (335) 
+                # prior = -300, (335)
                 # the wrapped prior is (-1 * (300)) + 365 = 65
                 # example, after_flag,
                 # date = 305
@@ -224,7 +224,7 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
                 prior_ratio = 1 - after_ratio
             else:
                 prior_ratio = after_ratio = 0.5
-                    
+
                 # Extract the image date and imagery index for the prior and after values
             prior_dates = i + prior
             prior_images_idx = [i for i, val in enumerate(image_dates) if val in prior_dates]
@@ -233,15 +233,15 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
             after_images_idx = [i for i, val in enumerate(image_dates) if val in after_dates]
             after_images_idx = np.array(after_images_idx).reshape(-1)
             #print(np.concatenate([prior_images_idx, after_images_idx]))
-            selected_images[i] = {'image_date': np.array([prior_dates, after_dates]).flatten(), 
+            selected_images[i] = {'image_date': np.array([prior_dates, after_dates]).flatten(),
                                   'image_ratio': [prior_ratio, after_ratio],
                                   'image_idx': [prior_images_idx, after_images_idx]}
-                            
+
     max_distance = 0
     for i in sorted(selected_images.keys()):
         #print(i, selected_images[i])
         if len(selected_images[i]['image_date']) == 2:
-            dist = (np.min(selected_images[i]['image_date'][1]) - 
+            dist = (np.min(selected_images[i]['image_date'][1]) -
                     np.max(selected_images[i]['image_date'][0]))
             if dist > max_distance:
                 max_distance = dist
@@ -267,7 +267,7 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
                 #step = step1 + step2
             """
         keep_steps.append(step)
-        
+
     keep_steps = np.stack(keep_steps)
     return keep_steps, max_distance
 
@@ -343,7 +343,7 @@ def calculate_proximal_steps_two(date: int, satisfactory: list) -> (int, int):
             arg_after = np.array(arg_after.argmin())
         if arg_after != np.empty((0)):
             arg_after = list(idx_after[arg_after])
-            
+
     if arg_after == np.empty((0)) and arg_before == np.empty((0)):
         arg_after = date
         arg_before = date
@@ -356,7 +356,7 @@ def calculate_proximal_steps_two(date: int, satisfactory: list) -> (int, int):
 
 
 def tile_window(h: int, w: int, tile_width: int=None,
-                tile_height: int=None, 
+                tile_height: int=None,
                 window_size: int=100) -> List:
     """Calculates overlapping tiles of tile_width x tile_height
     for an input h x w array
@@ -428,12 +428,12 @@ def check_contains(coord: tuple, step_x: int, step_y:
     outproj = Proj('epsg:4326')
     bottomleft = transform(inproj, outproj, bbx[0][0], bbx[0][1])
     topright = transform(inproj, outproj, bbx[1][0], bbx[1][1])
-    
+
     if os.path.exists(folder):
             if any([x.endswith(".geojson") for x in os.listdir(folder)]):
                 geojson_path = folder + [x for x in os.listdir(folder) if x.endswith(".geojson")][0]
-    
-                bool_contains = pts_in_geojson(lats = [bottomleft[1], topright[1]], 
+
+                bool_contains = pts_in_geojson(lats = [bottomleft[1], topright[1]],
                                                        longs = [bottomleft[0], topright[0]],
                                                        geojson = geojson_path)
                 contains = bool_contains
@@ -481,4 +481,3 @@ def hist_match(source: np.ndarray, template: np.ndarray) -> np.ndarray:
     interp_t_values = np.interp(s_quantiles, t_quantiles, t_values)
 
     return interp_t_values[bin_idx].reshape(oldshape)
-    

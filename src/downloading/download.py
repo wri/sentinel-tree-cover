@@ -40,7 +40,7 @@ class FileDownloader:
                     filename = prefix + file.split("/")[-1]
                     print(file, filename)
                     #print(file, id_npy)
-                    self.s3client.download_file(Bucket = bucket, 
+                    self.s3client.download_file(Bucket = bucket,
                         Key = file,
                         Filename = prefix + file.split("/")[-1])
 

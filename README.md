@@ -2,8 +2,8 @@ Mapping tree cover and extent with Sentinel-1 and 2
 ==============================
 
 # Description
- 
-This project maps tree extent at the ten-meter scale using open source artificial intelligence and satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems. 
+
+This project maps tree extent at the ten-meter scale using open source artificial intelligence and satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems.
 
 This repository contains the source code for the project. A full description of the methodology can be found [on arXiv](https://arxiv.org/abs/2005.08702). The data product specifications can be accessed on the wiki page.
 *  [Background](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#background)
@@ -23,7 +23,7 @@ John Brandt & Fred Stolle (2021) A global method to identify trees outside of cl
 
 Utilizing this repository to generate your own data requires:
 * Sentinel-Hub API key, see [Sentinel-hub](http://sentinel-hub.com/)
-* Amazon Web Services API key (optional) with s3 read/write privileges 
+* Amazon Web Services API key (optional) with s3 read/write privileges
 
 The API keys should be stored as `config.yaml` in the base directory with the structure:
 
@@ -43,7 +43,7 @@ cd sentinel-tree-cover/
 touch config.yaml
 vim config.yaml # insert your API keys here
 docker build -t sentinel_tree_cover .
-docker run -it --entrypoint /bin/bash sentinel_tree_cover:latest 
+docker run -it --entrypoint /bin/bash sentinel_tree_cover:latest
 cd src
 python3 download_and_predict_job.py --country "country" --year year
 ```
@@ -119,9 +119,9 @@ The code is released under the GNU General Public License v3.0.
     ├── models             <- Trained and serialized models, model predictions, or model summaries
     │
     ├── notebooks          <- Jupyter notebooks
-    │   └── baseline 
-    │   └── replicate-paper 
-    │   └── visualization 
+    │   └── baseline
+    │   └── replicate-paper
+    │   └── visualization
     │
     ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
     │

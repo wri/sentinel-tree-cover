@@ -11,7 +11,7 @@ def process_multiple_years(coord: tuple,
                        path: str = INPUT_FOLDER) -> None:
     '''Wrapper function to interpolate clouds and temporal gaps, superresolve tiles,
        calculate relevant indices, and save analysis-ready data to the output folder
-       
+
        Parameters:
         coord (tuple)
         step_x (int):
@@ -24,15 +24,15 @@ def process_multiple_years(coord: tuple,
 
     idx = str(step_y) + "_" + str(step_x)
     x_vals, y_vals = make_folder_names(step_x, step_y)
-    
+
     d2017 = hkl.load(f"{path}/2017/interim/dates_{idx}.hkl")
     d2018 = hkl.load(f"{path}/2018/interim/dates_{idx}.hkl")
     d2019 = hkl.load(f"{path}/2019/interim/dates_{idx}.hkl")
-    
+
     x2017 = hkl.load(f"{path}/2017/interim/{idx}.hkl").astype(np.float32)
     x2018 = hkl.load(f"{path}/2018/interim/{idx}.hkl").astype(np.float32)
     x2019 = hkl.load(f"{path}/2019/interim/{idx}.hkl").astype(np.float32)
-  
+
     s1_all = np.empty((72, 646, 646, 2))
     s1_2017 = hkl.load(f"{path}/2017/raw/s1/{idx}.hkl")
     s1_all[:24] = s1_2017
@@ -40,7 +40,7 @@ def process_multiple_years(coord: tuple,
     s1_all[24:48] = s1_2018
     s1_2019 = hkl.load(f"{path}2019/raw/s1/{idx}.hkl")
     s1_all[48:] = s1_2019
-    
+
 
     index = 0
     tiles = tile_window(IMSIZE, IMSIZE, window_size = 142)
@@ -62,7 +62,7 @@ def process_multiple_years(coord: tuple,
         out_17 = f"{path}/2017/processed/{y_vals[index]}/{x_vals[index]}.hkl"
         out_18 = f"{path}/2018/processed/{y_vals[index]}/{x_vals[index]}.hkl"
         out_19 = f"{path}/2019/processed/{y_vals[index]}/{x_vals[index]}.hkl"
-        
+
         index += 1
         print(f"{index}: The output file is {out_17}")
         subtile = interpolate_array(subtile, dim = 142)
@@ -73,7 +73,7 @@ def process_multiple_years(coord: tuple,
                 os.makedirs(os.path.realpath(output_folder))
         subtile = to_int32(subtile)
         assert subtile.shape[1] == 142, f"subtile shape is {subtile.shape}"
-        
+
         hkl.dump(subtile[:24], out_17, mode='w', compression='gzip')
         hkl.dump(subtile[24:48], out_18, mode='w', compression='gzip')
         hkl.dump(subtile[48:], out_19, mode='w', compression='gzip')
@@ -86,12 +86,12 @@ def reject_outliers(data, m = 4):
     for x in tnrange(data.shape[1]):
         for y in range(data.shape[2]):
             for band in range(data.shape[3]):
-                to_correct = np.where(s[:, x, y, band] > m) 
+                to_correct = np.where(s[:, x, y, band] > m)
                 data[to_correct, x, y, band] = mdev[x, y, band]
                 n_changed += len(to_correct[0])
     print(f"Rejected {n_changed} outliers")
     return data
-    
+
 
 def convertCoords(xy, src='', targ=''):
     """ Converts coords from one EPSG to another
@@ -100,7 +100,7 @@ def convertCoords(xy, src='', targ=''):
          xy (tuple): input longitiude, latitude tuple
          src (str): EPSG code associated with xy
          targ (str): EPSG code of target output
-    
+
         Returns:
          pt (tuple): (x, y) tuple of xy in targ EPSG
     """
@@ -153,7 +153,7 @@ def evi(x, verbose = False):
 def bounding_box(points, expansion = 160):
     """ Calculates the corners of a bounding box with an
         input expansion in meters from a given bounding_box
-        
+
         Subcalls:
          calculate_epsg, convertCoords
 
@@ -161,14 +161,14 @@ def bounding_box(points, expansion = 160):
          points (list): output of calc_bbox
          expansion (float): number of meters to expand or shrink the
                             points edges to be
-    
+
         Returns:
          bl (tuple): x, y of bottom left corner with edges of expansion meters
          tr (tuple): x, y of top right corner with edges of expansion meters
     """
     bl = list(points[0])
     tr = list(points[1])
-    
+
     epsg = calculate_epsg(bl)
 
     bl = convertCoords(bl, 4326, epsg)
@@ -181,13 +181,13 @@ def bounding_box(points, expansion = 160):
     bl = [bl[0] - expansion1, bl[1] - expansion2]
     tr = [tr[0] + expansion1, tr[1] + expansion2]
 
-    after = [b - a for a,b in zip(bl, tr)]   
+    after = [b - a for a,b in zip(bl, tr)]
     print(after)
     if max(init) > 130:
         print("ERROR: Initial field greater than 130m")
     if min(init) < 120:
         print("ERROR: Initial field less than 130m")
-        
+
     if min(after) < (expansion - 4.5):
         print("ERROR")
     if max(after) > (expansion + 5):
@@ -197,7 +197,7 @@ def bounding_box(points, expansion = 160):
     bl = convertCoords(bl, epsg, 4326)
     tr = convertCoords(tr, epsg, 4326)
     return bl, tr
-    
+
 def savi(x, verbose = False):
     # (1.5) * ((08 - 04)/ (08 + 04 + 0.5))
     NIR = x[:, :, :, 6]
@@ -294,7 +294,7 @@ def Squeeze_excitation_layer(input_x, out_dim, ratio, layer_name):
         scale = input_x * excitation
 
         return scale
-    
+
 def convGRU(x, cell_fw, cell_bw, ln):
         output, final = tf.nn.bidirectional_dynamic_rnn(
             cell_fw, cell_bw, x, ln, dtype=tf.float32)
@@ -359,7 +359,7 @@ def thirty_meter(true, pred, thresh = 0.4):
         if p == 0 and t == 1:
             fn = 1
             false_negatives.append(fn)
-            
+
     if sum(true_positives) + sum(false_positives) > 0:
         prec = sum(true_positives) / (sum(true_positives) + sum(false_positives))
         prec = prec * sum(subs_true)
@@ -371,7 +371,7 @@ def thirty_meter(true, pred, thresh = 0.4):
     else:
         rec = np.nan
     return sum(true_positives), sum(false_positives), sum(false_negatives)#rec, prec, sum(subs_true)
-    
+
 def get_shifts(arr):
     true_m = arr[1:13, 1:13]
     true_l = arr[0:12, 1:13]
@@ -401,7 +401,7 @@ def subset_contiguous_sunny_dates(dates, probs):
     months_to_adjust = []
     months_to_adjust_again = []
     indices_to_rm = []
-    
+
     def _indices_month(dates, x, y, indices_to_rm):
         indices_month = np.argwhere(np.logical_and(
                     dates >= x, dates < y)).flatten()
@@ -428,10 +428,10 @@ def subset_contiguous_sunny_dates(dates, probs):
         # This will sometimes take 3 month windows and cap them to 2 images/month
         for x in [0, 2, 4, 6, 8, 10]:
             three_m_sum = np.sum(n_per_month[x:x+3])
-            if three_m_sum >= 5 and np.min(n_per_month[x:x+3]) >= 1: 
+            if three_m_sum >= 5 and np.min(n_per_month[x:x+3]) >= 1:
                 if n_per_month[x + 1] == 3: # 3, 3, 3 or 2, 3, 2
                     months_to_adjust_again.append(x + 1)
-                elif n_per_month[x] == 3: # 3, 2, 2 
+                elif n_per_month[x] == 3: # 3, 2, 2
                     months_to_adjust_again.append(x)
                 elif n_per_month[x + 1] == 2: # 2, 2, 2 or 2, 2, 3
                     months_to_adjust_again.append(x + 1)
@@ -555,4 +555,3 @@ def subset_contiguous_sunny_dates(dates, probs):
 
         print(f"Removing {len(indices_to_rm)} sunny/cloudy dates")
     return indices_to_rm
-    

@@ -45,7 +45,7 @@ upsampling_8 = tf.keras.layers.Conv2DTranspose(filters = 24, kernel_size = (3, 3
 concat_8 = Concatenate(axis = -1)([upsampling_8, state_7[1]])
 padded_8 = ReflectionPadding2D((1, 1))(concat_8)
 conv_8 = Conv2D(filters = 24,
-            kernel_size = (3, 3), 
+            kernel_size = (3, 3),
             padding = 'valid',
             activity_regularizer=reg,
             )(padded_8)
@@ -60,7 +60,7 @@ upsampling_16 = tf.keras.layers.Conv2DTranspose(filters = 16, kernel_size = (3, 
 concat_16 = Concatenate(axis = -1)([upsampling_16, first_conv[1]])
 padded_16 = ReflectionPadding2D((1, 1))(concat_16)
 conv_16 = Conv2D(filters = 16,
-            kernel_size = (3, 3), 
+            kernel_size = (3, 3),
             padding = 'valid',
             activity_regularizer=reg,
             )(padded_16)
@@ -72,7 +72,7 @@ print("Up block 16 {}".format(squeezed_16.shape))
 
 #padded = ReflectionPadding2D((1, 1))(squeezed_16)
 #fm = Conv2D(filters = 12,
-#            kernel_size = (3, 3), 
+#            kernel_size = (3, 3),
 #            padding = 'valid',
 #            activity_regularizer=reg,
 #            )(padded)
@@ -82,7 +82,7 @@ print("Up block 16 {}".format(squeezed_16.shape))
 #print("Up block conv 3 {}".format(squeezed_16.shape))
 # Output layer
 fm = Conv2D(filters = 1,
-            kernel_size = (1, 1), 
+            kernel_size = (1, 1),
             padding = 'valid',
             activation = 'sigmoid'
             )(squeezed_16)

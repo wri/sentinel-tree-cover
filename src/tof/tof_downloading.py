@@ -49,12 +49,12 @@ def to_int16(array: np.array) -> np.array:
     '''Converts a float32 array to uint16'''
     assert np.min(array) >= 0, np.min(array)
     assert np.max(array) <= 1, np.max(array)
-    
+
     array = np.clip(array, 0, 1)
     array = np.trunc(array * 65535)
     assert np.min(array >= 0)
     assert np.max(array <= 65535)
-    
+
     return array.astype(np.uint16)
 
 
@@ -98,17 +98,17 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
         imagery selection is done entirely independently!
 
         Downloads and calculates cloud cover and shadow
-        This downloads cartesian WGS 84 coords that are snapped to the 
-        ESA LULC pixels -- so it will not return a square! 
-        
+        This downloads cartesian WGS 84 coords that are snapped to the
+        ESA LULC pixels -- so it will not return a square!
+
         Parameters:
          bbox (list): output of calc_bbox
-         epsg (float): EPSG associated with bbox 
-         dates (tuple): YY-MM-DD - YY-MM-DD bounds for downloading 
-    
+         epsg (float): EPSG associated with bbox
+         dates (tuple): YY-MM-DD - YY-MM-DD bounds for downloading
+
         Returns:
          cloud_img (np.array):
-         shadows (np.array): 
+         shadows (np.array):
          clean_steps (np.array):
     """
     warnings.warn("identify_clouds is deprecated; use identify_clouds_big_bbx", warnings.DeprecationWarning)
@@ -134,19 +134,19 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
         maxcc=maxcc, config=api_key,
         custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
         time_difference=datetime.timedelta(hours=24))
-    
+
     cloud_img = np.array(cloud_request.get_data())
     cloud_img = cloud_img.repeat(16,axis=1).repeat(16,axis=2).astype(np.uint8)
 
     cloud_dates_dict = [x for x in cloud_request.get_dates()]
     cloud_dates = extract_dates(cloud_dates_dict, year)
-    
+
     # Remove steps with >30% cloud cover
     n_cloud_px = np.sum(cloud_img > int(0.5 * 255), axis = (1, 2))
     cloud_steps = np.argwhere(n_cloud_px > (cloud_img.shape[1]*cloud_img.shape[2] * 0.30))
     clean_steps = [x for x in range(cloud_img.shape[0]) if x not in cloud_steps]
     cloud_img = np.delete(cloud_img, cloud_steps, 0)
-    
+
     # Align cloud and shadow imagery dates
     cloud_dates_dict = [x for x in cloud_request.get_dates()]
     cloud_dates = extract_dates(cloud_dates_dict, year)
@@ -154,9 +154,9 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
 
     shadow_dates_dict = [x for x in shadow_request.get_dates()]
     shadow_dates = extract_dates(shadow_dates_dict, year)
-    shadow_steps = [idx for idx, val in enumerate(shadow_dates) if val in cloud_dates] 
+    shadow_steps = [idx for idx, val in enumerate(shadow_dates) if val in cloud_dates]
 
-    to_remove_cloud = [idx for idx, val in enumerate(cloud_dates) if val not in shadow_dates]  
+    to_remove_cloud = [idx for idx, val in enumerate(cloud_dates) if val not in shadow_dates]
     if len(to_remove_cloud) > 0:
         cloud_img = np.delete(cloud_img, to_remove_cloud, 0)
         cloud_dates = list(np.delete(np.array(cloud_dates), to_remove_cloud))
@@ -169,7 +169,7 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
     n_remove_y = (cloud_img.shape[2] - shadow_img.shape[2]) // 2
     if n_remove_x > 0 and n_remove_y > 0:
         cloud_img = cloud_img[:, n_remove_x:-n_remove_x, n_remove_y : -n_remove_y]
-    
+
     # Make sure that the cloud_img and the shadow_img are the same shape
     # using the cloud_img as reference
     cloud_img = resize(
@@ -180,7 +180,7 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
         anti_aliasing = False,
         preserve_range = True
     ).astype(np.uint8)
-    
+
     # Type assertions, size assertions
     if not isinstance(cloud_img.flat[0], np.floating):
         assert np.max(cloud_img) > 1
@@ -189,7 +189,7 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
     assert cloud_img.dtype == np.float32
     assert shadow_img.dtype == np.uint16
     assert shadow_img.shape[0] == cloud_img.shape[0], (shadow_img.shape, cloud_img.shape)
-    
+
     # Calculate shadow+cloud masks with multitemporal images (Candra et al. 2020)
     print(f"Shadows ({shadow_img.shape}) used {round(shadow_pus, 1)} processing units")
     shadows = mcm_shadow_mask(shadow_img, cloud_img)
@@ -201,17 +201,17 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
                 year: int,
                 maxclouds = 0.2) -> (np.ndarray, np.ndarray, np.ndarray):
     """ Downloads and calculates cloud cover and shadow
-        This downloads cartesian WGS 84 coords that are snapped to the 
-        ESA LULC pixels -- so it will not return a square! 
-        
+        This downloads cartesian WGS 84 coords that are snapped to the
+        ESA LULC pixels -- so it will not return a square!
+
         Parameters:
          bbox (list): output of calc_bbox
-         epsg (float): EPSG associated with bbox 
-         dates (tuple): YY-MM-DD - YY-MM-DD bounds for downloading 
-    
+         epsg (float): EPSG associated with bbox
+         dates (tuple): YY-MM-DD - YY-MM-DD bounds for downloading
+
         Returns:
          cloud_img (np.array):
-         shadows (np.array): 
+         shadows (np.array):
          clean_steps (np.array):
     """
     # Download 160 x 160 meter cloud masks, 0 - 255
@@ -232,8 +232,8 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
 
     cloud_dates_dict = [x for x in cloud_request.get_dates()]
     cloud_dates = extract_dates(cloud_dates_dict, year)
-    
-    
+
+
     # Remove steps with at least 15% cloud cover
     n_cloud_px = np.sum(cloud_img > int(0.5 * 255), axis = (1, 2))
     cloud_percent = n_cloud_px / (cloud_img.shape[1]*cloud_img.shape[2])
@@ -245,7 +245,7 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
     cloud_steps = np.argwhere(n_cloud_px >= (cloud_img.shape[1]*cloud_img.shape[2] * maxclouds))
     clean_steps = [x for x in range(cloud_img.shape[0]) if x not in cloud_steps]
     cloud_img = np.delete(cloud_img, cloud_steps, 0)
-    
+
     cloud_dates_dict = [x for x in cloud_request.get_dates()]
     cloud_dates = extract_dates(cloud_dates_dict, year)
     cloud_dates = [val for idx, val in enumerate(cloud_dates) if idx in clean_steps]
@@ -256,18 +256,18 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
         cloud_img = np.float32(cloud_img) / 255.
     assert np.max(cloud_img) <= 1, np.max(cloud_img)
     assert cloud_img.dtype == np.float32
-    
+
     return cloud_img, clean_steps, np.array(cloud_dates)
 
 
 def download_dem(bbox: List[Tuple[float, float]],
                  api_key: str) -> np.ndarray:
     """ Downloads the DEM layer from Sentinel hub
-        
+
         Parameters:
          bbox (list): output of calc_bbox
-         epsg (float): EPSG associated with bbox 
-    
+         epsg (float): EPSG associated with bbox
+
         Returns:
          dem_image (arr):
     """
@@ -277,7 +277,7 @@ def download_dem(bbox: List[Tuple[float, float]],
     dem_request = WcsRequest(
         data_source = DataSource.DEM,
         layer='DEM',
-        bbox=box, 
+        bbox=box,
         resx='10m', resy='10m',
         image_format = MimeType.TIFF,
         maxcc=0.75, config=api_key,
@@ -289,11 +289,11 @@ def download_dem(bbox: List[Tuple[float, float]],
     dem_image = dem_image.astype(np.float32)
     width = dem_image.shape[0]
     height = dem_image.shape[1]
-    
+
     # Calculate median filter, slopde
     dem_image = median_filter(dem_image, size = 5)
     dem_image = calcSlope(dem_image.reshape((1, width, height)),
-                          np.full((width, height), 10), 
+                          np.full((width, height), 10),
                           np.full((width, height), 10), zScale = 1, minSlope = 0.02)
     dem_image = dem_image.reshape((width,height, 1))
 
@@ -314,7 +314,7 @@ def make_overlapping_windows(tiles: np.ndarray, diff = 7) -> np.ndarray:
     tiles2[:n_x, 2] += diff
     tiles2[-n_x:, 2] += diff
     to_adjust = np.full((tiles.shape[0]), diff * 2).astype(np.uint16)
-    
+
     for i in range(len(to_adjust)):
         if (i % n_y == 0) or ((i + 1) % n_y == 0):
             to_adjust[i] -= diff
@@ -335,25 +335,25 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
                         layer: str = "SENT",
                         ) -> (np.ndarray, np.ndarray):
     """ Downloads the GRD Sentinel 1 VV-VH layer from Sentinel Hub
-        
+
         Parameters:
          bbox (list): output of calc_bbox
-         epsg (float): EPSG associated with bbox 
+         epsg (float): EPSG associated with bbox
          imsize (int):
-         dates (tuple): YY-MM-DD - YY-MM-DD bounds for downloading 
+         dates (tuple): YY-MM-DD - YY-MM-DD bounds for downloading
          layer (str):
-         year (int): 
-    
+         year (int):
+
         Returns:
          s1 (arr):
-         image_dates (arr): 
+         image_dates (arr):
     """
 
     # Identify the S1 orbit, imagery dates
     source = DataSource.SENTINEL1_IW_DES if layer == "SENT_DESC" else DataSource.SENTINEL1_IW_ASC
     box = BBox(bbox, crs = CRS.WGS84)
     #size = bbox_to_dimensions(box, resolution=20)
-    
+
     # If the correct orbit is selected, download imagery
     s1_all = []
     image_dates = []
@@ -399,7 +399,7 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
                 // Initialise arrays
                 var VV_samples = [];
                 var VH_samples = [];
-                
+
                 // Loop through orbits and add data
                 for (let i=0; i<samples.length; i++){
                   // Ignore noData
@@ -407,10 +407,10 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
                     VV_samples.push(samples[i].VV);
                     VH_samples.push(samples[i].VH);
                    }
-                }  
-                
+                }
+
                 const factor = 65535;
-                
+
                 if (VV_samples.length == 0){
                   var VV_median = [factor];
                 } else {
@@ -421,7 +421,7 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
                 } else{
                   var VH_median = median(VH_samples) * factor;
                 }
-                
+
                 return [VV_median, VH_median];
             }
 
@@ -447,7 +447,7 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
                 evalscript=evalscript,
                 input_data=[
                     SentinelHubRequest.input_data(
-                        data_collection=source,          
+                        data_collection=source,
                         time_interval=date,
                         other_args={
                             "processing": {
@@ -462,7 +462,7 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
                                 "resolution": "HIGH",
                                 "polarization": "DV",
                             }
-                        },         
+                        },
                     ),
                 ],
                 responses=[
@@ -506,20 +506,20 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
 
     except:
         return np.empty((0,)), np.empty((0,))
-   
+
 
 def identify_s1_layer(coords: Tuple[float, float]) -> str:
-    """ Identifies whether to download ascending or descending 
+    """ Identifies whether to download ascending or descending
         sentinel 1 orbit based upon predetermined geographic coverage
-        
+
         Reference: https://sentinel.esa.int/web/sentinel/missions/
                    sentinel-1/satellite-description/geographical-coverage
-        
+
         Parameters:
-         coords (tuple): 
-    
+         coords (tuple):
+
         Returns:
-         layer (str): either of SENT, SENT_DESC 
+         layer (str): either of SENT, SENT_DESC
     """
     results = rg.search(coords)
     country = results[-1]['cc']
@@ -553,18 +553,18 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
                    clean_steps: np.ndarray, api_key,
                    dates: dict, year: int, maxclouds: float) -> (np.ndarray, np.ndarray):
     """ Downloads the L2A sentinel layer with 10 and 20 meter bands
-        
+
         Parameters:
          bbox (list): output of calc_bbox
          clean_steps (list): list of steps to filter download request
-         epsg (float): EPSG associated with bbox 
-         time (tuple): YY-MM-DD - YY-MM-DD bounds for downloading 
-    
+         epsg (float): EPSG associated with bbox
+         time (tuple): YY-MM-DD - YY-MM-DD bounds for downloading
+
         Returns:
          img (arr):
-         img_request (obj): 
+         img_request (obj):
     """
-    
+
     # Download 20 meter bands
     box = BBox(bbox, crs = CRS.WGS84)
 
@@ -614,17 +614,17 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
         steps_to_download = list(np.delete(steps_to_download, steps_to_rm))
         dates_to_download = np.array(dates_to_download)
         dates_to_download = list(np.delete(dates_to_download, steps_to_rm))
-    
+
     img_20 = np.array(image_request.get_data(data_filter = steps_to_download))
     s2_20_usage = (img_20.shape[1]*img_20.shape[2])/(512*512) * (6/3) * img_20.shape[0]
-    
+
     # Convert 20m bands to np.float32, ensure correct dimensions
     if not isinstance(img_20.flat[0], np.floating):
         assert np.max(img_20) > 1
         img_20 = np.float32(img_20) / 65535.
         assert np.max(img_20) <= 1
         assert img_20.dtype == np.float32
-    
+
     print(f"Original 20 meter bands size: {img_20.shape}, using {round(s2_20_usage, 1)} PU")
     # Download 10 meter bands
     image_request = WcsRequest(
@@ -639,7 +639,7 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
     )
     img_10 = np.array(image_request.get_data(data_filter = steps_to_download))
     s2_10_usage = (img_10.shape[1]*img_10.shape[2])/(512*512) * (4/3) * img_10.shape[0]
-    
+
     # Convert 10 meter bands to np.float32, ensure correct dimensions
     if not isinstance(img_10.flat[0], np.floating):
         print(f"Converting S2, 10m to float32, with {np.max(img_10)} max and"
@@ -662,18 +662,18 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
                    clean_steps: np.ndarray, api_key,
                    dates: dict, year: int, maxclouds:float = 1.) -> (np.ndarray, np.ndarray):
     """ Downloads the L2A sentinel layer with 10 and 20 meter bands
-        
+
         Parameters:
          bbox (list): output of calc_bbox
          clean_steps (list): list of steps to filter download request
-         epsg (float): EPSG associated with bbox 
-         time (tuple): YY-MM-DD - YY-MM-DD bounds for downloading 
-    
+         epsg (float): EPSG associated with bbox
+         time (tuple): YY-MM-DD - YY-MM-DD bounds for downloading
+
         Returns:
          img (arr):
-         img_request (obj): 
+         img_request (obj):
     """
-    
+
     # Download 20 meter bands
     box = BBox(bbox, crs = CRS.WGS84)
 
@@ -741,10 +741,10 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         steps_to_download = list(np.delete(steps_to_download, steps_to_rm))
         dates_to_download = np.array(dates_to_download)
         dates_to_download = list(np.delete(dates_to_download, steps_to_rm))
-    
+
     img_20 = np.array(image_request.get_data(data_filter = steps_to_download))
     s2_20_usage = (img_20.shape[1]*img_20.shape[2])/(512*512) * (4/3) * img_20.shape[0]
-    
+
     # Convert 20m bands to np.float32, ensure correct dimensions
     if not isinstance(img_20.flat[0], np.floating):
         assert np.max(img_20) > 1
@@ -770,7 +770,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         assert np.max(img_40) <= 1
         assert img_40.dtype == np.float32
 
-    s2_40_usage = (img_40.shape[1]*img_40.shape[2])/(512*512) * (2/3) * img_40.shape[0] 
+    s2_40_usage = (img_40.shape[1]*img_40.shape[2])/(512*512) * (2/3) * img_40.shape[0]
     img_40 = img_40.repeat(2, axis = 1).repeat(2, axis = 2)
     print(img_40.shape, img_20.shape)
 
@@ -786,7 +786,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
             img_40 = img_40[:, 1:-1, ...]
             img_40 = np.reshape(img_40, (img_40.shape[0], img_40.shape[1] // 2, 2, img_40.shape[2] // 2, 2, 2))
             img_40 = np.mean(img_40, axis = (2, 4))
- 
+
 
     if img_40.shape[2] > img_20.shape[2]:
         to_remove = (img_40.shape[2] - img_20.shape[2])
@@ -814,7 +814,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
     )
     img_10 = np.array(image_request.get_data(data_filter = steps_to_download))
     s2_10_usage = (img_10.shape[1]*img_10.shape[2])/(512*512) * (4/3) * img_10.shape[0]
-    
+
     # Convert 10 meter bands to np.float32, ensure correct dimensions
     if not isinstance(img_10.flat[0], np.floating):
         print(f"Converting S2, 10m to float32, with {np.max(img_10)} max and"

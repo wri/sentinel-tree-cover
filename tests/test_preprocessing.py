@@ -23,7 +23,7 @@ class TestSmoother(unittest.TestCase):
 		end = timer()
 
 		print(x.shape)
-		
+
 		self.assertTrue((end - begin) <= 0.5)
 		self.assertTrue(x.shape[0] == 72)
 		self.assertTrue(x.shape[1] == 10000)
@@ -32,7 +32,7 @@ class TestSmoother(unittest.TestCase):
 class TestTemporalMosaicing(unittest.TestCase):
 
 	def setUp(self):
-		self.bands = np.concatenate([np.full(shape = (1, 16, 16, 1), 
+		self.bands = np.concatenate([np.full(shape = (1, 16, 16, 1),
                           fill_value = x) for x in range(0, 7)], axis = 0)
 
 		self.image_dates = np.array([0, 22, 105, 232, 295, 310, 330])
@@ -60,9 +60,7 @@ class TestProximalSteps(unittest.TestCase):
 
 
 	def test_fn(self):
-		before, after = calculate_proximal_steps(self.date, 
+		before, after = calculate_proximal_steps(self.date,
 												 self.satisfactory_dates)
 		self.assertTrue(before == -1)
 		self.assertTrue(after == 6)
-
-

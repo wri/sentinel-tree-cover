@@ -23,3 +23,4 @@ pycountry_convert
 pytest
 numpy
 rasterio
+pre-commit

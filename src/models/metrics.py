@@ -594,7 +594,7 @@ def compute_f1_score_at_tolerance(surface_distances, tolerance_mm):
     # This counts the true positives
     print(surfel_areas_gt[distances_gt_to_pred <= tolerance_mm])
     true_positives = len(surfel_areas_gt[distances_gt_to_pred <= tolerance_mm])
-    
+
     # For each item in the ground truth, how many are not within tolerance to a prediction
     # This counts the false negatives
     false_negatives = len(surfel_areas_gt) - true_positives
@@ -605,12 +605,12 @@ def compute_f1_score_at_tolerance(surface_distances, tolerance_mm):
         false_positives = 0
     if (true_positives + false_negatives) > 0:
         recall = true_positives / (true_positives + false_negatives)
-    
+
     if (true_positives + false_positives) > 0:
         precision = true_positives / (true_positives + false_positives)
     if precision and recall:
         f1 = 2 * ((precision * recall) / (precision + recall))
-    else: 
+    else:
         f1 = None
 
     return f1, true_positives, false_positives, false_negatives

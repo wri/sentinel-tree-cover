@@ -67,7 +67,7 @@ def superresolve_tile(arr: np.ndarray, sess) -> np.ndarray:
     to_resolve = np.pad(arr, ((0, 0), (4, 4), (4, 4), (0, 0)), 'reflect')
 
     bilinear = to_resolve[..., 4:]
-    resolved = sess.run([superresolve_logits], 
+    resolved = sess.run([superresolve_logits],
                  feed_dict={superresolve_inp: to_resolve,
                             superresolve_inp_bilinear: bilinear})[0]
     resolved = resolved[:, 4:-4, 4:-4, :]
@@ -138,10 +138,10 @@ def make_bbox(initial_bbx: list, expansion: int = 10) -> list:
 
 
 def download_s1_tile(data: np.ndarray, bbx: list, api_key, year: int,
-                     dates_sentinel_1: list, size: tuple, 
+                     dates_sentinel_1: list, size: tuple,
                      s1_file: str, s1_dates_file: str) -> None:
     """Downloads the sentinel 1 data for a tile
-       
+
        Parameters:
             data (pd.DataFrame): dataframe of tile to be downloaded
             bbx (list): bounding box for tile
@@ -210,17 +210,17 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
     y = str(int(y))
     x = x[:-2] if ".0" in x else x
     y = y[:-2] if ".0" in y else y
-        
+
     initial_bbx = [data['X'][0], data['Y'][0], data['X'][0], data['Y'][0]]
 
     cloud_bbx = make_bbox(initial_bbx, expansion = 300/30)
     bbx = make_bbox(initial_bbx, expansion = 300/30)
     dem_bbx = make_bbox(initial_bbx, expansion = 301/30)
-        
+
     folder = f"{args.local_path}{str(x)}/{str(y)}/"
     tile_idx = f'{str(x)}X{str(y)}Y'
-    
-    make_output_and_temp_folders(folder)        
+
+    make_output_and_temp_folders(folder)
     clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl'
     shadows_file = f'{folder}raw/clouds/shadows_{tile_idx}.hkl'
     s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
@@ -236,15 +236,15 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         print(f"Downloading {clouds_file}")
 
         # Identify images with <30% cloud cover
-        cloud_probs, clean_steps, image_dates = tof_downloading.identify_clouds_big_bbx(cloud_bbx = cloud_bbx, 
+        cloud_probs, clean_steps, image_dates = tof_downloading.identify_clouds_big_bbx(cloud_bbx = cloud_bbx,
                                                             shadow_bbx = cloud_bbx,
                                                             dates = dates,
-                                                            api_key = api_key, 
+                                                            api_key = api_key,
                                                             year = year,
                                                             maxclouds = 0.3)
 
         clean_dates = image_dates
-        
+
         to_remove = cloud_removal.print_dates(
             clean_dates, np.mean(cloud_probs, axis = (1, 2))
         )
@@ -256,12 +256,12 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             _ = cloud_removal.print_dates(
                 clean_dates, np.mean(cloud_probs, axis = (1, 2))
             )
-            
+
         print(f"Overall using {len(clean_dates)} steps")
 
         hkl.dump(cloud_probs, clouds_file, mode='w', compression='gzip')
         hkl.dump(clean_dates, clean_steps_file, mode='w', compression='gzip')
-            
+
     if not (os.path.exists(s2_10_file)):
         print(f"Downloading {s2_10_file}")
         clean_steps = list(hkl.load(clean_steps_file))
@@ -282,15 +282,15 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         hkl.dump(to_int16(s2_20), s2_20_file, mode='w', compression='gzip')
         hkl.dump(s2_dates, s2_dates_file, mode='w', compression='gzip')
         size = s2_20.shape[1:3]
-            
+
     if not (os.path.exists(s1_file)):
-        download_s1_tile(data = data, 
+        download_s1_tile(data = data,
                          bbx = bbx,
                          api_key = api_key,
-                         year = year, 
-                         dates_sentinel_1 = dates_sentinel_1, 
-                         size = size, 
-                         s1_file = s1_file, 
+                         year = year,
+                         dates_sentinel_1 = dates_sentinel_1,
+                         size = size,
+                         s1_file = s1_file,
                          s1_dates_file = s1_dates_file)
 
     if not os.path.exists(dem_file):
@@ -354,7 +354,7 @@ def adjust_shape(arr: np.ndarray, width: int, height: int) -> np.ndarray:
     return arr
 
 
-def process_tile(x: int, y: int, data: pd.DataFrame, 
+def process_tile(x: int, y: int, data: pd.DataFrame,
                  local_path: str, make_shadow: bool = False) -> np.ndarray:
     """
     Processes raw data structure (in temp/raw/*) to processed data structure
@@ -373,15 +373,15 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
          interp (np.ndarray)
          s1 (np.ndarray)
     """
-    
+
     x = str(int(x))
     y = str(int(y))
     x = x[:-2] if ".0" in x else x
     y = y[:-2] if ".0" in y else y
-            
+
     folder = f"{local_path}{str(x)}/{str(y)}/"
     tile_idx = f'{str(x)}X{str(y)}Y'
-    
+
     clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl'
     shadows_file = f'{folder}raw/clouds/shadows_{tile_idx}.hkl'
     s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
@@ -392,20 +392,20 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     s2_file = f'{folder}raw/s2/{tile_idx}.hkl'
     clean_steps_file = f'{folder}raw/clouds/clean_steps_{tile_idx}.hkl'
     dem_file = f'{folder}raw/misc/dem_{tile_idx}.hkl'
-    
+
     clouds = hkl.load(clouds_file)
     s1 = hkl.load(s1_file)
     s1 = s1 / 65535
     s1[..., -1] = convert_to_db(s1[..., -1], 22)
     s1[..., -2] = convert_to_db(s1[..., -2], 22)
-    
+
     s2_10 = to_float32(hkl.load(s2_10_file))
     s2_20 = to_float32(hkl.load(s2_20_file))
 
     dem = hkl.load(dem_file)
     dem = median_filter(dem, size = 5)
     image_dates = hkl.load(s2_dates_file)
-    
+
     # Ensure arrays are the same dims
     width = s2_20.shape[1] * 2
     height = s2_20.shape[2] * 2
@@ -415,7 +415,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
 
     print(f'Clouds: {clouds.shape}, \n'
           f'S1: {s1.shape} \nS2: {s2_10.shape}, {s2_20.shape} \nDEM: {dem.shape}')
-            
+
     # The 20m bands must be bilinearly upsampled to 10m as input to superresolve_tile
     sentinel2 = np.empty((s2_10.shape[0], width, height, 10), np.float32)
     sentinel2[..., :4] = s2_10
@@ -473,7 +473,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         cloudshad = cloud_removal.remove_missed_clouds(sentinel2)
         #np.save("cloudshad.npy", cloudshad)
         sentinel2, interp = cloud_removal.remove_cloud_and_shadows(
-            sentinel2, cloudshad, cloudshad, image_dates, wsize = 8, step = 8, thresh = 8 
+            sentinel2, cloudshad, cloudshad, image_dates, wsize = 8, step = 8, thresh = 8
         )
         #np.save("interp_bef.npy", interp)
         time2 = time.time()
@@ -517,20 +517,20 @@ def rolling_mean(arr):
         return arr
     else:
         return arr
-    
 
-def process_subtiles(x: int, y: int, s2: np.ndarray = None, 
+
+def process_subtiles(x: int, y: int, s2: np.ndarray = None,
                        dates: np.ndarray = None,
                        interp: np.ndarray = None, s1 = None, dem = None,
                        sess = None,) -> None:
     '''Wrapper function to interpolate clouds and temporal gaps, superresolve tiles,
        calculate relevant indices, and save predicted tree cover as a .npy
-       
+
        Parameters:
         x (int): integer representation of the x tile ID
         y (int): integer representation of the y tile ID
         s2 (arr): (n, 160, 160, 11) array of sentinel 2 + DEM
-        dates (arr): (n,) array of day of year of each image 
+        dates (arr): (n,) array of day of year of each image
         interp (arr): (n, 160, 160) bool array of interpolated areas
         s1 (arr): (12, 160, 160, 2) float32 array of dB sentinel 1 data
         sess (tf.Session): tensorflow sesion to use for temporal predictions
@@ -543,7 +543,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     y = str(int(y))
     x = x[:-2] if ".0" in x else x
     y = y[:-2] if ".0" in y else y
-    
+
     s2 = interpolation.interpolate_na_vals(s2)
     s2 = np.float32(s2)
 
@@ -567,10 +567,10 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     win_sizes = np.full_like(windows, SIZE)
     tiles_folder = np.hstack([windows, win_sizes])
     tiles_folder = np.sort(tiles_folder, axis = 0)
-    tiles_folder[:, 1] = np.tile(np.unique(tiles_folder[:, 1]), 
+    tiles_folder[:, 1] = np.tile(np.unique(tiles_folder[:, 1]),
         int(len(tiles_folder[:, 1]) / len(np.unique(tiles_folder[:, 1]))))
     tiles_array = tof_downloading.make_overlapping_windows(tiles_folder, diff = 7)
-    
+
     make_subtiles(f'{args.local_path}{str(x)}/{str(y)}/processed/',
                   tiles_folder)
     path = f'{args.local_path}{str(x)}/{str(y)}/processed/'
@@ -583,7 +583,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         time1 = time.time()
         tile_folder = tiles_folder[t]
         tile_array = tiles_array[t]
-        
+
         start_x, start_y = tile_array[0], tile_array[1]
         folder_x, folder_y = tile_folder[0], tile_folder[1]
         end_x = start_x + tile_array[2]
@@ -623,7 +623,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         #np.save("before.npy", subset)
         subset = cloud_removal.adjust_interpolated_groups(subset, interp_tile)
-        
+
         #np.save("interp.npy", interp_tile)
         min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
         no_images = False
@@ -631,7 +631,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subset), axis = (1, 2, 3)) > 0).flatten()
-        if len(to_remove) > 0: 
+        if len(to_remove) > 0:
             print(f"Removing {to_remove} NA dates")
             dates_tile = np.delete(dates_tile, to_remove)
             subset = np.delete(subset, to_remove, 0)
@@ -669,7 +669,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         s1_subtile = s1[:, start_x:end_x, start_y:end_y, :]
 
         # Pad the corner / edge subtiles within each tile
-        if subtile.shape[2] == SIZE + 7: 
+        if subtile.shape[2] == SIZE + 7:
             pad_u = 7 if start_y == 0 else 0
             pad_d = 7 if start_y != 0 else 0
             subtile = np.pad(subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
@@ -695,17 +695,17 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         subtile_all[:-1, ..., 11:] = s1_subtile
         subtile_all[-1, ..., :10] = subtile_median
         subtile_all[-1, ..., 11:] = np.median(s1_subtile, axis = (0))
-        
+
         # Create the output folders for the subtile predictions
         output_folder = "/".join(output.split("/")[:-1])
         if not os.path.exists(os.path.realpath(output_folder)):
             os.makedirs(os.path.realpath(output_folder))
-        
+
         subtile_all = np.clip(subtile_all, 0, 1)
         assert subtile_all.shape[1] >= 145, f"subtile shape is {subtile_all.shape}"
         assert subtile_all.shape[0] == 13, f"subtile shape is {subtile_all.shape}"
 
-        no_images = True if len(dates_tile) < 2 else no_images   
+        no_images = True if len(dates_tile) < 2 else no_images
         if no_images:
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates -- no data"
                 f" {np.percentile(min_clear_images_per_date, 10)} clear images")
@@ -723,20 +723,20 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 def convert_to_db(x: np.ndarray, min_db: int) -> np.ndarray:
     """ Converts unitless backscatter coefficient
         to db with a min_db lower threshold
-        
+
         Parameters:
          x (np.ndarray): unitless backscatter (T, X, Y, B) array
          min_db (int): integer from -50 to 0
-    
+
         Returns:
          x (np.ndarray): db backscatter (T, X, Y, B) array
     """
-    
+
     x = 10 * np.log10(x + 1/65535)
     x[x < -min_db] = -min_db
     x = (x + min_db) / min_db
     return np.clip(x, 0, 1)
- 
+
 
 def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
     """ Runs temporal (convGRU + UNET) predictions on a (12, 174, 174, 13) array:
@@ -747,11 +747,11 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         Parameters:
          subtile (np.ndarray): monthly sentinel 2 + sentinel 1 mosaics
          sess (tf.Session): tensorflow session for prediction
-    
+
         Returns:
          preds (np.ndarray): (160, 160) float32 [0, 1] predictions
     """
-    
+
     if np.sum(subtile) > 0:
         if not isinstance(subtile.flat[0], np.floating):
             assert np.max(subtile) > 1
@@ -770,18 +770,18 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         subtile = (subtile - midrange) / (rng / 2)
 
         #np.save("tilebottom.npy", subtile)
-        
+
         batch_x = subtile[np.newaxis]
         lengths = np.full((batch_x.shape[0]), 12)
         preds = sess.run(predict_logits,
-                              feed_dict={predict_inp:batch_x, 
+                              feed_dict={predict_inp:batch_x,
                                          predict_length:lengths})
         preds = preds.squeeze()
         preds = preds[1:-1, 1:-1]
-        
+
     else:
         preds = np.full((SIZE, SIZE), 255)
-    
+
     return preds
 
 
@@ -791,7 +791,7 @@ def fspecial_gauss(size: int, sigma: int) -> np.ndarray:
         Parameters:
          size (int): size of square guassian kernel
          sigma (float): diameter of the kernel
-    
+
         Returns:
          g (np.ndarray): gaussian kernel from [0, 1]
     """
@@ -805,10 +805,10 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
     Loads the .npy subtile files in an output folder and mosaics the overlapping predictions
     to return a single .npy file of tree cover for the 6x6 km tile
     Additionally, applies post-processing threshold rules and implements no-data flag of 255
-    
+
         Parameters:
-         out_folder (os.Path): location of the prediction .npy files 
-    
+         out_folder (os.Path): location of the prediction .npy files
+
         Returns:
          predictions (np.ndarray): 6 x 6 km tree cover data as a uint8 from 0-100 w/ 255 no-data flag
     """
@@ -837,7 +837,7 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
     predictions_range = np.nanmax(predictions, axis=-1) - np.nanmin(predictions, axis=-1)
     mean_certain_pred = np.nanmean(predictions[predictions_range < 50])
     mean_uncertain_pred = np.nanmean(predictions[predictions_range > 50])
-    
+
     overpredict = True if (mean_uncertain_pred - mean_certain_pred) > 0 else False
     underpredict = True if not overpredict else False
     """
@@ -866,9 +866,9 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
     predictions[out == n_preds] = np.nan
     predictions[np.isnan(predictions)] = 255.
     predictions = predictions.astype(np.uint8)
-                
+
     original_preds = np.copy(predictions)
-    
+
     for x_i in range(0, predictions.shape[0] - 3):
         for y_i in range(0, predictions.shape[1] - 3):
             window = original_preds[x_i:x_i+3, y_i:y_i+3]
@@ -879,7 +879,7 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
 
             # This removes or mitigates some of the "noisiness" of individual trees
             # Which could have odd shapes depending on where they sit within or between
-            # Sentinel pixels 
+            # Sentinel pixels
             if np.max(window) >= 25 and np.argmax(window) == 4:
                 window_binary = window >= 25
                 if np.sum(window_binary) < 4:
@@ -888,9 +888,9 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
                         window[2, :] = 0
                         window[:, 0] = 0
                         window[:, 2] = 0
-    
-    predictions = original_preds 
-    predictions[predictions <= .20*100] = 0.        
+
+    predictions = original_preds
+    predictions[predictions <= .20*100] = 0.
     predictions[predictions > 100] = 255.
     return predictions
 
@@ -916,7 +916,7 @@ def download_raw_tile(tile_idx: tuple, local_path: str,
                        local_dir = path_to_tile,
                        s3_folder = s3_path_to_tile)
     return None
-     
+
 
 if __name__ == '__main__':
     import argparse
@@ -1007,7 +1007,7 @@ if __name__ == '__main__':
         predict_graph_def.ParseFromString(predict_file.read())
         predict_graph = tf.import_graph_def(predict_graph_def, name='predict')
         predict_sess = tf.compat.v1.Session(graph=predict_graph)
-        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_13/Sigmoid:0")            
+        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_13/Sigmoid:0")
         predict_inp = predict_sess.graph.get_tensor_by_name("predict/Placeholder:0")
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
     else:
@@ -1018,8 +1018,8 @@ if __name__ == '__main__':
     min_all = [0.006576638437476157, 0.0162050812542916, 0.010040436408026246, 0.013351644159609368, 0.01965362020294499,
                0.014229037918669413, 0.015289539940489814, 0.011993591210803388, 0.008239871824216068, 0.006546120393682765,
                0.0, 0.0, 0.0, -0.1409399364817101, -0.4973397113668104, -0.09731556326714398, -0.7193834232943873]
-    max_all = [0.2691233691920348, 0.3740291447318227, 0.5171435111009385, 0.6027466239414053, 0.5650263218127718, 
-               0.5747005416952773, 0.5933928435187305, 0.6034943160143434, 0.7472037842374304, 0.7000076295109483, 
+    max_all = [0.2691233691920348, 0.3740291447318227, 0.5171435111009385, 0.6027466239414053, 0.5650263218127718,
+               0.5747005416952773, 0.5933928435187305, 0.6034943160143434, 0.7472037842374304, 0.7000076295109483,
                0.509269855802243, 0.948334642387533, 0.6729257769285485, 0.8177635298774327, 0.35768999002433816,
                0.7545951919107605, 0.7602693339366691]
 
@@ -1057,10 +1057,10 @@ if __name__ == '__main__':
         path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/'
         s3_path_to_tile = f'2020/tiles/{str(x)}/{str(y)}/'
         processed = file_in_local_or_s3(path_to_tile,
-                                        s3_path_to_tile, 
-                                        AWSKEY, AWSSECRET, 
+                                        s3_path_to_tile,
+                                        AWSKEY, AWSSECRET,
                                         args.s3_bucket)
-        
+
         # If the tile does not exist, go ahead and download/process/upload it
         if not processed or args.reprocess:
             try:
@@ -1088,13 +1088,13 @@ if __name__ == '__main__':
                     s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
                     size = hkl.load(s2_20_file)
                     size = size.shape[1:3]
-                    download_s1_tile(data = data, 
+                    download_s1_tile(data = data,
                          bbx = bbx,
                          api_key = shconfig,
-                         year = args.year, 
-                         dates_sentinel_1 = dates_sentinel_1, 
-                         size = size, 
-                         s1_file = s1_file, 
+                         year = args.year,
+                         dates_sentinel_1 = dates_sentinel_1,
+                         size = size,
+                         s1_file = s1_file,
                          s1_dates_file = s1_dates_file)
 
                 s2, dates, interp, s1, dem, cloudshad = process_tile(x = x, y = y, data = data, local_path = args.local_path, make_shadow = True)

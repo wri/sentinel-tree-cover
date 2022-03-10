@@ -13,4 +13,3 @@ if __name__ == "__main__":
 		urllib.request.urlretrieve("https://storage.googleapis.com/rm-models/master.zip", "master.zip")
 		with zipfile.ZipFile("master.zip", 'r') as zip_ref:
 		    zip_ref.extractall("../models/")
-

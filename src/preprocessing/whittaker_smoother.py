@@ -27,7 +27,7 @@ class Smoother:
 
 
     def smooth(self, y: np.ndarray) -> np.ndarray:
-        ''' 
+        '''
         Apply whittaker smoothing to a 1-dimensional array, returning a 1-dimensional array
         '''
         return self.splu_coef.solve(np.array(y))
