@@ -48,7 +48,7 @@ class FileUploader:
         if self.overwrite:
             #print(f'uploading {file} to {bucket} as {key}')
             self.s3client.upload_file(
-                            file, bucket, key, 
+                            file, bucket, key,
                             Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20),
                             Callback=self.upload_callback,
                             ExtraArgs={'ACL':'bucket-owner-full-control'}
@@ -68,15 +68,15 @@ class FileUploader:
                 if self.stream:
                     with open(file, 'rb') as data:
                         self.s3client.upload_fileobj(
-                            file, bucket, key, 
-                            Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20), 
+                            file, bucket, key,
+                            Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20),
                             Callback=self.upload_callback,
                             ExtraArgs={'ACL':'bucket-owner-full-control'}
                         )
-                    
+
                 else:
                      self.s3client.upload_file(
-                            file, bucket, key, 
+                            file, bucket, key,
                             Config=TransferConfig( 5*(1024**3), use_threads=True, max_concurrency=20),
                             Callback=self.upload_callback,
                             ExtraArgs={'ACL':'bucket-owner-full-control'}
@@ -89,7 +89,7 @@ def get_folder_prefix(coordinates, params):
     geolocation = rg.search((coordinates[0], coordinates[1]))
     country = geolocation[-1]['cc']
     regex = re.compile('[^a-zA-Z-]')
-   
+
     country =  pc.country_alpha2_to_country_name(country)
     country = country.replace(" ", "-").lower()
     country = regex.sub('', country)
@@ -101,11 +101,11 @@ def get_folder_prefix(coordinates, params):
     return path
 
 
-def save_file(obj, 
+def save_file(obj,
               path,
-              params, 
+              params,
               save_bucket = True):
-    
+
     hkl.dump(obj, params['prefix'] + path, mode = 'w', compression = 'gzip')
     uploader = FileUploader(awskey = AWSKEY, awssecret = AWSSECRET)
     key = params['bucket_prefix'] + path
@@ -128,10 +128,10 @@ def make_output_and_temp_folders(output_folder: str) -> None:
     def _find_and_make_dirs(dirs: list) -> None:
         if not os.path.exists(os.path.realpath(dirs)):
             os.makedirs(os.path.realpath(dirs))
-            
+
     folders = ['raw/', 'raw/clouds/', 'raw/misc/', 'raw/s1/',
               'raw/s2_10/', 'raw/s2_20/']
-    
+
     for folder in folders:
         _find_and_make_dirs(output_folder + folder)
 
@@ -145,7 +145,7 @@ def upload_raw_processed_s3(path_to_tile, x, y, uploader):
          path_to_tile (os.path)
          x (int)
          y (int)
-         
+
         Returns:
          None
     '''
@@ -176,7 +176,7 @@ def file_in_local_or_s3(file, key, apikey, apisecret, bucket):
          aws_secret_access_key= apisecret)
     bucket = s3.Bucket(bucket)
     objs = list(bucket.objects.filter(Prefix=key))
-    
+
     if len(objs) > 0:
         print(f"The s3 resource s3://{bucket}/{key} exists")
         exists = True
@@ -193,7 +193,7 @@ def file_in_local_or_s3(file, key, apikey, apisecret, bucket):
 def write_tif(arr: np.ndarray, point: list, x: int, y: int,
               out_folder: str, suffix = "_FINAL") -> str:
     #! TODO: Documentation
-    
+
     file = out_folder + f"{str(x)}X{str(y)}Y{suffix}.tif"
 
     west, east = point[0], point[2]
@@ -202,7 +202,7 @@ def write_tif(arr: np.ndarray, point: list, x: int, y: int,
 
     transform = rasterio.transform.from_bounds(west = west, south = south,
                                                east = east, north = north,
-                                               width = arr.shape[1], 
+                                               width = arr.shape[1],
                                                height = arr.shape[0])
 
     print("Writing", file)
@@ -222,7 +222,7 @@ def download_folder(s3_folder, local_dir, apikey, apisecret, bucket):
     Checks to see if a file/key pair exists locally or on s3 or neither, and downloads the folder
     """
 
-   
+
     s3 = boto3.resource('s3', aws_access_key_id=apikey,
          aws_secret_access_key= apisecret)
     bucket = s3.Bucket(bucket)
@@ -242,7 +242,7 @@ def delete_folder(s3_folder, apikey, apisecret, bucket):
     Checks to see if a file/key pair exists locally or on s3 or neither, and downloads the folder
     """
 
-   
+
     s3 = boto3.resource('s3', aws_access_key_id=apikey,
          aws_secret_access_key= apisecret)
     bucket = s3.Bucket(bucket)
@@ -255,7 +255,7 @@ def download_file(s3_file, local_file, apikey, apisecret, bucket):
     if exists -- download the file
     """
 
-   
+
     s3 = boto3.resource('s3', aws_access_key_id=apikey,
          aws_secret_access_key= apisecret)
     bucket = s3.Bucket(bucket)
@@ -267,7 +267,7 @@ def download_file(s3_file, local_file, apikey, apisecret, bucket):
             else os.path.join(local_file, os.path.relpath(obj.key, s3_file))
         if not os.path.exists(os.path.dirname(target)):
             os.makedirs(os.path.dirname(target))
-        
+
         file_name = s3_file.split("/")[-1]
         print(f"Downloaded {s3_file} to {local_file + file_name}")
         bucket.download_file(obj.key, target[:-1] + file_name)
@@ -275,13 +275,13 @@ def download_file(s3_file, local_file, apikey, apisecret, bucket):
 
 
 def make_subtiles(folder: str, tiles) -> None:
-    
+
     y_tiles = np.unique(tiles[:, 1])
     x_tiles = np.unique(tiles[:, 0])
-    
+
     def _find_and_make_dirs(dirs):
         if not os.path.exists(os.path.realpath(dirs)):
             os.makedirs(os.path.realpath(dirs))
-    
+
     for y_tile in y_tiles:
         _find_and_make_dirs(folder + str(y_tile) + '/')

@@ -2,7 +2,7 @@ import tensorflow as tf
 import itertools
 from tensorflow.python.keras.layers import Conv2D, Lambda, Dense, Multiply, Add
 
-    
+
 def convGRU(x, cell_fw, cell_bw, ln):
         output, final = tf.nn.bidirectional_dynamic_rnn(
             cell_fw, cell_bw, x, ln, dtype=tf.float32)
@@ -10,7 +10,7 @@ def convGRU(x, cell_fw, cell_bw, ln):
         #final = tf.concat(final, -1)
         return output, final
 
-def fpa(inp, is_training, filter_count, clipping_params, 
+def fpa(inp, is_training, filter_count, clipping_params,
         keep_rate, upsample = "upconv"):
     '''Feature pyramid attention layer block, that allows for cross-scale combination
        of different size features without making blurry feature maps.
@@ -19,16 +19,16 @@ def fpa(inp, is_training, filter_count, clipping_params,
           inp (tf.Variable): input tensorflow layer
           is_training (str): flag to differentiate between train/test ops
           filter_count (int): number of filters for convolution
-          clipping_params (dict): specifies clipping of 
+          clipping_params (dict): specifies clipping of
                                   rmax, dmax, rmin for renormalization
 
          Returns:
           concat_1 (tf.Variable): output of FPA
-          
+
          References:
           https://arxiv.org/abs/1805.10180
     '''
-    one = conv_bn_relu(inp = inp, is_training = is_training, 
+    one = conv_bn_relu(inp = inp, is_training = is_training,
                        kernel_size = 1, scope =  'forward1',
                        filters = filter_count, clipping_params = clipping_params,
                        keep_rate = keep_rate, activation = False,
@@ -36,30 +36,30 @@ def fpa(inp, is_training, filter_count, clipping_params,
                        dropblock = False,
                        csse = False)
     inp_pad = ReflectionPadding2D(padding = (2, 2))(inp)
-    seven = conv_bn_relu(inp = inp_pad, is_training = is_training, 
+    seven = conv_bn_relu(inp = inp_pad, is_training = is_training,
                        kernel_size = 5, scope =  'down1', stride = (2, 2),
                        filters = filter_count, clipping_params = clipping_params,
                        keep_rate = keep_rate, activation = True,
                        use_bias = False, batch_norm = True, csse = True, dropblock = False)
     seven_pad = ReflectionPadding2D(padding = (2, 2))(seven)
-    seven_f = conv_bn_relu(inp = seven_pad, is_training = is_training, 
+    seven_f = conv_bn_relu(inp = seven_pad, is_training = is_training,
                        kernel_size = 5, scope =  'down1_f',
                        filters = filter_count, clipping_params = clipping_params,
                        keep_rate = keep_rate, activation = False,
                        use_bias = False, batch_norm = True, csse = False, dropblock = False)
-    
+
     print("Seven: {}".format(seven.shape))
     print("Seven f: {}".format(seven_f.shape))
-    
+
     five_pad = ReflectionPadding2D(padding = (1, 1))(seven)
     five = conv_bn_relu(inp = five_pad, is_training = is_training,  stride = (2, 2),
                        kernel_size = 3, scope =  'down2',
                        filters = filter_count, clipping_params = clipping_params,
                        keep_rate = keep_rate, activation = True,
                        use_bias = False, batch_norm = True, csse = True, dropblock = False)
-    
+
     five_pad2 = ReflectionPadding2D(padding = (1, 1))(five)
-    five_f = conv_bn_relu(inp = five_pad2, is_training = is_training, 
+    five_f = conv_bn_relu(inp = five_pad2, is_training = is_training,
                        kernel_size = 3, scope =  'down2_f',
                        filters = filter_count, clipping_params = clipping_params,
                        keep_rate = keep_rate, activation = False,
@@ -73,71 +73,71 @@ def fpa(inp, is_training, filter_count, clipping_params,
                        filters = filter_count, clipping_params = clipping_params,
                        keep_rate = keep_rate, activation = True,
                        use_bias = False, batch_norm = True, csse = True, dropblock = False)
-    
+
     three_pad2 = ReflectionPadding2D(padding = (1, 1))(three)
-    three_f = conv_bn_relu(inp = three_pad2, is_training = is_training, 
+    three_f = conv_bn_relu(inp = three_pad2, is_training = is_training,
                        kernel_size = 3, scope =  'down3_f',
                        filters = filter_count, clipping_params = clipping_params,
                        keep_rate = keep_rate, activation = False,
                        use_bias = False, batch_norm = True, csse = True, dropblock = False)
-        
-    
+
+
     if upsample == 'upconv' or 'bilinear':
         three_up = tf.keras.layers.UpSampling2D((2, 2), interpolation = 'bilinear')(three_f)
         if upsample == 'upconv':
             three_up = ReflectionPadding2D((1, 1,))(three_up)
-            three_up = conv_bn_relu(inp = three_up, is_training = is_training, 
+            three_up = conv_bn_relu(inp = three_up, is_training = is_training,
                        kernel_size = 3, scope =  'upconv1',
                        filters = filter_count, clipping_params = clipping_params,
                        keep_rate = keep_rate, activation = True,
                        use_bias = False, batch_norm = True,
                        csse = False, dropblock = False)
-            
+
             # 4x4
             three_up = tf.nn.relu(tf.add(three_up, five_f))
-    '''        
-    
+    '''
+
     if upsample == 'upconv' or "bilinear":
         five_up = tf.keras.layers.UpSampling2D((2, 2), interpolation = 'nearest')(five)
         if upsample == 'upconv':
             five_up = ReflectionPadding2D((1, 1,))(five_up)
-            five_up = conv_bn_relu(inp = five_up, is_training = is_training, 
+            five_up = conv_bn_relu(inp = five_up, is_training = is_training,
                        kernel_size = 3, scope =  'upconv2',
                        filters = filter_count, clipping_params = clipping_params,
                        keep_rate = keep_rate, activation = True,
-                       use_bias = False, batch_norm = True, 
+                       use_bias = False, batch_norm = True,
                        csse = False, dropblock = False)
             five_up = tf.nn.relu(tf.add(five_up, seven_f))
-            
+
     if upsample == 'upconv' or "bilinear":
         seven_up = tf.keras.layers.UpSampling2D((2, 2), interpolation = 'nearest')(five_up)
         if upsample == 'upconv':
             seven_up = ReflectionPadding2D((1, 1,))(seven_up)
-            seven_up = conv_bn_relu(inp = seven_up, is_training = is_training, 
+            seven_up = conv_bn_relu(inp = seven_up, is_training = is_training,
                        kernel_size = 3, scope =  'upconv3',
                        filters = filter_count, clipping_params = clipping_params,
                        keep_rate = keep_rate, activation = True,
-                       use_bias = False, batch_norm = True, 
+                       use_bias = False, batch_norm = True,
                        csse = False, dropblock = False)
-    
+
     print("One: {}".format(one.shape))
     print("Five_up: {}".format(five_up.shape))
     print("Seven_up: {}".format(seven_up.shape))
-    
+
     # top block
 
     #pooled = tf.keras.layers.GlobalAveragePooling2D()(inp)
     #one_top = conv_bn_relu(inp = tf.reshape(pooled, (-1, 1, 1, pooled.shape[-1])),
-    #                       is_training = is_training, 
+    #                       is_training = is_training,
     #                   kernel_size = 1, scope =  'topconv',
     #                   filters = filter_count, clipping_params = clipping_params,
     #                   keep_rate = keep_rate, activation = False,
-    #                   use_bias = False, batch_norm = True, 
+    #                   use_bias = False, batch_norm = True,
     #                   csse = False, dropblock = False)
     #one_top = conv_bn_relu(tf.reshape(pooled, (-1, 1, 1, pooled.shape[-1])),
     ##                      is_training, 1, 'top1', filter_count, pad = False)
     #four_top = tf.keras.layers.UpSampling2D((16, 16))(one_top)
-    
+
     #seven_up = tf.multiply(one, seven_up)
     out = tf.nn.relu(tf.multiply(seven_up, one))
     return out
@@ -162,7 +162,7 @@ def conv_selu(inp, is_training, kernel_size, scope,
 
          Returns:
           conv (tf.Variable): output of Conv2D -> SELU
-          
+
          References:
           https://arxiv.org/abs/1706.02515
     '''
@@ -188,7 +188,7 @@ def conv_selu(inp, is_training, kernel_size, scope,
 
 def create_deconv_init(filter_size, num_channels):
     '''Initializes a kernel weight matrix with a bilinear deconvolution
-    
+
          Parameters:
           filter_size (int): kernel size of convolution
           num_channels (int): number of filters for convolution
@@ -216,7 +216,7 @@ def create_deconv_init(filter_size, num_channels):
 
 def get_deconv2d(inp, filter_count, num_channels, scope, is_training, clipping_params):
     '''Creates a deconvolution layer with Conv2DTranspose. Following recent
-       recommendations to use 4 kernel, 2 stride to avoid artifacts. 
+       recommendations to use 4 kernel, 2 stride to avoid artifacts.
        Initialize kernel with bilinear upsampling.
 
          Parameters:
@@ -225,18 +225,18 @@ def get_deconv2d(inp, filter_count, num_channels, scope, is_training, clipping_p
           num_channels (int): number of output channels
           scope (str): tensorflow variable scope
           is_training (str): flag to differentiate between train/test ops
-          clipping_params (dict): specifies clipping of 
+          clipping_params (dict): specifies clipping of
                                   rmax, dmax, rmin for renormalization
 
          Returns:
           x (tf.Variable): layer with (B, x * 2, y * 2, C) shape
-          
+
          References:
           https://distill.pub/2016/deconv-checkerboard/
     '''
     bilinear_init = create_deconv_init(4, filter_count)
     x = tf.keras.layers.Conv2DTranspose(filters = filter_count, kernel_size = (4, 4),
-                                        strides=(2, 2), padding='same', 
+                                        strides=(2, 2), padding='same',
                                         use_bias = False,
                                         kernel_initializer = bilinear_init)(inp)
     #x = ELU()(x)

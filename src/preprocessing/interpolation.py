@@ -2,7 +2,7 @@ import numpy as np
 
 def id_missing_px(sentinel2: np.ndarray, thresh: int = 11) -> np.ndarray:
     """
-    Identifies missing (NA) values in a sentinel 2 array 
+    Identifies missing (NA) values in a sentinel 2 array
     Parameters:
          sentinel2 (np.ndarray): multitemporal sentinel 2 array
          thresh (int): denominator for threshold (missing < 1 / thresh)
@@ -32,7 +32,7 @@ def interpolate_missing_vals(s2: np.ndarray) -> np.ndarray:
             s2_image = s2[time]
             s2_image[s2_image >= 1] = nanmedian[s2_image >= 1]
             s2_image[s2_image == 0] = nanmedian[s2_image == 0]
-            
+
     return s2
 
 

@@ -1,5 +1,5 @@
 ## Data Analysis Notebooks
-These notebooks are dedicated to the cleaning, preparation and analysis of the TML model output. 
+These notebooks are dedicated to the cleaning, preparation and analysis of the TML model output.
 
 - [TML Analysis Pipeline](https://github.com/wri/sentinel-tree-cover/blob/jessica/tree-cover-eda/notebooks/analysis/tml-analysis-pipeline.ipynb)
 - [TML Analysis Pipeline (.py script)](https://github.com/wri/sentinel-tree-cover/blob/jessica/tree-cover-eda/notebooks/analysis/analyze_tml.py)

@@ -5,7 +5,7 @@ def slopePython(inBlock, outBlock, inXSize, inYSize, zScale=1):
 
     """ Calculate slope using Python.
         If Numba is available will make use of autojit function
-        to run at ~ 1/2 the speed of the Fortran module. 
+        to run at ~ 1/2 the speed of the Fortran module.
         If not will fall back to pure Python - which will be slow!
     """
     for x in range(1,inBlock.shape[2]-1):
@@ -22,12 +22,12 @@ def slopePython(inBlock, outBlock, inXSize, inYSize, zScale=1):
             nx = -1 * dy * dzx
             ny = -1 * dx * dzy
             nz = dx * dy
-    
+
             slopeRad = np.arccos(nz / sqrt(nx**2 + ny**2 + nz**2))
             slopeDeg = (180. / np.pi) * slopeRad
-    
+
             outBlock[0,y,x] = slopeDeg
-   
+
     return outBlock
 
 def slopePythonPlane(inBlock, outBlock, inXSize, inYSize, A_mat, z_vec, winSize=3, zScale=1):
@@ -49,14 +49,14 @@ def slopePythonPlane(inBlock, outBlock, inXSize, inYSize, A_mat, z_vec, winSize=
             dy = winSize * inYSize[y,x]
 
             # Calculate difference in elevation
-            """ 
+            """
                 Solve A b = x to give x
                 Where A is a matrix of:
                     x_pos | y_pos | 1
                 and b is elevation
                 and x are the coefficents
             """
- 
+
             # Form matrix
             index = 0
             for i in range(-1*winOffset, winOffset+1):
@@ -70,24 +70,24 @@ def slopePythonPlane(inBlock, outBlock, inXSize, inYSize, A_mat, z_vec, winSize=
                     z_vec[index] = inBlock[0,y+j,x+i]*zScale
 
                     index+=1
-            
+
             # Linear fit
             coeff_vec = np.linalg.lstsq(A_mat, z_vec)[0]
- 
+
             # Calculate dzx and dzy
             dzx = coeff_vec[0] * dx
             dzy = coeff_vec[1] * dy
-    
+
             # Find normal vector to the plane
             nx = -1 * dy * dzx
             ny = -1 * dx * dzy
             nz = dx * dy
-    
+
             slopeRad = np.arccos(nz / sqrt(nx**2 + ny**2 + nz**2))
             slopeDeg = (180. / np.pi) * slopeRad
-    
+
             outBlock[0,y,x] = slopeDeg
-   
+
     return outBlock
 
 
@@ -97,7 +97,7 @@ def calcSlope(inBlock, inXSize, inYSize, fitPlane=False, zScale=1, winSize=3, mi
         * inBlock - In elevation
         * inXSize - Array of pixel sizes (x)
         * inYSize - Array of pixel sizes (y)
-        * fitPlane - Calculate slope by fitting a plane to elevation 
+        * fitPlane - Calculate slope by fitting a plane to elevation
                      data using least squares fitting.
         * zScale - Scaling factor between horizontal and vertical
         * winSize - Window size to fit plane over.

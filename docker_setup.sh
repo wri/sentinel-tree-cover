@@ -24,7 +24,7 @@ docker pull 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download:latest &&\
 tmux new -s node-spot-2
 
 docker run -it --entrypoint /bin/bash 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download
-cd src 
+cd src
 python3 download_and_predict_job.py --country "Zambia" --ul_flag True
 
 
@@ -45,7 +45,7 @@ docker system prune -f &&\
 tmux new -s node-node-7
 
 docker run -it --entrypoint /bin/bash 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download
-cd src 
+cd src
 python3 download_and_predict_job.py --country "Mali" --ul_flag True
 
 # analysis
@@ -55,4 +55,3 @@ docker stop $(docker ps -a -q) &&\
 docker pull 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_analysis:latest &&docker system prune -f &&tmux attach
 
 docker run -p 8888:8888 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_analysis
-

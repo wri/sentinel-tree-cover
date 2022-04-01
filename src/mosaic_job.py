@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
 
     print(f'There are {len(tifs)} / {len(data)} tiles processed')
-    
+
     gdal.BuildVRT(f'{str(args.country)}.vrt', tifs, options=gdal.BuildVRTOptions(srcNodata=255, VRTNodata=255))
     #add_pixel_fn(f'{str(args.country)}.vrt')
     ds = gdal.Open(f'{str(args.country)}.vrt')

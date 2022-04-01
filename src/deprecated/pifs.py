@@ -60,10 +60,10 @@ def identify_pifs(input_year, reference):
     pearsons = np.empty(142*142*5*5)
     input_year = input_year[..., 3].reshape(24, 142*142*5*5)
     reference = reference[..., 3].reshape(24, 142*142*5*5)
-    
+
     for i in tnrange(pearsons.shape[0]):
         pearsons[i] = pearsonr(input_year[:, i], reference[:, i])[0]
-    
+
     pifs = np.argwhere(pearsons > np.percentile(pearsons, 99))
     #stacked = np.concatenate([input_year, reference], axis = 0)
     #stacked = stacked[..., 3].reshape(48, 142*142*5*5)
@@ -78,12 +78,12 @@ def identify_pifs(input_year, reference):
 
 def linear_adjust_pif(pifs, small_input, small_target, large_input, large_target):
     output = small_input.copy()
-    
+
     for date in range(0, 24):
         for band in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14]:
             input_ = large_input[:, pifs, band]
             target = large_target[:, pifs, band]
-            
+
             target_date = target[date].squeeze()[:, np.newaxis]
             input_date = input_[date].squeeze()[:, np.newaxis]
             reg = LinearRegression().fit(input_date, target_date)

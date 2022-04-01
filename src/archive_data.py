@@ -87,7 +87,7 @@ if __name__ == "__main__":
             y = str(int(row['Y_tile']))
             x = x[:-2] if ".0" in x else x
             y = y[:-2] if ".0" in y else y
-            
+
             path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/raw/'
             path_to_tile_s3 = f'2020/raw/{str(x)}/{str(y)}/'
             path_to_tile_archive = f'2020/raw-archive/{country}/{str(x)}/{str(y)}/'
@@ -97,7 +97,7 @@ if __name__ == "__main__":
             download_raw_tile((x, y), args.local_path, "raw")
             shutil.make_archive(path_to_local_archive, 'zip', path_to_tile)
 
-            uploader.upload(bucket = 'tof-output', 
+            uploader.upload(bucket = 'tof-output',
                             key = path_to_tile_archive + path_to_local_archive + ".zip",
                             file = path_to_local_archive + ".zip")
 
@@ -107,4 +107,3 @@ if __name__ == "__main__":
             break
         except Exception as e:
             print(f"Ran into {str(e)}")
-

@@ -20,15 +20,15 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
          interp (np.ndarray)
          s1 (np.ndarray)
     """
-    
+
     x = str(int(x))
     y = str(int(y))
     x = x[:-2] if ".0" in x else x
     y = y[:-2] if ".0" in y else y
-            
+
     folder = f"{local_path}{str(x)}/{str(y)}/"
     tile_idx = f'{str(x)}X{str(y)}Y'
-    
+
     clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl'
     shadows_file = f'{folder}raw/clouds/shadows_{tile_idx}.hkl'
     s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
@@ -39,19 +39,19 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
     s2_file = f'{folder}raw/s2/{tile_idx}.hkl'
     clean_steps_file = f'{folder}raw/clouds/clean_steps_{tile_idx}.hkl'
     dem_file = f'{folder}raw/misc/dem_{tile_idx}.hkl'
-    
+
     clouds = hkl.load(clouds_file)
     shadows = hkl.load(shadows_file)
     s1 = hkl.load(s1_file)
 
-    # The S1 data here needs to be bilinearly upsampled as it is in training time! 
+    # The S1 data here needs to be bilinearly upsampled as it is in training time!
     s1 = s1.reshape((s1.shape[0], s1.shape[1] // 2, 2, s1.shape[2] // 2, 2, 2))
     s1 = np.mean(s1, (2, 4))
     s1 = resize(s1, (s1.shape[0], s1.shape[1] * 2, s1.shape[2] * 2, 2), order = 1)
     s1 = s1 / 65535
     s1[..., -1] = convert_to_db(s1[..., -1], 22)
     s1[..., -2] = convert_to_db(s1[..., -2], 22)
-    
+
     s2_10 = to_float32(hkl.load(s2_10_file))
     s2_20 = to_float32(hkl.load(s2_20_file))
 
@@ -59,25 +59,25 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
     dem = hkl.load(dem_file)
     dem = median_filter(dem, size = 5)
     image_dates = hkl.load(s2_dates_file)
-    
+
     # The below code is somewhat ugly, but it is geared to ensure that the
     # Different data sources are all the same shape, as they are downloaded
     # with varying resolutions (10m, 20m, 60m, 160m)
     width = s2_10.shape[1]
     height = s2_20.shape[2] * 2
-    
+
     if clouds.shape[1] < width:
         pad_amt =  (width - clouds.shape[1]) // 2
         clouds = np.pad(clouds, ((0, 0), (pad_amt, pad_amt), (0,0)), 'edge')
-        
+
     if shadows.shape[1] < width:
         pad_amt =  (width - shadows.shape[1]) // 2
         shadows = np.pad(shadows, ((0, 0), (pad_amt, pad_amt), (0,0)), 'edge')
-        
+
     if dem.shape[0] < width:
         pad_amt =  (width - dem.shape[0]) // 2
         dem = np.pad(dem, ((pad_amt, pad_amt), (0, 0)), 'edge')
-        
+
     if s2_10.shape[2] < height:
         pad_amt =  (height - s2_10.shape[2]) / 2
         if pad_amt % 2 == 0:
@@ -85,12 +85,12 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
             s2_10 = np.pad(s2_10, ((0, 0), (0, 0), (pad_amt, pad_amt), (0,0)), 'edge')
         else:
             s2_10 = np.pad(s2_10, ((0, 0), (0, 0), (0, int(pad_amt * 2)), (0,0)), 'edge')
-    
+
     if s2_10.shape[2] > height:
         pad_amt =  abs(height - s2_10.shape[2])
         s2_10 = s2_10[:, :, :-pad_amt, :]
         print(s2_10.shape)
-       
+
     if dem.shape[1] < height:
         pad_amt =  (height - dem.shape[1]) / 2
         if pad_amt % 2 == 0:
@@ -98,14 +98,14 @@ def process_tile(x: int, y: int, data: pd.DataFrame, local_path) -> np.ndarray:
             dem = np.pad(dem, ((0, 0), (pad_amt, pad_amt)), 'edge')
         else:
             dem = np.pad(dem, ( (0, 0), (0, int(pad_amt * 2))), 'edge')
-            
+
     if dem.shape[1] > height:
         pad_amt =  abs(height - dem.shape[1])
         dem = dem[:, :-pad_amt]
-        
+
     print(f'Clouds: {clouds.shape}, \nShadows: {shadows.shape} \n'
           f'S1: {s1.shape} \nS2: {s2_10.shape}, {s2_20.shape} \nDEM: {dem.shape}')
-            
+
     # The 20m bands must be bilinearly upsampled to 10m as input to superresolve_tile
     #! TODO: Parallelize this function such that
          # sentinel2 = np.reshape(sentinel2, sentinel2.shape[0]*sentinel2.shape[-1], width, height)

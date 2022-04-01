@@ -157,7 +157,7 @@ training_plots = ggplot()+
 ggsave("../../references/highquality/figure1_new.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in", dpi = 600)
 ```
 
-# New training samples 
+# New training samples
 ```{r}
 library(ggalt)
 training_data = read.csv("../../tile_data/processed/training_plot_ids.csv")
@@ -255,7 +255,7 @@ x <- seq(-88.7, -87.7, 0.1) #(-90, -80)
 
 # Ghana
 y <- seq(7.4, 8.4, 0.1) #(-5, 5) # 10 x 14
-x <- seq(-1.2, -0.2, 0.1) #(-2, 12) 
+x <- seq(-1.2, -0.2, 0.1) #(-2, 12)
 
 # Tanzania
 x <- seq(36.7, 37.7, 0.1) # 30, 40 # 10 x 14
@@ -575,7 +575,7 @@ training_plots = ggplot()+
 ggsave("../../references/highquality/figure1_new.pdf", training_plots, "pdf", width = 8.6, height = 4.5, units = "in", dpi = 600)
 ```
 
-# New training samples 
+# New training samples
 ```{r}
 library(ggalt)
 training_data = read.csv("../../tile_data/processed/training_plot_ids.csv")
@@ -673,7 +673,7 @@ x <- seq(-88.7, -87.7, 0.1) #(-90, -80)
 
 # Ghana
 y <- seq(7.4, 8.4, 0.1) #(-5, 5) # 10 x 14
-x <- seq(-1.2, -0.2, 0.1) #(-2, 12) 
+x <- seq(-1.2, -0.2, 0.1) #(-2, 12)
 
 # Tanzania
 x <- seq(36.7, 37.7, 0.1) # 30, 40 # 10 x 14

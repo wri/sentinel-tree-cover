@@ -7,7 +7,7 @@ from src.preprocessing.indices import evi, savi, msavi2, bi, si
 class TestIndices(unittest.TestCase):
 
     def setUp(self):
-        self.bands = ([np.full(shape = (24, 16, 16, 1), 
+        self.bands = ([np.full(shape = (24, 16, 16, 1),
                           fill_value = x) for x in range(0, 10)])
         self.bands = np.concatenate(self.bands, axis = -1)
 
@@ -43,4 +43,3 @@ class TestIndices(unittest.TestCase):
         expected_mean = np.power(( (1 - 0) * (1 - 1) * (1 - 2)), 1/3)
         is_close = np.isclose(expected_mean, mean_value)
         self.assertTrue(is_close)
-

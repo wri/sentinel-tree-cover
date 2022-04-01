@@ -14,7 +14,7 @@ from scipy.ndimage.morphology import binary_dilation
 from scipy.ndimage.filters import gaussian_filter
 import warnings
 
-def adjust_interpolated_groups(array: np.ndarray, 
+def adjust_interpolated_groups(array: np.ndarray,
                               interp: np.ndarray) -> np.ndarray:
     for time in range(array.shape[0]):
         # For each time step where there is >0 and <100% interpolation
@@ -22,7 +22,7 @@ def adjust_interpolated_groups(array: np.ndarray,
             interp_map = interp[time, ...]
             interp_all = interp_map#np.max(interp[time], axis = -1)
             array_i = array[time]
-            # Conduct histogram normalization for each threshold of the 
+            # Conduct histogram normalization for each threshold of the
             # Gaussian blur, since they will have varying amounts of brightness
             aboves = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.]
             belows = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
@@ -39,7 +39,7 @@ def adjust_interpolated_groups(array: np.ndarray,
                 mean_ref = np.nanmean(non_interp_areas, axis = (0))
                 std_mult = (std_ref / std_src)
 
-                addition = (mean_ref - (mean_src * (std_mult)))                
+                addition = (mean_ref - (mean_src * (std_mult)))
                 array_i[np.logical_and(interp_map > below, interp_map <= above)] = (
                         array_i[np.logical_and(interp_map > below, interp_map <= above)] * std_mult + addition
                     )
@@ -59,7 +59,7 @@ def adjust_interpolated_groups(array: np.ndarray,
     return array
 
 
-def adjust_interpolated_areas_small(small_array: np.ndarray, 
+def adjust_interpolated_areas_small(small_array: np.ndarray,
                               std_ref: np.ndarray,
                               mean_ref) -> np.ndarray:
     if np.sum(std_ref) > 0:
@@ -67,12 +67,12 @@ def adjust_interpolated_areas_small(small_array: np.ndarray,
         std_src = np.std(small_array, axis = (0, 1))
         mean_src = np.mean(small_array, axis = (0, 1))
         std_mult = (std_ref / std_src)
-        addition = (mean_ref - (mean_src * (std_mult)))   
+        addition = (mean_ref - (mean_src * (std_mult)))
         std_mult = np.reshape(std_mult, (1, 1, 10))
-        addition = np.reshape(addition, (1, 1, 10)) 
+        addition = np.reshape(addition, (1, 1, 10))
         std_mult = np.clip(std_mult, 0.8, 1.2)
-        addition = np.clip(addition, -0.1, 0.1) 
-        #print(addition.shape)    
+        addition = np.clip(addition, -0.1, 0.1)
+        #print(addition.shape)
         #np.save("Small_array.npy", small_array)
         small_array = (small_array * std_mult) + addition
         #np.save("Small_array2.npy", small_array)
@@ -81,23 +81,23 @@ def adjust_interpolated_areas_small(small_array: np.ndarray,
 
 
 def remove_cloud_and_shadows(tiles: np.ndarray,
-                             probs: np.ndarray, 
+                             probs: np.ndarray,
                              shadows: np.ndarray,
-                             image_dates: List[int], 
+                             image_dates: List[int],
                              wsize: int = 36, step = 8, thresh = 100) -> np.ndarray:
-    """ Interpolates clouds and shadows for each time step with 
+    """ Interpolates clouds and shadows for each time step with
         linear combination of proximal clean time steps for each
         region of specified window size
-        
+
         Parameters:
          tiles (arr):
-         probs (arr): 
+         probs (arr):
          shadows (arr):
          image_dates (list):
-         wsize (int): 
-    
+         wsize (int):
+
         Returns:
-         tiles (arr): 
+         tiles (arr):
     """
     c_probs = shadows
 
@@ -127,7 +127,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
         for above, below in zip(aboves, belows):
             blurred[np.logical_and(blurred > below, blurred <= above)] = above
         areas_interpolated[date] = blurred
-        
+
     areas_interpolated = areas_interpolated.astype(np.float32)
 
     std_ref = np.zeros((tiles.shape[0], tiles.shape[-1]))
@@ -164,7 +164,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                         before[before < 0] = 0.
                         before[before > tiles.shape[0] - 1] = tiles.shape[0] - 1
                         before = np.unique(before)
-                        
+
                         if len(before) <= 1:
                             satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize*0.5))
                             before2, after2 = calculate_proximal_steps_two(date, satisfactory)
@@ -194,7 +194,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                             (areas_interpolated[date, x:x+wsize, y:y+wsize][..., np.newaxis] * candidate)
                         )
 
-                        
+
 
                         #snp.save("after3.npy", candidate)
                         tiles[date, x:x+wsize, y:y+wsize, : ] = candidate
@@ -202,7 +202,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     return tiles, areas_interpolated
 
 
-def mcm_shadow_mask(arr: np.ndarray, 
+def mcm_shadow_mask(arr: np.ndarray,
                     c_probs: np.ndarray) -> np.ndarray:
     """ Calculates the multitemporal shadow mask for Sentinel-2 using
         the methods from Candra et al. 2020 on L1C images and matching
@@ -212,7 +212,7 @@ def mcm_shadow_mask(arr: np.ndarray,
          arr (arr): (Time, X, Y, Band) array of L1C data scaled from [0, 1]
          c_probs (arr): (Time, X, Y) array of S2cloudless cloud probabilities
         Returns:
-         shadows_new (arr): cloud mask after Candra et al. 2020 and cloud matching 
+         shadows_new (arr): cloud mask after Candra et al. 2020 and cloud matching
          shadows_original (arr): cloud mask after Candra et al. 2020
     """
     warnings.warn("mcm_shadow_mask is deprecated; use remove_missed_clouds", category=DeprecationWarning)
@@ -253,12 +253,12 @@ def mcm_shadow_mask(arr: np.ndarray,
 def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
     """ Removes clouds that may have been missed by s2cloudless
         by looking at a temporal change outside of IQR
-        
+
         Parameters:
-         img (arr): 
-    
+         img (arr):
+
         Returns:
-         to_remove (arr): 
+         to_remove (arr):
     """
 
 
@@ -299,12 +299,12 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
 
 def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
     """ Calculates the timesteps to remove based upon cloud cover and missing data
-        
+
         Parameters:
          clouds (arr):
-    
+
         Returns:
-         to_remove (arr): 
+         to_remove (arr):
     """
     def _check_month(month, thresh):
         month_idx = np.argwhere(np.logical_and(dates >= starting[month],
@@ -322,7 +322,7 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
                 distances = distances.flatten()
                 if np.min(distances) < 0:
                     lower_distance = abs(np.max(distances[distances < 0]))
-                else: 
+                else:
                     lower_distance = 0
                 if np.max(distances) > 0:
                     upper_distance = np.min(distances[distances > 0])
@@ -339,7 +339,7 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
             distances = distances.flatten()
             if np.min(distances) < 0:
                 lower_distance = abs(np.max(distances[distances < 0]))
-            else: 
+            else:
                 lower_distance = 0
             if np.max(distances) > 0:
                 upper_distance = np.min(distances[distances > 0])
@@ -349,12 +349,12 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
             month_good_dates = np.empty((0, 0))
             #min_distance = 365
         return month_good_dates, min_distance
-    
+
     good_steps = np.empty((0, ))
     month_days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 80]
     starting = np.cumsum(month_days)
     starting[0] = -30
-    
+
     cloud_percent = clouds
     thresh = [0.20, 0.20, 0.25, 0.30]
     thresh_dist = [30, 60, 125, 150]
@@ -372,7 +372,7 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
                 if month == 0 and len(month_good_dates) > 3:
                         month_good_dates = month_good_dates[-3:]
                 if month == 11 and len(month_good_dates) > 3:
-                    month_good_dates = month_good_dates[:3]  
+                    month_good_dates = month_good_dates[:3]
                 if len(month_good_dates) > 3:
                     month_good_dates = np.array([month_good_dates[0],
                                         month_good_dates[1],
@@ -385,7 +385,7 @@ def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
                     print(f"{month + 1}, Dates: {month_good_dates},"
                          f" Dist: {min_distance}, Thresh: {thresh[x]}")
                     good_steps = np.concatenate([good_steps, month_good_dates.flatten()])
-                    
+
     good_steps_idx = [i for i, val in enumerate(dates) if val in good_steps]
     cloud_steps = np.array([x for x in range(dates.shape[0]) if x not in good_steps_idx])
 
@@ -441,7 +441,7 @@ def subset_contiguous_sunny_dates(dates, probs):
     months_to_adjust_again = []
     indices_to_rm = []
     indices = [x for x in range(len(dates))]
-    
+
     def _indices_month(dates, x, y):
         indices_month = np.argwhere(np.logical_and(
                     dates >= x, dates < y)).flatten()
@@ -479,7 +479,7 @@ def subset_contiguous_sunny_dates(dates, probs):
             second_image = indices_month[closest_to_second_img]
             best_two_per_month.append(first_image)
             best_two_per_month.append(second_image)
-                    
+
         elif len(month_good_dates) >= 1:
             if x > 0:
                 ideal_dates = [x, x + 15]
@@ -489,10 +489,10 @@ def subset_contiguous_sunny_dates(dates, probs):
             closest_to_second_img = np.argmin(abs(month_good_dates - ideal_dates[1]))
             second_image = indices_month[closest_to_second_img]
             best_two_per_month.append(second_image)
-                
+
     dates_round_2 = dates[best_two_per_month]
     probs_round_2 = probs[best_two_per_month]
-    
+
     # We then select between those two images to keep a max of one per month
     # We select the least cloudy image if the most cloudy has >15% cloud cover
     # Otherwise we select the second image
@@ -543,7 +543,7 @@ def subset_contiguous_sunny_dates(dates, probs):
                 monthly_dates_date.append(dates[indices_month[0]])
     else:
         monthly_dates = best_two_per_month
-        
+
     indices_to_rm = [x for x in indices if x not in monthly_dates]
 
 
@@ -567,7 +567,7 @@ def subset_contiguous_sunny_dates(dates, probs):
                 dates >= x, dates < y)).flatten()
             dates_month = dates[indices_month]
             indices_month = [x for x in indices_month if x in monthly_dates]
-            
+
             #print(f"Need to remove {n_to_remove} dates")
             if (len(indices_month) >= 1) and (len(monthly_dates) >= 10) and (n_removed < n_to_remove):
                 to_remove = [90, 181, 243] #if len(monthly_dates) >= 10 else [90, 243]

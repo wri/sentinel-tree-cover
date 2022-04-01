@@ -14,27 +14,27 @@ def calculate_bbx_pyproj(coord, step_x, step_y, expansion, multiplier = 1.):
         pyproj, so this may be more pixel accurate (?)
         x, y format
     '''
-    
+
     inproj = Proj('epsg:4326')
     outproj_code = calculate_epsg(coord)
     outproj = Proj('epsg:' + str(outproj_code))
-    
-    
-    
+
+
+
     coord_utm =  transform(inproj, outproj, coord[1], coord[0])
     coord_utm_bottom_left = (coord_utm[0] + step_x*6300 - expansion,
                              coord_utm[1] + step_y*6300 - expansion)
     coord_utm_top_right = (coord_utm[0] + (step_x+multiplier) * 6300 + expansion,
                            coord_utm[1] + (step_y+multiplier) * 6300 + expansion)
-    
+
     coord_bottom_left = transform(outproj, inproj,
                                   coord_utm_bottom_left[0],
                                   coord_utm_bottom_left[1])
-    
+
     coord_top_right = transform(outproj, inproj,
                                   coord_utm_top_right[0],
                                   coord_utm_top_right[1])
-    
+
     zone = str(outproj_code)[3:]
     direction = 'N' if coord[1] >= 0 else 'S'
     utm_epsg = "UTM_" + zone + direction
