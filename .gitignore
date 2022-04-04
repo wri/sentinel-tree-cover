@@ -1,6 +1,7 @@
 __pycache__/*
 *.pytest_cache/
 config.yaml
+jessica-config.yaml
 data/*
 gcloud-key.json
 *.DS_Store
