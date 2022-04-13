@@ -270,17 +270,17 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
         lower = np.max([0, time - 3])
         upper = np.min([img.shape[0], time + 4])
         if img.shape[0] > 2:
-            ri_lower = np.percentile(img[lower:upper], 25, axis = 0)
+            ri_lower = np.percentile(img[lower:upper], 20, axis = 0)
             ri_upper = ri_lower
         else:
             ri_lower = np.min(img[lower:upper], axis = 0)
             ri_upper = np.max(img[lower:upper], axis = 0)
 
-        deltab2 = (img[time, ..., 0] - ri_lower[..., 0]) > 0.10
+        deltab2 = (img[time, ..., 0] - ri_lower[..., 0]) > 0.08
         deltab8a = (img[time, ..., 7] - ri_upper[..., 7]) < -0.04
         deltab11 = (img[time, ..., 8] - ri_upper[..., 8]) < -0.04
-        deltab3 = (img[time, ..., 1] - ri_lower[..., 1]) > 0.08
-        deltab4 = (img[time, ..., 2] - ri_lower[..., 2]) > 0.08
+        deltab3 = (img[time, ..., 1] - ri_lower[..., 1]) > 0.07
+        deltab4 = (img[time, ..., 2] - ri_lower[..., 2]) > 0.07
         ti0 = (img[time, ..., 0] < 0.10)
         clouds_i = (deltab2 * deltab3 * deltab4)
         clouds_i = clouds_i * 1
@@ -293,7 +293,7 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
 
     clouds = np.maximum(clouds, shadows)
     for timestep in range(clouds.shape[0]):
-        clouds[timestep] = binary_dilation(clouds[timestep], iterations = 5)
+        clouds[timestep] = binary_dilation(clouds[timestep], iterations = 10)
     return clouds
 
 
