@@ -605,6 +605,7 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
             time_difference=datetime.timedelta(hours=24),
     )
 
+
     quality_img = np.array(quality_request.get_data(data_filter = steps_to_download))
     quality_per_img = np.mean(quality_img, axis = (1, 2)) / 255
     print("Image quality:", quality_per_img)
@@ -721,6 +722,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
                     print("Appending:", i)
         print(f"There are {len(steps_to_download)} steps within {min_thresh} days")
     """
+
     quality_request = WcsRequest(
             layer='DATA_QUALITY',
             bbox=box, time=dates,
@@ -732,8 +734,24 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
             time_difference=datetime.timedelta(hours=24),
     )
 
+    cirrus = WcsRequest(
+            layer='SCL',
+            bbox=box, time=dates,
+            image_format = MimeType.TIFF,
+            maxcc=maxclouds, resx='60m', resy='60m',
+            config=api_key,
+            custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+                                constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
+            time_difference=datetime.timedelta(hours=24),
+    )
+
     quality_img = np.array(quality_request.get_data(data_filter = steps_to_download))
+    cirrus_img = np.array(cirrus.get_data(data_filter = steps_to_download))
+    np.save("cirrus.npy", cirrus_img)
+    cirrus_img = np.mean(cirrus_img > 0, axis = (1, 2))
+    print(cirrus_img)
     quality_per_img = np.mean(quality_img, axis = (1, 2)) / 255
+    quality_per_img = quality_per_img + cirrus_img
     print("Image quality:", quality_per_img)
     steps_to_rm = np.argwhere(quality_per_img > 0.2).flatten()
     if len(steps_to_rm) > 0:

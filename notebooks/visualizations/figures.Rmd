@@ -119,8 +119,8 @@ bastin <- ggplot()+
              ylim=c(-58, 80))+
   theme(plot.margin=unit(c(0,0,0,0),"cm"))
 
-ggsave("../../references/pdf/bastin.pdf", bastin, "pdf", width = 8.75, height = 4.5, units = "in")
-#print(bastin)
+#ggsave("../../references/pdf/bastin.pdf", bastin, "pdf", width = 8.75, height = 4.5, units = "in")
+print(bastin)
 ```
 
 ```{r, fig.width=11, fig.height=7}
@@ -380,7 +380,7 @@ map.df <- fortify(map)
 ```{r}
 library(ggplot2)
 library(ggalt)
-testing_data = read.csv("../analysis/train_data.csv")
+testing_data = read.csv("train_data.csv")
 
 testing_plots = ggplot()+
   geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
@@ -394,7 +394,7 @@ testing_plots = ggplot()+
   #ggtitle("Testing plots - global pixel accuracy")+
   xlab("Longitude (°)")+
   ylab("Latitude (°)")+
-  xlim(-115, 55)+
+  xlim(-125 , 170)+
   ylim(-60, 40)+
   #scale_y_continuous(breaks= c(-50, -25, 0, 25, 50, 75),
   #                 labels = c("-50", "-25", "0", "25", "50", "75"))+
@@ -410,9 +410,9 @@ testing_plots = ggplot()+
         )
 
 
-ggsave("../../references/highquality/train_plot_new.pdf", testing_plots, "pdf", width = 7.4, dpi = 600, height = 4.5, units = "in")
+ggsave("train_plot_new.pdf", testing_plots, "pdf", width = 10.5, dpi = 600, height = 4.5, units = "in")
 
-print(testing_plots)
+#print(testing_plots)
 ```
 
 ```{r}
@@ -786,13 +786,23 @@ rast <- raster("../analysis/processing_area_clipped.tif")
 rast_spdf <- as(rast, "SpatialPixelsDataFrame")
 rast <- as.data.frame(rast_spdf)
 
+
+rast2 <- raster("asia_6km.tif")
+rast_spdf2 <- as(rast2, "SpatialPixelsDataFrame")
+rast2 <- as.data.frame(rast_spdf2)
 ```
 
 ```{r}
-geojson = "../../references/json/africa_lac.geojson"
+geojson = "countries.geojson"
 input.proj <- CRS("+proj=longlat + datum=WGS84")
 map <- readOGR(geojson)
 map.df <- fortify(map)
+```
+```{r}
+
+rast$processing_area = as.factor(rast$processing_area)
+rast2$asia_6km = as.factor(rast2$asia_6km)
+rast2 = subset(rast2, select = c(x, y, asia_6km))
 ```
 
 ```{r}
@@ -800,13 +810,14 @@ library(ggplot2)
 library(ggalt)
 testing_data = read.csv("../analysis/train_data.csv")
 
-rast$processing_area = as.factor(rast$processing_area)
+
 
 testing_plots = ggplot()+
   #ylim(-54, 85)+
   #xlim(-173, 180)+
   #geom_point(shape = 21, data = testing_data, aes(x = long, y = lat), fill = "yellow", color = "black", stroke = 0.25, size = 1.0)+
-  geom_raster(data = rast, aes_string(x = "x", y = "y", alpha = 'processing_area', fill = 'processing_area')) +
+  #geom_raster(data = rast, aes_string(x = "x", y = "y", alpha = 'processing_area', fill = 'processing_area')) +
+  geom_raster(data = rast2, aes_string(x = "x", y = "y", alpha = 'asia_6km', fill = 'asia_6km')) +
   geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = NA, colour = "black", size = 0.1)+
   theme_bw(base_size = 15)+
   xlab("")+
@@ -817,8 +828,8 @@ testing_plots = ggplot()+
   #ggtitle("Testing plots - global pixel accuracy")+
   xlab("Longitude (°)")+
   ylab("Latitude (°)")+
-  xlim(-119, 55)+
-  ylim(-60, 40)+
+  xlim(-150, 170)+
+  ylim(-40, 40)+
   #scale_y_continuous(breaks= c(-50, -25, 0, 25, 50, 75),
   #                 labels = c("-50", "-25", "0", "25", "50", "75"))+
   #scale_x_continuous(breaks= c(-150, -100, -50, 0, 50, 100, 150),
@@ -833,7 +844,7 @@ testing_plots = ggplot()+
         )
 
 
-ggsave("../../references/highquality/processing_area.png", testing_plots, "png", width = 7.4, dpi = 600, height = 4.5, units = "in")
+#ggsave("../../references/highquality/processing_area.png", testing_plots, "png", width = 7.4, dpi = 600, height = 4.5, units = "in")
 
 print(testing_plots)
 ```

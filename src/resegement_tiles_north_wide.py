@@ -8,6 +8,7 @@ import hickle as hkl
 import boto3
 from scipy.ndimage import median_filter
 import tensorflow.compat.v1 as tf
+#import tensorflow as tf
 from glob import glob
 import rasterio
 from rasterio.transform import from_origin
@@ -1086,14 +1087,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/620-240-temporal-jan/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/620-240-mar/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
-    parser.add_argument("--db_path", dest = "db_path", default = "processing_area_june_28.csv")
+    parser.add_argument("--db_path", dest = "db_path", default = "processing_area_nov_10.csv")
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
     parser.add_argument("--yaml_path", dest = "yaml_path", default = "../config.yaml")
     parser.add_argument("--start_id", dest = "start_id", default = 0)
-    parser.add_argument("--start_x", dest = "start_x", default = 5000)
+    parser.add_argument("--start_x", dest = "start_x", default = 10000)
     args = parser.parse_args()
 
     if os.path.exists(args.yaml_path):
@@ -1130,6 +1131,7 @@ if __name__ == "__main__":
         predict_sess = tf.compat.v1.Session(graph=predict_graph)
         predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_13/Sigmoid:0")
         predict_inp = predict_sess.graph.get_tensor_by_name("predict/Placeholder:0")
+        print(predict_inp.shape)
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
     else:
         raise Exception(f"The model path {args.predict_model_path} does not exist")
