@@ -798,6 +798,90 @@ input.proj <- CRS("+proj=longlat + datum=WGS84")
 map <- readOGR(geojson)
 map.df <- fortify(map)
 ```
+
+```{r}
+locs = read.csv("../../src/processing_area_nov_10.csv")
+loc2 = read.csv("../../src/asia_grid.csv")
+```
+
+```{r}
+locs = locs[!(locs$country == 'Mexico' & locs$Y > 24),]
+locs = locs[!(locs$country == 'United States of America' & locs$Y > 24),]
+locs = locs[!(locs$country == 'Argentina' & locs$Y < -24),]
+locs = locs[!(locs$country == 'Chile' & locs$Y < -24),]
+loc2 = loc2[!(loc2$country == 'China' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'Australia' & loc2$Y < -24),]
+loc2 = loc2[!(loc2$country == 'Australia' & loc2$Y < -24),]
+loc2 = loc2[!(loc2$country == 'India' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'Iran' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'Pakistan' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'Afghanistan' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'Turkmenistan' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'South Korea' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'Japan' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'Bhutan' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'Nepal' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'New Zealand' & loc2$Y < -24),]
+loc2 = loc2[!(loc2$country == 'Uzbekistan' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'Tajikistan' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'North Korea' & loc2$Y > 24),]
+loc2 = loc2[!(loc2$country == 'Saudi Arabia'),]
+loc2 = loc2[!(loc2$country == 'United Arab Emirates'),]
+loc2 = loc2[!(loc2$country == 'Oman'),]
+
+loc2 = loc2[!(loc2$country == 'Kyrgyzstan' & loc2$Y > 24),]
+
+
+locs = locs[!(locs$country == 'Turkey' & locs$Y > 24),]
+locs = locs[!(locs$country == 'Syria' & locs$Y > 24),]
+locs = locs[!(locs$country == 'Iraq' & locs$Y > 24),]
+locs = locs[!(locs$country == 'Iran' & locs$Y > 24),]
+locs = locs[!(locs$country == 'Spain' & locs$Y > 24),]
+
+
+
+
+```
+
+
+```{r}
+
+processing_area = ggplot()+
+
+  geom_raster(data = locs, aes_string(x = "X", y = "Y"), fill = 'lightcoral') +
+  geom_raster(data = loc2, aes_string(x = "X", y = "Y"), fill = 'lightcoral') +
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = NA, colour = "black", size = 0.1)+
+  theme_bw(base_size = 15)+
+  xlab("")+
+  ylab("")+
+  #scale_alpha_manual(values = c(0, 1.), guide = FALSE)+
+  #scale_fill_manual(values = c('black', 'lightcoral'), guide = FALSE)+
+  #ggtitle("Global tree cover plots from Bastin et al. 2017")+
+  #ggtitle("Testing plots - global pixel accuracy")+
+  xlab("Longitude (°)")+
+  ylab("Latitude (°)")+
+  xlim(-125, 170)+
+  ylim(-60, 40)+
+  #scale_y_continuous(breaks= c(-50, -25, 0, 25, 50, 75),
+  #                 labels = c("-50", "-25", "0", "25", "50", "75"))+
+  #scale_x_continuous(breaks= c(-150, -100, -50, 0, 50, 100, 150),
+  #                 labels = c("-150", "-100", "-50", "0", "50", "100", "150"))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_line(color = 'grey40', size = 0.25, linetype = "dashed"),
+        text = element_text(size=15,family="Times"),
+        panel.background = element_rect(fill = NA),
+        panel.ontop = TRUE,
+        )
+
+
+ggsave("../../references/highquality/new_processing_area.png", processing_area, "png", width = 10.5, dpi = 600, height = 4.5, units = "in")
+
+#print(processing_area)
+```
+
+
 ```{r}
 
 rast$processing_area = as.factor(rast$processing_area)
