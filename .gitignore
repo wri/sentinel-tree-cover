@@ -34,4 +34,5 @@ data_diffs.csv
 notebooks/*/*.csv
 *.qml
 *.csv
+config.json
 notebooks/analysis/statistics/*
