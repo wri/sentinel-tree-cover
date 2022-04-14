@@ -285,8 +285,6 @@ def align_subtile_histograms(array) -> np.ndarray:
     return array
 
 
-
-
 def process_subtiles(x: int, y: int, s2: np.ndarray = None,
                        dates: np.ndarray = None,
                        interp: np.ndarray = None, s1 = None, dem = None,
@@ -325,10 +323,8 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     gap_between_years = False
     t = 0
-    #sm = Smoother(lmbd = 150, size = 36, nbands = 10, dimx = SIZE + 14, dimy = SIZE + 14)
     n_median = 0
     median_thresh = 5
-    print(tiles_array)
     # Iterate over each subitle and prepare it for processing and generate predictions
     while t < len(tiles_folder):
         tile_folder = tiles_folder[t]
@@ -347,13 +343,12 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
 
         min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
-        #print(f"There are only {np.min(min_clear_images_per_date)} clear images")
+
         no_images = False
         if np.percentile(min_clear_images_per_date, 25) < 1:
             #print(f"There are only {np.min(min_clear_images_per_date)} clear images")
             no_images = True
 
-        #print(np.sum(np.isnan(subset), axis = (1, 2, 3)))
         subset[np.isnan(subset)] = np.median(subset[np.isnan(subset)], axis = 0)
         to_remove = np.argwhere(np.sum(np.isnan(subset), axis = (1, 2, 3)) > 10000).flatten()
         if len(to_remove) > 0:
@@ -364,7 +359,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         subtile = subset
         print(subtile.shape)
-       # subtile_copy = np.copy(subset)
+
         subtile_median = np.median(subtile, axis = 0)
         subtile_median = subtile_median[np.newaxis]
 
@@ -380,15 +375,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
             dem_subtile = np.pad(dem_subtile, ((0, 0,), (0, 0), (pad_u, pad_d)), 'reflect')
             subtile_median = np.pad(subtile_median, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
-        #if subtile.shape[1] == SIZE + 7:
-        #    pad_l = 7 if start_x == 0 else 0
-        #    pad_r = 7 if start_x != 0 else 0
-        #    subtile = np.pad(subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
-        #    s1_subtile = np.pad(s1_subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
-        #    dem_subtile = np.pad(dem_subtile, ((0, 0,), (pad_l, pad_r), (0, 0)), 'reflect')
-        #print(subtile.shape)
-        # Interpolate (whittaker smooth) the array and superresolve 20m to 10m
-        #subtile = sm.interpolate_array(subtile)
+ 
         subtile_s2 = subtile
         #subtile_s2 = superresolve_tile(subtile, sess = superresolve_sess)
 
@@ -545,7 +532,6 @@ def preprocess_tile(arr, dates, interp):
     arr, interp2 = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, wsize = 8, step = 8, thresh = 8 )
     interp = np.maximum(interp, interp2)
     arr = cloud_removal.adjust_interpolated_groups(arr, interp)
-    #arr = rolling_mean(arr)
     return arr, interp, dates
 
 
@@ -631,12 +617,11 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         fraction_diff = np.nanmean(abs(right - left) > 25)
         print(f"The left median is {np.mean(left_all)} and the right median is {np.mean(right_all)}")
 
-        other0 = (left_right_diff > 10) or np.isnan(left_right_diff)
 
-        other = fraction_diff > 0.3
+        other0 = (left_right_diff > 8) or np.isnan(left_right_diff)
+        other = fraction_diff > 0.2
         other = np.logical_and(other, (left_right_diff > 6) )
-
-        other2 = fraction_diff > 0.4
+        other2 = fraction_diff > 0.3
         other2 = np.logical_and(other2, (left_right_diff > 3) )
 
         print(f"The differences is: {left_right_diff} and fraction {fraction_diff}")
