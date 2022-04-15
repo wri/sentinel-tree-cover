@@ -527,6 +527,32 @@ def normalize_first_last_quarter(arr, dates):
     return arr, dates
 
 
+def make_and_smooth_indices(arr, dates):
+
+    sm_indices = Smoother(lmbd = 100, 
+                          size = 24, 
+                          nbands = 4, 
+                          dimx = arr.shape[1],
+                          dimy = arr.shape[2], 
+                          outsize = 12)
+
+    indices = np.empty(
+        (arr.shape[0], arr.shape[1], arr.shape[2], 4), dtype = np.float32
+    )
+    indices[:, ..., 0] = evi(arr)
+    indices[:, ...,  1] = bi(arr)
+    indices[:, ...,  2] = msavi2(arr)
+    indices[:, ...,  3] = grndvi(arr)
+    
+    try:
+        indices, _ = calculate_and_save_best_images(indices, dates)
+    except:
+        indices = np.zeros((24, arr.shape[1], arr.shape[2], 4), dtype = np.float32)
+        dates = [0,]
+    indices = sm_indices.interpolate_array(indices)
+
+    return indices
+
 
 def smooth_large_tile(arr, dates, interp):
 
@@ -534,7 +560,7 @@ def smooth_large_tile(arr, dates, interp):
     Deals with image normalization, smoothing, and regular timestep interpolation
     for the entire array all at once
     """
-
+    print(f"The interp shape is: {interp.shape}")
     time1 = time.time()
     sm = Smoother(lmbd = 100, size = 24, nbands = 10, dimx = arr.shape[1], dimy = arr.shape[2], outsize = 12)
     missing_px = interpolation.id_missing_px(arr, 10)
@@ -576,6 +602,8 @@ def smooth_large_tile(arr, dates, interp):
         interp = np.delete(interp, to_remove, 0)
 
     arr, dates = normalize_first_last_quarter(arr, dates)
+    indices = make_and_smooth_indices(arr, dates)
+
     try:
         time3 = time.time()
         arr, max_distance = calculate_and_save_best_images(arr, dates)
@@ -591,9 +619,13 @@ def smooth_large_tile(arr, dates, interp):
     arr = sm.interpolate_array(arr)
     time4 = time.time()
     print(f"Interp in {time4 - time3} seconds")
+
+    out = np.empty((arr.shape[0], arr.shape[1], arr.shape[2], 14), dtype = np.float32)
+    out[..., :10] = arr
+    out[..., 10:] = indices
     time2 = time.time()
     print(f"Smooth/regularize time series in {time2 - time1} seconds")
-    return arr, dates, interp
+    return out, dates, interp
 
     
 
@@ -658,7 +690,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     gap_between_years = False
     t = 0
-    #sm = Smoother(lmbd = 100, size = 24, nbands = 10, dimx = SIZE + 14, dimy = SIZE + 14, outsize = 12)
     # Iterate over each subitle and prepare it for processing and generate predictions
     for t in range(len(tiles_folder)):
         time1 = time.time()
@@ -712,12 +743,16 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         # Concatenate the DEM and Sentinel 1 data
         time1 = time.time()
-        subtile_all = np.empty((13, SIZE + 14, SIZE + 14, 13), dtype = np.float32)
-        subtile_all[:-1, ..., :10] = subtile
+        subtile_all = np.empty((13, SIZE + 14, SIZE + 14, 17), dtype = np.float32)
+        subtile_all[:-1, ..., :10] = subtile[..., :10]
+        subtile_all[:-1, ..., 11:13] = s1_subtile
+        subtile_all[:-1, ..., 13:] = subtile[..., 10:]
+
         subtile_all[:, ..., 10] = dem_subtile.repeat(13, axis = 0)
-        subtile_all[:-1, ..., 11:] = s1_subtile
-        subtile_all[-1, ..., :10] = subtile_median_s2
-        subtile_all[-1, ..., 11:] = subtile_median_s1
+
+        subtile_all[-1, ..., :10] = subtile_median_s2[..., :10]
+        subtile_all[-1, ..., 11:13] = subtile_median_s1
+        subtile_all[-1, ..., 13:] = subtile_median_s2[..., 10:]
         time2 = time.time()
         print(f"Concat in {time2 - time1} seconds")
         
@@ -726,7 +761,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         if not os.path.exists(os.path.realpath(output_folder)):
             os.makedirs(os.path.realpath(output_folder))
         
-        subtile_all = np.clip(subtile_all, 0, 1)
+        #subtile_all = np.clip(subtile_all, 0, 1)
         assert subtile_all.shape[1] >= 145, f"subtile shape is {subtile_all.shape}"
         assert subtile_all.shape[0] == 13, f"subtile shape is {subtile_all.shape}"
 
@@ -782,19 +817,9 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
             subtile = subtile / 65535.
 
         time1 = time.time()
-        indices = np.empty((13, subtile.shape[1], subtile.shape[2], 17))
-        indices[:, ..., :13] = subtile
-        indices[:, ..., 13] = evi(subtile)
-        indices[:, ...,  14] = bi(subtile)
-        indices[:, ...,  15] = msavi2(subtile)
-        indices[:, ...,  16] = grndvi(subtile)
-        time2 = time.time()
-        print(f"Indices in {time2 - time1} seconds")
-
-        time1 = time.time()
-        indices = np.core.umath.clip(indices, min_all, max_all)
-        indices = (indices - midrange) / (rng / 2)
-        batch_x = indices[np.newaxis]
+        subtile = np.core.umath.clip(subtile, min_all, max_all)
+        subtile = (subtile - midrange) / (rng / 2)
+        batch_x = subtile[np.newaxis]
         lengths = np.full((batch_x.shape[0]), 12)
         time2 = time.time()
         print(f"Other prep in {time2 - time1} seconds")
