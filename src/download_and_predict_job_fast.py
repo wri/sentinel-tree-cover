@@ -18,11 +18,12 @@ import reverse_geocoder as rg
 import pycountry
 import pycountry_convert as pc
 import hickle as hkl
-#from tqdm import tnrange, tqdm_notebook
 import boto3
 from typing import Tuple, List
 import warnings
-from scipy.ndimage import median_filter
+from scipy import ndimage
+from scipy.ndimage import median_filter, maximum_filter
+from scipy.ndimage.morphology import binary_dilation
 import time
 import copy
 #import tensorflow as tf
@@ -712,7 +713,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
         no_images = False
-        if np.percentile(min_clear_images_per_date, 50) < 2 or np.percentile(min_clear_images_per_date, 25) < 1:
+        if np.percentile(min_clear_images_per_date, 1) < 1:
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subtile), axis = (1, 2, 3)) > 0).flatten()
@@ -731,7 +732,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             dem_subtile = np.pad(dem_subtile, ((0, 0,), (0, 0), (pad_u, pad_d)), 'reflect')
             subtile_median_s2 = np.pad(subtile_median_s2, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
             subtile_median_s1 = np.pad(subtile_median_s1, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
-
+            min_clear_images_per_date = np.pad(min_clear_images_per_date, ((0, 0), (pad_u, pad_d)), 'reflect')
         if subtile.shape[1] == SIZE + 7:
             pad_l = 7 if start_x == 0 else 0
             pad_r = 7 if start_x != 0 else 0
@@ -740,7 +741,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             dem_subtile = np.pad(dem_subtile, ((0, 0,), (pad_l, pad_r), (0, 0)), 'reflect')
             subtile_median_s2 = np.pad(subtile_median_s2, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
             subtile_median_s1 = np.pad(subtile_median_s1, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
-
+            min_clear_images_per_date = np.pad(min_clear_images_per_date, ((pad_u, pad_d), (0, 0)), 'reflect')
         # Concatenate the DEM and Sentinel 1 data
         time1 = time.time()
         subtile_all = np.empty((13, SIZE + 14, SIZE + 14, 17), dtype = np.float32)
@@ -777,6 +778,16 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
                 f"for: {dates_tile}, {np.percentile(min_clear_images_per_date, 10)} clear images"
                 f" in {subtile_time} seconds")
+
+        min_clear_images_per_date = min_clear_images_per_date[7:-7, 7:-7]
+        no_images = min_clear_images_per_date < 1
+        struct2 = ndimage.generate_binary_structure(2, 2)
+        no_images = binary_dilation(no_images, iterations = 10, structure = struct2)
+        no_images = np.reshape(no_images, ((4, 54, 4, 54)))
+        no_images = np.sum(no_images, axis = (1, 3))
+        no_images = no_images > 0
+        no_images = no_images.repeat(54, axis = 0).repeat(54, axis = 1)
+        preds[no_images] = 255.
         np.save(output, preds)
 
 
@@ -867,7 +878,6 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
         Returns:
          predictions (np.ndarray): 6 x 6 km tree cover data as a uint8 from 0-100 w/ 255 no-data flag
     """
-
     x_tiles = [int(x) for x in os.listdir(out_folder) if '.DS' not in x]
     max_x = np.max(x_tiles) + SIZE
     for x_tile in x_tiles:
@@ -885,7 +895,10 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
                 if np.sum(prediction) < SIZE*SIZE*255:
                     prediction = (prediction * 100).T.astype(np.float32)
                     predictions[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = prediction
-                    mults[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = fspecial_gauss(SIZE, 44) # or 44
+                    fspecial_i = fspecial_gauss(SIZE, 44)
+                    fspecial_i[prediction > 100] = 0.
+                    mults[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = fspecial_i # or 44
+
                 i += 1
 
     predictions = predictions.astype(np.float32)
@@ -1143,6 +1156,7 @@ if __name__ == '__main__':
                     size = size.shape[1:3]
                     n_images = 10
                 if n_images > 2:
+           
                     s2, dates, interp, s1, dem, cloudshad = process_tile(x = x, 
                                                                          y = y, 
                                                                          data = data, 
