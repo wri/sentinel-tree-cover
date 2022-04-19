@@ -853,7 +853,9 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         fspecial_size = 28
                     if (x_tile + size_x - 1) < shape[1] and (y_tile + size_y- 1) < shape[0]:
                         predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = prediction
-                        mults[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = fspecial_gauss(subtile_size, fspecial_size)
+                        fspecial_i = fspecial_gauss(subtile_size, fspecial_size)
+                        fspecial_i[prediction > 100] = 0.
+                        mults[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = fspecial_i
                     else:
                         print(f"Skipping {x_tile, y_tile} because of {predictions.shape}")
                     i += 1
@@ -886,6 +888,7 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         prediction = (prediction * 100).T.astype(np.float32)
                         prediction = prediction[size_x:, :]
                         predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = prediction
+                        fspecial_i[prediction > 100] = 0.
                         mults[x_tile: x_tile+ size_x, y_tile:y_tile + size_y, i] = fspecial_i
                     i += 1
 
@@ -919,6 +922,7 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         prediction = (prediction * 100).T.astype(np.float32)
                         prediction = prediction[:size_x, :]
                         predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = prediction
+                        fspecial_i[prediction > 100] = 0.
                         mults[x_tile: x_tile+ size_x, y_tile:y_tile + size_y, i] = fspecial_i
                     print(i)
                     i += 1
@@ -950,6 +954,7 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         prediction = (prediction * 100).T.astype(np.float32)
                         prediction = prediction[:, size_y:]
                         predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = prediction
+                        fspecial_i[prediction > 100] = 0.
                         mults[x_tile: x_tile+ size_x, y_tile:y_tile + size_y, i] = fspecial_i
                     i += 1
 
@@ -980,6 +985,7 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         prediction = (prediction * 100).T.astype(np.float32)
                         prediction = prediction[:, :size_y]
                         predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = prediction
+                        fspecial_i[prediction > 100] = 0.
                         mults[x_tile: x_tile+ size_x, y_tile:y_tile + size_y, i] = fspecial_i
                     i += 1
 

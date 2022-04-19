@@ -22,8 +22,8 @@ from tqdm import tnrange, tqdm_notebook
 import boto3
 from typing import Tuple, List
 import warnings
-from scipy.ndimage import median_filter
-import time
+from scipy.ndimage import median_filter, maximum_filter
+from scipy.ndimage.morphology import binary_dilationimport time
 import copy
 #import tensorflow as tf
 import tensorflow.compat.v1 as tf
@@ -630,7 +630,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         #np.save("interp.npy", interp_tile)
         min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
         no_images = False
-        if np.percentile(min_clear_images_per_date, 33) < 1:
+        if np.percentile(min_clear_images_per_date, 1) < 1:
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subset), axis = (1, 2, 3)) > 0).flatten()
@@ -644,19 +644,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         subtile_copy = np.copy(subset)
         subtile_median = np.median(subtile_copy, axis = 0)
         subtile_median = subtile_median[np.newaxis]
-        """
-        begin_dates = [-60, 90, 180, 270]
-        end_dates = [90, 180, 270, 390]
 
-        for begin, end in zip(begin_dates, end_dates):
-            dates_to_median = np.argwhere(np.logical_and(dates_tile > begin, dates_tile < end)).flatten()
-            if len(dates_to_median) == 1:
-                dates_to_median = [dates_to_median - 1, dates_to_median, dates_to_median + 1]
-                dates_to_median = np.clip(dates_to_median, 0, len(dates_tile) - 1)
-                dates_to_median = dates_to_median.flatten()
-            #print(f"Taking the median of {dates_tile[dates_to_median]}")
-            subset[dates_to_median] = np.median(subset[dates_to_median], axis = 0)
-        """
         subset = rolling_mean(subset)
         try:
             subtile, max_distance = calculate_and_save_best_images(subset, dates_tile)
@@ -679,6 +667,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
             dem_subtile = np.pad(dem_subtile, ((0, 0,), (0, 0), (pad_u, pad_d)), 'reflect')
             subtile_median = np.pad(subtile_median, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
+            min_clear_images_per_date = np.pad(min_clear_images_per_date, ((0, 0), (pad_u, pad_d)), 'reflect')
 
         if subtile.shape[1] == SIZE + 7:
             pad_l = 7 if start_x == 0 else 0
@@ -687,6 +676,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             s1_subtile = np.pad(s1_subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
             dem_subtile = np.pad(dem_subtile, ((0, 0,), (pad_l, pad_r), (0, 0)), 'reflect')
             subtile_median = np.pad(subtile_median, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
+            min_clear_images_per_date = np.pad(min_clear_images_per_date, ((pad_u, pad_d), (0, 0)), 'reflect')
 
         # Interpolate (whittaker smooth) the array and superresolve 20m to 10m
         subtile = sm.interpolate_array(subtile)
@@ -720,6 +710,16 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
                 f"for: {dates_tile}, {max_distance} max dist, {np.percentile(min_clear_images_per_date, 10)} clear images"
                 f" in {subtile_time} seconds")
+
+        min_clear_images_per_date = min_clear_images_per_date[7:-7, 7:-7]
+        no_images = min_clear_images_per_date < 1
+        struct2 = ndimage.generate_binary_structure(2, 2)
+        no_images = binary_dilation(no_images, iterations = 10, structure = struct2)
+        no_images = np.reshape(no_images, ((4, 54, 4, 54)))
+        no_images = np.sum(no_images, axis = (1, 3))
+        no_images = no_images > 0
+        no_images = no_images.repeat(54, axis = 0).repeat(54, axis = 1)
+        preds[no_images] = 255.
         np.save(output, preds)
 
 
@@ -833,7 +833,9 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
                 if np.sum(prediction) < SIZE*SIZE*255:
                     prediction = (prediction * 100).T.astype(np.float32)
                     predictions[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = prediction
-                    mults[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = fspecial_gauss(SIZE, 40) # or 44
+                    fspecial_i = fspecial_gauss(SIZE, 44)
+                    fspecial_i[prediction > 100] = 0.
+                    mults[x_tile: x_tile+SIZE, y_tile:y_tile + SIZE, i] = fspecial_i
                 i += 1
 
     predictions = predictions.astype(np.float32)
