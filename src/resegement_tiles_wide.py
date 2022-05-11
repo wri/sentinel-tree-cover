@@ -15,6 +15,7 @@ from rasterio.transform import from_origin
 import time
 import re
 import shutil
+import bottleneck as bn
 
 from sys import getsizeof
 from preprocessing import slope
@@ -130,8 +131,8 @@ def superresolve_large_tile(arr: np.ndarray, sess) -> np.ndarray:
             superresolved (arr): (?, X, Y, 10) array
     """
     # Pad the input images to avoid border artifacts
-    wsize = 110
-    step = 110
+    wsize = 125
+    step = 125
     x_range = [x for x in range(0, arr.shape[1] - (wsize), step)] + [arr.shape[1] - wsize]
     y_range = [x for x in range(0, arr.shape[2] - (wsize), step)] + [arr.shape[2] - wsize]
     x_end = np.copy(arr[:, x_range[-1]:, ...])
@@ -209,8 +210,12 @@ def check_if_processed(tile_idx, local_path):
 
 
 def align_dates(tile_date, neighb_date):
-    to_rm_tile = [idx for idx, date in enumerate(tile_date) if date not in neighb_date]
-    to_rm_neighb = [idx for idx, date in enumerate(neighb_date) if date not in tile_date]
+    # Add a 7 day grace period b/w dates
+    differences_tile = [np.min(abs(a - np.array([neighb_date]))) for a in tile_date]
+    differences_neighb = [np.min(abs(a - np.array([tile_date]))) for a in neighb_date]
+
+    to_rm_tile = [idx for idx, diff in enumerate(differences_tile) if diff > 0]
+    to_rm_neighb = [idx for idx, diff in enumerate(differences_neighb) if diff > 0]
     n_to_rm = len(to_rm_tile) + len(to_rm_neighb)
     min_images_left = np.minimum(
         len(tile_date) - len(to_rm_tile),
@@ -245,6 +250,21 @@ def make_tiles_right_neighb(tiles_folder_x, tiles_folder_y):
 
 
 def align_subtile_histograms(array) -> np.ndarray:
+
+    def _water_ndwi(array):
+        return (array[..., 1] - array[..., 3]) / (array[..., 1] + array[..., 3])
+
+    left_water = _water_ndwi(
+        np.median(array[:, :, (SIZE + 14) // 2:], axis = 0))
+    left_water = left_water >= 0.3
+    print(f'{np.mean(left_water)}% of the left is water')
+
+    right_water = _water_ndwi(
+        np.median(array[:, :, :(SIZE + 14) // 2], axis = 0))
+    right_water = right_water >= 0.3
+    print(f'{np.mean(right_water)}% of the right is water')
+
+
     for time in range(array.shape[0]):
 
         # Identify all of the areas that are, and aren't interpolated
@@ -252,12 +272,12 @@ def align_subtile_histograms(array) -> np.ndarray:
         right = array[time, :, :(SIZE + 14) // 2]
 
         # And calculate their means and standard deviation per band
-        std_right = np.nanstd(right, axis = (0, 1))
-        std_left = np.nanstd(left, axis = (0, 1))
+        std_right = np.nanstd(right[~right_water], axis = (0))
+        std_left = np.nanstd(left[~left_water], axis = (0))
         std_ref = (std_right + std_left) / 2
         
-        mean_right = np.nanmean(right, axis = (0, 1))
-        mean_left = np.nanmean(left, axis = (0, 1))
+        mean_right = np.nanmean(right[~right_water], axis = (0))
+        mean_left = np.nanmean(left[~left_water], axis = (0))
         mean_ref = (mean_right + mean_left) / 2
         
         std_mult_left = (std_left / std_ref)
@@ -343,10 +363,10 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         output = f"{path}/right{str(folder_y)}/{str(folder_x)}.npy"
         output2 = f"{path_neighbor}{str(0)}/left{str(folder_x)}.npy"
 
-        min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
+        min_clear_images_per_date = np.sum(interp_tile < 1, axis = (0))
         print(f"There are only {np.min(min_clear_images_per_date)} clear images")
         no_images = False
-        if np.percentile(min_clear_images_per_date, 50) < 1:
+        if np.percentile(min_clear_images_per_date, 25) < 1:
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subset), axis = (1, 2, 3)) > 0).flatten()
@@ -367,6 +387,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             dem_subtile = np.pad(dem_subtile, ((0, 0,), (0, 0), (pad_u, pad_d)), 'reflect')
             subtile_median_s2 = np.pad(subtile_median_s2, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
             subtile_median_s1 = np.pad(subtile_median_s1, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
+            min_clear_images_per_date = np.pad(min_clear_images_per_date, ((0, 0), (pad_u, pad_d)), 'reflect')
 
         if subtile.shape[1] == SIZE_Y + 7:
             pad_l = 7 if start_y == 0 else 0
@@ -376,10 +397,11 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             dem_subtile = np.pad(dem_subtile, ((0, 0,), (pad_l, pad_r), (0, 0)), 'reflect')
             subtile_median_s2 = np.pad(subtile_median_s2, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
             subtile_median_s1 = np.pad(subtile_median_s1, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
+            min_clear_images_per_date = np.pad(min_clear_images_per_date, ((pad_l, pad_r), (0, 0)), 'reflect')
 
         subtile_s2 = subtile
         # Concatenate the DEM and Sentinel 1 data
-        subtile = np.empty((13, SIZE_Y + 14, SIZE + 14, 17))
+        subtile = np.empty((13, SIZE_Y + 14, SIZE + 14, 17), dtype = np.float32)
         subtile[:-1, ..., :10] = subtile_s2[..., :10]
         subtile[:-1, ..., 11:13] = s1_subtile
         subtile[:-1, ..., 13:] = subtile_s2[..., 10:]
@@ -389,6 +411,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         subtile[-1, ..., :10] = subtile_median_s2[..., :10]
         subtile[-1, ..., 11:13] = subtile_median_s1
         subtile[-1, ..., 13:] = subtile_median_s2[..., 10:]
+
         
         # Create the output folders for the subtile predictions
         output_folder = "/".join(output.split("/")[:-1])
@@ -420,22 +443,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         left_mean = np.mean(preds[:,  (SIZE - 8) // 2 : (SIZE) // 2])
         right_mean = np.mean(preds[:, (SIZE) // 2 : (SIZE + 8) // 2])
 
-        if abs(left_mean - right_mean) > 0.15 and not hist_align:
-            subtile = align_subtile_histograms(subtile)
-            #subtile = np.clip(subtile, 0, 1)
-            no_images = True if len(dates_tile) < 3 else no_images
-            if no_images:
-                print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates -- no data")
-                preds = np.full((SIZE_Y, SIZE), 255)
-            else:
-                print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
-                    f"for: {dates_tile}")
-                preds = predict_subtile(subtile, sess)
-            print(preds.shape)
-
-        left_mean = np.mean(preds[:,  (SIZE - 8) // 2 : (SIZE) // 2])
-        right_mean = np.mean(preds[:, (SIZE) // 2 : (SIZE + 8) // 2])
-
         if abs(left_mean - right_mean) > 0.15:
             print("ADJUSTING first round")
             left = preds[:, : (SIZE) // 2]
@@ -453,31 +460,38 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         right_mean = np.mean(preds[:, (SIZE) // 2 : (SIZE + 8) // 2])
         print(left_mean, right_mean)
 
-        if abs(left_mean - right_mean) > 0.15:
-            print("ADJUSTING AGAIN")
-            left_adjust = (right_mean - left_mean) / 2
-            print(left_adjust)
-            preds[:, : (SIZE) // 2] += left_adjust
-            preds[:, (SIZE) // 2 :] -= left_adjust
-            preds = np.clip(preds, 0, 1)
-
         left_source_med = np.nanmean(left_all[start_y:start_y + SIZE_Y])
         right_source_med = np.nanmean(right_all[start_y:start_y + SIZE_Y])
+
+        left_pred_mean = np.nanmean(preds[: , :(SIZE // 2)], axis = 1) * 100
+        right_pred_mean = np.nanmean(preds[: , -(SIZE // 2):], axis = 1) * 100
+
+        print(np.nanmean(left_pred_mean), left_source_med)
+        print(np.nanmean(right_pred_mean), right_source_med)
+        left_diff = np.nanmean(left_all[start_y:start_y + SIZE_Y] - left_pred_mean)
+        right_diff = np.nanmean(right_all[start_y:start_y + SIZE_Y] - right_pred_mean)
+        print("LEFT RIGHT DIFF", left_diff, right_diff)
 
         min_ref_median = np.minimum(left_source_med, right_source_med)
         max_ref_median = np.maximum(left_source_med, right_source_med)
 
-        source_median = 100 * np.mean(preds)
+        source_median = 100 * np.nanmean(preds)
         print(f"The predict median is {np.mean(preds)}")
 
         # If the prediction is out of range from the inputs
         # We want to save only the tile that needs to be increased or decreased
         if np.max(preds) < 255:
+            min_clear_images_per_date = min_clear_images_per_date[7:-7, 7:-7]
+            no_images = min_clear_images_per_date < 1
+            no_images = np.reshape(no_images, (4, 60, 10, (SIZE // 10)))
+            no_images = np.sum(no_images, axis = (1, 3))
+            no_images = no_images > 0
+            no_images = no_images.repeat(60, axis = 0).repeat((SIZE // 10), axis = 1)
 
             if source_median <= (min_ref_median - 10):
                 # IF we are out of bounds on the lower side, adjust to fit the lower bound
-                adjust_value = np.around(((min_ref_median - source_median) / 100), 3)
-                print(f"One tile because {source_median} median compared "
+                adjust_value = np.around(((min_ref_median - source_median - 10) / 100), 3)
+                print(f"Adjusting, {source_median} median compared "
                       f" to {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} diff"
                       f" {adjust_value} adjustment")
                 mean_bef = (np.mean(preds))
@@ -485,12 +499,13 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
                 preds = np.clip(preds, 0, 1)
                 mean_af = np.mean(preds)
                 print(f"Old mean: {mean_bef} new mean: {mean_af}")
+                preds[no_images] = 255.
                 np.save(output, preds) 
                 np.save(output2, preds)
 
             elif source_median >= (max_ref_median + 10):
-                adjust_value = np.around(((source_median - max_ref_median) / 100), 3)
-                print(f"Only saving one tile because {source_median} median compared to"
+                adjust_value = np.around(((source_median - max_ref_median - 10) / 100), 3)
+                print(f"Adjusting, {source_median} median compared to"
                       f" {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference"
                       f" {adjust_value} adjustment")
 
@@ -499,6 +514,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
                 preds = np.clip(preds, 0, 1)
                 mean_af = np.mean(preds)
                 print(f"Old mean: {mean_bef} new mean: {mean_af}")
+                preds[no_images] = 255.
                 np.save(output, preds)
                 np.save(output2, preds)
 
@@ -507,29 +523,28 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             ):
                 print(f"{source_median} median: {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference,"
                       f"{left_mean}, {right_mean}")
+                preds[no_images] = 255.
                 np.save(output, preds)
                 np.save(output2, preds)
             elif np.isnan(max_ref_median) and np.isnan(min_ref_median):
                 print(f"{source_median} median: {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference")
+                preds[no_images] = 255.
                 np.save(output, preds)
                 np.save(output2, preds)
             else:
                 print(f"Skipping because {abs(left_mean - right_mean)} difference or "
                     f"{source_median} median compared to {min_ref_median}-{max_ref_median}")
         else:
+            preds[no_images] = 255.
             np.save(output, preds)
             np.save(output2, preds)
         
 
-def preprocess_tile(arr, dates, interp):
+def preprocess_tile(arr, dates, interp, clm_path, fname):
     time1 = time.time()
-    if np.sum(arr == 0) > 0:
-        arr[arr == 0.] = np.tile(np.median(arr, axis = 0)[np.newaxis], (arr.shape[0], 1, 1, 1))[arr == 0]
 
-    missing_px = interpolation.id_missing_px(arr, 100)
+    missing_px = interpolation.id_missing_px(arr, 20)
     if len(missing_px) > 0:
-        print(np.sum(arr == 0, axis = (1, 2)))
-        print(np.sum(arr >= 1, axis = (1, 2)))
         dates = np.delete(dates, missing_px)
         arr = np.delete(arr, missing_px, 0)
         interp = np.delete(interp, missing_px, 0)
@@ -538,11 +553,76 @@ def preprocess_tile(arr, dates, interp):
     print(f"Finished missing px in preprocess_tile in {np.around(time2 - time1, 1)} seconds")
 
         # Remove dates with high likelihood of missed cloud or shadow (false negatives)
+    # This is done here because make_shadow = False in process_tile
     cld = cloud_removal.remove_missed_clouds(arr)
-    arr, interp2 = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, wsize = 12, step = 12, thresh = 18)
+
+    if os.path.exists(clm_path):
+        print(f"loading {clm_path}")
+        clm = hkl.load(clm_path).repeat(2, axis = 1).repeat(2, axis = 2)
+        print(clm.shape)
+        clm, _ = split_fn(clm, fname)
+        print(clm.shape)
+        if len(missing_px) > 0:
+            print(f"Deleting {missing_px} from cloud mask")
+            clm = np.delete(clm, missing_px, 0)
+        try:
+            cld = np.maximum(clm, cld)
+        except:
+            print("There is a date mismatch between clm and cld, continuing")
+        print(cld.shape)
+        
+
+    print(np.mean(cld, axis = (1, 2)))
+
+    to_remove = np.argwhere(np.mean(cld, axis = (1, 2)) > 0.75)
+    if len(to_remove) > 0:
+        cld = np.delete(cld, to_remove, axis = 0)
+        dates = np.delete(dates, to_remove)
+        interp = np.delete(interp, to_remove, axis = 0)
+        arr = np.delete(arr, to_remove, axis = 0)
+
+    arr, interp2 = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, wsize = 12, step = 12, thresh = 36)
+    print(np.mean(interp2, axis = (1, 2)))
     interp = np.maximum(interp, interp2)
-    arr = cloud_removal.adjust_interpolated_groups(arr, interp)
+    
     return arr, interp, dates
+
+
+def check_if_artifact(tile, neighb):
+    right = neighb[:, :3]
+    left = tile[:, -3:]
+
+    right_mean = bn.nanmean(neighb[:, :3])
+    left_mean = bn.nanmean(tile[:, -3:])
+    right = neighb[:,  0]#bn.nanmean(neighb[:, :3], axis = 1)
+    right = np.pad(right, (10 - (right.shape[0] % 10)) // 2, constant_values = np.nan)
+    right = np.reshape(right, (right.shape[0] // 10, 10))
+    right = bn.nanmean(right, axis = 1)    
+    
+    left = tile[:, -1]#bn.nanmean(tile[:, -3:], axis = 1)
+    left = np.pad(left, (10 - (left.shape[0] % 10)) // 2, constant_values =  np.nan)
+    left = np.reshape(left, (left.shape[0] // 10, 10))
+    left = bn.nanmean(left, axis = 1)
+
+    fraction_diff = bn.nanmean(abs(right - left) > 20) #normally 25
+    fraction_diff_2 = bn.nanmean(abs(right - left) > 10)
+    left_right_diff = abs(right_mean - left_mean)
+
+    other0 = left_right_diff > 8
+
+    other = fraction_diff_2 > 0.5
+    other = np.logical_and(other, (left_right_diff > 2) ) # normally 6
+
+    other2 = fraction_diff > 0.25
+    other2 = np.logical_and(other2, (left_right_diff > 2) ) # normally 3
+
+    print(x, y, left_right_diff, fraction_diff, other0, other, other2)
+    if other0 or other or other2:
+        return 1
+    else:
+        return 0
+
+
 
 
 def load_tif(tile_id, local_path):
@@ -581,7 +661,7 @@ def load_tif(tile_id, local_path):
 
         for file in files:
            tifs.append(os.path.join(dir_i, file))
-    
+
     tifs = tifs[0]
     tifs = rasterio.open(tifs).read(1)
     return tifs, smooth
@@ -591,7 +671,6 @@ def resegment_border(tile_x, tile_y, edge, local_path):
 
     processed = check_if_processed((tile_x, tile_y), local_path)
     neighbor_id = [str(int(tile_x) + 1), tile_y]
-    print(neighbor_id)
 
     processed_neighbor = check_if_processed(neighbor_id, local_path)
     if processed_neighbor:
@@ -614,35 +693,17 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         neighbor_tif = neighbor_tif.astype(np.float32)
         neighbor_tif[neighbor_tif > 100] = np.nan
         tile_tif[tile_tif > 100] = np.nan
-        right = neighbor_tif[:, :6]
-        left = neighbor_tif[:, -6:]
-
-        right_all = np.mean(neighbor_tif[:, :SIZE // 2], axis = 1)
-        left_all = np.mean(tile_tif[:, -(SIZE // 2):], axis = 1)
+        
         diff_for_compare = np.mean(abs(np.mean(neighbor_tif[:, :8], axis = 1) - 
                                np.mean(tile_tif[:, -8:], axis = 1)))
+        
+        
+        artifact = check_if_artifact(tile_tif, neighbor_tif)
+        right_all = np.nanmean(neighbor_tif[:, :(SIZE // 2)], axis = 1)
+        left_all = np.nanmean(tile_tif[:, -(SIZE // 2):], axis = 1)
         print(f"The left median is {np.mean(left_all)} and the right median is {np.mean(right_all)}")
-        
-        right_mean = np.nanmean(neighbor_tif[:, :6])
-        left_mean = np.nanmean(tile_tif[:, -6:])
-        right = np.mean(neighbor_tif[:, :6], axis = 1)
-        left = np.mean(tile_tif[:, -6:], axis = 1)
 
-        fraction_diff = np.nanmean(abs(right - left) > 25)
-        left_right_diff = abs(right_mean - left_mean)
-
-        other0 = (left_right_diff > 8) or np.isnan(left_right_diff)
-        
-        other = fraction_diff > 0.2
-        other = np.logical_and(other, (left_right_diff > 6) )
-
-        other2 = fraction_diff > 0.3
-        other2 = np.logical_and(other2, (left_right_diff > 3) )
-        
-        
-        print(f"The differences is: {left_right_diff} and fraction {fraction_diff}")
-
-        if other0 or other or other2 or args.process_all:
+        if artifact == 1 or args.process_all:
             
             download_raw_tile((tile_x, tile_y), local_path, "processed")
             download_raw_tile((tile_x, tile_y), local_path, "raw")
@@ -659,7 +720,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         return 0, None, None, 0
         
     time1 = time.time()
-    s2, dates, interp, s1, dem, _ = process_tile(tile_x, tile_y, data, local_path)
+    s2, dates, interp, s1, dem, _ = process_tile(tile_x, tile_y, data, local_path, False)
     s2_shape = s2.shape[1:-1]
     time2 = time.time()
     print(f"Finished process tile in {np.around(time2 - time1, 1)} seconds")
@@ -671,7 +732,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
    
     time1 = time.time()
     s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb, _ = \
-        process_tile(neighbor_id[0], neighbor_id[1], data, args.local_path)
+        process_tile(neighbor_id[0], neighbor_id[1], data, args.local_path, False)
     s2_neighb_shape = s2_neighb.shape[1:-1]
     time2 = time.time()
     print(f"Finished process tile in {np.around(time2 - time1, 1)} seconds")
@@ -683,8 +744,17 @@ def resegment_border(tile_x, tile_y, edge, local_path):
     print(f"Finished split to border in {np.around(time2 - time1, 1)} seconds")
 
     time1 = time.time()
-    s2, interp, dates = preprocess_tile(s2, dates, interp)
-    s2_neighb, interp_neighb, dates_neighb = preprocess_tile(s2_neighb, dates_neighb, interp_neighb)
+    print(np.max(s2))
+
+    tile_idx = f'{str(tile_x)}X{str(tile_y)}Y'
+    cloudmask_path = f"{local_path}{str(tile_x)}/{str(tile_y)}/raw/clouds/cloudmask_{tile_idx}.hkl"
+    s2, interp, dates = preprocess_tile(s2, dates, interp, cloudmask_path, "tile")
+
+    tile_idx = f'{str(neighbor_id[0])}X{str(neighbor_id[1])}Y'
+    cloudmask_path = f"{local_path}{str(neighbor_id[0])}/{str(neighbor_id[1])}/raw/clouds/cloudmask_{tile_idx}.hkl"
+    s2_neighb, interp_neighb, dates_neighb = preprocess_tile(
+        s2_neighb, dates_neighb, interp_neighb, cloudmask_path, 'neighbor'
+    )
     print(dates)
     print(dates_neighb)
     print(s2.shape, s2_neighb.shape)
@@ -694,7 +764,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
     print("Aligning the dates")
     to_rm_tile, to_rm_neighb, min_images = align_dates(dates, dates_neighb)
     print(to_rm_tile, to_rm_neighb)
-    if min_images >= 3: # (len(to_rm_tile) <= 3 and len(to_rm_neighb) <= 3) or 
+    if min_images >= 2:
         if len(to_rm_tile) > 0:
             s2 = np.delete(s2, to_rm_tile, 0)
             interp = np.delete(interp, to_rm_tile, 0)
@@ -703,6 +773,10 @@ def resegment_border(tile_x, tile_y, edge, local_path):
             s2_neighb = np.delete(s2_neighb, to_rm_neighb, 0)
             interp_neighb = np.delete(interp_neighb, to_rm_neighb, 0)
             dates_neighb = np.delete(dates_neighb, to_rm_neighb)
+        hist_align = False
+    else:
+        hist_align = True
+    print(dates, dates_neighb)
 
     # make the indices
     s2_indices = make_and_smooth_indices(s2, dates)
@@ -787,12 +861,6 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         tiles_folder_y = np.hstack([np.arange(0, s1.shape[1] - SIZE_Y, gap_y), np.array(s1.shape[1] - SIZE_Y)])
         tiles_array, tiles_folder = make_tiles_right_neighb(tiles_folder_x, tiles_folder_y)
 
-        if not np.array_equal(np.array(dates), np.array(dates_neighb)):
-            hist_align = True
-            print("Aligning histogram")
-        else:
-            hist_align = False
-            print("No align needed")
         process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, gap_sess, tiles_folder, tiles_array,
             right_all, left_all, hist_align)
 
@@ -836,7 +904,6 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
     n_border = n_up + n_down + n_left + n_right
     predictions = np.full((shape[1], shape[0], n_tiles), np.nan, dtype = np.float32)
     mults = np.full((shape[1], shape[0], n_tiles), 0, dtype = np.float32)
-    print(predictions.shape)
     i = 0
 
     small_tile = False
@@ -852,7 +919,6 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                 size_y = prediction.shape[0]
                 size_x = prediction.shape[1]
                 subtile_size = np.maximum(size_x, size_y)
-                print(subtile_size)
                 if np.sum(prediction) < size_x*size_y*255:
                     prediction = (prediction * 100).T.astype(np.float32)
                     if subtile_size == 208 or subtile_size == 216:
@@ -893,7 +959,7 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         fspecial_size = 85
                     elif subtile_size == 412:
                         fspecial_size = 95
-                    elif subtile_size == 588 or subtile_size == 620:
+                    elif subtile_size == 588 or subtile_size >= 620:
                         fspecial_size = 150# if not small_tile else 100
                     else:
                         fspecial_size = 28
@@ -903,9 +969,10 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         prediction = (prediction * 100).T.astype(np.float32)
                         prediction = prediction[size_x:, :]
                         predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = prediction
+                        preds_to_adj = predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, :]
+                        preds_to_adj[prediction > 100] = 255.
                         fspecial_i[prediction > 100] = 0.
                         mults[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = fspecial_i
-                    print(i)
                     i += 1
                     
     # RIGHT BLOCK
@@ -918,18 +985,16 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                 output_file = out_folder + str(x_tile_name) + "/" + str(y_tile) + ".npy"
                 if os.path.exists(output_file):
                     prediction = np.load(output_file)
-                    print(prediction.shape)
                     size_y = prediction.shape[0]
                     size_x = prediction.shape[1] // 2
                     subtile_size = np.maximum(size_x * 2, size_y)
-                    print(subtile_size)
                     if subtile_size == 208 or subtile_size == 216:
                         fspecial_size = 44
                     elif subtile_size == 348:
                         fspecial_size = 85
                     elif subtile_size == 412:
                         fspecial_size = 95
-                    elif subtile_size == 588 or subtile_size == 620:
+                    elif subtile_size == 588 or subtile_size >= 620:
                         fspecial_size = 150# if not small_tile else 100
                     else:
                         fspecial_size = 28
@@ -940,9 +1005,10 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         prediction = (prediction * 100).T.astype(np.float32)
                         prediction = prediction[:size_x, :]
                         predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = prediction
+                        preds_to_adj = predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, :]
+                        preds_to_adj[prediction > 100] = 255.
                         fspecial_i[prediction > 100] = 0.
                         mults[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = fspecial_i
-                    print(i)
                     i += 1
                     
     if n_up > 0:
@@ -962,8 +1028,8 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         fspecial_size = 85
                     elif subtile_size == 412:
                         fspecial_size = 95
-                    elif subtile_size == 588 or subtile_size == 620:
-                        fspecial_size = 150 #if not small_tile else 100
+                    elif subtile_size == 588 or subtile_size >= 620:
+                        fspecial_size = 150# if not small_tile else 100
                     else:
                         fspecial_size = 28
                     fspecial_i = fspecial_gauss(subtile_size, fspecial_size)[:, size_y:]
@@ -972,6 +1038,8 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         prediction = (prediction * 100).T.astype(np.float32)
                         prediction = prediction[:, size_y:]
                         predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = prediction
+                        preds_to_adj = predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, :]
+                        preds_to_adj[prediction > 100] = 255.
                         fspecial_i[prediction > 100] = 0.
                         mults[x_tile: x_tile+ size_x, y_tile:y_tile + size_y, i] = fspecial_i
                     i += 1
@@ -993,7 +1061,7 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         fspecial_size = 85
                     elif subtile_size == 412:
                         fspecial_size = 95
-                    elif subtile_size == 588 or subtile_size == 620:
+                    elif subtile_size == 588 or subtile_size >= 620:
                         fspecial_size = 150# if not small_tile else 100
                     else:
                         fspecial_size = 28
@@ -1003,15 +1071,17 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                         prediction = (prediction * 100).T.astype(np.float32)
                         prediction = prediction[:, :size_y]
                         predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, i] = prediction
+                        preds_to_adj = predictions[x_tile: x_tile+size_x, y_tile:y_tile + size_y, :]
+                        preds_to_adj[prediction > 100] = 255.
                         fspecial_i[prediction > 100] = 0.
                         mults[x_tile: x_tile+ size_x, y_tile:y_tile + size_y, i] = fspecial_i
                     i += 1
 
     predictions = predictions.astype(np.float32)
     
-    mults = mults / np.sum(mults, axis = -1)[..., np.newaxis]
-
     predictions[predictions > 100] = np.nan
+    mults[np.isnan(predictions)] = 0.
+    mults = mults / np.sum(mults, axis = -1)[..., np.newaxis]
     out = np.copy(predictions)
     out = np.sum(np.isnan(out), axis = (2))
     n_preds = predictions.shape[-1]
@@ -1072,14 +1142,14 @@ def cleanup_row_or_col(idx, current_idx, local_path):
         
 
 if __name__ == "__main__":
-    SIZE = 620
+    SIZE = 680
     SIZE_Y = 240
 
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/240-620-apr/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/240-680-may/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_nov_10.csv")
@@ -1151,8 +1221,8 @@ if __name__ == "__main__":
 
     min_all = np.array(min_all)
     max_all = np.array(max_all)
-    min_all = np.broadcast_to(min_all, (1, SIZE_Y + 14, SIZE + 14, 17)).astype(np.float32)
-    max_all = np.broadcast_to(max_all, (1, SIZE_Y + 14, SIZE + 14, 17)).astype(np.float32)
+    min_all = np.broadcast_to(min_all, (1, 1, 1, 17)).astype(np.float32)
+    max_all = np.broadcast_to(max_all, (1, 1, 1, 17)).astype(np.float32)
 
     midrange = (max_all + min_all) / 2
     midrange = midrange.astype(np.float32)
@@ -1167,8 +1237,14 @@ if __name__ == "__main__":
     else:
         raise Exception(f"The database does not exist at {args.db_path}")
 
-    #data['X_tile'] = data['X_tile'].str.extract('(\d+)', expand=False)
-    #data['Y_tile'] = data['Y_tile'].str.extract('(\d+)', expand=False)
+    try:
+        data['X_tile'] = data['X_tile'].str.extract('(\d+)', expand=False)
+        data['X_tile'] = pd.to_numeric(data['X_tile'])
+        data['Y_tile'] = data['Y_tile'].str.extract('(\d+)', expand=False)
+        data['Y_tile'] = pd.to_numeric(data['Y_tile'])
+    except Exception as e:
+        print(f"Ran into {str(e)} error")
+        time.sleep(1)
     
     data['X_tile'] = data['X_tile'].astype(int)
     data['Y_tile'] = data['Y_tile'].astype(int)
@@ -1237,10 +1313,9 @@ if __name__ == "__main__":
                     right_mean = np.nanmean(right, axis = 0)
                     left_mean = np.nanmean(left, axis = 0)
                     smooth_diff = np.nanmean(abs(right_mean - left_mean))
-                    print(smooth_diff)
                     diff = 100 if np.isnan(diff) else diff
                     print(f"Before smooth: {diff}, after smooth: {smooth_diff}")
-                    if smooth_diff < (diff + 20):
+                    if smooth_diff < (diff + 20) or np.isnan(smooth_diff):
 
                         if os.path.exists(f"{path_to_tile}/{str(x)}X{str(y)}Y_SMOOTH_XY.tif"):
                             suffix = "_SMOOTH_XY"
