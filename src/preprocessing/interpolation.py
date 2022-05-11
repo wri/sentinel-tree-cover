@@ -12,9 +12,13 @@ def id_missing_px(sentinel2: np.ndarray, thresh: int = 11) -> np.ndarray:
                                       due to missing imagery
 
     """
-    missing_images_0 = np.sum(sentinel2[..., :10] == 0.0, axis = (1, 2, 3))
-    missing_images_p = np.sum(sentinel2[..., :10] >= 1., axis = (1, 2, 3))
+    missing_images_0 = np.sum(sentinel2[..., :10] == 0.0, axis = (-1))
+    missing_images_p = np.sum(sentinel2[..., :10] >= 1., axis = (-1))
     missing_images = missing_images_0 + missing_images_p
+    # missing images is (T, X, Y)
+    print(np.sum(missing_images > 0, axis = (1, 2)))
+    print(np.sum(missing_images > 1, axis = (1, 2)))
+    missing_images = np.sum(missing_images > 1., axis = (1, 2))
     missing_images = np.argwhere(missing_images >= (sentinel2.shape[1]**2) / thresh).flatten()
     return missing_images
 

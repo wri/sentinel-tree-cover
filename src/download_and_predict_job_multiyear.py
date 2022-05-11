@@ -22,8 +22,10 @@ from tqdm import tnrange, tqdm_notebook
 import boto3
 from typing import Tuple, List
 import warnings
+from scipy import ndimage
 from scipy.ndimage import median_filter, maximum_filter
-from scipy.ndimage.morphology import binary_dilationimport time
+from scipy.ndimage.morphology import binary_dilation
+import time
 import copy
 #import tensorflow as tf
 import tensorflow.compat.v1 as tf
@@ -47,7 +49,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 SIZE = 216
 
 tf.disable_v2_behavior()
-
 
 
 def superresolve_tile(arr: np.ndarray, sess) -> np.ndarray:
@@ -223,6 +224,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
 
     make_output_and_temp_folders(folder)
     clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl'
+    cloud_mask_file = f'{folder}raw/clouds/cloudmask_{tile_idx}.hkl'
     shadows_file = f'{folder}raw/clouds/shadows_{tile_idx}.hkl'
     s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
     s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
@@ -264,12 +266,12 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
 
         hkl.dump(cloud_probs, clouds_file, mode='w', compression='gzip')
         hkl.dump(clean_dates, clean_steps_file, mode='w', compression='gzip')
-
+        
     if not (os.path.exists(s2_10_file)):
         print(f"Downloading {s2_10_file}")
         clean_steps = list(hkl.load(clean_steps_file))
         cloud_probs = hkl.load(clouds_file)
-        s2_10, s2_20, s2_dates = tof_downloading.download_sentinel_2_new(bbx,
+        s2_10, s2_20, s2_dates, clm = tof_downloading.download_sentinel_2_new(bbx,
                                                      clean_steps = clean_steps,
                                                      api_key = api_key, dates = dates,
                                                      year = year)
@@ -284,6 +286,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         hkl.dump(to_int16(s2_10), s2_10_file, mode='w', compression='gzip')
         hkl.dump(to_int16(s2_20), s2_20_file, mode='w', compression='gzip')
         hkl.dump(s2_dates, s2_dates_file, mode='w', compression='gzip')
+        hkl.dump(clm, cloud_mask_file, mode='w', compression='gzip')
         size = s2_20.shape[1:3]
 
     if not (os.path.exists(s1_file)):
@@ -386,6 +389,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     tile_idx = f'{str(x)}X{str(y)}Y'
 
     clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl'
+    cloud_mask_file = f'{folder}raw/clouds/cloudmask_{tile_idx}.hkl'
     shadows_file = f'{folder}raw/clouds/shadows_{tile_idx}.hkl'
     s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
     s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
@@ -396,7 +400,13 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     clean_steps_file = f'{folder}raw/clouds/clean_steps_{tile_idx}.hkl'
     dem_file = f'{folder}raw/misc/dem_{tile_idx}.hkl'
 
+
     clouds = hkl.load(clouds_file)
+    if os.path.exists(cloud_mask_file):
+        clm = hkl.load(cloud_mask_file).repeat(2, axis = 1).repeat(2, axis = 2)
+    else:
+        clm = None
+
     s1 = hkl.load(s1_file)
     s1 = s1 / 65535
     s1[..., -1] = convert_to_db(s1[..., -1], 22)
@@ -467,6 +477,8 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         clouds = np.delete(clouds, missing_px, axis = 0)
         image_dates = np.delete(image_dates, missing_px)
         sentinel2 = np.delete(sentinel2, missing_px, axis = 0)
+        if clm is not None:
+            clm = np.delete(clm, missing_px, axis = 0)
 
     # Otherwise... set the missing values to the median value.
     sentinel2 = interpolation.interpolate_missing_vals(sentinel2)
@@ -474,7 +486,10 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     if make_shadow:
         time1 = time.time()
         cloudshad = cloud_removal.remove_missed_clouds(sentinel2)
-        #np.save("cloudshad.npy", cloudshad)
+
+        if clm is not None:
+            cloudshad = np.maximum(cloudshad, clm)
+
         sentinel2, interp = cloud_removal.remove_cloud_and_shadows(
             sentinel2, cloudshad, cloudshad, image_dates, wsize = 8, step = 8, thresh = 8
         )
@@ -625,12 +640,12 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             print(f"Removing {len(missing_px)} missing images, leaving {len(dates_tile)} / {len(dates)}")
 
         #np.save("before.npy", subset)
-        subset = cloud_removal.adjust_interpolated_groups(subset, interp_tile)
+        #subset = cloud_removal.adjust_interpolated_groups(subset, interp_tile)
 
         #np.save("interp.npy", interp_tile)
-        min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
+        min_clear_images_per_date = np.sum(interp_tile < 0.5, axis = (0))
         no_images = False
-        if np.percentile(min_clear_images_per_date, 1) < 1:
+        if np.percentile(min_clear_images_per_date, 5) < 1:
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subset), axis = (1, 2, 3)) > 0).flatten()
@@ -714,7 +729,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         min_clear_images_per_date = min_clear_images_per_date[7:-7, 7:-7]
         no_images = min_clear_images_per_date < 1
         struct2 = ndimage.generate_binary_structure(2, 2)
-        no_images = binary_dilation(no_images, iterations = 10, structure = struct2)
+        no_images = binary_dilation(no_images, iterations = 20, structure = struct2)
         no_images = np.reshape(no_images, ((4, 54, 4, 54)))
         no_images = np.sum(no_images, axis = (1, 3))
         no_images = no_images > 0

@@ -44,7 +44,7 @@ from downloading.io import FileUploader,  get_folder_prefix, make_output_and_tem
 from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder
 from preprocessing.indices import evi, bi, msavi2, grndvi
 
-#tf.config.optimizer.set_jit(True)
+#$tf.config.optimizer.set_jit(True)
 tf.disable_v2_behavior()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -160,25 +160,30 @@ def download_s1_tile(data: np.ndarray, bbx: list, api_key, year: int,
     """
     print(f"Downloading {s1_file}")
     s1_layer = tof_downloading.identify_s1_layer((data['Y'][0], data['X'][0]))
-    s1, s1_dates = tof_downloading.download_sentinel_1_composite(bbx,
-                                       layer = s1_layer,
-                                       api_key = api_key,
-                                       year = year,
-                                       dates = dates_sentinel_1,
-                                       size = size,
-                                       )
 
-    if s1.shape[0] == 0: # If the first attempt receives no images, swap orbit
-        s1_layer = "SENT_DESC" if s1_layer == "SENT" else "SENT_DESC"
-        print(f'Switching to {s1_layer}')
-        s1, s1_dates = tof_downloading.download_sentinel_1_composite(bbx,
+    s1, s1_dates = np.empty((0,)), np.empty((0,))
+    for year in [year, year - 1,  year - 2, year - 3, year - 4]:
+
+        if s1.shape[0] == 0:
+            s1, s1_dates = tof_downloading.download_sentinel_1_composite(bbx,
                                            layer = s1_layer,
                                            api_key = api_key,
                                            year = year,
                                            dates = dates_sentinel_1,
                                            size = size,
                                            )
-                                           #config = api_key)
+
+        if s1.shape[0] == 0: # If the first attempt receives no images, swap orbit
+            s1_layer = "SENT_DESC" if s1_layer == "SENT" else "SENT_DESC"
+            print(f'Switching to {s1_layer}')
+            s1, s1_dates = tof_downloading.download_sentinel_1_composite(bbx,
+                                               layer = s1_layer,
+                                               api_key = api_key,
+                                               year = year,
+                                               dates = dates_sentinel_1,
+                                               size = size,
+                                               )
+
     # Convert s1 to monthly mosaics, and write to disk
     s1 = tof_downloading.process_sentinel_1_tile(s1, s1_dates)
     hkl.dump(to_int16(s1), s1_file, mode='w', compression='gzip')
@@ -224,6 +229,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
     
     make_output_and_temp_folders(folder)        
     clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl'
+    cloud_mask_file = f'{folder}raw/clouds/cloudmask_{tile_idx}.hkl'
     shadows_file = f'{folder}raw/clouds/shadows_{tile_idx}.hkl'
     s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
     s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
@@ -274,7 +280,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         print(f"Downloading {s2_10_file}")
         clean_steps = list(hkl.load(clean_steps_file))
         cloud_probs = hkl.load(clouds_file)
-        s2_10, s2_20, s2_dates = tof_downloading.download_sentinel_2_new(bbx,
+        s2_10, s2_20, s2_dates, clm = tof_downloading.download_sentinel_2_new(bbx,
                                                      clean_steps = clean_steps,
                                                      api_key = api_key, dates = dates,
                                                      year = year, maxclouds = 1.0)
@@ -289,6 +295,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         hkl.dump(to_int16(s2_10), s2_10_file, mode='w', compression='gzip')
         hkl.dump(to_int16(s2_20), s2_20_file, mode='w', compression='gzip')
         hkl.dump(s2_dates, s2_dates_file, mode='w', compression='gzip')
+        hkl.dump(clm, cloud_mask_file, mode='w', compression='gzip')
         size = s2_20.shape[1:3]
             
     if not (os.path.exists(s1_file)) and len(clean_dates) > 2:
@@ -391,6 +398,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     tile_idx = f'{str(x)}X{str(y)}Y'
     
     clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl'
+    cloud_mask_file = f'{folder}raw/clouds/cloudmask_{tile_idx}.hkl'
     shadows_file = f'{folder}raw/clouds/shadows_{tile_idx}.hkl'
     s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
     s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
@@ -402,6 +410,11 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     dem_file = f'{folder}raw/misc/dem_{tile_idx}.hkl'
     
     clouds = hkl.load(clouds_file)
+    if os.path.exists(cloud_mask_file):
+        clm = hkl.load(cloud_mask_file).repeat(2, axis = 1).repeat(2, axis = 2)
+    else:
+        clm = None
+
     s1 = hkl.load(s1_file)
     s1 = s1 / 65535
     s1[..., -1] = convert_to_db(s1[..., -1], 22)
@@ -477,30 +490,34 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     # If more than 50% of data for a time step is missing, then remove them....
     missing_px = interpolation.id_missing_px(sentinel2, 2)
     if len(missing_px) > 0:
-        print(f"Removing {missing_px} dates due to missing data")
+        print(f"Removing {missing_px} dates due to {missing_px} missing data")
         clouds = np.delete(clouds, missing_px, axis = 0)
         image_dates = np.delete(image_dates, missing_px)
         sentinel2 = np.delete(sentinel2, missing_px, axis = 0)
+        if clm is not None:
+            clm = np.delete(clm, missing_px, axis = 0)
 
     # Otherwise... set the missing values to the median value.
     sentinel2 = interpolation.interpolate_missing_vals(sentinel2)
     if make_shadow:
         time1 = time.time()
         cloudshad = cloud_removal.remove_missed_clouds(sentinel2)
-        print(np.mean(cloudshad, axis = (1,2 )))
-        to_remove = np.argwhere(np.mean(cloudshad, axis = (1, 2)) > 0.50)
+        print(np.mean(cloudshad, axis = (1, 2)))
+        if clm is not None:
+            cloudshad = np.maximum(cloudshad, clm)
+        print(np.mean(cloudshad, axis = (1, 2)))
+        to_remove = np.argwhere(np.mean(cloudshad, axis = (1, 2)) > 0.75)
         if len(to_remove) > 0:
             clouds = np.delete(clouds, to_remove, axis = 0)
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
             cloudshad = np.delete(cloudshad, to_remove, axis = 0)
-
         sentinel2, interp = cloud_removal.remove_cloud_and_shadows(
-            sentinel2, cloudshad, cloudshad, image_dates, wsize = 8, step = 8, thresh = 8 
+            sentinel2, cloudshad, cloudshad, image_dates, wsize = 8, step = 8, thresh = 24
         )
         time2 = time.time()
-        print(f"Cloud/shadow interp:{np.around(time2 - time1, 1)} seconds, "
-            f" {100*np.sum(interp > 0)/np.prod(interp.shape)}%")
+        print(f"Cloud/shadow interp:{np.around(time2 - time1, 1)} seconds")
+        print(f"{100*np.sum(interp > 0, axis = (1, 2))/(interp.shape[1] * interp.shape[2])}%")
 
     else:
         interp = np.zeros(
@@ -582,17 +599,8 @@ def smooth_large_tile(arr, dates, interp):
             np.median(arr, axis = 0)[np.newaxis], (arr.shape[0], 1, 1, 1)
         )[arr == 1]
 
-    missing_px = interpolation.id_missing_px(arr, 100)
-    if len(missing_px) > 0:
-        print(np.sum(arr == 0, axis = (1, 2, 3)))
-        print(np.sum(arr >= 1, axis = (1, 2, 3)))
-        dates = np.delete(dates, missing_px)
-        arr = np.delete(arr, missing_px, 0)
-        interp = np.delete(interp, missing_px, 0)
-        print(f"Removing {len(missing_px)} missing images, leaving {len(dates)} / {len(dates)}")
-
     time3 = time.time()
-    arr = cloud_removal.adjust_interpolated_groups(arr, interp)
+    #arr = cloud_removal.adjust_interpolated_groups(arr, interp)
     time4 = time.time()
     print(f"Adjust groups in {time4 - time3} seconds")
     to_remove = np.argwhere(np.sum(np.isnan(arr), axis = (1, 2, 3)) > 0).flatten()
@@ -711,9 +719,9 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         s1_subtile = s1[:, start_x:end_x, start_y:end_y, :]
         output = f"{path}{str(folder_y)}/{str(folder_x)}.npy"
 
-        min_clear_images_per_date = np.sum(interp_tile == 0, axis = (0))
+        min_clear_images_per_date = np.sum(interp_tile < 0.5, axis = (0))
         no_images = False
-        if np.percentile(min_clear_images_per_date, 1) < 1:
+        if np.percentile(min_clear_images_per_date, 10) < 1:
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subtile), axis = (1, 2, 3)) > 0).flatten()
@@ -742,21 +750,18 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subtile_median_s2 = np.pad(subtile_median_s2, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
             subtile_median_s1 = np.pad(subtile_median_s1, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
             min_clear_images_per_date = np.pad(min_clear_images_per_date, ((pad_u, pad_d), (0, 0)), 'reflect')
+        
         # Concatenate the DEM and Sentinel 1 data
-        time1 = time.time()
         subtile_all = np.empty((13, SIZE + 14, SIZE + 14, 17), dtype = np.float32)
         subtile_all[:-1, ..., :10] = subtile[..., :10]
         subtile_all[:-1, ..., 11:13] = s1_subtile
         subtile_all[:-1, ..., 13:] = subtile[..., 10:]
 
         subtile_all[:, ..., 10] = dem_subtile.repeat(13, axis = 0)
-
         subtile_all[-1, ..., :10] = subtile_median_s2[..., :10]
         subtile_all[-1, ..., 11:13] = subtile_median_s1
         subtile_all[-1, ..., 13:] = subtile_median_s2[..., 10:]
-        time2 = time.time()
-        print(f"Concat in {time2 - time1} seconds")
-        
+ 
         # Create the output folders for the subtile predictions
         output_folder = "/".join(output.split("/")[:-1])
         if not os.path.exists(os.path.realpath(output_folder)):
@@ -781,8 +786,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         min_clear_images_per_date = min_clear_images_per_date[7:-7, 7:-7]
         no_images = min_clear_images_per_date < 1
-        struct2 = ndimage.generate_binary_structure(2, 2)
-        no_images = binary_dilation(no_images, iterations = 10, structure = struct2)
         no_images = np.reshape(no_images, ((4, 54, 4, 54)))
         no_images = np.sum(no_images, axis = (1, 3))
         no_images = no_images > 0
@@ -822,15 +825,16 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         Returns:
          preds (np.ndarray): (160, 160) float32 [0, 1] predictions
     """
-    if np.sum(subtile) > 0:
+    if np.sum(subtile) != 0:
         if not isinstance(subtile.flat[0], np.floating):
+            print("CONVERTING TO FLOAT")
             assert np.max(subtile) > 1
             subtile = subtile / 65535.
 
         time1 = time.time()
         subtile = np.core.umath.clip(subtile, min_all, max_all)
         subtile = (subtile - midrange) / (rng / 2)
-        batch_x = subtile[np.newaxis]
+        batch_x = subtile[np.newaxis].astype(np.float32)
         lengths = np.full((batch_x.shape[0]), 12)
         time2 = time.time()
         print(f"Other prep in {time2 - time1} seconds")
@@ -847,6 +851,7 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         
     else:
         preds = np.full((SIZE, SIZE), 255)
+        print(f"The sum of the subtile is {np.sum(subtile)}")
     
     return preds
 
@@ -902,15 +907,17 @@ def load_mosaic_predictions(out_folder: str) -> np.ndarray:
                 i += 1
 
     predictions = predictions.astype(np.float32)
-    predictions_range = np.nanmax(predictions, axis=-1) - np.nanmin(predictions, axis=-1)
-    mean_certain_pred = np.nanmean(predictions[predictions_range < 50])
-    mean_uncertain_pred = np.nanmean(predictions[predictions_range > 50])
+    #predictions_range = np.nanmax(predictions, axis=-1) - np.nanmin(predictions, axis=-1)
+    #mean_certain_pred = np.nanmean(predictions[predictions_range < 50])
+    #ean_uncertain_pred = np.nanmean(predictions[predictions_range > 50])
     
-    overpredict = True if (mean_uncertain_pred - mean_certain_pred) > 0 else False
-    underpredict = True if not overpredict else False
+    #overpredict = True if (mean_uncertain_pred - mean_certain_pred) > 0 else False
+    #underpredict = True if not overpredict else False
 
-    mults = mults / np.sum(mults, axis = -1)[..., np.newaxis]
     predictions[predictions > 100] = np.nan
+    mults[np.isnan(predictions)] = 0.
+    mults = mults / np.sum(mults, axis = -1)[..., np.newaxis]
+
     out = np.copy(predictions)
     out = np.sum(np.isnan(out), axis = (2))
     n_preds = predictions.shape[-1]
@@ -957,7 +964,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--predict_model_path",
         dest = 'predict_model_path',
-        default = '../models/224-apr-2/'
+        default = '../models/224-may-3/'
     )
     parser.add_argument(
         "--gap_model_path",
@@ -972,7 +979,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--db_path", dest = "db_path", default = "processing_area_nov_10.csv"
     )
-    parser.add_argument("--ul_flag", dest = "ul_flag", default = False)
+    parser.add_argument("--ul_flag", dest = "ul_flag", default = True)
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
     parser.add_argument("--yaml_path", dest = "yaml_path", default = "../config.yaml")
     parser.add_argument("--year", dest = "year", default = 2020)

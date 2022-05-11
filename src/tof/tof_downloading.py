@@ -172,6 +172,7 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
 
     # Make sure that the cloud_img and the shadow_img are the same shape
     # using the cloud_img as reference
+    print(np.mean(cloud_img, axis = (1, 2)))
     cloud_img = resize(
         cloud_img, (cloud_img.shape[0],
                     shadow_img.shape[1],
@@ -182,6 +183,7 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
     ).astype(np.uint8)
 
     # Type assertions, size assertions
+    print(np.mean(cloud_img, axis = (1, 2)))
     if not isinstance(cloud_img.flat[0], np.floating):
         assert np.max(cloud_img) > 1
         cloud_img = np.float32(cloud_img) / 255.
@@ -250,9 +252,10 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
     cloud_dates = extract_dates(cloud_dates_dict, year)
     cloud_dates = [val for idx, val in enumerate(cloud_dates) if idx in clean_steps]
 
+    print(np.mean(cloud_img, axis = (1, 2)))
     # Type assertions, size assertions
     if not isinstance(cloud_img.flat[0], np.floating):
-        assert np.max(cloud_img) > 1
+        #assert np.max(cloud_img) > 1
         cloud_img = np.float32(cloud_img) / 255.
     assert np.max(cloud_img) <= 1, np.max(cloud_img)
     assert cloud_img.dtype == np.float32
@@ -452,7 +455,6 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
                         other_args={
                             "processing": {
                                 "backCoeff": "GAMMA0_TERRAIN",
-                                "orthorectify": "true",
                                 "speckleFilter": {
                                     "type": "NONE"
                                 },
@@ -735,10 +737,10 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
     )
 
     cirrus = WcsRequest(
-            layer='SCL',
+            layer='CIRRUS_CLOUDS',
             bbox=box, time=dates,
             image_format = MimeType.TIFF,
-            maxcc=maxclouds, resx='60m', resy='60m',
+            maxcc=maxclouds, resx='160m', resy='160m',
             config=api_key,
             custom_url_params = {constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
                                 constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
@@ -746,12 +748,8 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
     )
 
     quality_img = np.array(quality_request.get_data(data_filter = steps_to_download))
-    cirrus_img = np.array(cirrus.get_data(data_filter = steps_to_download))
-    np.save("cirrus.npy", cirrus_img)
-    cirrus_img = np.mean(cirrus_img > 0, axis = (1, 2))
-    print(cirrus_img)
     quality_per_img = np.mean(quality_img, axis = (1, 2)) / 255
-    quality_per_img = quality_per_img + cirrus_img
+    quality_per_img = quality_per_img# + cirrus_img
     print("Image quality:", quality_per_img)
     steps_to_rm = np.argwhere(quality_per_img > 0.2).flatten()
     if len(steps_to_rm) > 0:
@@ -842,9 +840,14 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         assert np.max(img_10) <= 1
         assert img_10.dtype == np.float32
 
+    cirrus_img = np.array(cirrus.get_data(data_filter = steps_to_download))
+    print(np.sum(cirrus_img == 2))
+    cirrus_img = cirrus_img > 0
+    cirrus_img = resize(cirrus_img, (cirrus_img.shape[0], img_20.shape[1], img_20.shape[2]), order = 0, preserve_range = True)
+    print(cirrus_img.shape)
     # Ensure output is within correct range
     img_10 = np.clip(img_10, 0, 1)
     img_20 = np.clip(img_20, 0, 1)
 
     s2_10_usage = (img_10.shape[1]*img_10.shape[2])/(512*512) * (4/3) * img_10.shape[0]
-    return img_10, img_20, np.array(dates_to_download)
+    return img_10, img_20, np.array(dates_to_download), cirrus_img
