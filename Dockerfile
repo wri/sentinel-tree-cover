@@ -27,6 +27,16 @@ RUN python3.7 -m pip install -r requirements.txt
 RUN cd /usr/lib/python3/dist-packages && cp apt_pkg.cpython-36m-x86_64-linux-gnu.so apt_pkg.so
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1 && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2
 
+RUN \
+    # Update nvidia GPG key
+    rm /etc/apt/sources.list.d/cuda.list && \
+    rm /etc/apt/sources.list.d/nvidia-ml.list && \
+    apt-key del 7fa2af80 && \
+    apt-get update && apt-get install -y --no-install-recommends wget && \
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
+    dpkg -i cuda-keyring_1.0-1_all.deb && \
+    apt-get update
+
 RUN add-apt-repository ppa:ubuntugis/ppa && apt-get update &&\
  	apt-get -y install gdal-bin &&\
  	apt-get -y install libgdal-dev &&\
