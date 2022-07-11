@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
+import functools
+from time import time, strftime
 import os
+import os.path
 import rasterio as rs
 from rasterio.mask import mask
 from rasterio.merge import merge
@@ -11,27 +14,49 @@ import numpy as np
 import numpy.ma as ma
 import pyproj
 import geopandas as gpd
-import shapely
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
 import pandas as pd
+import pandas.api.types as ptypes
 import fiona
 from contextlib import contextmanager
 from skimage.transform import resize
 import math
+import requests
 import urllib.request
+from urllib.error import HTTPError
 import osgeo
 from osgeo import gdal
 from osgeo import gdalconst
 import glob
 from copy import copy
+from datetime import datetime
+import psutil
 import argparse
 
-parser = argparse.ArgumentParser(description='Provide a capitalized country name.')
+parser = argparse.ArgumentParser(description='Provide a capitalized country name, extent and analysis type.')
 parser.add_argument('country', type=str)
+parser.add_argument('extent', type=str)
+parser.add_argument('incl_hansen', type=bool)
 args = parser.parse_args()
 
-def shp_to_gjson(country):
+def timer(func):
+    '''
+    Prints the runtime of the decorated function.
+    '''
+
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        start = datetime.now()
+        value = func(*args, **kwargs)
+        end = datetime.now()
+        run_time = end - start
+        print(f'Completed {func.__name__!r} in {run_time}.')
+        return value
+    return wrapper_timer
+
+
+def shape_to_gjson(country):
     '''
     Imports a country shapefile, translates and saves it as
     a geojson, confirming the correct CRS and absence of
@@ -46,6 +71,7 @@ def shp_to_gjson(country):
     if country == 'Costa Rica':
         return 'Using existing geojson file for Costa Rica.'
     else:
+        # removed index as glob.glob not ordered
         shapefile = glob.glob(f'{country}/shapefile/*.shp')
         new_shp = gpd.read_file(shapefile[0])
         new_shp.to_file(f'{country}/{country}_adminboundaries.geojson', driver='GeoJSON')
@@ -57,7 +83,7 @@ def shp_to_gjson(country):
 
 def create_hansen_tif(country):
     '''
-    Identifies the latitude and longitude coordinates for a country
+    Identifies the lat/lon coordinates for a single country
     to download Hansen 2010 tree cover and 2020 tree cover loss tif files.
     Returns combined tifs as one file in the country's folder.
 
@@ -65,6 +91,7 @@ def create_hansen_tif(country):
     ----------
     country : str
         a string indicating the country files to import
+
     '''
     gdal.UseExceptions()
     shapefile = gpd.read_file(f'{country}/{country}_adminboundaries.geojson')
@@ -88,10 +115,6 @@ def create_hansen_tif(country):
     upper_x = math.ceil(max_x / 10) * 10
     upper_y = math.ceil(max_y / 10) * 10
 
-    # create a list of tif file names for the country
-    tree_cover_files = []
-    loss_files = []
-
     print('Downloading files from GLAD...')
 
     for x_grid in range(lower_x, upper_x, 10):
@@ -100,35 +123,36 @@ def create_hansen_tif(country):
             lon = 'N' if y_grid >= 0 else 'S'
             lat = 'E' if x_grid >= 0 else 'W'
 
-            # download tree cover and loss files from UMD
-            cover_url =  f'https://glad.umd.edu/Potapov/TCC_2010/treecover2010_' \
-                         f'{str(y_grid).zfill(2)}{lon}_{str(np.absolute(x_grid)).zfill(3)}{lat}.tif'
-            cover_dest = f'hansen_treecover2010/{str(y_grid).zfill(2)}{lon}_{str(np.absolute(x_grid)).zfill(3)}{lat}.tif'
+            # establish urls
+            lon_lat = f'{str(np.absolute(y_grid)).zfill(2)}{lon}_{str(np.absolute(x_grid)).zfill(3)}{lat}.tif'
+            cover_url = f'https://glad.umd.edu/Potapov/TCC_2010/treecover2010_{lon_lat}'
+            cover_dest = f'hansen_treecover2010/{lon_lat}'
+            loss_url = f'https://storage.googleapis.com/earthenginepartners-hansen/GFC-2020-v1.8/Hansen_GFC-2020-v1.8_lossyear_{lon_lat}'
+            loss_dest = f'hansen_lossyear2020/{lon_lat}'
 
+            # download tree cover and loss files from UMD website
             try:
                 urllib.request.urlretrieve(cover_url, cover_dest)
             except urllib.error.HTTPError as err:
                 if err.code == 404:
-                    print(f'HTTP Error 404: {cover_url}')
-            loss_url =  f'https://storage.googleapis.com/earthenginepartners-hansen/GFC-2020-v1.8/Hansen_GFC-2020-v1.8_lossyear_' \
-                         f'{str(y_grid).zfill(2)}{lon}_{str(np.absolute(x_grid)).zfill(3)}{lat}.tif'
-            loss_dest = f'hansen_lossyear2020/{str(y_grid).zfill(2)}{lon}_{str(np.absolute(x_grid)).zfill(3)}{lat}.tif'
+                    print(f'HTTP Error 404 for tree cover data: {cover_url}')
+                    pass
 
             try:
                 urllib.request.urlretrieve(loss_url, loss_dest)
             except urllib.error.HTTPError as err:
                 if err.code == 404:
-                    print(f'HTTP Error 404: {loss_url}')
+                    print(f'HTTP Error 404 for tree cover loss data: {loss_url}')
+                    pass
 
-            if not os.path.exists(cover_dest) or not os.path.exists(loss_dest):
-                print(f'Files did not download.')
+    # if the tree cover file doesn't exist, remove loss file
+    for tif in os.listdir('hansen_lossyear2020/'):
+        if tif not in os.listdir('hansen_treecover2010/'):
+            os.remove(f'hansen_lossyear2020/{tif}')
 
-            tree_cover_files.append(cover_dest)
-            loss_files.append(loss_dest)
-
-    # remove duplicate file names
-    tree_tifs = [x for x in tree_cover_files if os.path.exists(x)]
-    loss_tifs = [x for x in loss_files if os.path.exists(x)]
+    # create list of tifs and ensure no duplicates
+    tree_tifs = glob.glob('hansen_treecover2010/*.tif')
+    loss_tifs = glob.glob('hansen_lossyear2020/*.tif')
 
     # convert tree cover and loss tifs into a virtual raster tile
     gdal.BuildVRT(f'{country}/{country}_hansen_treecover2010.vrt', tree_tifs)
@@ -141,33 +165,35 @@ def create_hansen_tif(country):
                                               noData=255,
                                               creationOptions=['COMPRESS=LZW'],
                                               resampleAlg='nearest')
+
     source = gdal.Open(f'{country}/{country}_hansen_treecover2010.vrt', )
     ds = gdal.Translate(f'{country}/{country}_hansen_treecover2010.tif', source, options=translateoptions)
     os.remove(f'{country}/{country}_hansen_treecover2010.vrt')
     source = None
     ds = None
+
     source = gdal.Open(f'{country}/{country}_hansen_loss2020.vrt')
     ds = gdal.Translate(f'{country}/{country}_hansen_loss2020.tif', source, options=translateoptions)
     os.remove(f'{country}/{country}_hansen_loss2020.vrt')
     source = None
     ds = None
+
     assert os.path.exists(f'{country}/{country}_hansen_treecover2010.tif')
     assert os.path.exists(f'{country}/{country}_hansen_loss2020.tif')
 
     # if new files are properly create, delete what is not needed
-    for file in tree_cover_files:
+    for file in tree_tifs:
         os.remove(file)
 
-    for file in loss_files:
+    for file in loss_tifs:
         os.remove(file)
 
-    print('Hansen raster built.')
     return None
 
 
 def remove_loss(country):
     '''
-    Takes in a country name to import hansen tree cover loss tifs. Updates tree cover
+    Imports hansen tree cover loss tifs for a single country. Updates tree cover
     to 0 if loss was detected between 2011-2020. Returns updated tif in the country's
     folder.
 
@@ -178,7 +204,9 @@ def remove_loss(country):
     '''
     gdal.UseExceptions()
     hansen_cover = rs.open(f'{country}/{country}_hansen_treecover2010.tif').read(1)
+    #print(f"The hansen cover data is {hansen_cover.nbytes / 1e6} megabytes")
     hansen_loss = rs.open(f'{country}/{country}_hansen_loss2020.tif').read(1)
+    #print(f"The hansen loss data is {hansen_loss.nbytes / 1e6} megabytes")
 
      # assert raster shape, datatype and max/min values
     assert hansen_cover.dtype == 'uint8'
@@ -189,22 +217,23 @@ def remove_loss(country):
     assert hansen_loss.max() <= 20 and hansen_cover.min() >= 0
 
     # If there was loss between 2011-2020, make then 0 in tree cover
-    hansen_cover_new = np.where((hansen_loss >= 11) & (hansen_loss <= 20), 0, hansen_cover)
+    sum_before_loss = np.sum(hansen_cover > 0)
+    hansen_cover[(hansen_loss >= 11)] = 0.
 
     # check bin counts after loss removed
-    print(f'{(np.sum(hansen_cover > 0)) - (np.sum(hansen_cover_new > 0))} pixels converted to loss.')
+    print(f'{sum_before_loss - (np.sum(hansen_cover > 0))} tree cover pixels converted to loss.')
 
     # write as a new file
     out_meta = rs.open(f'{country}/{country}_hansen_treecover2010.tif').meta
     out_meta.update({'driver': 'GTiff',
                      'dtype': 'uint8',
-                     'height': hansen_cover_new.shape[0],
-                     'width': hansen_cover_new.shape[1],
+                     'height': hansen_cover.shape[0],
+                     'width': hansen_cover.shape[1],
                      'count': 1,
                      'compress':'lzw'})
     outpath = f'{country}/{country}_hansen_treecover2010_wloss.tif'
     with rs.open(outpath, 'w', **out_meta) as dest:
-            dest.write(hansen_cover_new, 1)
+            dest.write(hansen_cover, 1)
 
     # remove original hansen tree cover and loss files
     os.remove(f'{country}/{country}_hansen_treecover2010.tif')
@@ -212,19 +241,21 @@ def remove_loss(country):
     hansen_cover = None
     hansen_loss = None
 
+    print('Hansen raster built.')
     return None
 
-def pad_tcl_raster(country):
+def pad_tml_raster(country):
 
     '''
-    Increase the raster extent to match the bounds of a country's shapefile
-    and fill with no data value.
+    Increase the TML raster extent to match the bounds of a country's shapefile
+    and fill with no data value to facilitate clipping.
 
     Attributes
     ----------
     country : str
         a string indicating the country files to import
     '''
+
     shapefile = gpd.read_file(f'{country}/{country}_adminboundaries.geojson')
 
     # identify min/max bounds for the country
@@ -252,12 +283,13 @@ def pad_tcl_raster(country):
     ds = gdal.Warp(f'{country}/{country}_tof_padded.tif',
                    f'{country}/{country}.tif',
                    options=warp_options)
+
     ds = None
 
     return None
 
 
-def create_clippings(country):
+def create_clippings(country, multi_analysis):
     '''
     Takes in a country name to import tof/hansen rasters and masks out administrative
     boundaries based on the shapefile. Saves exploded shapefile as a geojson with polygons
@@ -270,8 +302,9 @@ def create_clippings(country):
         a string indicating the country files to import
     '''
 
-    if not os.path.exists(f'{country}/clipped_rasters/hansen'):
-        os.makedirs(f'{country}/clipped_rasters/hansen')
+    if multi_analysis:
+        if not os.path.exists(f'{country}/clipped_rasters/hansen'):
+            os.makedirs(f'{country}/clipped_rasters/hansen')
 
     if not os.path.exists(f'{country}/clipped_rasters/tof'):
         os.makedirs(f'{country}/clipped_rasters/tof')
@@ -304,13 +337,14 @@ def create_clippings(country):
     shapefile.to_file(f'{country}/{country}_adminboundaries_exp.geojson', driver='GeoJSON')
 
     def mask_raster(polygon, admin, raster, folder):
-        out_img, out_transform = mask(dataset=raster, shapes=[polygon], crop=True, nodata=255, filled = False)
+        out_img, out_transform = mask(dataset=raster, shapes=[polygon], crop=True, nodata=255, filled=True)
         out_meta = raster.meta
         out_meta.update({'driver': 'GTiff',
                          'dtype': 'uint8',
                          'height': out_img.shape[1],
                          'width': out_img.shape[2],
-                         'transform': out_transform})
+                         'transform': out_transform,
+                         'compress':'lzw'})
         outpath = f'{country}/clipped_rasters/{folder}/{admin}.tif'
         with rs.open(outpath, 'w', **out_meta) as dest:
             dest.write(out_img)
@@ -319,23 +353,28 @@ def create_clippings(country):
         return None
 
     tof_raster_path = f'{country}/{country}_tof_padded.tif'
-    hansen_raster_path = f'{country}/{country}_hansen_treecover2010_wloss.tif'
     esa_raster_path = 'ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7.tif'
 
-    files_to_process = [tof_raster_path, hansen_raster_path, esa_raster_path]
-    types_to_process = ['tof', 'hansen', 'esa']
+    files_to_process = [tof_raster_path, esa_raster_path]
+    types_to_process = ['tof', 'esa']
+
+    if multi_analysis:
+        files_to_process.append(f'{country}/{country}_hansen_treecover2010_wloss.tif')
+        types_to_process.append('hansen')
 
     for file, file_type in zip(files_to_process, types_to_process):
         with rs.open(file) as raster:
             for polygon, admin in zip(shapefile.geometry, shapefile.NAME_1):
-                #print(f"Clipping {admin}: {file_type}")
                 mask_raster(polygon, admin, raster, file_type)
 
     # delete Tof and Hansen files once clippings created
-    os.remove(f'{country}/{country}_hansen_treecover2010_wloss.tif')
     os.remove(f'{country}/{country}_tof_padded.tif')
     os.remove(f'{country}/{country}_tof_padded.tfw')
+    if multi_analysis:
+        os.remove(f'{country}/{country}_hansen_treecover2010_wloss.tif')
+
     print(f"{country}'s rasters clipped and saved.")
+
     return None
 
 
@@ -356,6 +395,7 @@ def match_extent_and_res(source, reference, out_filename, tof=False, esa=False):
     ref_ds = gdal.Open(reference, gdalconst.GA_ReadOnly)
     ref_proj = ref_ds.GetProjection()
     ref_geotrans = ref_ds.GetGeoTransform()
+
     # create height/width for the interpolation (ref dataset except for tof)
     width = ref_ds.RasterXSize if not tof else src.RasterXSize
     height = ref_ds.RasterYSize if not tof else src.RasterYSize
@@ -375,13 +415,14 @@ def match_extent_and_res(source, reference, out_filename, tof=False, esa=False):
     interpolation = gdalconst.GRA_NearestNeighbour
     gdal.ReprojectImage(src, out, src_proj, ref_proj, interpolation)
 
-    src = None
     ref_ds = None
-    
+    src = None
+
     return None
 
 
-def apply_extent_res(country):
+@timer
+def apply_extent_res(country, multi_analysis):
 
     '''
     Applies match_raster_extent_and_res() to all admin files
@@ -395,8 +436,9 @@ def apply_extent_res(country):
         a string indicating the country files to import
     '''
 
-    if not os.path.exists(f'{country}/resampled_rasters/hansen'):
-        os.makedirs(f'{country}/resampled_rasters/hansen')
+    if multi_analysis:
+        if not os.path.exists(f'{country}/resampled_rasters/hansen'):
+            os.makedirs(f'{country}/resampled_rasters/hansen')
 
     if not os.path.exists(f'{country}/resampled_rasters/tof'):
         os.makedirs(f'{country}/resampled_rasters/tof')
@@ -426,23 +468,27 @@ def apply_extent_res(country):
                              esa = False)
 
         # apply to hansen
-        match_extent_and_res(f'{country}/clipped_rasters/hansen/{admin}.tif',
-                             f'{country}/resampled_rasters/esa/{admin}.tif',
-                             f'{country}/resampled_rasters/hansen/{admin}.tif',
-                             tof = False,
-                             esa = False)
+        if multi_analysis:
+            match_extent_and_res(f'{country}/clipped_rasters/hansen/{admin}.tif',
+                                 f'{country}/resampled_rasters/esa/{admin}.tif',
+                                 f'{country}/resampled_rasters/hansen/{admin}.tif',
+                                 tof = False,
+                                 esa = False)
 
         # assert no data value added correctly in tof rasters
         tof = rs.open(f'{country}/resampled_rasters/tof/{admin}.tif').read(1)
         assert tof.max() <= 255
+        tof = None
+
     return None
 
 
-def merge_polygons(country):
+def merge_polygons(country, multi_analysis):
     '''
     Takes in a country's resampled rasters and identifies
     which admin boundaries are composed of multipolygons. Combines individual files
     into one for the admin district, then deletes the individual files.
+
     Attributes
     ----------
     country : str
@@ -464,7 +510,10 @@ def merge_polygons(country):
     no_ints = list(set(no_ints))
     print(f'{len(no_ints)} admins will be merged: {no_ints}')
 
-    datasets = ['tof', 'hansen', 'esa']
+    datasets = ['tof', 'esa']
+    if multi_analysis:
+        datasets.append('hansen')
+
     for data in datasets:
         for admin_2 in no_ints:
 
@@ -503,7 +552,8 @@ def merge_polygons(country):
                              'dtype': 'uint8',
                              'height': mosaic.shape[1],
                              'width': mosaic.shape[2],
-                             'transform': out_transform})
+                             'transform': out_transform,
+                             'compress':'lzw'})
 
             with rs.open(outpath, "w", **out_meta) as dest:
                 dest.write(mosaic)
@@ -514,11 +564,62 @@ def merge_polygons(country):
 
     return None
 
+def processing_check(country):
+    '''
+    Calculate the area of an admin district in hectares. Convert hectares to bytes to determine
+    if the admin can be processed on r5a.2xlarge instance. If it exceeds the processing threshold
+    flag the country and save to a csv file.
+    '''
+    # print size of TML tif
+
+
+    # Return the current process id
+    process = psutil.Process(os.getpid())
+
+    # get rss and calculate return the memory usage in MB
+    print(f'Current memory usage: {process.memory_info()[0] / float(2 ** 20)} MB')
+
+    # return the memory usage in percentage like top
+    mem = process.memory_percent()
+    print(f'Perc memory usage: %{round(mem, 2)}')
+
+    # import and create a copy
+    shapefile = gpd.read_file(f'{country}/{country}_adminboundaries.geojson')
+    shapefile = shapefile.copy()
+
+    # convert the crs to an equal-area projection to get polygon area in m2
+    # then convert to hectares (divide the area value by 10000)
+    shapefile['area'] = shapefile['geometry'].to_crs({'init': 'epsg:3395'}).map(lambda x: x.area / 10**4)
+
+    # calculate the size of the largest area, ha --> bytes
+    max_area = shapefile['area'].max()
+    max_bytes = max_area * 3200
+    admin = shapefile.loc[shapefile['area'] == max_area]['NAME_1'].item()
+
+    # create a dataframe to store details
+    too_large = pd.DataFrame(columns=['country','admin','file_size','date'], dtype=object)
+
+    # check if it can fit into RAM, otherwise save to csv
+    # should be checking the max area in ha?
+    if max_bytes >= 6.4e10:
+        print(f'The largest admin in {country} is {admin}. Area: {round(max_area, 2)} ha')
+        print(f'Warning: That largest admin {admin} is too large to process. As np.float32, array is ({round(max_bytes/10e9, 2)} GB)')
+        too_large.append({'country': country,
+                         'largest_admin': admin,
+                         'file_size': max_bytes,
+                         'area': round(max_area, 2),
+                         'date': datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}, ignore_index=True)
+
+        too_large.to_csv('bigtiff_full_2020.csv', mode='a', header=False)
+    else:
+        print('Passed processing check.')
+    return None
+
 def reshape_to_4d(raster):
 
     '''
     Takes in a GTiff, identifies the dimensions and them down to the nearest 10th.
-    Returns a reshaped 10x10 grid array.
+    Then uses those dimensions and reshapes to a 4 dimensional, 10x10 grid.
 
     Attributes
     ----------
@@ -539,12 +640,13 @@ def reshape_to_4d(raster):
     return reshaped
 
 
-def calculate_stats(country):
+@timer
+def calculate_stats_tml(country, extent):
 
     '''
-    Takes in a country to import appropriate tof/hansen/esa rasters. Returns a csv
+    Takes in a country and extent (full or partial) to import appropriate rasters. Returns a csv
     with statistics per administrative district, per land cover class and per tree cover
-    threshold.
+    threshold. Only produces statistics for TML.
 
     Attributes
     ----------
@@ -556,74 +658,276 @@ def calculate_stats(country):
     if not os.path.exists(f'{country}/stats'):
         os.makedirs(f'{country}/stats')
 
-    # set up the dataframe
-    df = pd.DataFrame(columns=['country','admin','esa_id','esa_class',
-                               'esa_sampled_ha','esa_total_ha','tree_cover_class',
-                               'tof_ha','hans_ha', 'tof_mean', 'hans_mean'], dtype=object)
+    df = pd.DataFrame({'country': pd.Series(dtype='str'),
+                       'admin': pd.Series(dtype='str'),
+                       'esa_id': pd.Series(dtype='str'),
+                       'esa_class': pd.Series(dtype='str'),
+                       'esa_sampled_ha': pd.Series(dtype='float64'),
+                       'esa_total_ha': pd.Series(dtype='float64'),
+                       'tree_cover_class': pd.Series(dtype='str'),
+                       'tof_ha': pd.Series(dtype='int64'),
+                       'tof_mean': pd.Series(dtype='float64')})
     counter = 0
 
     folder_contents = [f for f in os.listdir(f'{country}/resampled_rasters/tof') if f != '.ipynb_checkpoints']
 
     # iterate through the admins
     for file in folder_contents:
-
         counter += 1
-        print(f'Importing {file} rasters.')
-        tof = rs.open(f'{country}/resampled_rasters/tof/{file}').read(1).astype(np.float32)
-        hans = rs.open(f'{country}/resampled_rasters/hansen/{file}').read(1).astype(np.float32)
-        esa = rs.open(f'{country}/resampled_rasters/esa/{file}').read(1).astype(np.float32)
+
+        tof = rs.open(f'{country}/resampled_rasters/tof/{file}').read(1)
+        esa = rs.open(f'{country}/resampled_rasters/esa/{file}').read(1)
+
         lower_rng = [x for x in range(0, 100, 10)]
         upper_rng = [x for x in range(10, 110, 10)]
 
         # convert values to their median for binning
         for lower, upper in zip(lower_rng, upper_rng):
+            tof[(tof >= lower) & (tof < upper)] = lower + 4.5
 
+        # iterate through the land cover classes
+        esa_classes = np.unique(esa)
+
+        for cover in esa_classes:
+
+            # replace all values not equal to the current lcc with no data values
+            tof_class = tof.copy()
+            tof_class[esa != cover] = 255
+
+            # reshape to a 4d array and apply mask
+            tof_reshaped = reshape_to_4d(tof_class)
+            tof_reshaped = np.ma.masked_equal(tof_reshaped, 255)
+
+            # count the number of non-masked entries per hectare
+            tof_class_count_per_ha = np.sum(~tof_reshaped.mask, axis=(1,3), dtype=np.uint8)
+
+            # get sum of values themselves that are not masked
+            tof_class_sum_per_ha = np.sum(tof_reshaped, axis=(1,3), dtype=np.uint16)
+
+            # divide the sum by the count (to avoid using np.mean which will use np.float)
+            tof_class_mean_per_ha = np.divide(tof_class_sum_per_ha, tof_class_count_per_ha, dtype=np.float32)
+
+            # Return all the non-masked data as a 1-D array (prevent mask from propagating)
+            tof_class_mean_per_ha = tof_class_mean_per_ha.compressed()
+
+            tof_class_mean = np.round(np.mean(tof_class_mean_per_ha), 2)
+
+            # calculate the area sampled
+            lc_total = np.sum(esa == cover)/100
+            lc_sampled = np.sum(~tof_reshaped.mask)/100
+
+            # iterate through the thresholds (0-10, 10-20, 20-30)
+            for lower, upper in zip(lower_rng, upper_rng):
+
+                # calculate total ha for that threshold
+                tof_bin = np.sum((tof_class_mean_per_ha >= lower) & (tof_class_mean_per_ha < upper))
+                bin_name = (f'{str(lower)}-{str(upper - 1)}')
+
+                # confirm masked array doesn't propogate
+                vars_to_check = [lc_sampled, lc_total, tof_bin, tof_class_mean]
+
+                for index, var in enumerate(vars_to_check):
+                    if var == '--':
+                        var = 0
+
+                for index, var in enumerate(vars_to_check):
+                    if np.ma.isMaskedArray(var):
+                        print(f'Masked array at {index}.')
+
+                # check for erroneous values
+                if lc_sampled > lc_total:
+                    raise ValueError(f'Sampled area is greater than total area for land cover {cover} in {file}.')
+
+                df = df.append({'country': country,
+                               'admin': file[:-4],
+                               'esa_id': cover,
+                               'esa_sampled_ha': lc_sampled,
+                               'esa_total_ha': lc_total,
+                               'tree_cover_class': bin_name,
+                               'tof_ha': tof_bin,
+                               'tof_mean': tof_class_mean},
+                                ignore_index=True)
+
+                # reinforce datatypes
+                convert_dict = {'esa_sampled_ha':'float64',
+                                'esa_total_ha':'float64',
+                                'tof_ha':'int64',
+                                'tof_mean': 'float64'}
+                df = df.astype(convert_dict)
+
+        # map ESA id numbers to lcc labels
+        esa_legend = {0: 'ESA No Data',
+                10: 'Cropland, rainfed',
+                11: 'Cropland, rainfed',
+                12: 'Cropland, rainfed',
+                20: 'Cropland, irrigated or post-flooding',
+                30: 'Mosaic cropland / natural vegetation',
+                40: 'Mosaic natural vegetation / cropland',
+                50: 'Tree cover, broadleaved, evergreen',
+                60: 'Tree cover, broadleaved, deciduous',
+                61: 'Tree cover, broadleaved, deciduous',
+                62: 'Tree cover, broadleaved, deciduous',
+                70: 'Tree cover, needleleaved, evergreen',
+                71: 'Tree cover, needleleaved, evergreen',
+                72: 'Tree cover, needleleaved, evergreen',
+                80: 'Tree cover, needleleaved, deciduous',
+                81: 'Tree cover, needleleaved, deciduous',
+                82: 'Tree cover, needleleaved, deciduous',
+                90: 'Tree cover, mixed leaf type',
+                100: 'Mosaic tree and shrub / herbaceous cover',
+                110: 'Mosaic herbaceous cover / tree and shrub',
+                120: 'Shrubland',
+                121: 'Shrubland',
+                122: 'Shrubland',
+                130: 'Grassland',
+                140: 'Lichens and mosses',
+                150: 'Sparse vegetation',
+                151: 'Sparse vegetation',
+                152: 'Sparse vegetation',
+                153: 'Sparse vegetation',
+                160: 'Tree cover, flooded, fresh or brakish water',
+                170: 'Tree cover, flooded, saline water',
+                180: 'Shrub or herbaceous cover, flooded, fresh/saline/brakish water',
+                190: 'Urban areas',
+                200: 'Bare areas',
+                201: 'Bare areas',
+                202: 'Bare areas',
+                210: 'Water bodies',
+                220: 'Permanent snow and ice',
+                255: 'No Data (flag)'}
+
+        df['esa_class'] = df['esa_id'].map(esa_legend)
+
+        tof = None
+        esa = None
+
+        if counter % 3 == 0:
+            print(f'{counter}/{len(folder_contents)} admins processed...')
+
+    cols_to_check = ['esa_sampled_ha', 'esa_total_ha', 'tof_ha', 'tof_mean']
+    assert all(ptypes.is_numeric_dtype(df[col]) for col in cols_to_check)
+
+    df.to_csv(f'{country}/stats/{country}_statistics_{extent}_tmlonly.csv', index=False)
+    print('Analysis complete.')
+
+    return None
+
+
+@timer
+def calculate_stats(country, extent):
+
+    '''
+    Takes in a country and extent (partial or full) to import appropriate tml/hansen/esa rasters.
+    Returns a csv with statistics per administrative district, per land cover class and per tree cover
+    threshold. Includes Hansen and TML statistics.
+
+    Attributes
+    ----------
+    country : str
+        a string indicating the country files to import
+
+    '''
+
+    if not os.path.exists(f'{country}/stats'):
+        os.makedirs(f'{country}/stats')
+
+    df = pd.DataFrame({'country': pd.Series(dtype='str'),
+                       'admin': pd.Series(dtype='str'),
+                       'esa_id': pd.Series(dtype='str'),
+                       'esa_class': pd.Series(dtype='str'),
+                       'esa_sampled_ha': pd.Series(dtype='float64'),
+                       'esa_total_ha': pd.Series(dtype='float64'),
+                       'tree_cover_class': pd.Series(dtype='str'),
+                       'tof_ha': pd.Series(dtype='int64'),
+                       'hans_ha': pd.Series(dtype='int64'),
+                       'tof_mean': pd.Series(dtype='float64'),
+                       'hans_mean': pd.Series(dtype='float64')})
+    counter = 0
+
+    folder_contents = [f for f in os.listdir(f'{country}/resampled_rasters/tof') if f != '.ipynb_checkpoints']
+
+    # iterate through the admins
+    for file in folder_contents:
+        counter += 1
+
+        tof = rs.open(f'{country}/resampled_rasters/tof/{file}').read(1)
+        hans = rs.open(f'{country}/resampled_rasters/hansen/{file}').read(1)
+        esa = rs.open(f'{country}/resampled_rasters/esa/{file}').read(1)
+
+        lower_rng = [x for x in range(0, 100, 10)]
+        upper_rng = [x for x in range(10, 110, 10)]
+
+        # convert values to their median for binning
+        for lower, upper in zip(lower_rng, upper_rng):
             tof[(tof >= lower) & (tof < upper)] = lower + 4.5
             hans[(hans >= lower) & (hans < upper)] = lower + 4.5
 
         # iterate through the land cover classes
         esa_classes = np.unique(esa)
 
-        if 0 and 255 in esa_classes:
-            print('ESA contains lc labels 0 and 255.')
-
         for cover in esa_classes:
-            print(f'Calculating means for {cover}.')
-            # change all values that are not equal to the lcc to NaN including no data vals
+
+            # replace all values not equal to the current lcc with no data values
             tof_class = tof.copy()
-            tof_class[esa != cover] = np.nan
-            tof_class[tof_class == 255] = np.nan
+            tof_class[esa != cover] = 255
 
-            # reshape and calculate stats
-            # if the entire array in NaNs then tof mean = 0
+            # reshape to a 4d array and apply mask
             tof_reshaped = reshape_to_4d(tof_class)
-            tof_class_mean = np.nanmean(tof_reshaped)
-            tof_class_mean_per_ha = np.nanmean(tof_reshaped, axis=(1,3))
+            tof_reshaped = np.ma.masked_equal(tof_reshaped, 255)
 
-            # same for Hansen
+            # count the number of non-masked entries per hectare
+            tof_class_count_per_ha = np.sum(~tof_reshaped.mask, axis=(1,3), dtype=np.uint8)
+
+            # get sum of values themselves that are not masked
+            tof_class_sum_per_ha = np.sum(tof_reshaped, axis=(1,3), dtype=np.uint16)
+
+            # divide the sum by the count (to avoid using np.mean which will use np.float)
+            tof_class_mean_per_ha = np.divide(tof_class_sum_per_ha, tof_class_count_per_ha, dtype=np.float32)
+
+            # check the conversion to hectares - should be 10x smaller than tof_class
+            #print(f'Conversion check. Original: {tof_class.shape} New: {tof_class_mean_per_ha.shape}')
+
+            # Return all the non-masked data as a 1-D array (prevent mask from propagating)
+            tof_class_mean_per_ha = tof_class_mean_per_ha.compressed()
+
+            tof_class_mean = np.round(np.mean(tof_class_mean_per_ha), 2)
+
+            # apply same steps to hansen
             hans_class = hans.copy()
-            hans_class[esa != cover] = np.nan
-            hans_class[hans_class == 255] = np.nan
-
+            hans_class[esa != cover] = 255
             hans_reshaped = reshape_to_4d(hans_class)
-            hans_class_mean = np.nanmean(hans_reshaped)
-            hans_class_mean_per_ha = np.nanmean(hans_reshaped, axis=(1,3))
+            hans_reshaped = np.ma.masked_equal(hans_reshaped, 255)
+            hans_class_count_per_ha = np.sum(~hans_reshaped.mask, axis=(1,3), dtype=np.uint8)
+            hans_class_sum_per_ha = np.sum(hans_reshaped, axis=(1,3), dtype=np.uint16)
+            hans_class_mean_per_ha = np.divide(hans_class_sum_per_ha, hans_class_count_per_ha, dtype=np.float32)
+            hans_class_mean_per_ha = hans_class_mean_per_ha.compressed()
+            hans_class_mean = np.round(np.mean(hans_class_mean_per_ha), 2)
+
+            # calculate the area sampled
+            lc_total = np.sum(esa == cover)/100
+            lc_sampled = np.sum(~tof_reshaped.mask)/100
 
             # iterate through the thresholds (0-10, 10-20, 20-30)
             for lower, upper in zip(lower_rng, upper_rng):
-                # calculate total ha for that threshold 
+
+                # calculate total ha for that threshold
                 tof_bin = np.sum((tof_class_mean_per_ha >= lower) & (tof_class_mean_per_ha < upper))
                 hans_bin = np.sum((hans_class_mean_per_ha >= lower) & (hans_class_mean_per_ha < upper))
                 bin_name = (f'{str(lower)}-{str(upper - 1)}')
 
-                # area of lc sampled (tof is NOT null) and total area (esa raster equals cover)
-                # /100 converts 10m data to hectares
-                lc_sampled = np.sum(~np.isnan(tof_class)) / 100
+                # confirm masked array doesn't propogate
+                vars_to_check = [lc_sampled, lc_total, tof_bin, hans_bin, tof_class_mean, hans_class_mean]
 
-                # need to ensure this counts the no data class correctly (no data label is 0.0)
-                lc_total = np.count_nonzero(esa == cover)/100 if cover == 0.0 else np.sum(esa == cover)/100
+                for index, var in enumerate(vars_to_check):
+                    if var == '--':
+                        var = 0
 
-                # check for erroneous calculations
+                for index, var in enumerate(vars_to_check):
+                    if np.ma.isMaskedArray(var):
+                        print(f'Masked array at {index}.')
+
+                # check for erroneous values
+                assert ~np.ma.isMaskedArray(var)
                 if lc_sampled > lc_total:
                     raise ValueError(f'Sampled area is greater than total area for land cover {cover} in {file}.')
 
@@ -638,8 +942,16 @@ def calculate_stats(country):
                                'tof_mean': tof_class_mean,
                                'hans_mean': hans_class_mean},
                                 ignore_index=True)
-            print('Appended to dataframe.')
-        
+
+                # reinforce datatypes
+                convert_dict = {'esa_sampled_ha':'float64',
+                                'esa_total_ha':'float64',
+                                'tof_ha':'int64',
+                                'hans_ha': 'int64',
+                                'tof_mean': 'float64',
+                                'hans_mean': 'float64'}
+                df = df.astype(convert_dict)
+
         # map ESA id numbers to lcc labels
         esa_legend = {0: 'ESA No Data',
                 10: 'Cropland, rainfed',
@@ -650,60 +962,88 @@ def calculate_stats(country):
                 40: 'Mosaic natural vegetation / cropland',
                 50: 'Tree cover, broadleaved, evergreen',
                 60: 'Tree cover, broadleaved, deciduous',
+                61: 'Tree cover, broadleaved, deciduous',
+                62: 'Tree cover, broadleaved, deciduous',
                 70: 'Tree cover, needleleaved, evergreen',
+                71: 'Tree cover, needleleaved, evergreen',
+                72: 'Tree cover, needleleaved, evergreen',
                 80: 'Tree cover, needleleaved, deciduous',
+                81: 'Tree cover, needleleaved, deciduous',
+                82: 'Tree cover, needleleaved, deciduous',
                 90: 'Tree cover, mixed leaf type',
                 100: 'Mosaic tree and shrub / herbaceous cover',
                 110: 'Mosaic herbaceous cover / tree and shrub',
                 120: 'Shrubland',
+                121: 'Shrubland',
+                122: 'Shrubland',
                 130: 'Grassland',
                 140: 'Lichens and mosses',
                 150: 'Sparse vegetation',
+                151: 'Sparse vegetation',
+                152: 'Sparse vegetation',
+                153: 'Sparse vegetation',
                 160: 'Tree cover, flooded, fresh or brakish water',
                 170: 'Tree cover, flooded, saline water',
                 180: 'Shrub or herbaceous cover, flooded, fresh/saline/brakish water',
                 190: 'Urban areas',
                 200: 'Bare areas',
+                201: 'Bare areas',
+                202: 'Bare areas',
                 210: 'Water bodies',
                 220: 'Permanent snow and ice',
                 255: 'No Data (flag)'}
 
         df['esa_class'] = df['esa_id'].map(esa_legend)
 
+        tof = None
+        esa = None
+        hans = None
+
         if counter % 3 == 0:
             print(f'{counter}/{len(folder_contents)} admins processed...')
 
-    df.to_csv(f'{country}/stats/{country}_statistics.csv', index=False)
+    cols_to_check = ['esa_sampled_ha', 'esa_total_ha', 'tof_ha', 'hans_ha', 'tof_mean', 'hans_mean']
+    assert all(ptypes.is_numeric_dtype(df[col]) for col in cols_to_check)
+
+    df.to_csv(f'{country}/stats/{country}_statistics_{extent}.csv', index=False)
+    print('Analysis complete.')
 
     return None
 
-def execute_pipe(country):
-
+@timer
+def execute_pipe(country, extent, incl_hansen=True):
+    print(f'Started at: {datetime.now().strftime("%H:%M:%S")}')
     print('Converting shapefile to geojson...')
-    shp_to_gjson(country)
-    print('Building Hansen tree cover raster...')
-    create_hansen_tif(country)
-    print('Removing tree cover loss...')
-    remove_loss(country)
-    print('Padding tof raster...')
-    pad_tcl_raster(country)
+    shape_to_gjson(country)
+    if incl_hansen:
+        print('Building Hansen tree cover raster...')
+        create_hansen_tif(country)
+        print('Removing tree cover loss...')
+        remove_loss(country)
+    print('Padding tml raster...')
+    pad_tml_raster(country)
     print('Clipping rasters by admin boundary...')
-    create_clippings(country)
+    create_clippings(country, multi_analysis=incl_hansen)
     print('Resampling to match raster extents and resolutions...')
-    apply_extent_res(country)
+    apply_extent_res(country, multi_analysis=incl_hansen)
     print('Merging admins containing multiple polygons...')
-    merge_polygons(country)
-    print('Data preparation complete.')
+    merge_polygons(country, multi_analysis=incl_hansen)
+    print('Checking size...')
+    processing_check(country)
     print('Calculating statistics...')
-    calculate_stats(country)
-    print('Analysis complete.')
-
+    if incl_hansen:
+        calculate_stats(country, extent)
+    else:
+        calculate_stats_tml(country, extent)
+    print(f'Finished {extent} processing at: {datetime.now().strftime("%H:%M:%S")}')
     return None
 
 
 def main():
     country = args.country
-    execute_pipe(country)
+    extent = args.extent
+    incl_hansen = args.incl_hansen
+    execute_pipe(country, extent, incl_hansen)
 
 if __name__ ==  "__main__":
     main()
