@@ -1,4 +1,5 @@
 import numpy as np
+import bottleneck as bn
 
 def id_missing_px(sentinel2: np.ndarray, thresh: int = 11) -> np.ndarray:
     """
@@ -15,9 +16,6 @@ def id_missing_px(sentinel2: np.ndarray, thresh: int = 11) -> np.ndarray:
     missing_images_0 = np.sum(sentinel2[..., :10] == 0.0, axis = (-1))
     missing_images_p = np.sum(sentinel2[..., :10] >= 1., axis = (-1))
     missing_images = missing_images_0 + missing_images_p
-    # missing images is (T, X, Y)
-    print(np.sum(missing_images > 0, axis = (1, 2)))
-    print(np.sum(missing_images > 1, axis = (1, 2)))
     missing_images = np.sum(missing_images > 1., axis = (1, 2))
     missing_images = np.argwhere(missing_images >= (sentinel2.shape[1]**2) / thresh).flatten()
     return missing_images
@@ -44,10 +42,9 @@ def interpolate_na_vals(s2: np.ndarray) -> np.ndarray:
     '''Interpolates NA values with closest time steps, to deal with
        the small potential for NA values in calculating indices
     '''
-    print("INTERPS NA")
-    print(np.sum(np.isnan(s2)))
     if np.sum(np.isnan(s2)) > 0:
-        nanmedian = np.nanmedian(s2, axis = 0).astype(np.float32)
+        nanmedian = bn.median(s2, axis = 0).astype(np.float32)
+        nanmedian[np.isnan(nanmedian)] = 0.
         for time in range(s2.shape[0]):
             nanvals = np.isnan(s2[time]) # (X, Y, bands)
             s2[time, nanvals] = nanmedian[nanvals]

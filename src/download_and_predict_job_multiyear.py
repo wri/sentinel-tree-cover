@@ -246,21 +246,42 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
                                                             year = year,
                                                             maxclouds = 0.3)
 
-        clean_dates = image_dates
 
+        cloud_probs = cloud_probs * 255
+        cloud_probs[cloud_probs > 100] = np.nan
+        cloud_percent = np.nanmean(cloud_probs, axis = (1, 2))
+        cloud_percent = cloud_percent / 100
+
+        clean_dates = image_dates
+        print(image_dates)
         to_remove = cloud_removal.print_dates(
-            clean_dates, np.mean(cloud_probs, axis = (1, 2))
-        )
+            clean_dates, cloud_percent)
+
+        print(f"There are {len(clean_dates)} dates")
         to_remove = np.array(to_remove).flatten().astype(np.uint8)
         if len(to_remove) > 0 and len(clean_dates) > 8:
             print(to_remove)
             print(image_dates)
-            clean_dates = np.delete(image_dates, to_remove)
+            clean_dates = np.delete(clean_dates, to_remove)
             cloud_probs = np.delete(cloud_probs, to_remove, 0)
+            cloud_percent = np.delete(cloud_percent, to_remove)
 
-            _ = cloud_removal.print_dates(
-                clean_dates, np.mean(cloud_probs, axis = (1, 2))
+            to_remove = cloud_removal.print_dates(
+                clean_dates, cloud_percent
             )
+            print("MID", to_remove)
+        print(f"There are {len(clean_dates)} dates")
+        if len(to_remove) > 0 and len(clean_dates) > 8:
+            print(to_remove)
+            print(image_dates)
+            clean_dates = np.delete(clean_dates, to_remove)
+            cloud_probs = np.delete(cloud_probs, to_remove, 0)
+            cloud_percent = np.delete(cloud_percent, to_remove)
+
+            to_remove = cloud_removal.print_dates(
+                clean_dates, cloud_percent
+            )
+            print("END", to_remove)
 
         print(f"Overall using {len(clean_dates)} steps")
 
@@ -485,10 +506,23 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     #np.save("before_shadow_interp,npy", sentinel2[:, :222, :222, 0])
     if make_shadow:
         time1 = time.time()
-        cloudshad = cloud_removal.remove_missed_clouds(sentinel2)
+        #np.save("before.npy", sentinel2)
+        cloudshad, fcps = cloud_removal.remove_missed_clouds(sentinel2)
 
         if clm is not None:
+            #np.save("clm.npy", clm)
+            #np.save("fcps.npy", fcps)
+            clm[fcps] = 0.
+            #np.save("clm.npy", clm)
             cloudshad = np.maximum(cloudshad, clm)
+
+        to_remove = np.argwhere(np.mean(cloudshad, axis = (1, 2)) > 0.5)
+        if len(to_remove) > 0:
+            clouds = np.delete(clouds, to_remove, axis = 0)
+            image_dates = np.delete(image_dates, to_remove)
+            sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
+            cloudshad = np.delete(cloudshad, to_remove, axis = 0)
+            cloudshad, _ = cloud_removal.remove_missed_clouds(sentinel2)
 
         sentinel2, interp = cloud_removal.remove_cloud_and_shadows(
             sentinel2, cloudshad, cloudshad, image_dates, wsize = 8, step = 8, thresh = 8
@@ -643,9 +677,9 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         #subset = cloud_removal.adjust_interpolated_groups(subset, interp_tile)
 
         #np.save("interp.npy", interp_tile)
-        min_clear_images_per_date = np.sum(interp_tile < 0.5, axis = (0))
+        min_clear_images_per_date = np.sum(interp_tile < 1, axis = (0))
         no_images = False
-        if np.percentile(min_clear_images_per_date, 5) < 1:
+        if np.percentile(min_clear_images_per_date, 33) < 1:
             no_images = True
 
         to_remove = np.argwhere(np.sum(np.isnan(subset), axis = (1, 2, 3)) > 0).flatten()
@@ -732,7 +766,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         no_images = binary_dilation(no_images, iterations = 20, structure = struct2)
         no_images = np.reshape(no_images, ((4, 54, 4, 54)))
         no_images = np.sum(no_images, axis = (1, 3))
-        no_images = no_images > 0
+        no_images = no_images > (54*54) * 0.10
         no_images = no_images.repeat(54, axis = 0).repeat(54, axis = 1)
         preds[no_images] = 255.
         np.save(output, preds)
@@ -903,7 +937,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/224-apr-2/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/224-may-3/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "processing_area_nov_10.csv")
@@ -1013,6 +1047,15 @@ if __name__ == '__main__':
     rng = rng.astype(np.float32)
     n = 0
 
+    try:
+        data['X_tile'] = data['X_tile'].str.extract('(\d+)', expand=False)
+        data['X_tile'] = pd.to_numeric(data['X_tile'])
+        data['Y_tile'] = data['Y_tile'].str.extract('(\d+)', expand=False)
+        data['Y_tile'] = pd.to_numeric(data['Y_tile'])
+    except Exception as e:
+        print(f"Ran into {str(e)} error")
+        time.sleep(1)
+
     if args.x and args.y:
         x = args.x
         y = args.y
@@ -1068,14 +1111,6 @@ if __name__ == '__main__':
                     s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
                     size = hkl.load(s2_20_file)
                     size = size.shape[1:3]
-                    download_s1_tile(data = data,
-                         bbx = bbx,
-                         api_key = shconfig,
-                         year = args.year,
-                         dates_sentinel_1 = dates_sentinel_1,
-                         size = size,
-                         s1_file = s1_file,
-                         s1_dates_file = s1_dates_file)
 
                 s2, dates, interp, s1, dem, cloudshad = process_tile(x = x, y = y, data = data, local_path = args.local_path, make_shadow = True)
                 s2 = superresolve_large_tile(s2, superresolve_sess)
