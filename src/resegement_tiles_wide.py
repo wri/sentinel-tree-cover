@@ -257,6 +257,7 @@ def align_subtile_histograms(array) -> np.ndarray:
 
     left_water = _water_ndwi(
         np.median(array[:, :, (SIZE + 14) // 2:], axis = 0))
+
     left_water = left_water >= 0.1
     print(f'{np.mean(left_water)}% of the left is water')
 
@@ -380,7 +381,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         s1_subtile = s1[:, start_y:end_y, start_x:end_x, :]
         output = f"{path}/right{str(folder_y)}/{str(folder_x)}.npy"
         output2 = f"{path_neighbor}{str(0)}/left{str(folder_x)}.npy"
-
         print(f"There are only {np.min(min_clear_images_per_date)} clear images")
         no_images = False
         if np.percentile(min_clear_images_per_date, 25) < 1:
@@ -411,6 +411,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subtile_median_s1 = np.pad(subtile_median_s1, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
             min_clear_tile = np.pad(min_clear_tile, ((0, 0), (pad_u, pad_d)), 'reflect')
 
+
         if subtile.shape[1] == SIZE_Y + 7:
             pad_l = 7 if start_y == 0 else 0
             pad_r = 7 if start_y != 0 else 0
@@ -433,6 +434,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         subtile[-1, ..., :10] = subtile_median_s2[..., :10]
         subtile[-1, ..., 11:13] = subtile_median_s1
         subtile[-1, ..., 13:] = subtile_median_s2[..., 10:]
+
         
         # Create the output folders for the subtile predictions
         output_folder = "/".join(output.split("/")[:-1])
@@ -475,7 +477,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             preds = np.clip(preds, 0, 1)
 
         if np.max(preds) < 255:
-
             left_mean = np.mean(preds[:,  (SIZE - 8) // 2 : (SIZE) // 2])
             right_mean = np.mean(preds[:, (SIZE) // 2 : (SIZE + 8) // 2])
             print(left_mean, right_mean)
@@ -498,7 +499,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
             # If the prediction is out of range from the inputs
         # We want to save only the tile that needs to be increased or decreased
-            
+         
             min_clear_tile = min_clear_tile[7:-7, 7:-7]
             print(min_clear_tile.shape)
             no_images = min_clear_tile < 1
@@ -596,6 +597,7 @@ def preprocess_tile(arr, dates, interp, clm_path, fname):
 
     print(np.mean(cld, axis = (1, 2)))
 
+
     interp = cloud_removal.id_areas_to_interp(
             arr, cld, cld, dates, wsize = 10, step = 10, thresh = 10
     )
@@ -651,7 +653,7 @@ def check_if_artifact(tile, neighb):
         return 1
     else:
         return 0
-
+        
 
 def load_tif(tile_id, local_path):
     dir_i = f"{local_path}/{tile_id[0]}/{tile_id[1]}/"
@@ -752,8 +754,7 @@ def resegment_border(tile_x, tile_y, edge, local_path):
         
     time1 = time.time()
     s2, dates, interp, s1, dem, _ = process_tile(tile_x, tile_y, data, local_path, False)
-    print('s2', np.sum(np.isnan(s2)))
-    print('s1', np.sum(np.isnan(s1)))
+
     s2_shape = s2.shape[1:-1]
     time2 = time.time()
     print(f"Finished process tile in {np.around(time2 - time1, 1)} seconds")

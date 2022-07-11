@@ -205,8 +205,6 @@ def check_if_processed(tile_idx, local_path):
 
 
 def align_dates(tile_date, neighb_date):
-    print(tile_date)
-    print(neighb_date)
     # Add a 7 day grace period b/w dates
     differences_tile = [np.min(abs(a - np.array([neighb_date]))) for a in tile_date]
     differences_neighb = [np.min(abs(a - np.array([tile_date]))) for a in neighb_date]
@@ -251,6 +249,7 @@ def align_subtile_histograms(array) -> np.ndarray:
 
     def _water_ndwi(array):
         return (array[..., 1] - array[..., 3]) / (array[..., 1] + array[..., 3])
+        
     left_water = _water_ndwi(
         np.median(array[:, (SIZE + 14) // 2:], axis = 0))
     left_water = left_water >= 0.1
@@ -531,7 +530,6 @@ def preprocess_tile(arr, dates, interp, clm_path, fname):
 
     # Remove dates with high likelihood of missed cloud or shadow (false negatives)
     cld, _ = cloud_removal.remove_missed_clouds(arr)
-
     if os.path.exists(clm_path):
         print(f"loading {clm_path}")
         clm = hkl.load(clm_path).repeat(2, axis = 1).repeat(2, axis = 2)
@@ -553,6 +551,7 @@ def preprocess_tile(arr, dates, interp, clm_path, fname):
             arr, cld, cld, dates, wsize = 10, step = 10, thresh = 10
     )
     to_remove = np.argwhere(np.mean(interp > 0.75, axis = (1, 2)) > 0.90)
+
     if len(to_remove) > 0:
         cld = np.delete(cld, to_remove, axis = 0)
         dates = np.delete(dates, to_remove)
@@ -637,7 +636,6 @@ def check_if_artifact(tile, neighb):
 
     other = fraction_diff_2 > 0.5
     other = np.logical_and(other, (left_right_diff > 2) ) # normally 6
-
     other2 = (fraction_diff > 0.25) or (fraction_diff_left > 0.33) or (fraction_diff_right > 0.33)
     other2 = np.logical_and(other2, (left_right_diff > 2) ) # normally 3
 
@@ -1105,8 +1103,7 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
 
     isnanpreds = np.sum(predictions > 100, axis = (-1))[..., np.newaxis]
     isnanpreds = np.tile(isnanpreds, (1, 1, predictions.shape[-1]))
-    predictions[isnanpreds > 0] = np.nan
-    
+    predictions[isnanpreds > 0] = np.nan    
     predictions[predictions > 100] = np.nan
     mults[np.isnan(predictions)] = 0.
     mults = mults / np.sum(mults, axis = -1)[..., np.newaxis]

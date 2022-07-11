@@ -160,7 +160,6 @@ def download_s1_tile(data: np.ndarray, bbx: list, api_key, year: int,
 
     s1, s1_dates = np.empty((0,)), np.empty((0,))
     for year in [year, year - 1,  year - 2, year - 3, year - 4, year + 1, year + 2]:
-
         if s1.shape[0] == 0:
             s1, s1_dates = tof_downloading.download_sentinel_1_composite(bbx,
                                            layer = s1_layer,
@@ -181,6 +180,7 @@ def download_s1_tile(data: np.ndarray, bbx: list, api_key, year: int,
                                                size = size,
                                                )
 
+
         if s1.shape[0] == 0: # If the first attempt receives no images, swap orbit
             s1_layer = "SENT_ALL"
             print(f'Switching to {s1_layer}')
@@ -191,7 +191,6 @@ def download_s1_tile(data: np.ndarray, bbx: list, api_key, year: int,
                                                dates = dates_sentinel_1,
                                                size = size,
                                                )
-
     # Convert s1 to monthly mosaics, and write to disk
     s1 = tof_downloading.process_sentinel_1_tile(s1, s1_dates)
     hkl.dump(to_int16(s1), s1_file, mode='w', compression='gzip')
@@ -571,7 +570,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         print(f"Cloud/shadow interp:{np.around(time2 - time1, 1)} seconds")
         print(f"{100*np.sum(interp > 0.67, axis = (1, 2))/(interp.shape[1] * interp.shape[2])}%")
         print("Cloud/shad", np.mean(cloudshad, axis = (1, 2)))
-
     else:
         interp = np.zeros(
             (sentinel2.shape[0], sentinel2.shape[1], sentinel2.shape[2]), dtype = np.float32
@@ -641,7 +639,6 @@ def deal_w_missing_px(arr, dates, interp):
         for i in range(arr.shape[0]):
             arr_i = arr[i]
             arr_i[arr_i == 1] = np.median(arr, axis = 0)[arr_i == 1]
-
     to_remove = np.argwhere(np.sum(np.isnan(arr), axis = (1, 2, 3)) > 0).flatten()
     if len(to_remove) > 0: 
         print(f"Removing {to_remove} NA dates")
@@ -1024,7 +1021,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--db_path", dest = "db_path", default = "processing_area_nov_10.csv"
     )
-    parser.add_argument("--ul_flag", dest = "ul_flag", default = False)
+    parser.add_argument("--ul_flag", dest = "ul_flag", default = True)
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
     parser.add_argument("--yaml_path", dest = "yaml_path", default = "../config.yaml")
     parser.add_argument("--year", dest = "year", default = 2020)

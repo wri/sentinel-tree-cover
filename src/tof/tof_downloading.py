@@ -174,6 +174,7 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
 
     # Make sure that the cloud_img and the shadow_img are the same shape
     # using the cloud_img as reference
+    print(np.mean(cloud_img, axis = (1, 2)))
     cloud_img = resize(
         cloud_img, (cloud_img.shape[0],
                     shadow_img.shape[1],
@@ -184,6 +185,7 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
     ).astype(np.uint8)
 
     # Type assertions, size assertions
+    print(np.mean(cloud_img, axis = (1, 2)))
     if not isinstance(cloud_img.flat[0], np.floating):
         assert np.max(cloud_img) > 1
         cloud_img = np.float32(cloud_img) / 255.

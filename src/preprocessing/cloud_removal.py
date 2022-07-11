@@ -63,6 +63,44 @@ def adjust_interpolated_groups(array: np.ndarray,
             array[time] = candidate
     return array
 
+def align_interp_array(interp_array, array, interp):
+    for time in range(array.shape[0]):
+        if np.sum(interp[time] > 0) > 0 and np.sum(interp[time] == 0) > 0:
+            if np.mean(interp[time] > 0) < 1:
+                interp_map = interp[time, ...]
+                interp_all = interp_map
+                array_i = array[time]
+                interp_array_i = interp_array[time]
+
+                    # Identify all of the areas that are, and aren't interpolated
+                interp_areas = interp_array_i[interp[time] > 0]
+                non_interp_areas = array_i[interp[time] == 0]
+
+                # And calculate their means and standard deviation per band
+                std_src = bn.nanstd(interp_areas, axis = (0))
+                std_ref = bn.nanstd(non_interp_areas, axis = (0))
+                mean_src = bn.nanmean(interp_areas, axis = (0))
+                mean_ref = bn.nanmean(non_interp_areas, axis = (0))
+                std_mult = (std_ref / std_src)
+
+                addition = (mean_ref - (mean_src * (std_mult)))
+                interp_array_i[interp[time] > 0] = (
+                        interp_array_i[interp[time] > 0] * std_mult + addition
+                    )
+                interp_array[time] = interp_array_i
+
+    for time in range(array.shape[0]):
+        if np.mean(interp[time] > 0) == 1:
+            candidate_lower = np.max([time - 1, 0])
+            candidate_upper = np.min([time + 1, array.shape[0] - 1])
+            candidate = np.mean(
+                np.array([array[candidate_lower], array[candidate_upper]]), axis = 0
+            )
+            interp_array[time] = candidate
+
+    return interp_array
+
+
 
 def align_interp_array(interp_array, array, interp):
 
@@ -162,10 +200,10 @@ def rmv_clds_in_candidate(arr, clouds, perc = 25):
 
 
 def rmv_clds_in_candidate(arr, clouds, perc = 25):
-
     arr[clouds > 0] = np.nan
     arr = bn.nanmedian(arr, axis = 0)
     return arr
+
 
 
 def id_areas_to_interp(tiles: np.ndarray,
