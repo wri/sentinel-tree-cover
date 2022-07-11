@@ -36,14 +36,18 @@ def msavi2(x: np.ndarray, verbose: bool = False) -> np.ndarray:
     RED = np.clip(x[..., 2], 0, 1)
     NIR = np.clip(x[..., 3], 0, 1)
 
-    msavis = (2 * NIR + 1 - np.sqrt( (2*NIR+1)**2 - 8*(NIR-RED) )) / 2
+    sqrt = (2*NIR+1)**2 - 8*(NIR-RED)
+    sqrt[sqrt < 0] = 0.
+    msavis = (2 * NIR + 1 - np.sqrt(sqrt)) / 2
+    msavis = np.clip(msavis, -1, 1)
     return msavis
 
 
 def bi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
-    B11 = np.clip(x[..., 8], 0, 1)
-    B4 = np.clip(x[..., 2], 0, 1)
-    B8 = np.clip(x[..., 3], 0, 1)
-    B2 = np.clip(x[..., 0], 0, 1)
+    B11 = x[..., 8]
+    B4 = x[..., 2]
+    B8 = x[..., 3]
+    B2 = x[..., 0]
     bis = ((B11 + B4) - (B8 + B2)) / ((B11 + B4) + (B8 + B2))
+    bis = np.clip(bis, -1, 1)
     return bis

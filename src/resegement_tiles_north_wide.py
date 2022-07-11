@@ -168,7 +168,7 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
          preds (np.ndarray): (160, 160) float32 [0, 1] predictions
     """
 
-    if np.sum(subtile) > 0:
+    if np.sum(subtile) != 0:
         if not isinstance(subtile.flat[0], np.floating):
             assert np.max(subtile) > 1
             subtile = subtile / 65535.
@@ -209,8 +209,8 @@ def align_dates(tile_date, neighb_date):
     differences_tile = [np.min(abs(a - np.array([neighb_date]))) for a in tile_date]
     differences_neighb = [np.min(abs(a - np.array([tile_date]))) for a in neighb_date]
 
-    to_rm_tile = [idx for idx, diff in enumerate(differences_tile) if diff > 0]
-    to_rm_neighb = [idx for idx, diff in enumerate(differences_neighb) if diff > 0]
+    to_rm_tile = [idx for idx, diff in enumerate(differences_tile) if diff > 1]
+    to_rm_neighb = [idx for idx, diff in enumerate(differences_neighb) if diff > 1]
     n_to_rm = len(to_rm_tile) + len(to_rm_neighb)
     min_images_left = np.minimum(
         len(tile_date) - len(to_rm_tile),
@@ -249,15 +249,15 @@ def align_subtile_histograms(array) -> np.ndarray:
 
     def _water_ndwi(array):
         return (array[..., 1] - array[..., 3]) / (array[..., 1] + array[..., 3])
-
+        
     left_water = _water_ndwi(
-        np.median(array[:, :(SIZE + 14) // 2:], axis = 0))
-    left_water = left_water >= 0.3
+        np.median(array[:, (SIZE + 14) // 2:], axis = 0))
+    left_water = left_water >= 0.1
     print(f'{np.mean(left_water)}% of the left is water')
 
     right_water = _water_ndwi(
         np.median(array[:, :(SIZE + 14) // 2], axis = 0))
-    right_water = right_water >= 0.3
+    right_water = right_water >= 0.1
     print(f'{np.mean(right_water)}% of the right is water')
 
     for time in range(array.shape[0]):
@@ -281,13 +281,26 @@ def align_subtile_histograms(array) -> np.ndarray:
         std_mult_right = (std_right / std_ref)
         addition_right = (mean_right - (mean_ref * (std_mult_right)))
 
-        array[time, :(SIZE + 14) // 2] = (
-                array[time, :(SIZE + 14) // 2] * std_mult_left + addition_left
+        before = abs(np.roll(array[time], 1, axis = 0) - array[time])
+        before = np.mean(before[(SIZE // 2) + 7], axis = (0, 1))
+        print("before", before)
+
+        candidate = np.copy(array[time])
+        
+        candidate[:(SIZE + 14) // 2] = (
+                candidate[:(SIZE + 14) // 2] * std_mult_left + addition_left
         )
 
-        array[time, (SIZE + 14) // 2:] = (
-                array[time, (SIZE + 14) // 2:] * std_mult_right + addition_right
+        candidate[(SIZE + 14) // 2:] = (
+                candidate[(SIZE + 14) // 2:] * std_mult_right + addition_right
         )
+
+        after = abs(np.roll(candidate, 1, axis = 0) - candidate)
+        after = np.mean(after[(SIZE // 2) + 7], axis = (0, 1))
+        print("after", after)
+
+        if after < before:
+            array[time] = candidate
 
     return array
 
@@ -516,8 +529,7 @@ def preprocess_tile(arr, dates, interp, clm_path, fname):
         print(f"Removing {len(missing_px)} missing images")
 
     # Remove dates with high likelihood of missed cloud or shadow (false negatives)
-    cld = cloud_removal.remove_missed_clouds(arr)
-
+    cld, _ = cloud_removal.remove_missed_clouds(arr)
     if os.path.exists(clm_path):
         print(f"loading {clm_path}")
         clm = hkl.load(clm_path).repeat(2, axis = 1).repeat(2, axis = 2)
@@ -535,16 +547,21 @@ def preprocess_tile(arr, dates, interp, clm_path, fname):
         
 
     print(np.mean(cld, axis = (1, 2)))
-    to_remove = np.argwhere(np.mean(cld, axis = (1, 2)) > 0.75)
+    interp = cloud_removal.id_areas_to_interp(
+            arr, cld, cld, dates, wsize = 10, step = 10, thresh = 10
+    )
+    to_remove = np.argwhere(np.mean(interp > 0.75, axis = (1, 2)) > 0.90)
+
     if len(to_remove) > 0:
         cld = np.delete(cld, to_remove, axis = 0)
         dates = np.delete(dates, to_remove)
         interp = np.delete(interp, to_remove, axis = 0)
         arr = np.delete(arr, to_remove, axis = 0)
+        cld, _= cloud_removal.remove_missed_clouds(arr)
 
-    arr, interp2 = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, wsize = 12, step = 12, thresh = 36 )
-    interp = np.maximum(interp, interp2)
-    return arr, interp, dates
+    arr, interp2 = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, wsize = 10, step = 10, thresh = 10 )
+    #interp = np.maximum(interp, interp2)
+    return arr, interp2, dates
 
 
 def load_tif(tile_id, local_path):
@@ -568,13 +585,13 @@ def load_tif(tile_id, local_path):
 
         smooth_files = [file for file in smooth_files if os.path.splitext(file)[-1] == '.tif']
         if len(smooth_files) > 0:
-            if len(smooth_files) > 1:
-                if len(smooth_xy) > 0:
-                    files = smooth_xy
-                elif len(smooth_x) > 0:
-                    files = smooth_x
-                elif len(smooth_y) > 0:
-                    files = smooth_y
+            #if len(smooth_files) > 1:
+            if len(smooth_xy) > 0:
+                files = smooth_xy
+            elif len(smooth_x) > 0:
+                files = smooth_x
+            elif len(smooth_y) > 0:
+                files = smooth_y
 
         elif len(final_files) > 0:
             files = final_files
@@ -610,6 +627,8 @@ def check_if_artifact(tile, neighb):
     left = bn.nanmean(left, axis = 1)
 
     fraction_diff = bn.nanmean(abs(right - left) > 20) #normally 25
+    fraction_diff_left = bn.nanmean(abs(right[:15] - left[:15]) > 20)
+    fraction_diff_right = bn.nanmean(abs(right[-15:] - left[-15:]) > 20)
     fraction_diff_2 = bn.nanmean(abs(right - left) > 10)
     left_right_diff = abs(right_mean - left_mean)
 
@@ -617,8 +636,7 @@ def check_if_artifact(tile, neighb):
 
     other = fraction_diff_2 > 0.5
     other = np.logical_and(other, (left_right_diff > 2) ) # normally 6
-
-    other2 = fraction_diff > 0.25
+    other2 = (fraction_diff > 0.25) or (fraction_diff_left > 0.33) or (fraction_diff_right > 0.33)
     other2 = np.logical_and(other2, (left_right_diff > 2) ) # normally 3
 
     print(x, y, left_right_diff, fraction_diff, other0, other, other2)
@@ -1082,7 +1100,10 @@ def recreate_resegmented_tifs(out_folder: str, shape) -> np.ndarray:
                     i += 1
 
     predictions = predictions.astype(np.float32)
-    
+
+    isnanpreds = np.sum(predictions > 100, axis = (-1))[..., np.newaxis]
+    isnanpreds = np.tile(isnanpreds, (1, 1, predictions.shape[-1]))
+    predictions[isnanpreds > 0] = np.nan    
     predictions[predictions > 100] = np.nan
     mults[np.isnan(predictions)] = 0.
     mults = mults / np.sum(mults, axis = -1)[..., np.newaxis]

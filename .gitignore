@@ -36,3 +36,5 @@ notebooks/*/*.csv
 *.csv
 config.json
 notebooks/analysis/statistics/*
+*.png
+*.mp4

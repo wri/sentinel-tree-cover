@@ -173,69 +173,66 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
         closest = np.min(abs(distances))
         closest_id = np.argmin(abs(distances))
         # If there is imagery within 10 days, select it
-        if closest <= 30:
-            image_idx = np.argwhere(abs(distances) <= 30).flatten()
-            date = np.array(satisfactory_dates)[image_idx]
-            image_ratio = [1 / len(image_idx)] * len(image_idx)
+        #if closest <= 30:
+        #    image_idx = np.argwhere(abs(distances) <= 30).flatten()
+        #    date = np.array(satisfactory_dates)[image_idx]
+        #    image_ratio = [1 / len(image_idx)] * len(image_idx)
             #image_idx = int(np.argwhere(np.array(image_dates) == date)[0])
-            selected_images[i] = {'image_date': [date], 'image_ratio': image_ratio, 'image_idx': [image_idx]}
-        else:
+        #    selected_images[i] = {'image_date': [date], 'image_ratio': image_ratio, 'image_idx': [image_idx]}
+        #else:
             # Fill gaps with the median of all images that are within 2 months of the closest prior
             # and after image
-            prior = distances[np.where(distances < 0)][-3:]
-            if prior.shape[0] > 0:
-                prior = np.array(prior[prior > (-100 + np.max(prior))]).flatten()
-            after = distances[np.where(distances > 0)][:3]
-            if after.shape[0] > 0:
-                after = np.array(after[after < (100 + np.min(after))])
-            after_flag = 0
-            prior_flag = 0
-            prior_mult = 1
-            if len(prior) == 0:
-                if np.min(satisfactory_dates) >= 90: # this doesn't quite work because its an iterative
-                    #print(f"No previous image: {i}, using last first 3 images: {i + distances[-3:]}")
-                    prior = distances[-3:]
-                    prior_flag = 365
-                    prior_mult = -1
-                else:
-                    prior = after
-            if len(after) == 0:
-                if np.max(satisfactory_dates) <= 270:
-                    # check if the date is after 275
-                    #print(f"No after image: {i}, using the first 3 images: {i + distances[:3]}")
-                    after = distances[:3]
-                    after_flag = 365
-                else:
-                    after = prior
-            if prior[0] != after[0]: # check this
-                # example, prior
-                # date = 35
-                # prior = -300, (335)
-                # the wrapped prior is (-1 * (300)) + 365 = 65
-                # example, after_flag,
-                # date = 305
-                # after = 270 (35)
-                # the wrapped after is abs(270) - (365) = 95
-                prior_abs = (prior_mult * abs(np.mean(prior))) + prior_flag
-                after_abs = abs(abs(np.mean(after)) - after_flag)
-                # (20 / (20 + 80)) = 0.2
-                after_ratio = (prior_abs) / (prior_abs + after_abs)
-                assert after_ratio <= 1.
-                prior_ratio = 1 - after_ratio
+        prior = distances[np.where(distances < 5)][-2:]
+        if prior.shape[0] > 0:
+            prior = np.array(prior[prior > (-100 + np.max(prior))]).flatten()
+        after = distances[np.where(distances >= -5)][:2]
+        if after.shape[0] > 0:
+            after = np.array(after[after < (100 + np.min(after))])
+        after_flag = 0
+        prior_flag = 0
+        prior_mult = 1
+        if len(prior) == 0:
+            if np.min(satisfactory_dates) >= 90:
+                prior = distances[-1:]
+                prior_flag = 365
+                prior_mult = -1
             else:
-                prior_ratio = after_ratio = 0.5
+                prior = after
+        if len(after) == 0:
+            if np.max(satisfactory_dates) <= 270:
+                after = distances[:1]
+                after_flag = 365
+            else:
+                after = prior
+        if prior[0] != after[0]: 
+            # example, prior
+            # date = 35
+            # prior = -300, (335)
+            # the wrapped prior is (-1 * (300)) + 365 = 65
+            # example, after_flag,
+            # date = 305
+            # after = 270 (35)
+            # the wrapped after is abs(270) - (365) = 95
+            prior_abs = (prior_mult * abs(np.mean(prior))) + prior_flag
+            after_abs = abs(abs(np.mean(after)) - after_flag)
+            # (20 / (20 + 80)) = 0.2
+            after_ratio = (prior_abs) / (prior_abs + after_abs)
+            assert after_ratio <= 1.
+            prior_ratio = 1 - after_ratio
+        else:
+            prior_ratio = after_ratio = 0.5
 
-                # Extract the image date and imagery index for the prior and after values
-            prior_dates = i + prior
-            prior_images_idx = [i for i, val in enumerate(image_dates) if val in prior_dates]
-            prior_images_idx = np.array(prior_images_idx).reshape(-1)
-            after_dates = i + after
-            after_images_idx = [i for i, val in enumerate(image_dates) if val in after_dates]
-            after_images_idx = np.array(after_images_idx).reshape(-1)
-            #print(np.concatenate([prior_images_idx, after_images_idx]))
-            selected_images[i] = {'image_date': np.array([prior_dates, after_dates]).flatten(),
-                                  'image_ratio': [prior_ratio, after_ratio],
-                                  'image_idx': [prior_images_idx, after_images_idx]}
+            # Extract the image date and imagery index for the prior and after values
+        prior_dates = i + prior
+        prior_images_idx = [i for i, val in enumerate(image_dates) if val in prior_dates]
+        prior_images_idx = np.array(prior_images_idx).reshape(-1)
+        after_dates = i + after
+        after_images_idx = [i for i, val in enumerate(image_dates) if val in after_dates]
+        after_images_idx = np.array(after_images_idx).reshape(-1)
+        #print(np.concatenate([prior_images_idx, after_images_idx]))
+        selected_images[i] = {'image_date': np.array([prior_dates, after_dates]).flatten(),
+                              'image_ratio': [prior_ratio, after_ratio],
+                              'image_idx': [prior_images_idx, after_images_idx]}
 
     max_distance = 0
     for i in sorted(selected_images.keys()):
@@ -253,9 +250,9 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
             step = np.median(img_bands[info['image_idx']], axis = 0)
         if len(info['image_idx']) >= 2:
             step1 = img_bands[info['image_idx'][0]]
-            step1 = np.median(step1, axis = 0) * info['image_ratio'][0]
+            step1 = np.mean(step1, axis = 0) * info['image_ratio'][0]
             step2 = img_bands[info['image_idx'][1]]
-            step2 = np.median(step2, axis = 0) * info['image_ratio'][1]
+            step2 = np.mean(step2, axis = 0) * info['image_ratio'][1]
             step = step1 + step2
             """
             if info['image_ratio'][0] > 0.5:
