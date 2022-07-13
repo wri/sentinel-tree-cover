@@ -3,6 +3,8 @@ Mapping tree cover and extent with Sentinel-1 and 2
 
 # Description
 
+DATA LINK: View the data on GEE here: https://jombrandt.users.earthengine.app/view/sentinel-tree-cover
+
 This project maps tree extent at the ten-meter scale using open source artificial intelligence and satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems.
 
 This repository contains the source code for the project. A full description of the methodology can be found [on arXiv](https://arxiv.org/abs/2005.08702). The data product specifications can be accessed on the wiki page.
