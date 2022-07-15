@@ -1,0 +1,163 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array(['SouthernAfrica', 'EastSouthAmerica', 'SouthWestAsia', 'Europe',\n",
+       "       'Sahel', 'MiddleEast', 'Australia', 'WestSouthAmerica',\n",
+       "       'CentralAsia', 'HornAfrica', 'NorthernAfrica', 'NorthAmerica'],\n",
+       "      dtype=object)"
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df = pd.read_csv(\"../../data/latlongs/science-2017-test.csv\")\n",
+    "df = df.sample(frac=1)\n",
+    "df['dryland_assessment_region'].unique()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import math\n",
+    "df = df[df['dryland_assessment_region'].isin(['Australia', 'Europe', 'NorthAmerica'])]\n",
+    "group = (df['tree_cover'] * 100).astype(int)\n",
+    "group = map(lambda x: int(math.floor(np.min([x, 90]) / 10.0)) * 10, group )\n",
+    "group = [x for x in group]\n",
+    "df['group'] = group\n",
+    "stratified = df.groupby('group', group_keys=False).apply(lambda x: x.sample(min(len(x), 90)))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import math\n",
+    "from osgeo import ogr, osr\n",
+    "#stratified['PLOT_ID'] = [x for x in range(3000, 3000+len(stratified ))]\n",
+    "stratified.reset_index(inplace = True)\n",
+    "\n",
+    "def convertCoords(xy, src='', targ=''):\n",
+    "\n",
+    "    srcproj = osr.SpatialReference()\n",
+    "    srcproj.ImportFromEPSG(src)\n",
+    "    targproj = osr.SpatialReference()\n",
+    "    if isinstance(targ, str):\n",
+    "        targproj.ImportFromProj4(targ)\n",
+    "    else:\n",
+    "        targproj.ImportFromEPSG(targ)\n",
+    "    transform = osr.CoordinateTransformation(srcproj, targproj)\n",
+    "\n",
+    "    pt = ogr.Geometry(ogr.wkbPoint)\n",
+    "    pt.AddPoint(xy[0], xy[1])\n",
+    "    pt.Transform(transform)\n",
+    "    return([pt.GetX(), pt.GetY()])\n",
+    "\n",
+    "def calculate_epsg(points):\n",
+    "    lon, lat = points[0], points[1]\n",
+    "    utm_band = str((math.floor((lon + 180) / 6 ) % 60) + 1)\n",
+    "    if len(utm_band) == 1:\n",
+    "        utm_band = '0'+utm_band\n",
+    "    if lat >= 0:\n",
+    "        epsg_code = '326' + utm_band\n",
+    "    else:\n",
+    "        epsg_code = '327' + utm_band\n",
+    "    return int(epsg_code)\n",
+    "\n",
+    "def bounding_box(points, expansion = 160):\n",
+    "    # LONG, LAT FOR SOME REASON\n",
+    "    epsg = calculate_epsg(points)\n",
+    "    points = convertCoords(points, 4326, epsg)\n",
+    "    bl = [points[0] - 5, points[1] - 5]\n",
+    "    bl = convertCoords(bl, epsg, 4326)\n",
+    "    return bl[0], bl[1]\n",
+    "\n",
+    "new_longs = []\n",
+    "new_lats = []\n",
+    "original_lats = stratified['location_y']\n",
+    "original_longs = stratified['location_x']\n",
+    "for i in range(0, len(stratified)):\n",
+    "    long, lat = bounding_box((original_longs[i], original_lats[i]))\n",
+    "    new_longs.append(long)\n",
+    "    new_lats.append(lat)\n",
+    "\n",
+    "stratified['LAT'] = new_lats\n",
+    "stratified['LON'] = new_longs\n",
+    "\n",
+    "#create_new_df = create_new_df[2500:2800]\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#stratified = stratified.sample(frac=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "stratified.to_csv(\"../../data/latlongs/stratified_new.csv\", index = False)#"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "new_df = pd.DataFrame({'LON': stratified['LON'],\n",
+    "                       'LAT': stratified['LAT'],\n",
+    "                       'PLOTID': range(3000, len(stratified)+3000)})\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "new_df[:300].to_csv(\"../../data/test-csv/fao/extra-1.csv\", index = False)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "remote_sensing",
+   "language": "python",
+   "name": "remote_sensing"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

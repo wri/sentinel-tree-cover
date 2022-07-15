@@ -510,19 +510,20 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         cloudshad, fcps = cloud_removal.remove_missed_clouds(sentinel2)
 
         if clm is not None:
-            #np.save("clm.npy", clm)
-            #np.save("fcps.npy", fcps)
             clm[fcps] = 0.
-            #np.save("clm.npy", clm)
             cloudshad = np.maximum(cloudshad, clm)
 
-        to_remove = np.argwhere(np.mean(cloudshad, axis = (1, 2)) > 0.5)
+        to_remove = np.argwhere(np.mean(cloudshad, axis = (1, 2)) > 0.80)
         if len(to_remove) > 0:
+            print(f"Deleting: {to_remove}")
             clouds = np.delete(clouds, to_remove, axis = 0)
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
             cloudshad = np.delete(cloudshad, to_remove, axis = 0)
             cloudshad, _ = cloud_removal.remove_missed_clouds(sentinel2)
+            if clm is not None:
+                clm = np.delete(clm, to_remove, axis = 0)
+                cloudshad = np.maximum(cloudshad, clm)
 
         sentinel2, interp = cloud_removal.remove_cloud_and_shadows(
             sentinel2, cloudshad, cloudshad, image_dates, wsize = 8, step = 8, thresh = 8
@@ -694,7 +695,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         subtile_median = np.median(subtile_copy, axis = 0)
         subtile_median = subtile_median[np.newaxis]
 
-        subset = rolling_mean(subset)
+        #subset = rolling_mean(subset)
         try:
             subtile, max_distance = calculate_and_save_best_images(subset, dates_tile)
         except:
@@ -762,11 +763,11 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         min_clear_images_per_date = min_clear_images_per_date[7:-7, 7:-7]
         no_images = min_clear_images_per_date < 1
-        struct2 = ndimage.generate_binary_structure(2, 2)
-        no_images = binary_dilation(no_images, iterations = 20, structure = struct2)
+        #struct2 = ndimage.generate_binary_structure(2, 2)
+        #no_images = binary_dilation(no_images, iterations = 20, structure = struct2)
         no_images = np.reshape(no_images, ((4, 54, 4, 54)))
         no_images = np.sum(no_images, axis = (1, 3))
-        no_images = no_images > (54*54) * 0.10
+        no_images = no_images > (54*54) * 0.02
         no_images = no_images.repeat(54, axis = 0).repeat(54, axis = 1)
         preds[no_images] = 255.
         np.save(output, preds)
