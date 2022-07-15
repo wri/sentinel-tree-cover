@@ -1,6 +1,5 @@
 import sys
 sys.path.append('../')
-from src.preprocessing.cloud_removal import mcm_shadow_mask
 from src.preprocessing.slope import calcSlope
 from src.downloading.utils import calculate_and_save_best_images
 from sentinelhub import WmsRequest, WcsRequest, MimeType, CRS, BBox, constants, DataSource, CustomUrlParam, SentinelHubRequest
@@ -196,8 +195,8 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
 
     # Calculate shadow+cloud masks with multitemporal images (Candra et al. 2020)
     print(f"Shadows ({shadow_img.shape}) used {round(shadow_pus, 1)} processing units")
-    shadows = mcm_shadow_mask(shadow_img, cloud_img)
-    return cloud_img, shadows, clean_steps, np.array(cloud_dates), shadow_img
+    #shadows = mcm_shadow_mask(shadow_img, cloud_img)
+    return cloud_img, shadow_img, clean_steps, np.array(cloud_dates), shadow_img
 
 
 def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dict,
@@ -887,22 +886,14 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         assert img_10.dtype == np.float32
 
     cirrus_img = np.array(cirrus.get_data(data_filter = steps_to_download))
-    print(np.sum(cirrus_img == 2, axis = (1, 2)))
-    print(np.sum(cirrus_img == 1, axis = (1, 2)))
-    print(np.sum(cirrus_img == 3, axis = (1, 2)))
-    print(np.sum(cirrus_img == 9, axis = (1, 2)))
-    print(np.sum(cirrus_img == 10, axis = (1, 2)))
-
     cirrus_img = remove_noise_clouds(cirrus_img)
 
-    print(np.sum(cirrus_img == 2, axis = (1, 2)))
-    print(np.sum(cirrus_img == 1, axis = (1, 2)))
-    print(np.sum(cirrus_img == 3, axis = (1, 2)))
-    print(np.sum(cirrus_img == 9, axis = (1, 2)))
-    print(np.sum(cirrus_img == 10, axis = (1, 2)))
-
     cirrus_img = cirrus_img > 0
-    cirrus_img = resize(cirrus_img, (cirrus_img.shape[0], img_20.shape[1], img_20.shape[2]), order = 0, preserve_range = True)
+    cirrus_img = resize(cirrus_img, 
+        (cirrus_img.shape[0], img_20.shape[1], img_20.shape[2]), 
+        order = 0, preserve_range = True
+    )
+    
     # Ensure output is within correct range
     img_10 = np.clip(img_10, 0, 1)
     img_20 = np.clip(img_20, 0, 1)
