@@ -4,15 +4,15 @@ import functools
 from time import time, strftime
 import os
 import os.path
+import boto3
+import confuse
 import rasterio as rs
 from rasterio.mask import mask
 from rasterio.merge import merge
 from rasterio.enums import Resampling
-from rasterio import Affine, MemoryFile
 
 import numpy as np
 import numpy.ma as ma
-import pyproj
 import geopandas as gpd
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
@@ -32,7 +32,6 @@ import glob
 from copy import copy
 from datetime import datetime
 import psutil
-import argparse
 
 parser = argparse.ArgumentParser(description='Provide a capitalized country name, extent and analysis type.')
 parser.add_argument('country', type=str)
@@ -55,29 +54,29 @@ def timer(func):
         return value
     return wrapper_timer
 
+def download_inputs(country):
 
-def shape_to_gjson(country):
-    '''
-    Imports a country shapefile, translates and saves it as
-    a geojson, confirming the correct CRS and absence of
-    duplicates. Prints the number of admin 1 districts.
+    if not os.path.exists(f'{country}/'):
+        os.makedirs(f'{country}/')
 
-    Attributes
-    ----------
-    country : str
-        a string indicating the country files to import
+    config = confuse.Configuration('sentinel-tree-cover')
+    config.set_file('jessica-config.yaml')
+    aws_access_key = config['aws']['aws_access_key_id']
+    aws_secret_key = config['aws']['aws_secret_access_key']
+    s3 = boto3.client('s3', aws_access_key_id=aws_access_key.as_str(), aws_secret_access_key=aws_secret_key.as_str())
 
-    '''
-    if country == 'Costa Rica':
-        return 'Using existing geojson file for Costa Rica.'
-    else:
-        # removed index as glob.glob not ordered
-        shapefile = glob.glob(f'{country}/shapefile/*.shp')
-        new_shp = gpd.read_file(shapefile[0])
-        new_shp.to_file(f'{country}/{country}_adminboundaries.geojson', driver='GeoJSON')
-        print(f'There are {len(new_shp)} admins in {country}.')
-        assert new_shp.crs == 'epsg:4326'
-        assert new_shp.NAME_1.duplicated().sum() == 0
+    # download 10m res country tif
+    s3.download_file('tof-output',
+                     f'2020/country/{country}.tif',
+                     f'{country}/{country}.tif')
+
+    # download admin 1 boundaries
+    # NOTE: need to create new s3 folder w/ admin boundaries
+    s3.download_file('tof-output',
+                     f'2020/analysis/2020-full/admin_boundaries/{country}_adminboundaries.geojson',
+                     f'{country}/{country}_adminboundaries.geojson')
+    print(f'{country} files downloaded.')
+
     return None
 
 
@@ -125,7 +124,7 @@ def create_hansen_tif(country):
 
             # establish urls
             lon_lat = f'{str(np.absolute(y_grid)).zfill(2)}{lon}_{str(np.absolute(x_grid)).zfill(3)}{lat}.tif'
-            cover_url = f'https://glad.umd.edu/Potapov/TCC_2010/treecover2010_{lon_lat}'
+            cover_url = f'https://storage.googleapis.com/earthenginepartners-hansen/GFC2015/Hansen_GFC2015_treecover2000_{lon_lat}'
             cover_dest = f'hansen_treecover2010/{lon_lat}'
             loss_url = f'https://storage.googleapis.com/earthenginepartners-hansen/GFC-2020-v1.8/Hansen_GFC-2020-v1.8_lossyear_{lon_lat}'
             loss_dest = f'hansen_lossyear2020/{lon_lat}'
@@ -204,9 +203,7 @@ def remove_loss(country):
     '''
     gdal.UseExceptions()
     hansen_cover = rs.open(f'{country}/{country}_hansen_treecover2010.tif').read(1)
-    #print(f"The hansen cover data is {hansen_cover.nbytes / 1e6} megabytes")
     hansen_loss = rs.open(f'{country}/{country}_hansen_loss2020.tif').read(1)
-    #print(f"The hansen loss data is {hansen_loss.nbytes / 1e6} megabytes")
 
      # assert raster shape, datatype and max/min values
     assert hansen_cover.dtype == 'uint8'
@@ -639,7 +636,6 @@ def reshape_to_4d(raster):
 
     return reshaped
 
-
 @timer
 def calculate_stats_tml(country, extent):
 
@@ -680,12 +676,6 @@ def calculate_stats_tml(country, extent):
 
         lower_rng = [x for x in range(0, 100, 10)]
         upper_rng = [x for x in range(10, 110, 10)]
-
-        # convert values to their median for binning
-        for lower, upper in zip(lower_rng, upper_rng):
-            tof[(tof >= lower) & (tof < upper)] = lower + 4.5
-
-        # iterate through the land cover classes
         esa_classes = np.unique(esa)
 
         for cover in esa_classes:
@@ -730,13 +720,8 @@ def calculate_stats_tml(country, extent):
                     if var == '--':
                         var = 0
 
-                for index, var in enumerate(vars_to_check):
-                    if np.ma.isMaskedArray(var):
-                        print(f'Masked array at {index}.')
-
                 # check for erroneous values
-                if lc_sampled > lc_total:
-                    raise ValueError(f'Sampled area is greater than total area for land cover {cover} in {file}.')
+                assert lc_sampled <= lc_total, f'Sampled area is greater than total area for land cover {cover} in {file}.'
 
                 df = df.append({'country': country,
                                'admin': file[:-4],
@@ -812,7 +797,6 @@ def calculate_stats_tml(country, extent):
 
     return None
 
-
 @timer
 def calculate_stats(country, extent):
 
@@ -842,6 +826,7 @@ def calculate_stats(country, extent):
                        'hans_ha': pd.Series(dtype='int64'),
                        'tof_mean': pd.Series(dtype='float64'),
                        'hans_mean': pd.Series(dtype='float64')})
+
     counter = 0
 
     folder_contents = [f for f in os.listdir(f'{country}/resampled_rasters/tof') if f != '.ipynb_checkpoints']
@@ -849,18 +834,12 @@ def calculate_stats(country, extent):
     # iterate through the admins
     for file in folder_contents:
         counter += 1
-
         tof = rs.open(f'{country}/resampled_rasters/tof/{file}').read(1)
         hans = rs.open(f'{country}/resampled_rasters/hansen/{file}').read(1)
         esa = rs.open(f'{country}/resampled_rasters/esa/{file}').read(1)
 
         lower_rng = [x for x in range(0, 100, 10)]
         upper_rng = [x for x in range(10, 110, 10)]
-
-        # convert values to their median for binning
-        for lower, upper in zip(lower_rng, upper_rng):
-            tof[(tof >= lower) & (tof < upper)] = lower + 4.5
-            hans[(hans >= lower) & (hans < upper)] = lower + 4.5
 
         # iterate through the land cover classes
         esa_classes = np.unique(esa)
@@ -912,8 +891,8 @@ def calculate_stats(country, extent):
 
                 # calculate total ha for that threshold
                 tof_bin = np.sum((tof_class_mean_per_ha >= lower) & (tof_class_mean_per_ha < upper))
-                hans_bin = np.sum((hans_class_mean_per_ha >= lower) & (hans_class_mean_per_ha < upper))
                 bin_name = (f'{str(lower)}-{str(upper - 1)}')
+                hans_bin = np.sum((hans_class_mean_per_ha >= lower) & (hans_class_mean_per_ha < upper))
 
                 # confirm masked array doesn't propogate
                 vars_to_check = [lc_sampled, lc_total, tof_bin, hans_bin, tof_class_mean, hans_class_mean]
@@ -922,14 +901,8 @@ def calculate_stats(country, extent):
                     if var == '--':
                         var = 0
 
-                for index, var in enumerate(vars_to_check):
-                    if np.ma.isMaskedArray(var):
-                        print(f'Masked array at {index}.')
-
                 # check for erroneous values
-                assert ~np.ma.isMaskedArray(var)
-                if lc_sampled > lc_total:
-                    raise ValueError(f'Sampled area is greater than total area for land cover {cover} in {file}.')
+                assert lc_sampled <= lc_total, f'Sampled area is greater than total area for land cover {cover} in {file}.'
 
                 df = df.append({'country': country,
                                'admin': file[:-4],
@@ -947,7 +920,7 @@ def calculate_stats(country, extent):
                 convert_dict = {'esa_sampled_ha':'float64',
                                 'esa_total_ha':'float64',
                                 'tof_ha':'int64',
-                                'hans_ha': 'int64',
+                                'hans_ha':'int64',
                                 'tof_mean': 'float64',
                                 'hans_mean': 'float64'}
                 df = df.astype(convert_dict)
@@ -1011,10 +984,41 @@ def calculate_stats(country, extent):
     return None
 
 @timer
+def upload_dir(source_dir, bucket, object_name):
+    """
+    Upload a directory to an S3 bucket.
+
+    file_name: File to upload
+    bucket: Bucket to upload to
+    object_name: S3 object name. If not specified then file_name is used
+
+    """
+    config = confuse.Configuration('sentinel-tree-cover')
+    config.set_file('jessica-config.yaml')
+    aws_access_key = config['aws']['aws_access_key_id']
+    aws_secret_key = config['aws']['aws_secret_access_key']
+    session = boto3.Session(aws_access_key_id=aws_access_key.as_str(), aws_secret_access_key=aws_secret_key.as_str())
+    s3 = session.resource('s3')
+    bucket = s3.Bucket(bucket)
+
+    # use directory tree generator to get list of file paths and upload each
+    for subdir, dirs, files in os.walk(source_dir):
+
+        for file in files:
+            dest_path = os.path.join(subdir, file)
+
+            with open(dest_path, 'rb') as data:
+                bucket.put_object(Key=object_name+dest_path, Body=data)
+
+    print('Upload complete.')
+
+    return None
+
+@timer
 def execute_pipe(country, extent, incl_hansen=True):
     print(f'Started at: {datetime.now().strftime("%H:%M:%S")}')
-    print('Converting shapefile to geojson...')
-    shape_to_gjson(country)
+    print('Downloading input data...')
+    download_inputs(country)
     if incl_hansen:
         print('Building Hansen tree cover raster...')
         create_hansen_tif(country)
@@ -1035,9 +1039,10 @@ def execute_pipe(country, extent, incl_hansen=True):
         calculate_stats(country, extent)
     else:
         calculate_stats_tml(country, extent)
+    print('Uploading files to s3...')
+    upload_dir(country, 'tof-output', '2020/analysis/2020-full/')
     print(f'Finished {extent} processing at: {datetime.now().strftime("%H:%M:%S")}')
     return None
-
 
 def main():
     country = args.country
