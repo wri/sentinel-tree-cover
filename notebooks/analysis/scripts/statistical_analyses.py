@@ -53,11 +53,20 @@ def create_regional_csv(list_of_countries, region, processing_extent='full'):
         try:
             country_df = pd.read_csv(f'statistics/{country}_statistics_{processing_extent}.csv')
         except OSError:
+            print(f'Trying alternative processing extent for {country}')
             country_df = pd.read_csv(f'statistics/{country}_statistics_{processing_extent}_tmlonly.csv')
 
         dfs_to_concat.append(country_df)
 
     regional_df = pd.concat(dfs_to_concat, ignore_index=True)
-    regional_df.to_csv(f'statistics/{region}.csv', index=False)
+
+    # for Brazil and Indonesia, combine admins and save as country spreadsheet
+    if region == 'Brazil' or 'Indonesia':
+        regional_filename = f'statistics/{region}_statistics_{processing_extent}.csv'
+        regional_df.country = region
+    else:
+        regional_filename = f'statistics/{region}.csv'
+
+    regional_df.to_csv(regional_filename, index=False)
 
     return None
