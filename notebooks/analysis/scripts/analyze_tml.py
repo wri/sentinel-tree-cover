@@ -20,7 +20,6 @@ import pandas as pd
 import pandas.api.types as ptypes
 import fiona
 from contextlib import contextmanager
-from skimage.transform import resize
 import math
 import requests
 import urllib.request
@@ -67,11 +66,10 @@ def download_inputs(country):
 
     # download 10m res country tif
     s3.download_file('tof-output',
-                     f'2020/country/{country}.tif',
+                     f'2020/mosaics/{country}.tif',
                      f'{country}/{country}.tif')
 
     # download admin 1 boundaries
-    # NOTE: need to create new s3 folder w/ admin boundaries
     s3.download_file('tof-output',
                      f'2020/analysis/2020-full/admin_boundaries/{country}_adminboundaries.geojson',
                      f'{country}/{country}_adminboundaries.geojson')
