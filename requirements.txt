@@ -25,3 +25,4 @@ numpy
 rasterio
 pre-commit
 bottleneck
+sklearn

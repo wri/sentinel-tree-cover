@@ -33,16 +33,13 @@ def timing(f):
 
 def extract_dates(date_dict: dict, year: int) -> List:
     """ Transforms a SentinelHub date dictionary to a
-         list of integer calendar dates
+         list of integer calendar dates indicating the date of the year
     """
     dates = []
     days_per_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]
     starting_days = np.cumsum(days_per_month)
     for date in date_dict:
-        #if date.year == year:
         dates.append(((date.year - year)*365) + starting_days[(date.month-1)] + date.day)
-       # if date.year == year + 1:
-        #    dates.append(365 + starting_days[(date.month-1)]+date.day)
     return dates
 
 
@@ -81,7 +78,7 @@ def process_sentinel_1_tile(sentinel1: np.ndarray, dates: np.ndarray) -> np.ndar
          s1 (np.array)
     """
     s1, _ = calculate_and_save_best_images(sentinel1, dates)
-    monthly = np.empty((12, sentinel1.shape[1], sentinel1.shape[2], 2))
+    monthly = np.zeros((12, sentinel1.shape[1], sentinel1.shape[2], 2))
     index = 0
     for start, end in zip(range(0, 24 + 2, 24 // 12), #0, 72, 6
                           range(24 // 12, 24 + 2, 24 // 12)): # 6, 72, 6
@@ -97,6 +94,8 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
     """ DEPRECATED: This version of the cloud identification is currently deprecated
         because it can cause tile artifacts between neighboring tiles, if the
         imagery selection is done entirely independently!
+
+        Use identiffy_clouds_big_bbx instead
 
         Downloads and calculates cloud cover and shadow
         This downloads cartesian WGS 84 coords that are snapped to the
@@ -199,10 +198,37 @@ def identify_clouds(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dic
     return cloud_img, shadow_img, clean_steps, np.array(cloud_dates), shadow_img
 
 
+def _check_for_alt_img(probs, dates, date):
+    # Checks to see if there is an image within win days that has
+    # Less local cloud cover. If so, remove the higher CC image.
+    # This is done to avoid having to remove (interpolate)
+    # All of an image for a given tile, as this can cause artifacts
+    begin = [-60, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 341]
+    end = [31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 341, 410]
+
+    begins = (end - date)
+    begins[begins < 0] = 999
+    month_start = begin[np.argmin(begins)]
+    month_end = end[np.argmin(begins)]
+    lower = month_start
+    upper = month_end
+    
+    candidate_idx = np.argwhere(np.logical_and(np.logical_and(dates >= lower, dates <= upper),
+                                               dates != date))
+    candidate_probs = probs[candidate_idx]
+    if len(candidate_probs) == 0:
+        return False
+    if np.min(candidate_probs) < 0.3:
+        return True
+    else:
+        return False
+
+
+
 def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dict,
                 api_key: str,
                 year: int,
-                maxclouds = 0.3) -> (np.ndarray, np.ndarray, np.ndarray):
+                maxclouds = 0.4) -> (np.ndarray, np.ndarray, np.ndarray):
     """ Downloads and calculates cloud cover and shadow
         This downloads cartesian WGS 84 coords that are snapped to the
         ESA LULC pixels -- so it will not return a square!
@@ -217,7 +243,11 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
          shadows (np.array):
          clean_steps (np.array):
     """
-    # Download 160 x 160 meter cloud masks, 0 - 255
+    # Download 640 x 640 meter cloud masks, 0 - 255
+    # This is done typically for a very large area... e.g. 80 x 80 km
+    # To ensure that neighboring tiles have the same images analyzed.
+
+    """
     box = BBox(shadow_bbx, crs = CRS.WGS84)
     cloud_filter_request = WcsRequest(
         layer='CLOUD_SCL_PREVIEW',
@@ -232,74 +262,81 @@ def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], da
 
     image_dates_dict = [x for x in cloud_filter_request.get_dates()]
     cloud_filter_dates = np.array(extract_dates(image_dates_dict, year))
-    print(cloud_filter_dates)
-
+    """
     box = BBox(cloud_bbx, crs = CRS.WGS84)
     cloud_request = WcsRequest(
         layer='CLOUD_SCL_PREVIEW',
         bbox=box, time=dates,
         resx='640m', resy='640m',
         image_format = MimeType.TIFF,
-        maxcc=0.4, config=api_key,
+        maxcc=0.5, config=api_key,
         custom_url_params = {constants.CustomUrlParam.UPSAMPLING: 'NEAREST',
                              constants.CustomUrlParam.PREVIEW: 'TILE_PREVIEW'},
         time_difference=datetime.timedelta(hours=48),
     )
     image_dates_dict = [x for x in cloud_request.get_dates()]
     cloud_dates = extract_dates(image_dates_dict, year)
-    #closest_small_date = [np.min(abs(cloud_filter_dates - x)) for x in cloud_dates]
-    #keep_steps = list(np.argwhere(np.array(closest_small_date) <= 2).flatten())
     cloud_dates = np.array(cloud_dates)#[keep_steps]
-
     cloud_img = np.array(cloud_request.get_data()).astype(np.float32)
 
     print(f"Clouds: {cloud_img.shape}, {np.max(cloud_img)}")
-    #cloud_dates_dict = [x for x in cloud_request.get_dates(data_filter = keep_steps)]
-    #cloud_dates = extract_dates(cloud_dates_dict, year)
-    
-
-    # Make sure that there is imagery for the tile
+    # Make sure that there is imagery for the tile, delete timesteps
+    # Where the px associated with the tile ID have no data
     mid_idx = cloud_img.shape[1] // 2
     mid_idx_y = cloud_img.shape[2] // 2
-    is_valid = np.sum(cloud_img[:, mid_idx-5:mid_idx+5, mid_idx_y-5:mid_idx_y+5] == 255, axis = (1, 2))
+    is_valid = np.mean(cloud_img[:, mid_idx-5:mid_idx+5, mid_idx_y-5:mid_idx_y+5] == 255, axis = (1, 2))    
     is_invalid = np.argwhere(is_valid > 0).flatten()
-
-    #for i in range(len(cloud_dates)):
-    #    print(cloud_dates[i], np.mean(cloud_img[i] == 100), is_valid[i])
-
     if len(is_invalid) > 0:
-        print(f"deleting {np.array(cloud_dates)[is_invalid]}")
+        print(f"removing {np.array(cloud_dates)[is_invalid]} dates that have no data")
         cloud_dates = np.delete(cloud_dates, is_invalid)
         cloud_img = np.delete(cloud_img, is_invalid, 0)
 
-    # And make sure to remove areas within the tile that are only cloudy
-    is_invalid = np.mean(cloud_img[:, mid_idx-5:mid_idx+5, mid_idx_y-5:mid_idx_y+5] == 100, axis = (1, 2))
-    is_invalid = np.argwhere(is_invalid > 0.75).flatten()
-    print(f"deleting {np.array(cloud_dates)[is_invalid]}")
-    cloud_dates = np.delete(cloud_dates, is_invalid)
-    cloud_img = np.delete(cloud_img, is_invalid, 0)
+    for i, x in zip(cloud_dates, cloud_img):
+        print(i, np.mean(x == 100))
+
+    # Remove areas within the tile that are very cloudy locally,
+    # but meet the large BBox cloud threshold. Empirically doing a 3x3 tile window
+    # And 0.40 seems to be a good threshold.
+    # But only execute this code if there is a better (less cloudy)
+    # Image within the same month
 
     cloud_img = np.float32(cloud_img)
     cloud_img[cloud_img == 255] = np.nan
     cloud_percent = np.nanmean(cloud_img, axis = (1, 2)) / 100
+    local_clouds = np.nanmean(
+        cloud_img[:, mid_idx-15:mid_idx+15, mid_idx_y-15:mid_idx_y+15],
+        axis = (1, 2)) / 100
     cloud_img[np.isnan(cloud_img)] = 255
     cloud_img = cloud_img / 255
 
-    cloud_steps = np.argwhere(cloud_percent > maxclouds)
-
-    # Remove steps with at least 15% cloud cover
-    """
-    n_cloud_px = np.sum(cloud_img > int(0.5 * 255), axis = (1, 2))
-    cloud_percent = n_cloud_px / (cloud_img.shape[1]*cloud_img.shape[2])
-    cloud_steps = np.argwhere(n_cloud_px >= (cloud_img.shape[1]*cloud_img.shape[2] * maxclouds))
-    """
-    #clean_steps = [x for x in range(cloud_img.shape[0]) if x not in cloud_steps]
+    # Test out a harmonic mean of the total and local clouds
+    cloud_steps = np.argwhere(cloud_percent > 0.5)
     cloud_img = np.delete(cloud_img, cloud_steps, 0)
-    cloud_percent = np.delete(cloud_percent, cloud_steps, 0)
-    cloud_dates = np.delete(cloud_dates, cloud_steps, 0)
-    #cloud_dates_dict = [x for x in cloud_request.get_dates()]
-    #cloud_dates = extract_dates(cloud_dates_dict, year)
-    #cloud_dates = [val for idx, val in enumerate(cloud_dates) if idx in clean_steps]
+    cloud_percent = np.delete(cloud_percent, cloud_steps)
+    cloud_dates = np.delete(cloud_dates, cloud_steps)
+    local_clouds = np.delete(local_clouds, cloud_steps)
+
+    cloud_percent[cloud_percent > 0.4] = ((cloud_percent[cloud_percent > 0.4] + local_clouds[cloud_percent > 0.4]) / 2)
+    cloud_steps = np.argwhere(cloud_percent > maxclouds)
+    cloud_img = np.delete(cloud_img, cloud_steps, 0)
+    cloud_percent = np.delete(cloud_percent, cloud_steps)
+    cloud_dates = np.delete(cloud_dates, cloud_steps)
+    local_clouds = np.delete(local_clouds, cloud_steps)
+
+    to_remove = []
+    for i, x, l in zip(cloud_dates, local_clouds, np.arange(0, len(cloud_dates))):
+        print(i, x, cloud_percent[l])
+        if x > 0.50:
+            if _check_for_alt_img(local_clouds, cloud_dates, i) == True:
+                to_remove.append(l)
+    
+    if len(to_remove) > 0:
+        print(f"deleting {np.array(cloud_dates)[to_remove]}, with local probs"
+              f" of {local_clouds[to_remove]}")
+        cloud_dates = np.delete(cloud_dates, to_remove)
+        cloud_img = np.delete(cloud_img, to_remove, 0)
+        cloud_percent = np.delete(cloud_percent, to_remove)
+        
     # Type assertions, size assertions
     if not isinstance(cloud_img.flat[0], np.floating):
         #assert np.max(cloud_img) > 1
@@ -334,13 +371,14 @@ def download_dem(bbox: List[Tuple[float, float]],
         custom_url_params = {CustomUrlParam.SHOWLOGO: False,
                             constants.CustomUrlParam.UPSAMPLING: 'NEAREST'})
 
+    # Convert the uint16 data to float32
     dem_image = dem_request.get_data()[0]
     dem_image = dem_image - 12000
     dem_image = dem_image.astype(np.float32)
     width = dem_image.shape[0]
     height = dem_image.shape[1]
 
-    # Calculate median filter, slopde
+    # Apply median filter, calculate slope
     dem_image = median_filter(dem_image, size = 5)
     dem_image = calcSlope(dem_image.reshape((1, width, height)),
                           np.full((width, height), 10),
@@ -356,7 +394,12 @@ def download_dem(bbox: List[Tuple[float, float]],
 def make_overlapping_windows(tiles: np.ndarray, diff = 7) -> np.ndarray:
     """ Takes the A x B window IDs (n, 4)for an
      X by Y rectangle and enures that the windows are the right
-     size (e.g. square, 150 x 150) for running predictions on """
+     size (e.g. square, 150 x 150) for running predictions on 
+    
+    Thish function aligns the array indices for thhe subtile predictions
+    With the filenames for prediction mosaicing, since the input to the
+    model is larger than the output by diff on each side.
+     """
     tiles2 = np.copy(tiles)
     n_x = np.sum(tiles2[:, 0] == 0)
     n_y = np.sum(tiles2[:, 1] == 0)
@@ -528,7 +571,6 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
             )
 
             s1 = np.array(request.get_data())
-            #print(f"Shape of returned images for {date} = {s1[0].shape[0:2]}")
 
             if not isinstance(s1.flat[0], np.floating):
                 assert np.max(s1) > 1
@@ -539,8 +581,8 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
             width = s1.shape[2]
 
             s1_usage = (4/3) * s1.shape[0] * ((s1.shape[1]*s1.shape[2]) / (512*512))
-            print(f"Sentinel 1 used {round(s1_usage, 1)} PU for {image_date}")
-            print(np.sum(s1 == 1) / (height * width))
+            nan_perc = np.sum(s1 == 1) / (height * width)
+            print(f"Sentinel 1 used {round(s1_usage, 1)} PU for {image_date}, with {nan_perc} no data")
             if np.sum(s1 == 1) < (height * width / 4):
                 s1_all.append(s1)
                 image_dates.append(image_date)
@@ -549,11 +591,10 @@ def download_sentinel_1_composite(bbox: List[Tuple[float, float]],
 
             image_date += 120
 
+        # Format the s1 data so that it will align with smoothed s2 data
         s1 = np.concatenate(s1_all, axis = 0)
         s1 = np.clip(s1, 0, 1)
         image_dates = np.array(image_dates).repeat(12 // s1.shape[0], axis = 0)
-        #print(image_dates)
-
         s1 = s1.repeat(12 // s1.shape[0], axis = 0)
         s1 = s1.repeat(4,axis=1).repeat(4,axis=2)
         return s1, image_dates
@@ -607,6 +648,8 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
                    clean_steps: np.ndarray, api_key,
                    dates: dict, year: int, maxclouds: float) -> (np.ndarray, np.ndarray):
     """ Downloads the L2A sentinel layer with 10 and 20 meter bands
+
+        DEPRECATED: Use download_sentinel_2_new
 
         Parameters:
          bbox (list): output of calc_bbox
@@ -714,6 +757,8 @@ def download_sentinel_2(bbox: List[Tuple[float, float]],
 
 
 def remove_noise_clouds(arr):
+    # global cloudmasks from S2cloudless or SCL are noisy. They can have
+    # persistent commission errors, which this fn helps mitigate.
         for t in range(arr.shape[0]):
             for x in range(1, arr.shape[1] - 1, 1):
                 for y in range(1, arr.shape[2] - 1, 1):
@@ -769,7 +814,6 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         else:
             print(f"There is a date/orbit mismatch, and the closest image is"
                   f" {np.min(abs(val - image_dates))} days away")
-    print(steps_to_download)
 
     quality_request = WcsRequest(
             layer='DATA_QUALITY',
@@ -834,9 +878,11 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
 
     s2_40_usage = (img_40.shape[1]*img_40.shape[2])/(512*512) * (2/3) * img_40.shape[0]
     img_40 = img_40.repeat(2, axis = 1).repeat(2, axis = 2)
+    print("Img_40", img_40.shape)
 
     if (img_20.shape[1] > img_40.shape[1]) or (img_20.shape[2] > img_40.shape[2]):
-        img_40 = resize(img_40, (img_20.shape[0], img_20.shape[1], img_20.shape[2], 2), order = 0)
+        img_40 = resize(img_40, (img_20.shape[0], img_20.shape[1], img_20.shape[2], img_40.shape[-1]), order = 0)
+    print("Img_40", img_40.shape)
 
     if img_40.shape[1] > img_20.shape[1]:
         to_remove = (img_40.shape[1] - img_20.shape[1])
@@ -845,7 +891,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         if to_remove == 1:
             img_40 = img_40.repeat(2, axis = 1).repeat(2, axis = 2)
             img_40 = img_40[:, 1:-1, ...]
-            img_40 = np.reshape(img_40, (img_40.shape[0], img_40.shape[1] // 2, 2, img_40.shape[2] // 2, 2, 2))
+            img_40 = np.reshape(img_40, (img_40.shape[0], img_40.shape[1] // 2, 2, img_40.shape[2] // 2, 2, img_40.shape[-1]))
             img_40 = np.mean(img_40, axis = (2, 4))
 
 
@@ -856,7 +902,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         if to_remove == 1:
             img_40 = img_40.repeat(2, axis = 1).repeat(2, axis = 2)
             img_40 = img_40[:, :, 1:-1, ...]
-            img_40 = np.reshape(img_40, (img_40.shape[0], img_40.shape[1] // 2, 2, img_40.shape[2] // 2, 2, 2))
+            img_40 = np.reshape(img_40, (img_40.shape[0], img_40.shape[1] // 2, 2, img_40.shape[2] // 2, 2, img_40.shape[-1]))
             img_40 = np.mean(img_40, axis = (2, 4))
 
     img_20 = np.concatenate([img_20, img_40], axis = -1)

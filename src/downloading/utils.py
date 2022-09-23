@@ -160,6 +160,8 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
          keep_steps (arr):
          max_distance (int)
     """
+    image_dates = np.array(image_dates)
+    image_dates[image_dates < -100] = image_dates[image_dates < -100] % 365
     biweekly_dates = [day for day in range(0, 360, 15)] # ideal imagery dates are every 15 days
 
     # Identify the dates where there is < 20% cloud cover
@@ -182,20 +184,21 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
         #else:
             # Fill gaps with the median of all images that are within 2 months of the closest prior
             # and after image
+
+        # 
         prior = distances[np.where(distances < 5)][-2:]
         if prior.shape[0] > 0:
             prior = np.array(prior[prior > (-100 + np.max(prior))]).flatten()
+
         after = distances[np.where(distances >= -5)][:2]
         if after.shape[0] > 0:
             after = np.array(after[after < (100 + np.min(after))])
         after_flag = 0
         prior_flag = 0
-        prior_mult = 1
         if len(prior) == 0:
             if np.min(satisfactory_dates) >= 90:
                 prior = distances[-1:]
                 prior_flag = 365
-                prior_mult = -1
             else:
                 prior = after
         if len(after) == 0:
@@ -204,31 +207,53 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
                 after_flag = 365
             else:
                 after = prior
-        if prior[0] != after[0]: 
-            # example, prior
-            # date = 35
-            # prior = -300, (335)
-            # the wrapped prior is (-1 * (300)) + 365 = 65
-            # example, after_flag,
-            # date = 305
-            # after = 270 (35)
-            # the wrapped after is abs(270) - (365) = 95
-            prior_abs = (prior_mult * abs(np.mean(prior))) + prior_flag
-            after_abs = abs(abs(np.mean(after)) - after_flag)
-            # (20 / (20 + 80)) = 0.2
-            after_ratio = (prior_abs) / (prior_abs + after_abs)
-            assert after_ratio <= 1.
-            prior_ratio = 1 - after_ratio
-        else:
-            prior_ratio = after_ratio = 0.5
+        
+        # Wrap when no data at end or beginning of year
+        prior_calc = prior - prior_flag
+        after_calc = after + after_flag 
 
-            # Extract the image date and imagery index for the prior and after values
+        prior_calc = abs(prior_calc)
+        after_calc = abs(after_calc)
+        prior_calc = np.maximum(prior_calc, 1.)
+        after_calc = np.maximum(after_calc, 1.)
+
+        total_distances = np.sum(np.concatenate([abs(prior_calc), abs(after_calc)]))
+        if total_distances == 0:
+            prior_calc += 1
+            after_calc += 1
+            total_distances = np.sum(np.concatenate([abs(prior_calc), abs(after_calc)]))
+        closest_distances = np.maximum(abs(prior_calc[-1]) + abs(after_calc[0]), 2)
+        
+        # Each 15 day grid is a 4-window weighted average based on temporal distance
+        # This will always work for the closest distances
+        prior_mults = abs(1 - (abs(prior_calc) / closest_distances))
+        after_mults = abs(1 - (abs(after_calc) / closest_distances))
+        # But for the further away distances, if distance > sum(closest)... it fails
+        # So we overwrite the value and manually calculate it here, but keep the
+        # above vectorization since the code is cleaner
+        if len(prior_mults) == 2:
+            prior_mults[0] = abs((prior_calc[1] / prior_calc[0]) * prior_mults[1])
+        if len(after_mults) == 2:
+            after_mults[1] = abs((after_calc[0] / after_calc[1]) * after_mults[0])
+
+        # Rescale to ensure that the multiplications add up to 1.
+        divisor = np.sum(np.concatenate([abs(prior_mults), abs(after_mults)]))
+        prior_ratio = prior_mults / divisor
+        after_ratio = after_mults / divisor
+
+        # Extract the image date and imagery index for the prior and after values
         prior_dates = i + prior
         prior_images_idx = [i for i, val in enumerate(image_dates) if val in prior_dates]
         prior_images_idx = np.array(prior_images_idx).reshape(-1)
         after_dates = i + after
         after_images_idx = [i for i, val in enumerate(image_dates) if val in after_dates]
         after_images_idx = np.array(after_images_idx).reshape(-1)
+        after_images_idx = sorted(list(set(after_images_idx)))
+        prior_images_idx = sorted(list(set(prior_images_idx)))
+        if len(after_images_idx) > 2:
+            after_images_idx = after_images_idx[-2:]
+        if len(prior_images_idx) > 2:
+            prior_images_idx = prior_images_idx[:2]
         #print(np.concatenate([prior_images_idx, after_images_idx]))
         selected_images[i] = {'image_date': np.array([prior_dates, after_dates]).flatten(),
                               'image_ratio': [prior_ratio, after_ratio],
@@ -250,9 +275,16 @@ def calculate_and_save_best_images(img_bands: np.ndarray,
             step = np.median(img_bands[info['image_idx']], axis = 0)
         if len(info['image_idx']) >= 2:
             step1 = img_bands[info['image_idx'][0]]
-            step1 = np.mean(step1, axis = 0) * info['image_ratio'][0]
+            if len(step1.shape) == 3:
+                step1 = step1[np.newaxis]
+
+            step1mult = np.array(info['image_ratio'][0], dtype = np.float32)[..., np.newaxis, np.newaxis, np.newaxis]
+            step1 = np.sum(np.copy(step1) * step1mult, axis = 0)
             step2 = img_bands[info['image_idx'][1]]
-            step2 = np.mean(step2, axis = 0) * info['image_ratio'][1]
+            step2mult = np.array(info['image_ratio'][1], dtype = np.float32)[..., np.newaxis, np.newaxis, np.newaxis]
+            if len(step2.shape) == 3:
+                step2 = step2[np.newaxis]
+            step2 = np.sum(np.copy(step2) * step2mult, axis = 0)
             step = step1 + step2
             """
             if info['image_ratio'][0] > 0.5:

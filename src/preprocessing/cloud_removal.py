@@ -3,6 +3,7 @@ import sys
 sys.path.append('../')
 from src.downloading.utils import calculate_proximal_steps, calculate_proximal_steps_two
 from typing import List, Any, Tuple
+import rasterio as rs
 from functools import reduce
 from skimage.transform import resize
 from tqdm import tnrange, tqdm_notebook
@@ -17,15 +18,28 @@ from scipy.ndimage.filters import gaussian_filter
 import warnings
 from scipy.ndimage import distance_transform_edt as distance
 import bottleneck as bn
+from sklearn.cross_decomposition import CCA
+from sklearn.linear_model import LinearRegression
+
+def identify_pifs(src, ref):
+    # Canonical correlation analysis is used to identify psuedo-invariant features
+    # We assume that phenological or atmospheric differences are linear
+    # While land-use change or cloud cover is non-linear
+    # We select the points between src and ref that are the most correlated
+    # By doing CCA and selecting the pixels where the components are the closest
+    cca = CCA(n_components=2, tol = 1e-5, max_iter = 400)
+    xs, ys = cca.fit_transform(src[..., :4], ref[..., :4])
+    diffs = xs - ys
+    # Mean squared error
+    diffs = np.sum( (diffs/np.std(diffs, axis = 0))**2, axis = 1)
+    diffs = np.argwhere(diffs < np.percentile(diffs, 10))
+    return src[diffs].squeeze(), ref[diffs].squeeze()
 
 
-def align_interp_array(interp_array, array, interp):
-
-    def _water_ndwi(array):
-        return (array[..., 1] - array[..., 3]) / (array[..., 1] + array[..., 3])
-
-    water_mask = _water_ndwi(np.median(array, axis = 0)) > 0.0
-    print(np.mean(water_mask), "% water")
+def align_interp_array(interp_array, array, interp, mosaic, water_mask, linregress = False):
+    # Normalizes interpolated areas to non-interpolated areas
+    # By learning linear mappings based on pseudo-invariant features
+    # And smoothly blending with a gaussian filter
 
     for time in range(array.shape[0]):
         if np.sum(interp[time] > 0) > 0 and np.sum(interp[time] == 0) > 0:
@@ -36,26 +50,77 @@ def align_interp_array(interp_array, array, interp):
                 interp_array_i = interp_array[time]
 
                 # Identify all of the areas that are, and aren't interpolated
-                interp_areas = interp_array_i[np.logical_and(interp[time] > 0, water_mask == 0)]
-                non_interp_areas = array_i[np.logical_and(interp[time] == 0,  water_mask == 0)]
+                # interp_areas = interp_array_i[np.logical_and(interp[time] > 0, water_mask == 0)]
+                non_interp_areas = array_i[np.logical_and(interp[time] < 1,  water_mask == 0)]
+                non_interp_mosaic = mosaic[np.logical_and(interp[time] < 1,  water_mask == 0)]
 
-                # And calculate their means and standard deviation per band
-                std_src = bn.nanstd(interp_areas, axis = (0))
+                non_interp_mosaic, non_interp_areas = identify_pifs(non_interp_mosaic, non_interp_areas)
+                
+                if linregress:
+                    # Learn a linear mapping with OLS. Empirically thihs does not seem to work better
+                    # Than a simple mean / std deviation shift (below), which is the default
+                    std_mult = np.ones((1, 1, 10))
+                    addition = np.zeros((1, 1, 10))
+                    for i in range(10):
+                        model = LinearRegression().fit(non_interp_mosaic[..., i][..., np.newaxis],
+                                                       non_interp_areas[..., i][..., np.newaxis])
+                        std_mult[..., i] = model.coef_
+                        addition[..., i] = model.intercept_#(model.intercept_, model.coef_)
+                else:
+                    # And calculate their means and standard deviation per band
+                    # First calculate the time difference between non-interpolated areas
+                    # (non_interp_mosaic to non_interp_areas) -> (interp_mosaic -> interp_areas)
+                    std_src = bn.nanstd(non_interp_mosaic, axis = (0))
+                    std_ref = bn.nanstd(non_interp_areas, axis = (0))
+                    mean_src = bn.nanmean(non_interp_mosaic, axis = (0))
+                    mean_ref = bn.nanmean(non_interp_areas, axis = (0))
+                    std_mult = (std_ref / std_src)
+
+                    #print('bef', std_src[..., 3], std_ref[..., 3], mean_src[..., 3], mean_ref[..., 3])
+
+                    # Then calculate the mosaic diff between non interp and interp
+                    addition = (mean_ref - (mean_src * (std_mult)))
+                    addition = np.reshape(addition, (1, 1, 10))
+                    std_mult = np.reshape(std_mult, (1, 1, 10))
+
+                non_interp_areas = array_i[np.logical_and(interp[time] == 0,  water_mask == 0)]
+                non_interp_mosaic = interp_array_i[np.logical_and(interp[time] > 0,  water_mask == 0)]
+
+                
+                std_src = bn.nanstd(non_interp_mosaic, axis = (0))
                 std_ref = bn.nanstd(non_interp_areas, axis = (0))
-                mean_src = bn.nanmean(interp_areas, axis = (0))
+                mean_src = bn.nanmean(non_interp_mosaic, axis = (0))
+                mean_ref = bn.nanmean(non_interp_areas, axis = (0))
+
+                #print('bef', std_src[..., 3], std_ref[..., 3], mean_src[..., 3], mean_ref[..., 3])
+
+
+                interp_array_i[np.logical_and(interp[time] > 0, water_mask == 0)] = (
+                        (interp_array_i[np.logical_and(interp[time] > 0, water_mask == 0)] * std_mult) + addition
+                    )
+                non_interp_areas = array_i[np.logical_and(interp[time] == 0,  water_mask == 0)]
+                non_interp_mosaic = interp_array_i[np.logical_and(interp[time] > 0,  water_mask == 0)]
+
+                std_src = bn.nanstd(non_interp_mosaic, axis = (0))
+                std_ref = bn.nanstd(non_interp_areas, axis = (0))
+                mean_src = bn.nanmean(non_interp_mosaic, axis = (0))
                 mean_ref = bn.nanmean(non_interp_areas, axis = (0))
                 std_mult = (std_ref / std_src)
 
-                addition = (mean_ref - (mean_src * (std_mult)))
-                interp_array_i[np.logical_and(interp[time] > 0, water_mask == 0)] = (
-                        interp_array_i[np.logical_and(interp[time] > 0, water_mask == 0)] * std_mult + addition
-                    )
+                #print('aft', std_src[..., 3], std_ref[..., 3], mean_src[..., 3], mean_ref[..., 3])
 
+                # Make sure that this normalization doesnt change the original range of the data.
+                for i in range(interp_array_i.shape[-1]):
+                    interp_array_i[..., i] = np.clip(interp_array_i[..., i],
+                                                     np.min(array_i[..., i]), 
+                                                     np.max(array_i[..., i]))
+
+                # Normalization for water areas is done separately since the spectral 
+                # Reflectances are so different than on land.
                 interp_areas = interp_array_i[np.logical_and(interp[time] > 0, water_mask == 1)]
                 non_interp_areas = array_i[np.logical_and(interp[time] == 0,  water_mask == 1)]
 
                 if interp_areas.shape[0] > 200 and non_interp_areas.shape[0] > 618*618*.02:
-                # And calculate their means and standard deviation per band
                     std_src = bn.nanstd(interp_areas, axis = (0))
                     std_ref = bn.nanstd(non_interp_areas, axis = (0))
                     mean_src = bn.nanmean(interp_areas, axis = (0))
@@ -69,76 +134,7 @@ def align_interp_array(interp_array, array, interp):
                 
                 interp_array[time] = interp_array_i
 
-    for time in range(array.shape[0]):
-        if np.mean(interp[time] > 0) == 1:
-            candidate_lower = np.max([time - 1, 0])
-            candidate_upper = np.min([time + 1, array.shape[0] - 1])
-            candidate = np.mean(
-                np.array([array[candidate_lower], array[candidate_upper]]), axis = 0
-            )
-            interp_array[time] = candidate
-
     return interp_array
-
-
-def id_areas_to_interp(tiles: np.ndarray,
-                             probs: np.ndarray,
-                             shadows: np.ndarray,
-                             image_dates: List[int],
-                             wsize: int = 36, step = 8, thresh = 100) -> np.ndarray:
-    """ Interpolates clouds and shadows for each time step with
-        linear combination of proximal clean time steps for each
-        region of specified window size
-
-        Parameters:
-         tiles (arr):
-         probs (arr):
-         shadows (arr):
-         image_dates (list):
-         wsize (int):
-
-        Returns:
-         tiles (arr):
-    """
-    c_probs = shadows
-
-    areas_interpolated = np.zeros((tiles.shape[0], tiles.shape[1], tiles.shape[2]), dtype = np.float32)
-    x_range = [x for x in range(0, tiles.shape[1] - (wsize), step)] + [tiles.shape[1] - wsize]
-    y_range = [x for x in range(0, tiles.shape[2] - (wsize), step)] + [tiles.shape[2] - wsize]
-
-    time1 = time.time()
-
-    for x in x_range:
-        for y in y_range:
-            subs = c_probs[:, x:x + wsize, y:y+wsize]
-            satisfactory = np.argwhere(np.sum(subs, axis = (1, 2)) < (wsize*wsize*0.05))
-
-            if len(satisfactory) > 0:
-                for date in range(0, tiles.shape[0]):
-                    if np.sum(subs[date]) >= thresh:
-                        areas_interpolated[date, x:x+wsize, y:y+wsize] = 1.
-            else:
-                areas_interpolated[:, x:x+wsize, y:y+wsize] = 1.
-
-    for date in range(areas_interpolated.shape[0]):
-        if np.sum(areas_interpolated[date]) > 0:
-           # areas_interpolated[date] = binary_dilation(areas_interpolated[date], iterations = 4)
-            blurred = distance(1 - areas_interpolated[date])
-            blurred[blurred > 12] = 12
-            blurred = blurred / 12
-            blurred = 1 - blurred
-            blurred[blurred < 0.1] = 0.
-            areas_interpolated[date] = blurred
-
-    areas_interpolated = areas_interpolated.astype(np.float32)
-    return areas_interpolated
-
-
-def calc_cloudfree_medians(arr, interp, water_mask):
-    source_refs = np.empty((arr.shape[-1]))
-    for i in range(arr.shape[-1]):
-        source_refs[i] = np.median(arr[..., i][np.logical_and(interp < 1, water_mask == 0)])
-    return source_refs
 
 
 def make_aligned_mosaic(arr, interp):
@@ -149,16 +145,17 @@ def make_aligned_mosaic(arr, interp):
     water_mask = water_mask > 0
     water_mask = binary_dilation(1 - water_mask, iterations = 2)
     water_mask = binary_dilation(1 - water_mask, iterations = 5)
-
-    refs = calc_cloudfree_medians(arr, interp, water_mask)
+    mean_ref = bn.nanmean(arr[np.logical_and(interp == 0, water_mask == 0)], axis = 0)
+    std_ref = bn.nanstd(arr[np.logical_and(interp == 0, water_mask == 0)], axis = 0)
     mosaic = np.zeros((arr.shape[1], arr.shape[2], arr.shape[3]), dtype = np.float32)
+
     for i in range(arr.shape[0]):
-        
-        target_refs = calc_cloudfree_medians(arr[i], interp[i], water_mask)
-        adj = (refs - target_refs)
-        adj = np.clip(adj, -0.05, 0.05)
+        mean_src = bn.nanmean(arr[i][np.logical_and(interp[i] == 0, water_mask == 0)], axis = 0)
+        std_src = bn.nanstd(arr[i][np.logical_and(interp[i] == 0, water_mask == 0)], axis = 0)
+        std_mult = (std_ref / std_src)
+        addition = (mean_ref - (mean_src * (std_mult)))
         arr_i = np.copy(arr[i])
-        arr_i[water_mask == 0] = arr_i[water_mask == 0] + adj
+        arr_i[water_mask == 0] = arr_i[water_mask == 0] * std_mult + addition
         increment = (1 - interp[i][..., np.newaxis]) * arr_i
         mosaic = mosaic + increment
     divisor = (np.sum(1 - interp, axis = 0))[..., np.newaxis]
@@ -168,7 +165,7 @@ def make_aligned_mosaic(arr, interp):
     return mosaic
 
 
-def calculate_clouds_in_mosaic(mosaic, interp):
+def calculate_clouds_in_mosaic(mosaic, interp, pfcps):
     # If there is only 1 availalble image, omission errors are
     # possible due to S2Cloudless and ESA SCL
     # We can assume that areas with > 1 image have no clouds,
@@ -177,10 +174,13 @@ def calculate_clouds_in_mosaic(mosaic, interp):
     # to threshold the non-saturated, non FCP areas with 1 image
     # to make a cloud mask.
     only_1_img = np.sum(1 - (interp > 0), axis = 0).squeeze() < 2
-    fcp, _ = detect_pfcp(mosaic[np.newaxis])
-    fcp = binary_dilation(fcp, iterations = 10)
+
+    if len(pfcps.shape) == 3 and pfcps.shape[0] > 1:
+        pfcps = pfcps[0]
+
+    pfcps = binary_dilation(pfcps, iterations = 10)
     
-    only_1_img = np.maximum(only_1_img, fcp.squeeze())
+    only_1_img = np.maximum(only_1_img, pfcps.squeeze())
     
     reference_blue = np.percentile(mosaic[..., 0][~only_1_img], 99)
     reference_red = np.percentile(mosaic[..., 2][~only_1_img], 99)
@@ -191,16 +191,67 @@ def calculate_clouds_in_mosaic(mosaic, interp):
                        )
 
     
-    clouds_in_mosaic[fcp.squeeze() > 0] = 0.
+    clouds_in_mosaic[pfcps.squeeze() > 0] = 0.
     clouds_in_mosaic = binary_dilation(1 - clouds_in_mosaic, iterations = 3)
     clouds_in_mosaic = binary_dilation(1 - clouds_in_mosaic, iterations = 8)
     return clouds_in_mosaic
+
+
+def mask_nonurban_areas(file, bbx, pfcps):
+    # Use the ESA WorldCover (160m resample) to identify
+    # Where urban areas are, to enable removal of urban 
+    # false-positive clouds
+
+    with rs.open(file) as data:
+        rst = data.read(1, window=rs.windows.from_bounds(
+            bbx[0], bbx[1], bbx[2], bbx[3],
+            data.transform)
+        )
+        # 160m mask of majority urban-px in ESA Worldcover
+        rst = binary_dilation(rst, iterations = 1)
+        rst_original = np.copy(rst)
+        rst_original = resize(rst, pfcps.shape, 0)
+        pfcps[rst_original == 1] = 1.
+
+        # Remove false positives >1km from an urban px
+        rst = binary_dilation(rst, iterations = 5)
+        rst = resize(rst, pfcps.shape, 0)
+        pfcps[rst == 0] = 0.
+        print(f"Tile is {np.mean(rst == 1) * 100}% urban")
+        return pfcps
+
+
+def id_areas_to_interp(tiles: np.ndarray,
+                             probs: np.ndarray,
+                             shadows: np.ndarray,
+                             image_dates: List[int],
+                             pfcps) -> np.ndarray:
+    """ Identifies the areas that will be interpolated by 
+    remove_cloud_and_shadows. This is used to remove images
+    that are >95% interpolated before actually executinig
+    the interpolation
+    """
+    areas_interpolated = np.copy(probs)
+    areas_interpolated = areas_interpolated.astype(np.float32)
+
+    for date in range(areas_interpolated.shape[0]):
+        if np.sum(areas_interpolated[date]) > 0:
+            blurred = distance(1 - areas_interpolated[date])
+            blurred[blurred > 12] = 12
+            blurred = (blurred / 12)
+            blurred = 1 - blurred
+            blurred[blurred < 0.1] = 0.
+            blurred = grey_closing(blurred, size = 20)
+            areas_interpolated[date] = blurred
+
+    return areas_interpolated
 
 
 def remove_cloud_and_shadows(tiles: np.ndarray,
                              probs: np.ndarray,
                              shadows: np.ndarray,
                              image_dates: List[int],
+                             pfcps,
                              wsize: int = 36, step = 8, thresh = 100) -> np.ndarray:
     """ Interpolates clouds and shadows for each time step with
         linear combination of proximal clean time steps for each
@@ -216,8 +267,8 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
         Returns:
          tiles (arr):
     """
-    c_probs = shadows
-    areas_interpolated = np.copy(c_probs)
+    areas_interpolated = np.copy(probs)
+    areas_interpolated = areas_interpolated.astype(np.float32)
 
     for date in range(areas_interpolated.shape[0]):
         if np.sum(areas_interpolated[date]) > 0:
@@ -230,57 +281,175 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
             areas_interpolated[date] = blurred
 
     areas_interpolated = areas_interpolated.astype(np.float32)
-    interp_array = np.zeros_like(tiles, dtype = np.float32)
-
-    interp_multiplier = (1 - areas_interpolated[..., np.newaxis])
+    print(np.mean(areas_interpolated > 0, axis = (1, 2)))
     mosaic = make_aligned_mosaic(tiles, areas_interpolated)
 
-    # There is a failure case here when the only image available is an ommission error cloud.
-    # When there is only one image, we rely on 160m S2cloudless + ESA SCL...
-    # which can miss tiny clouds, resulting in artifacts in the data. 
-    # We attempt to remove these artifacts by thresholding red/blue bands based on cloud-free areas
-    # This is a pretty conservative approach, but gets most of the problem areas.
-    #np.save("mosaic.npy", mosaic)
-    #np.save("interp.npy", areas_interpolated)
-    #np.save("tiles.npy", tiles)
-    clouds_in_mosaic = calculate_clouds_in_mosaic(mosaic, areas_interpolated.squeeze())
-    
+    def _water_ndwi(array):
+        return (array[..., 1] - array[..., 3]) / (array[..., 1] + array[..., 3])
+
+    water_mask = _water_ndwi(np.median(tiles, axis = 0)) > 0.0
     for date in range(0, tiles.shape[0]):
-        interp_array[date, areas_interpolated[date] > 0] = mosaic[areas_interpolated[date] > 0]
+        interp_array = np.zeros_like(tiles[date])
+        interp_multiplier = (1 - areas_interpolated[date, ..., np.newaxis])
+        interp_array[areas_interpolated[date] > 0] = mosaic[areas_interpolated[date] > 0]
 
-    interp_array = align_interp_array(interp_array, tiles, areas_interpolated)
+        interp_array = align_interp_array(interp_array[np.newaxis], 
+                                          tiles[date][np.newaxis],
+                                          areas_interpolated[date][np.newaxis],
+                                          mosaic,
+                                          water_mask)
+        #print(np.sum(np.isnan(interp_array)))
+        tiles[date] = (tiles[date] * (1 - areas_interpolated[date][..., np.newaxis]) +  \
+                      (interp_array * areas_interpolated[date][..., np.newaxis]))
+        #print(np.sum(np.isnan(tiles), axis = (1, 2, 3)))
+
     areas_interpolated = areas_interpolated[..., np.newaxis]
-    tiles = (tiles * (1 - areas_interpolated) +  \
-        (interp_array * areas_interpolated))
-
+    interp_array = None
     areas_interpolated = areas_interpolated.squeeze()
+    clouds_in_mosaic = calculate_clouds_in_mosaic(mosaic, areas_interpolated.squeeze(), pfcps)
     areas_interpolated += clouds_in_mosaic[np.newaxis]
     areas_interpolated[areas_interpolated > 1] = 1.
-    interp_array = None
+    
     #np.save("after.npy", tiles)
     return tiles, areas_interpolated
 
 
-def detect_pfcp(arr):
+def make_cloudfree_composite(arr, interp, time):
     
+    #! TODO: Incorporate water mask
+    
+    arr_i = arr[time]
+    mosaic = np.copy(arr[time])
+    interp_mosaic = np.copy(interp)
+    
+    # Iterate through each band and timestep and make a cloud-free
+    # Composite and normalize it to the reference time
+    for band in range(arr.shape[-1]):
+        arr_band = arr[..., band]
+        
+        normalized = np.full_like(arr_band, np.nan)
+        for i in range(arr.shape[0]):
+            increment = np.copy(arr_band[i])
+            arr_band_i = arr_band[time]
+            
+            ref = arr_band_i[np.logical_and(interp[time] < 1, interp[i] < 1)]
+            src = increment[np.logical_and(interp[time] < 1, interp[i] < 1)]
+            if src.shape[0] > 2000 and ref.shape[0] > 2000:
+                # For the non-interpolated areas in BOTH the src and ref
+                # Calculate the difference in mean/std
+                # And apply that to make the src more similar to thhe ref
+                std_src = bn.nanstd(src, axis = (0))
+                std_ref = bn.nanstd(ref, axis = (0))
+                mean_src = bn.nanmean(src, axis = (0))
+                mean_ref = bn.nanmean(ref, axis = (0))
+                
+                std_mult = (std_ref / std_src)
+                addition = (mean_ref - (mean_src * (std_mult)))
+                increment[interp[i] < 1] = increment[interp[i] < 1] * std_mult + addition
+                normalized[i][interp[i] < 1] = increment[interp[i] < 1]
+            else:
+                # If we can't standardize the image using direct overlap
+                # Then we just have to use the SEPARATE non-interpolated areas
+                # Otherwise we'd be introducing NAN values to the mosaic
+                ref = arr_band_i[interp[i] < 1]
+                src = increment[interp[i] < 1]
+                
+                std_src = bn.nanstd(src, axis = (0))
+                std_ref = bn.nanstd(ref, axis = (0))
+                mean_src = bn.nanmean(src, axis = (0))
+                mean_ref = bn.nanmean(ref, axis = (0))
+                
+                std_mult = (std_ref / std_src)
+                addition = (mean_ref - (mean_src * (std_mult)))
+                increment[interp[i] < 1] = increment[interp[i] < 1] * std_mult + addition
+                normalized[i][interp[i] < 1] = increment[interp[i] < 1]
+                
+        # NANs should only persist where there were no non-interp areas to begin w/
+        # And these will be picked up by the `interp` mask
+        normalized_med = bn.nanmedian(normalized, axis = 0)
+        normalized_med[np.isnan(normalized_med)] = np.min(arr[..., band], axis = 0)[np.isnan(normalized_med)]
+        mosaic[..., band] = normalized_med
+    return mosaic
+
+"""
+def remove_cloud_and_shadows(tiles: np.ndarray,
+                             probs: np.ndarray,
+                             shadows: np.ndarray,
+                             image_dates: List[int],
+                             pfcps,
+                             wsize: int = 36, step = 8, thresh = 100) -> np.ndarray:
+    
+    areas_interpolated = np.copy(probs)
+    areas_interpolated = areas_interpolated.astype(np.float32)
+
+    for date in range(areas_interpolated.shape[0]):
+        if np.sum(areas_interpolated[date]) > 0:
+            blurred = distance(1 - areas_interpolated[date])
+            blurred[blurred > 15] = 15
+            blurred = (blurred / 15)
+            blurred = 1 - blurred
+            blurred[blurred < 0.1] = 0.
+            blurred = grey_closing(blurred, size = 20)
+            areas_interpolated[date] = blurred
+
+    areas_interpolated = areas_interpolated.astype(np.float32)
+    for date in range(tiles.shape[0]):
+        mosaic = make_cloudfree_composite(tiles, areas_interpolated, date)
+        #areas_interpolated[nans[np.newaxis]] = 1.
+        interp_array = np.zeros_like(tiles[date], dtype = np.float32)
+        interp_multiplier = (1 - areas_interpolated[date, ..., np.newaxis])
+        interp_array[areas_interpolated[date] > 0] = mosaic[areas_interpolated[date] > 0]
+        #tiles[date] = mosaic
+        tiles[date] = (tiles[date] * (interp_multiplier) +  \
+            (interp_array * (1 - interp_multiplier)))
+        #areas_interpolated[np.isnan()]
+
+    np.save("after.npy", tiles)
+
+
+    #interp_array = None
+    #areas_interpolated = areas_interpolated.squeeze()
+    #clouds_in_mosaic = calculate_clouds_in_mosaic(mosaic, areas_interpolated.squeeze(), pfcps)
+    #areas_interpolated += clouds_in_mosaic[np.newaxis]
+    #areas_interpolated[areas_interpolated > 1] = 1.
+    
+    #np.save("after.npy", tiles)
+    #areas_interpolated = areas_interpolated[..., np.newaxis]
+    return tiles, areas_interpolated
+"""
+
+def detect_pfcp(arr, dem, bbx):
+    # Detects potential false cloud pixels
+    # By using the paralax effect of the NIR bands as
+    # done in Fmask 4.0
+
     def _ndbi(arr):
         return ((arr[..., 8] - arr[..., 3]) / (arr[..., 8] + arr[..., 3]))
-    
+
     def _ndvi(arr):
         return (arr[..., 3] - arr[..., 2]) / (arr[..., 3] + arr[..., 2])
-    
+
     def _ndwi(arr):
         return (arr[..., 1] - arr[..., 3]) / (arr[..., 1] + arr[..., 3])
-    
-    pfps = np.logical_and(_ndbi(arr) > 0, _ndbi(arr) > _ndvi(arr))
-    water_mask = _ndwi(arr)
-    water_mask = np.median(water_mask, axis = 0)[np.newaxis]
-    water_mask = water_mask > 0
 
-    pfps = np.logical_and(pfps, water_mask == 0)
+    ndvi = _ndvi(arr)
+    ndwi = _ndwi(arr)
+    ndbi = _ndbi(arr)
+    ndwi = np.median(_ndwi(arr), axis = 0)
+
+    pfps = np.logical_and(ndbi > 0, ndbi > ndvi)
+    pfps = np.median(pfps, axis = 0)
+    pfps = pfps * (ndwi < 0)
+    pfps = mask_nonurban_areas("urbanmask.tif", bbx, pfps)
+    pfps[(dem / 90) > 0.10] = 0.
+    pfps = pfps[np.newaxis]
+
+    water_mask = ndwi[np.newaxis]
+    water_mask = water_mask > 0
+    pfps = np.tile(pfps, (arr.shape[0], 1, 1))
     
+    # Paralax
     cdis = np.zeros((arr.shape[0], arr.shape[1], arr.shape[2]), dtype = np.float32)
-    
     for time in range(arr.shape[0]):
         
         b8down = np.copy(arr[time, ..., 3])
@@ -318,19 +487,23 @@ def detect_pfcp(arr):
         r8a7 = mean_of_sq - sq_of_mean
 
         cdi = (r8a7 -r8a)/(r8a7 + r8a)
-        pfcps = cdi >= -0.7
+        pfcps = (cdi >= -0.66) 
         pfcps = pfcps.repeat(2, axis = 0).repeat(2, axis = 1)
         pfcps = resize(pfcps, (arr.shape[1], arr.shape[2]), 0)
+        pfcps = pfcps * (_ndvi(arr[time]) < 0.4)
         cdis[time] = pfcps
-        
-    cdis = binary_dilation(cdis, iterations = 3)
-    pfps = binary_dilation(pfps, iterations = 3)
+    
+    struct2 = generate_binary_structure(2, 2)
+    for i in range(cdis.shape[0]):
+        cdis[i] = binary_dilation(cdis[i], iterations = 6, structure = struct2)
+        pfps[i] = binary_dilation(pfps[i], iterations = 6, structure = struct2)
         
     fcps = (pfps * cdis)
+    print("False positive clouds", np.mean(fcps, axis = (1, 2)))
     return fcps, pfps
 
 
-def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
+def remove_missed_clouds(img: np.ndarray, dem, bbx) -> np.ndarray:
     """ Removes clouds that may have been missed by s2cloudless
         by looking at a temporal change outside of IQR
 
@@ -341,18 +514,17 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
          to_remove (arr):
     """
     def _water_ndwi(array):
-        # For wate rmasking
+        # For water masking
         return (array[..., 1] - array[..., 3]) / (array[..., 1] + array[..., 3])
     
     def _hollstein_cld(arr):
         # Simple cloud detection algorithm
         # Generates "okay" cloud masks that are to be refined
-        # This step could probably be improved
         # From Figure 6 in Hollstein et al. 2016
-        step1 = arr[..., 7] > 0.156
+        step1 = arr[..., 7] > 0.166
         step2b = arr[..., 1] > 0.28
         step3 = arr[..., 5] / arr[..., 8] < 4.292
-        cl = step1 * step2b * step3# * step4
+        cl = step1 * step2b * step3
         for i in range(cl.shape[0]):
             cl[i] = binary_dilation(1 - (binary_dilation(cl[i] == 0, iterations = 2)), iterations = 10)
         return cl
@@ -365,17 +537,23 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
         return in_arr.cumsum(0)[windowsize-1:].cumsum(1)[:, windowsize-1:]
 
     water_mask = bn.nanmedian(_water_ndwi(img), axis = 0)
-    shadows = np.empty_like(img[..., 0], dtype = np.float32)
-    clouds = np.empty_like(shadows, dtype = np.float32)
+    shadows = np.zeros_like(img[..., 0], dtype = np.float32)
+    clouds = np.zeros_like(shadows, dtype = np.float32)
     
     # Generate a "okay" quality cloud mask
     # and use it to do multi-temporal cloud shadow masking
     # Where the delta B8A and delta B11 are < -0.04 and B2 is < 0.095 over land
     # The water shadow thresholds work -okay- and could be improved
     clm = _hollstein_cld(img)
+
     for time in range(img.shape[0]):
         lower = np.max([0, time - 2])
-        upper = np.min([img.shape[0], time + 3])
+        upper = np.min([img.shape[0], time + 4])
+        if (upper - lower) == 3:
+            if upper == img.shape[0]:
+                lower = np.maximum(lower - 1, 0)
+            if lower == 0:
+                upper = np.minimum(upper + 1, img.shape[0])
         others = np.array([x for x in np.arange(lower, upper)])
 
         ri_shadow = np.copy(img[..., [0, 1, 7, 8]])
@@ -391,7 +569,7 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
         deltab11 = (img[time, ..., 8] - ri_shadow[..., 3]) < -0.04
         ti0 = (img[time, ..., 0] < 0.095)
 
-        shadows_i = (deltab11 * deltab8a * ti0)
+        shadows_i = (deltab11 * deltab8a * ti0 * (img[time, ..., 7] < 0.15)) 
         shadows_i[water_mask > 0] = 0.
 
         water_shadow = ((img[time, ..., 0] - ri_shadow[..., 0]) < -0.04) * \
@@ -406,10 +584,10 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
     struct2 = generate_binary_structure(2, 2)
     for i in range(clouds.shape[0]):
         shadows_i = shadows[i]
-        shadows_i = binary_dilation(1 - (binary_dilation(shadows_i == 0, iterations = 3)), iterations = 6)
+        shadows_i = binary_dilation(1 - (binary_dilation(shadows_i == 0, iterations = 2)), iterations = 4)
         shadows_i = distance(1 - shadows_i)
-        shadows_i[shadows_i <= 5] = 0.
-        shadows_i[shadows_i > 5] = 1
+        shadows_i[shadows_i <= 4] = 0.
+        shadows_i[shadows_i > 4] = 1
         shadows_i = 1 - shadows_i
         shadows[i] = shadows_i
     
@@ -425,7 +603,7 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
                 lower = np.maximum(lower - 1, 0)
             if lower == 0:
                 upper = np.minimum(upper + 1, img.shape[0])
-        others = np.array([x for x in np.arange(lower, upper)]) #if x != time])
+        others = np.array([x for x in np.arange(lower, upper)])
         close = [np.max([0, time - 1]), np.min([img.shape[0] - 1, time + 1])]
         if close[1] - close[0] < 2:
             if close[0] == 0:
@@ -466,11 +644,11 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
         # Note that this is not done in Candra et al. 2020 but empirically is useful
         # These thresholds are slightly aggressive and result in some commission errors
         # But don't seem to significantly affect the overall % of data coverage.
-        close_thresh = np.minimum(((ri_close[..., 0] / 0.02 / 100) + 0.01), 0.07)
-        close_thresh = np.maximum(close_thresh, 0.03)
+        close_thresh = np.minimum(((ri_close[..., 0] / 0.015 / 100) + 0.005), 0.10)
+        close_thresh = np.maximum(close_thresh, 0.025)
 
-        deltab2 = (img[time, ..., 0] - ri_upper0) > 0.08
-        deltab3 = (img[time, ..., 1] - ri_upper1) > 0.07
+        deltab2 = (img[time, ..., 0] - ri_upper0) > 0.09
+        deltab3 = (img[time, ..., 1] - ri_upper1) > 0.08
         deltab4 = (img[time, ..., 2] - ri_upper2) > 0.07
         
         closeb2 = (img[time, ..., 0] - ri_close[..., 0]) > close_thresh
@@ -484,8 +662,10 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
     # Remove urban false positives using b8a, b7, b8 paralax effect
     # and NDBI, NDVI, NDWI
     # This method is from Fmask 4.0
-    fcps, pfcps = detect_pfcp(img)
+    fcps, pfcps = detect_pfcp(img, dem, bbx)
+    
     clouds[fcps > 0] = 0.
+    shadows[fcps > 0] = 0.
     
     # Remove bright surface false positives e.g. sand, rock
     # With a NIR to SWIR1 ratio threshold of < 0.75
@@ -496,6 +676,7 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
     for i in range(img.shape[0]):
         nir_swir_ratio[i][water_mask < 0] = 0.
     clouds[nir_swir_ratio] = 0.
+    shadows[nir_swir_ratio] = 0.
 
     # Remove false positive clouds over water based on NIR
     # A large dilation is necessary here because of shorelines
@@ -518,8 +699,8 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
     for i in range(clouds.shape[0]):
         pfcps[i] = binary_dilation(pfcps[i], iterations = 5)
         urban_clouds = clouds[i] * pfcps[i]
-        urban_clouds = (1 - (binary_dilation(urban_clouds == 0, iterations = 3)))
-        urban_clouds = binary_dilation(urban_clouds, iterations = 3)
+        urban_clouds = (1 - (binary_dilation(urban_clouds == 0, iterations = 5)))
+        #urban_clouds = binary_dilation(urban_clouds, iterations = 2)
         
         non_urban_clouds = clouds[i] * (1 - pfcps[i])
         window_sum = _winsum(non_urban_clouds,  3)
@@ -527,25 +708,32 @@ def remove_missed_clouds(img: np.ndarray) -> np.ndarray:
         is_large_cloud[window_sum < 6] = 0.
         is_small_cloud = np.copy(non_urban_clouds)
         is_small_cloud[window_sum >= 6] = 0.
-        is_large_cloud = binary_dilation(is_large_cloud, iterations = 9)
+        is_small_cloud = binary_dilation(is_small_cloud, iterations = 1)
+        is_large_cloud = binary_dilation(is_large_cloud, iterations = 7)
         non_urban_clouds = np.maximum(is_large_cloud, is_small_cloud)
 
         #non_urban_clouds = binary_dilation(non_urban_clouds, iterations = 7, structure = struct2)
         non_urban_clouds = distance(1 - non_urban_clouds)
-        non_urban_clouds[non_urban_clouds <= 3] = 0.
-        non_urban_clouds[non_urban_clouds > 3] = 1
+        non_urban_clouds[non_urban_clouds <= 5] = 0.
+        non_urban_clouds[non_urban_clouds > 5] = 1
         non_urban_clouds = 1 - non_urban_clouds
         clouds[i] = (non_urban_clouds + urban_clouds)
-        
+    
     clouds = np.maximum(clouds, shadows)
-
     fcps = np.maximum(fcps, nir_swir_ratio)
     fcps = binary_dilation(fcps, iterations = 2)
+    print("Cloud/shadow percents", np.mean(clouds, axis = (1, 2)))
+    print("False positive clouds", np.mean(fcps, axis = (1, 2)))
     return clouds, fcps
 
 
 def calculate_cloud_steps(clouds: np.ndarray, dates: np.ndarray) -> np.ndarray:
     """ Calculates the timesteps to remove based upon cloud cover and missing data
+        This is basically the image selection algorithm, and will be renamed as such.
+        In general, we want to balance selecting the best available images for each tile,
+        with seelcting consistent images between nearby tiles. 
+
+        This is DEPRECATED as of August 2022.
 
         Parameters:
          clouds (arr):
@@ -661,7 +849,7 @@ def print_dates(dates, probs):
         if np.sum(month_cl_arr < 0.15) >= 1:
             maxcc = 0.15
         else:
-            maxcc = 0.3
+            maxcc = 0.4
         #if np.max(probs)
         to_remove = month_idx[np.argwhere(np.logical_or(month_cl_arr >= maxcc,
                                           np.isnan(month_clouds))).flatten()]
@@ -690,19 +878,32 @@ def print_dates(dates, probs):
 
 def subset_contiguous_sunny_dates(dates, probs):
     """
+    This is the currently used image selection algorithm.
     The general imagery subsetting strategy is as below:
-        - Select all images with < 30% cloud cover
-        - For each month, select up to 2 images that are <30% CC and are the closest to
-          the beginning and the midde of the month
-        - Select only one image per month for each month if the following criteria are met
-              - Within Q1 and Q4, apply if at least 3 images in quarter
-              - Otherwise, apply if at least 8 total images for year
-              - Select the second image if max CC < 15%, otherwise select least-cloudy image
-        - If more than 10 images remain, remove any images for April and September
+        - Select all images with < 20% cloud cover.
+        - If there are no images for a given month, expand search to < 30% cloud cover
+        - For each month, select up to 2 images that are <20 or 30% CC and are the closest to
+          the beginning and the midde of the month. this will NOT always select the least-cloudy
+          image, since that would not be spatially stable. Temporal consistency here enforces
+          spatial consistency of selected images between tiles in a region.
+        - Select only one image per month for each month if n images > 6. Select the image closest to the
+          middle of the month, unless that image is >20% CC, and the other image is at least 10% clearer.
+              - The trade-off here is between date consistency (less artifacts) and selecting 
+                clearer images (also less artifacts), so a line has to be drawn between
+                the two cloud cover thresholds used here. A > 20% and (A - B) > 10% seem to work.
+                But there is probably still some room to optimize.
+        - If more than 10 images remain, remove any images for March, July, and October. This is
+          purely done to reduce IO needs and save processing / storage / acquisition costs.
+
+    Note that it --may-- be better to have a static cloud map (per 200x200km image), and 
+    select the least-cloudy image each months. This would mitigate artifacts caused by the variable
+    inclusion / exclusion of images close to the 30% threshold as a tile moves closer or further 
+    away from a cloudy region. But would likely also cause increased artifacts near S2 image borders.
 
     """
-    begin = [-60, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
-    end = [31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 410]
+
+    begin = [-60, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 341]
+    end = [31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 341, 410]
     n_per_month = []
     months_to_adjust = []
     months_to_adjust_again = []
@@ -715,7 +916,7 @@ def subset_contiguous_sunny_dates(dates, probs):
         return indices_month
 
 
-    _ = print_dates(dates, probs)
+    #_ = print_dates(dates, probs)
 
     if len(dates) > 6:
         # Select the best 2 images per month to start with
@@ -726,14 +927,34 @@ def subset_contiguous_sunny_dates(dates, probs):
 
             month_dates = dates[indices_month]
             month_clouds = probs[indices_month]
-            if np.sum(month_clouds < 0.1) >= 1:
-                maxcc = 0.1
-            elif np.sum(month_clouds < 0.2) >= 1:
-                maxcc = 0.2
+
+            # If there is a < 0.2 image, go ahead and use it.
+            # Otherwise, expand teh search to 0.2-0.4
+            # If Make sure that the least CC image is at least 10% better
+            # This is a very important step! We want to make sure that
+            # Neighboring tiles have consistent images... so we expand the
+            # Search up to 0.4 CC when necessary. However,
+            # We don't want to avoid cloud-free images if they exist! 
+            if len(month_clouds) > 1:
+                leastcc = np.min(month_clouds)
+                secondleastcc = np.partition(month_clouds, 1)[1]
+                maxcc = np.max(month_clouds)
+                
+                if np.logical_and(
+                    np.logical_and(leastcc < 0.2, maxcc > 0.2),
+                    # we don't want to choose e.g. 0.19 vs 0.22
+                    # but we do want to choose e.g. 0.19 vs 0.30
+                    ((maxcc - leastcc) > 0.10)
+                ):
+                    maxcc = 0.2
+                else:
+                    maxcc = 0.4
+                #print(leastcc, maxcc, month_clouds, maxcc)
             else:
-                maxcc = 0.3
+                maxcc = 0.4
 
             month_good_dates = month_dates[month_clouds < maxcc]
+
             indices_month = indices_month[month_clouds < maxcc]
 
             if len(month_good_dates) >= 2:
@@ -744,19 +965,24 @@ def subset_contiguous_sunny_dates(dates, probs):
 
                 # We first pick the 2 images with <30% cloud cover that are the closest
                 # to the 1st and 15th of the month
-                # todo: if both these images are above 15%, and one below 15% is available, include it
                 closest_to_first_img = np.argmin(abs(month_good_dates - ideal_dates[0]))
                 closest_to_second_img = np.argmin(abs(month_good_dates - ideal_dates[1]))
+                # This is deprecated for now, as it leads to
+                # Inconsistent image selection, and in some cases, artifacts.
+                # We don't necessarily want these to be 2 different images, if the
+                # Same image is the closest to both 0 and 15
+                """
                 if closest_to_second_img == closest_to_first_img:
                     distances = abs(month_good_dates - ideal_dates[1])
                     closest_to_second_img = np.argsort(distances)[1]
-
+                """
                 first_image = indices_month[closest_to_first_img]
                 second_image = indices_month[closest_to_second_img]
                 best_two_per_month.append(first_image)
                 best_two_per_month.append(second_image)
 
             elif len(month_good_dates) >= 1:
+
                 if x > 0:
                     ideal_dates = [x, x + 15]
                 else:
@@ -767,11 +993,10 @@ def subset_contiguous_sunny_dates(dates, probs):
                 best_two_per_month.append(second_image)
     else:
         best_two_per_month = np.arange(0, len(dates))
+
     dates_round_2 = dates[best_two_per_month]
 
     probs_round_2 = probs[best_two_per_month]
-    print(dates_round_2, probs_round_2)
-
     # We then select between those two images to keep a max of one per month
     # We select the least cloudy image if the most cloudy has >15% cloud cover
     # Otherwise we select the second image
@@ -792,7 +1017,7 @@ def subset_contiguous_sunny_dates(dates, probs):
             if len(indices_month) > 1:
                 month_dates = dates[indices_month]
                 month_clouds = probs[indices_month]
-
+                
                 subset_month = True
                 if x == -60:
                     feb_mar = np.argwhere(np.logical_and(
@@ -806,7 +1031,9 @@ def subset_contiguous_sunny_dates(dates, probs):
                 if subset_month:
                     subset_month = True if removed <= n_to_rm else False
                 if subset_month:
-                    if np.max(month_clouds) >= 0.10:
+                    if month_clouds[1] >= 0.2 and ((np.min(month_clouds) + 0.10) < (month_clouds[1])):
+                        # This appears to be worthwhile, though a harsh cut-off 
+                        # Can cause inconsistent image selection, so be warned.
                         month_best_date = [indices_month[np.argmin(month_clouds)]]
                     else:
                         month_best_date = [indices_month[1]]
@@ -825,7 +1052,6 @@ def subset_contiguous_sunny_dates(dates, probs):
 
     indices_to_rm = [x for x in indices if x not in monthly_dates]
 
-
     dates_round_3 = dates[monthly_dates]
     probs_round_3 = probs[monthly_dates]
     remove_next_month = False
@@ -839,12 +1065,15 @@ def subset_contiguous_sunny_dates(dates, probs):
         print(f"There are {len(dates_round_3)} dates and need to remove {n_to_remove}")
 
         highest_n = np.argpartition(probs_round_3, -n_to_remove)[-n_to_remove:]
-        highest_n = [x for x in highest_n if probs_round_3[x] > 0.15]
+        # In general, we do not want to remove the cloudiest image..
+        # Since this leads to inconsistent selection between neighboring tiles.
+        # However, in some cases, we do want to if it improves data availiability.
+        # For now, this is turned off (set to 0.3), since it isn't clear that the trade-off
+        # between data coverage and consiistenty is worth it
+
+        highest_n = [x for x in highest_n if probs_round_3[x] > 0.4]
         date_of_highest_n = dates_round_3[highest_n]
-        print(dates)
-        print(date_of_highest_n)
         index_to_rm = np.argwhere(np.in1d(dates, date_of_highest_n)).flatten()
-        print(index_to_rm)
         print(f"Removing cloudiest dates of {np.array(dates)[index_to_rm]}," 
             f"{date_of_highest_n}, {np.array(probs)[index_to_rm]}")
 
@@ -859,8 +1088,7 @@ def subset_contiguous_sunny_dates(dates, probs):
 
             #print(f"Need to remove {n_to_remove} dates")
             if (len(indices_month) >= 1) and (len(monthly_dates) >= 10) and (n_removed < n_to_remove):
-                print(x, indices_month, n_removed)
-                to_remove = [90, 181, 243] #if len(monthly_dates) >= 10 else [90, 243]
+                to_remove = [90, 243] #if len(monthly_dates) >= 10 else [90, 243]
                 if x in to_remove or remove_next_month:
                     if len(indices_month) > 0:
                         if indices_month[0] not in indices_to_rm: #and probs_round_3[indices_month[0] < 0.15]:
@@ -873,5 +1101,8 @@ def subset_contiguous_sunny_dates(dates, probs):
                     else:
                         print("Removing the next month instead")
                         remove_next_month = True if not remove_next_month else False
+
+    dates_round_4 = [val for x, val in enumerate(dates) if x not in indices_to_rm]
+    print(dates_round_4)
 
     return indices_to_rm

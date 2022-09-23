@@ -56,5 +56,4 @@ sudo service docker start &&\
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 838255262149.dkr.ecr.us-east-1.amazonaws.com &&\
 docker stop $(docker ps -a -q) &&\
 docker pull 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_analysis:latest &&docker system prune -f &&tmux attach
-
 docker run -p 8888:8888 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_analysis

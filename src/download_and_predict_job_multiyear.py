@@ -382,7 +382,7 @@ def adjust_shape(arr: np.ndarray, width: int, height: int) -> np.ndarray:
 
 
 def process_tile(x: int, y: int, data: pd.DataFrame,
-                 local_path: str, make_shadow: bool = False) -> np.ndarray:
+                 local_path: str, bbx, make_shadow: bool = False) -> np.ndarray:
     """
     Processes raw data structure (in temp/raw/*) to processed data structure
         - align shapes of different data sources (clouds / shadows / s1 / s2 / dem)
@@ -507,7 +507,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     if make_shadow:
         time1 = time.time()
         #np.save("before.npy", sentinel2)
-        cloudshad, fcps = cloud_removal.remove_missed_clouds(sentinel2)
+        cloudshad, fcps = cloud_removal.remove_missed_clouds(sentinel2, dem, bbx)
 
         if clm is not None:
             clm[fcps] = 0.
@@ -520,13 +520,13 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
             cloudshad = np.delete(cloudshad, to_remove, axis = 0)
-            cloudshad, _ = cloud_removal.remove_missed_clouds(sentinel2)
+            cloudshad, _ = cloud_removal.remove_missed_clouds(sentinel2, dem, bbx)
             if clm is not None:
                 clm = np.delete(clm, to_remove, axis = 0)
                 cloudshad = np.maximum(cloudshad, clm)
 
         sentinel2, interp = cloud_removal.remove_cloud_and_shadows(
-            sentinel2, cloudshad, cloudshad, image_dates, wsize = 8, step = 8, thresh = 8
+            sentinel2, cloudshad, cloudshad, image_dates, pfcps = fcps, wsize = 8, step = 8, thresh = 8
         )
         #np.save("interp_bef.npy", interp)
         time2 = time.time()
@@ -1113,7 +1113,9 @@ if __name__ == '__main__':
                     size = hkl.load(s2_20_file)
                     size = size.shape[1:3]
 
-                s2, dates, interp, s1, dem, cloudshad = process_tile(x = x, y = y, data = data, local_path = args.local_path, make_shadow = True)
+                s2, dates, interp, s1, dem, cloudshad = process_tile(x = x, y = y, data = data,
+                                                                     local_path = args.local_path, 
+                                                                     bbx = bbx, make_shadow = True)
                 s2 = superresolve_large_tile(s2, superresolve_sess)
                 process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess)
                 predictions = load_mosaic_predictions(path_to_tile + "processed/")
