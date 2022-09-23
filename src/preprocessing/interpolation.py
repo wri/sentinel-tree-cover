@@ -26,7 +26,7 @@ def interpolate_missing_vals(s2: np.ndarray) -> np.ndarray:
        the small potential for NA values in calculating indices
     '''
     print("INTERPS MSISING")
-    print(np.sum(s2 >= 1))
+    print(np.sum(s2 >= 1, axis = (0, 1, 2)))
     print(np.sum(s2 == 0))
     if np.sum(np.logical_and(s2 >= 1, s2 == 0)) > 0:
         nanmedian = np.median(s2, axis = 0)

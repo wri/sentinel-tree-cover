@@ -234,7 +234,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
 
     # The cloud bounding box is much larger, to ensure that the same image dates
     # Are selected in neighboring tiles
-    cloud_bbx = make_bbox(initial_bbx, expansion = 5000/30)
+    cloud_bbx = make_bbox(initial_bbx, expansion = 4500/30)
     bbx = make_bbox(initial_bbx, expansion = 300/30)
     dem_bbx = make_bbox(initial_bbx, expansion = 301/30)
         
@@ -258,18 +258,13 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         print(f"Downloading {clouds_file}")
 
         # Identify images with <30% cloud cover
-        cloud_probs, _, image_dates = tof_downloading.identify_clouds_big_bbx(
+        cloud_probs, cloud_percent, image_dates = tof_downloading.identify_clouds_big_bbx(
             cloud_bbx = cloud_bbx, 
             shadow_bbx = bbx,
             dates = dates,
             api_key = api_key, 
             year = year
         )
-
-        cloud_probs = cloud_probs * 255
-        cloud_probs[cloud_probs > 100] = np.nan
-        cloud_percent = np.nanmean(cloud_probs, axis = (1, 2))
-        cloud_percent = cloud_percent / 100
 
         # This function selects the images used for processing
         # Based on cloud cover and frequency of cloud-free images
@@ -281,7 +276,6 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             cloud_percent = np.delete(cloud_percent, to_remove)
         else:
             clean_dates = image_dates
-
         if len(clean_dates) >= 11:
             clean_dates = np.delete(clean_dates, 5)
             cloud_probs = np.delete(cloud_probs, 5, 0)
@@ -290,6 +284,8 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
         _ = cloud_removal.print_dates(
             clean_dates, cloud_percent
         )
+        for i, x in zip(clean_dates, cloud_percent):
+            print(i, x)
         print(f"Overall using {len(clean_dates)}/{len(clean_dates)+len(to_remove)} steps")
 
         hkl.dump(cloud_probs, clouds_file, mode='w', compression='gzip')
@@ -345,7 +341,7 @@ def adjust_shape(arr: np.ndarray, width: int, height: int) -> np.ndarray:
     Assures that the shape of arr is width x height
     Used to align 10, 20, 40, 160, 640 meter resolution Sentinel data
     """
-    print(f"Input array shape: {arr.shape}")
+    #print(f"Input array shape: {arr.shape}")
     arr = arr[:, :, :, np.newaxis] if len(arr.shape) == 3 else arr
     arr = arr[np.newaxis, :, :, np.newaxis] if len(arr.shape) == 2 else arr
     
@@ -393,7 +389,7 @@ def adjust_shape(arr: np.ndarray, width: int, height: int) -> np.ndarray:
 
 
 def process_tile(x: int, y: int, data: pd.DataFrame, 
-                 local_path: str, make_shadow: bool = False) -> np.ndarray:
+                 local_path: str, bbx, make_shadow: bool = False) -> np.ndarray:
     """
     Processes raw data structure (in temp/raw/*) to processed data structure
         - align shapes of different data sources (clouds / shadows / s1 / s2 / dem)
@@ -435,12 +431,13 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     clouds = hkl.load(clouds_file)
     if os.path.exists(cloud_mask_file):
         # These are the S2Cloudless / Sen2Cor masks
+        #clm = None
         clm = hkl.load(cloud_mask_file).repeat(2, axis = 1).repeat(2, axis = 2)
     else:
         clm = None
 
     s1 = hkl.load(s1_file)
-    s1 = s1 / 65535
+    s1 = np.float32(s1) / 65535
     s1[..., -1] = convert_to_db(s1[..., -1], 22)
     s1[..., -2] = convert_to_db(s1[..., -2], 22)
     s1 = s1.astype(np.float32)
@@ -471,7 +468,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         s2_20 = s2_20[np.newaxis]
 
     # bilinearly upsample 20m bands to 10m for superresolution
-    sentinel2 = np.empty((s2_10.shape[0], width, height, 10), np.float32)
+    sentinel2 = np.zeros((s2_10.shape[0], width, height, 10), np.float32)
     sentinel2[..., :4] = s2_10
 
     # a foor loop is faster than trying to vectorize it here! 
@@ -529,55 +526,61 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     sentinel2 = interpolation.interpolate_missing_vals(sentinel2)
     if make_shadow:
         time1 = time.time()
-        cloudshad, fcps = cloud_removal.remove_missed_clouds(sentinel2)
-        print("Cloud/shad", np.mean(cloudshad, axis = (1, 2)))
+        # Bounding box passed to remove_missed_clouds to mask 
+        # out non-urban areas from the false positive cloud removal
+        cloudshad, fcps = cloud_removal.remove_missed_clouds(sentinel2, dem, bbx)
 
         if clm is not None:
             clm[fcps] = 0.
             cloudshad = np.maximum(cloudshad, clm)
-        print("Cloud/shad", np.mean(cloudshad, axis = (1, 2)))
 
         interp = cloud_removal.id_areas_to_interp(
-            sentinel2, cloudshad, cloudshad, mage_dates, 
-            wsize = 8, step = 8, thresh = 32
+            sentinel2, cloudshad, cloudshad, image_dates, pfcps = fcps
         )
-        # images that have very high cloud cover can mess up
-        # cloud masks in adjacent images, so remove and re-run
-        to_remove = np.argwhere(np.mean(interp > 0.75, axis = (1, 2)) > 0.90)
+
+        print(f"INTERP: {100*np.mean(interp == 1, axis = (1, 2))}%")
+        # In order to properly normalize band values to gapfill cloudy areas
+        # We need 2% of the image to be non-cloudy
+        # So that we can identify PIFs with at least 1000 px
+        # Images deleted here will get propogated in the resegmentation
+        # So it should not cause boundary artifacts in the final product.
+        to_remove = np.argwhere(np.mean(interp == 1, axis = (1, 2)) > 0.98).flatten()
         if len(to_remove) > 0:
             print(f"Deleting {to_remove}")
             clouds = np.delete(clouds, to_remove, axis = 0)
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
-            cloudshad = np.delete(cloudshad, to_remove, axis = 0)
-            clm = np.delete(clm, to_remove, axis = 0)
-            cloudshad, _ = cloud_removal.remove_missed_clouds(sentinel2)
+            interp = np.delete(interp, to_remove, axis = 0)
+            cloudshad, fcps = cloud_removal.remove_missed_clouds(sentinel2, dem, bbx)
+            if clm is not None:
+                clm = np.delete(clm, to_remove, axis = 0)
+                cloudshad = np.maximum(cloudshad, clm)
 
             interp = cloud_removal.id_areas_to_interp(
-                sentinel2, cloudshad, cloudshad, image_dates, 
-                wsize = 8, step = 8, thresh = 32
+                sentinel2, cloudshad, cloudshad, image_dates, pfcps = fcps
             )
 
-        to_remove = np.argwhere(np.mean(interp > 0.75, axis = (1, 2)) > 0.90)
+        to_remove = np.argwhere(np.mean(interp == 1, axis = (1, 2)) > 0.98).flatten()
         if len(to_remove) > 0:
             print(f"Deleting {to_remove}")
             clouds = np.delete(clouds, to_remove, axis = 0)
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
-            clm = np.delete(clm, to_remove, axis = 0)
-            cloudshad = np.delete(cloudshad, to_remove, axis = 0)
-
-        if clm is not None:
-            cloudshad = np.maximum(cloudshad, clm)
+            interp = np.delete(interp, to_remove, axis = 0)
+            cloudshad, fcps = cloud_removal.remove_missed_clouds(sentinel2, dem, bbx)
+            if clm is not None:
+                clm = np.delete(clm, to_remove, axis = 0)
+                cloudshad = np.maximum(cloudshad, clm)
 
         sentinel2, interp = cloud_removal.remove_cloud_and_shadows(
-            sentinel2, cloudshad, cloudshad, image_dates, wsize = 8, step = 8, thresh = 4
-        )
-
+                sentinel2, cloudshad, cloudshad, image_dates, pfcps = fcps, wsize = 8, step = 8, thresh = 4
+            )
+        """
         time2 = time.time()
         print(f"Cloud/shadow interp:{np.around(time2 - time1, 1)} seconds")
-        print(f"{100*np.sum(interp > 0.67, axis = (1, 2))/(interp.shape[1] * interp.shape[2])}%")
-        print("Cloud/shad", np.mean(cloudshad, axis = (1, 2)))
+        print(f"{100*np.sum(interp > 0.0, axis = (1, 2))/(interp.shape[1] * interp.shape[2])}%")
+        #print("Cloud/shad", np.mean(cloudshad, axis = (1, 2)))
+        """
     else:
         interp = np.zeros(
             (sentinel2.shape[0], sentinel2.shape[1], sentinel2.shape[2]), dtype = np.float32
@@ -591,6 +594,33 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     return sentinel2, image_dates, interp, s1, dem, cloudshad
 
 
+def rolling_mean(arr):
+    if arr.shape[0] > 4:
+        mean_arr = np.zeros_like(arr)
+        start = np.arange(0, arr.shape[0] - 3, 1)
+        start = np.concatenate([
+            np.array([0]),
+            start,
+            np.full((2,), arr.shape[0] - 3)
+        ])
+        end = start + 3
+        i = 0
+
+        for s, e in zip(start, end):
+            array_to_mean = arr[s:e]
+            mean_arr[i] = np.median(array_to_mean, axis = 0)
+            i += 1
+        return mean_arr
+
+    elif arr.shape[0] == 3 or arr.shape[0] == 4:
+        mean_arr = np.median(arr, axis = 0)
+        arr[0] = mean_arr
+        arr[-1] = mean_arr
+        return arr
+    else:
+        return arr
+
+
 def normalize_first_last_quarter(arr, dates):
     """Deprecated"""
     dates_first_quarter = np.argwhere(np.logical_and(dates < 90, dates > -30))
@@ -601,6 +631,13 @@ def normalize_first_last_quarter(arr, dates):
     if len(np.argwhere(dates > 270)) > 0:
         dates_last_quarter = np.argwhere(dates > 270)
         arr[-1] = np.mean(arr[dates_last_quarter], axis = 0)
+    return arr, dates
+
+def normalize_first_last_date(arr, dates):
+    """Deprecated"""
+    if len(dates) >= 4:
+        arr[0] = np.median(arr[:3], axis = 0)
+        arr[-1] = np.median(arr[-3:], axis = 0)
     return arr, dates
 
 
@@ -616,13 +653,15 @@ def make_and_smooth_indices(arr, dates):
                           dimy = arr.shape[2], 
                           outsize = 12)
 
-    indices = np.empty(
+    indices = np.zeros(
         (arr.shape[0], arr.shape[1], arr.shape[2], 4), dtype = np.float32
     )
     indices[:, ..., 0] = evi(arr)
     indices[:, ...,  1] = bi(arr)
     indices[:, ...,  2] = msavi2(arr)
     indices[:, ...,  3] = grndvi(arr)
+
+    #ndices = normalize_first_last_quarter(indices, dates)
 
     try:
         indices, _ = calculate_and_save_best_images(indices, dates)
@@ -670,8 +709,12 @@ def smooth_large_tile(arr, dates, interp):
         dimx = arr.shape[1], dimy = arr.shape[2], outsize = 12)
     
     arr, dates, interp = deal_w_missing_px(arr, dates, interp)
+    #arr = rolling_mean(arr)
+    arr, dates = normalize_first_last_date(arr, dates)
     indices = make_and_smooth_indices(arr, dates)
 
+    #arr = np.delete(arr, 4, axis = 0)
+    #np.save("arr.npy", arr)
     try:
         time3 = time.time()
         arr, max_distance = calculate_and_save_best_images(arr, dates)
@@ -681,16 +724,19 @@ def smooth_large_tile(arr, dates, interp):
         print("Skipping because of no images")
         arr = np.zeros((24, arr.shape[1], arr.shape[2], 10), dtype = np.float32)
         dates = [0,]
+    #np.save("largearr.npy", arr)
+
 
     time3 = time.time()
     arr = sm.interpolate_array(arr)
     time4 = time.time()
     print(f"Interp in {time4 - time3} seconds")
 
-    out = np.empty((arr.shape[0], arr.shape[1], arr.shape[2], 14), dtype = np.float32)
+    out = np.zeros((arr.shape[0], arr.shape[1], arr.shape[2], 14), dtype = np.float32)
     out[..., :10] = arr 
     out[..., 10:] = indices
     time2 = time.time()
+    #np.save("smoothed.npy", out)
     print(f"Smooth/regularize time series in {time2 - time1} seconds")
     return out, dates, interp
 
@@ -722,9 +768,19 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     
     s2 = interpolation.interpolate_na_vals(s2)
     s2 = np.float32(s2)
+
+    #s2_median = np.median(s2, axis = 0)[np.newaxis].astype(np.float32)
+    #s2_median = np.median(s2, axis = 0).astype(np.float32)
+    #s2_median = np.concatenate([s2_median, evi(s2_median)[..., np.newaxis]], axis = -1)
+    #s2_median = np.concatenate([s2_median, bi(s2_median)[..., np.newaxis]], axis = -1)
+    #s2_median = np.concatenate([s2_median, msavi2(s2_median)[..., np.newaxis]], axis = -1)
+    #s2_median = np.concatenate([s2_median, grndvi(s2_median)[..., np.newaxis]], axis = -1)
+    #s2_median = s2_median[np.newaxis]
+
     s2, dates, interp = smooth_large_tile(s2, dates, interp)
-    s2_median = np.median(s2, axis = 0)[np.newaxis].astype(np.float32)
+
     s1_median = np.median(s1, axis = 0)[np.newaxis].astype(np.float32)
+    s2_median = np.median(s2, axis = 0)[np.newaxis].astype(np.float32)
 
     # The tiles_folder references the folder names (w/o boundaries)
     # While the tiles_array references the arrays themselves (w/ boudnaries)
@@ -773,7 +829,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         interp_tile = interp[:, start_x:end_x, start_y:end_y]
         dates_tile = np.copy(dates)
         dem_subtile = dem[np.newaxis, start_x:end_x, start_y:end_y]
-        s1_subtile = s1[:, start_x:end_x, start_y:end_y, :]
+        s1_subtile = np.copy(s1[:, start_x:end_x, start_y:end_y, :])
         output = f"{path}{str(folder_y)}/{str(folder_x)}.npy"
 
         min_clear_images_per_date = np.sum(interp_tile != 1, axis = (0))
@@ -809,7 +865,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             min_clear_images_per_date = np.pad(min_clear_images_per_date, ((pad_u, pad_d), (0, 0)), 'reflect')
         
         # Concatenate the DEM and Sentinel 1 data
-        subtile_all = np.empty((13, SIZE + 14, SIZE + 14, 17), dtype = np.float32)
+        subtile_all = np.zeros((13, SIZE + 14, SIZE + 14, 17), dtype = np.float32)
         subtile_all[:-1, ..., :10] = subtile[..., :10]
         subtile_all[:-1, ..., 11:13] = s1_subtile
         subtile_all[:-1, ..., 13:] = subtile[..., 10:]
@@ -818,6 +874,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         subtile_all[-1, ..., :10] = subtile_median_s2[..., :10]
         subtile_all[-1, ..., 11:13] = subtile_median_s1
         subtile_all[-1, ..., 13:] = subtile_median_s2[..., 10:]
+
  
         # Create the output folders for the subtile predictions
         output_folder = "/".join(output.split("/")[:-1])
@@ -838,15 +895,15 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subtile_time = np.around(time2 - time1, 1)
             print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
                 f"for: {dates_tile}, {np.percentile(min_clear_images_per_date, 10)} clear images"
-                f" in {subtile_time} seconds")
+                f" in {subtile_time} seconds, {np.mean(preds)}")
 
         # Go back through and remove predictions where there are no cloud-free images
         min_clear_images_per_date = min_clear_images_per_date[7:-7, 7:-7]
         no_images = min_clear_images_per_date < 1
-        no_images = np.reshape(no_images, ((4, 54, 4, 54)))
+        no_images = np.reshape(no_images, ((6, 36, 6, 36)))
         no_images = np.sum(no_images, axis = (1, 3))
-        no_images = no_images > (54*54) * 0.02
-        no_images = no_images.repeat(54, axis = 0).repeat(54, axis = 1)
+        no_images = no_images > (36*36) * 0.025
+        no_images = no_images.repeat(36, axis = 0).repeat(36, axis = 1)
         preds[no_images] = 255.
         np.save(output, preds)
 
@@ -899,11 +956,11 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         preds = sess.run(predict_logits,
                               feed_dict={predict_inp:batch_x, 
                                          predict_length:lengths})
-        
+
         preds = preds.squeeze()
         preds = preds[1:-1, 1:-1]
         time2 = time.time()
-        
+
     else:
         preds = np.full((SIZE, SIZE), 255)
         print(f"The sum of the subtile is {np.sum(subtile)}")
@@ -1012,7 +1069,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--predict_model_path",
         dest = 'predict_model_path',
-        default = '../models/224-may-3/'
+        default = '../models/224-may-avg-onethird/'
     )
     parser.add_argument(
         "--gap_model_path",
@@ -1179,72 +1236,75 @@ if __name__ == '__main__':
         
         # If the tile does not exist, go ahead and download/process/upload it
         if not processed or args.reprocess:
-            try:
-                bbox = None
-                if not bbx:
-                    data2 = data.copy()
-                    data2 = data2[data2['Y_tile'] == int(y)]
-                    data2 = data2[data2['X_tile'] == int(x)]
-                    data2 = data2.reset_index(drop = True)
-                    x = str(int(x))
-                    y = str(int(y))
-                    x = x[:-2] if ".0" in x else x
-                    y = y[:-2] if ".0" in y else y
-                    initial_bbx = [data2['X'][0], data2['Y'][0], data2['X'][0], data2['Y'][0]]
-                    bbx = make_bbox(initial_bbx, expansion = 300/30)
-                time0 = time.time()
-                if not args.redownload:
-                    time1 = time.time()
-                    bbx, n_images = download_tile(x = x,
-                                                  y = y, 
-                                                  data = data, 
-                                                  api_key = shconfig, 
-                                                  year = args.year)
-                    time2 = time.time()
-                    print(f"Finished downloading imagery in {np.around(time2 - time0, 1)} seconds")
-                else:
-                    download_raw_tile((x, y), args.local_path, "raw")
-                    folder = f"{args.local_path}{str(x)}/{str(y)}/"
-                    tile_idx = f'{str(x)}X{str(y)}Y'
-                    s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
-                    s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
-                    s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
-                    size = hkl.load(s2_20_file)
-                    size = size.shape[1:3]
-                    n_images = 10
-                if n_images > 2:
-                
-                    s2, dates, interp, s1, dem, cloudshad = process_tile(x = x, 
-                                                                         y = y, 
-                                                                         data = data, 
-                                                                         local_path = args.local_path, 
-                                                                         make_shadow = True)
-                    s2 = superresolve_large_tile(s2, superresolve_sess)
-                    time1 = time.time()
-                    process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess)
-                    time2 = time.time()
-                    print(f"Finished processing subtiles in {np.around(time2 - time1, 1)} seconds")
+            #try:
+            bbox = None
+            if not bbx:
+                data2 = data.copy()
+                data2 = data2[data2['Y_tile'] == int(y)]
+                data2 = data2[data2['X_tile'] == int(x)]
+                data2 = data2.reset_index(drop = True)
+                x = str(int(x))
+                y = str(int(y))
+                x = x[:-2] if ".0" in x else x
+                y = y[:-2] if ".0" in y else y
+                initial_bbx = [data2['X'][0], data2['Y'][0], data2['X'][0], data2['Y'][0]]
+                bbx = make_bbox(initial_bbx, expansion = 300/30)
+            time0 = time.time()
+            if not args.redownload:
+                time1 = time.time()
+                bbx, n_images = download_tile(x = x,
+                                              y = y, 
+                                              data = data, 
+                                              api_key = shconfig, 
+                                              year = args.year)
+                time2 = time.time()
+                print(f"Finished downloading imagery in {np.around(time2 - time0, 1)} seconds")
+            else:
+                download_raw_tile((x, y), args.local_path, "raw")
+                #download_raw_tile((x, y), args.local_path, "processed")
+                folder = f"{args.local_path}{str(x)}/{str(y)}/"
+                tile_idx = f'{str(x)}X{str(y)}Y'
+                s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
+                s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
+                s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
+                size = hkl.load(s2_20_file)
+                size = size.shape[1:3]
+                n_images = 10
+            if n_images > 2:
+                print(bbx)
+                s2, dates, interp, s1, dem, cloudshad = process_tile(x = x, 
+                                                                     y = y, 
+                                                                     data = data, 
+                                                                     local_path = args.local_path, 
+                                                                     bbx = bbx,
+                                                                     make_shadow = True)
+                s2 = superresolve_large_tile(s2, superresolve_sess)
+                time1 = time.time()
+                process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess)
+                time2 = time.time()
+                print(f"Finished processing subtiles in {np.around(time2 - time1, 1)} seconds")
 
-                    time1 = time.time()
-                    predictions = load_mosaic_predictions(path_to_tile + "processed/")
-                    time2 = time.time()
-                    print(f"Finished making tif in {np.around(time2 - time1, 1)} seconds")
+                time1 = time.time()
+                predictions = load_mosaic_predictions(path_to_tile + "processed/")
+                time2 = time.time()
+                print(f"Finished making tif in {np.around(time2 - time1, 1)} seconds")
 
-                    file = write_tif(predictions, bbx, x, y, path_to_tile)
-                    key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_FINAL.tif'
-                    uploader.upload(bucket = args.s3_bucket, key = key, file = file)
-                    if args.ul_flag:
-                        upload_raw_processed_s3(path_to_tile, x, y, uploader)
-                    time2 = time.time()
-                    print(f"Finished {n} in {np.around(time2 - time0, 1)}"
-                         f" seconds, total of {exception_counter} exceptions")
-                    n += 1
-                    predictions = None
-                    s2 = None
-                    dates = None
-                    interp = None
-                    s1 = None
-                    dem = None
+                file = write_tif(predictions, bbx, x, y, path_to_tile)
+                key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y_FINAL.tif'
+                uploader.upload(bucket = args.s3_bucket, key = key, file = file)
+                if args.ul_flag:
+                    upload_raw_processed_s3(path_to_tile, x, y, uploader)
+                time2 = time.time()
+                print(f"Finished {n} in {np.around(time2 - time0, 1)}"
+                     f" seconds, total of {exception_counter} exceptions")
+                n += 1
+                predictions = None
+                s2 = None
+                dates = None
+                interp = None
+                s1 = None
+                dem = None
+            """
             except Exception as e:
                 exception_counter += 1
                 print(f"Ran into {str(e)} error, skipping {x}/{y}/")
@@ -1256,5 +1316,6 @@ if __name__ == '__main__':
                 dem = None
                 time.sleep(10)
                 continue
+            """
         else:
             print(f'Skipping {x}, {y} as it is done')

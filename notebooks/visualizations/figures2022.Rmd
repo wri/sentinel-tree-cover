@@ -1,0 +1,229 @@
+
+
+```{r}
+extrafont::loadfonts(device="pdf")
+library(dplyr)
+library(tidyr)
+library(rgdal)
+library(sp)
+library(sf)
+library(ggplot2)
+library(rgeos)
+library(broom)
+library(mapproj)
+```
+
+
+```{r}
+geojson = "tropicssmall.geojson"
+input.proj <- CRS("+proj=longlat + datum=WGS84")
+map <- readOGR(geojson)
+map.df <- fortify(map)
+```
+
+```{r}
+library(ggalt)
+
+training_data = read.csv("train_data.csv")
+
+#geojson = "../../references/json/custom.geo.json"
+#map <- readOGR(geojson)
+#map.df <- fortify(map)
+
+training_plots = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  #geom_point(data = new_data, aes(x = longs, y = lats), color = "blue", size = 0.2)+
+  geom_point(data = training_data, aes(x = long, y = lat), color = "red", size = 0.2)+
+  #ylim(-54, 85)+
+  #xlim(-173, 180)+
+  theme_bw(base_size = 12)+
+  ggtitle("Training plots")+
+  xlab("")+
+  ylab("")+
+  coord_proj()+
+  #coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+  #           xlim=c(-100, -80), # -100, -35, -40, 25
+  #           ylim=c(0, 25))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"))
+
+print(training_plots)
+```
+
+
+```{r}
+library(raster)
+tml = raster("25km_overview.tif")
+test_spdf <- as(tml, "SpatialPixelsDataFrame")
+test_df <- as.data.frame(test_spdf)
+
+colnames(test_df) <- c("value", "x", "y") 
+
+test_df <- subset(test_df, y > -24 & y < 24)
+test_df <- subset(test_df, x > -110)
+```
+
+```{r}
+colour_breaks <- c(0, 20, 40, 60, 80)
+colours = c("#f0f7f0", "#f0f7f0", "#d1ebcf", "#90ca91", "#57a162", "#127434")
+
+l = ggplot() +  
+  geom_tile(data=test_df, aes(x=x, y=y, fill=value, color = value), size = 0.0)+
+  theme_bw()+
+  geom_polygon(data = map.df, 
+               aes(x = long, y = lat, group = group), 
+               fill = "transparent",
+               colour = "black",
+               size = 0.1)+
+  scale_colour_stepsn(limits  = range(test_df$value),
+    colours = colours[c(1, seq_along(colours), length(colours))],
+    values  = c(0, scales::rescale(colour_breaks, from = range(test_df$value)), 1),
+    name = NULL)+
+  scale_fill_stepsn(limits  = range(test_df$value),
+    colours = colours[c(1, seq_along(colours), length(colours))],
+    values  = c(0, scales::rescale(colour_breaks, from = range(test_df$value)), 1),
+    name = NULL)+
+  xlab(NULL)+
+  ylab(NULL)+
+  ggtitle('2020 percent tree cover')+
+  #scale_fill_distiller(palette = "Greens", direction = 1)+
+  coord_proj(ylim = c(-24, 24), xlim = c(-110, 170))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_line(color = 'grey40', size = 0.25, linetype = "dashed"),
+        text = element_text(size=15,family="Times"),
+        panel.background = element_rect(fill = NA),
+        legend.position=c(0.96,0.75),
+        panel.ontop = TRUE,
+        )
+
+ggsave("25km_overview.pdf", l, "pdf", width = 10, height = 2.85, units = "in")
+```
+
+```{r}
+library(ggalt)
+training_data = read.csv("../evaluation.csv")
+
+#geojson = "../../references/json/custom.geo.json"
+#map <- readOGR(geojson)
+#map.df <- fortify(map)
+
+training_plots = ggplot()+
+  theme_bw(base_size = 12)+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  geom_point(data = training_data, aes(x = long, y = lat), color = "red", size = 0.4)+
+  #ggtitle("Testing plots")+
+  xlab("")+
+  ylab("")+
+  coord_proj(ylim = c(-40, 40), xlim = c(-110, 170))+
+  #coord_proj("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+  #           xlim=c(-100, -80), # -100, -35, -40, 25
+  #           ylim=c(0, 25))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_line(color = 'grey40', size = 0.25, linetype = "dashed"),
+        text = element_text(size=15,family="Times"),
+        panel.background = element_rect(fill = NA),
+        panel.ontop = TRUE,
+        )
+
+ggsave("testinggplots.png", training_plots, "png", width = 8, height = 3.85, units = "in")
+print(training_plots)
+
+```
+
+
+```{r}
+library(ggplot2)
+library(ggalt)
+testing_data = read.csv("train_data.csv")
+
+testing_plots = ggplot()+
+  geom_polygon(data = map.df, aes(x = long, y = lat, group = group), fill = "white", colour = "black", size = 0.1)+
+  geom_point(shape = 21, data = testing_data, aes(x = long, y = lat), fill = "yellow", color = "black", stroke = 0.2, size = 0.8)+
+  theme_bw(base_size = 15)+
+  xlab("")+
+  ylab("")+
+  coord_proj(ylim = c(-55, 40), xlim = c(-120, 170))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_line(color = 'grey40', size = 0.25, linetype = "dashed"),
+        text = element_text(size=15,family="Times"),
+        panel.background = element_rect(fill = NA),
+        panel.ontop = TRUE,
+        )
+
+
+ggsave("train_plot_july2022.png", testing_plots, "png", width = 10.5, dpi = 300, height = 5.5, units = "in")
+```
+
+# Difference maps
+```{r}
+library(raster)
+library(ggalt)
+library(dplyr)
+library(tidyr)
+library(rgdal)
+library(sp)
+library(sf)
+library(ggplot2)
+library(rgeos)
+library(broom)
+library(mapproj)
+library(raster)
+library(ggalt)
+
+# Load in polygons
+geojson = "tropics.geojson"
+input.proj <- CRS("+proj=longlat + datum=WGS84")
+map <- readOGR(geojson)
+map.df <- fortify(map)
+
+# Load in raster
+rast = raster("20km_5m_diff.tif")
+spdf <- as(rast, "SpatialPixelsDataFrame")
+df <- as.data.frame(spdf)
+colnames(df) <- c("value", "x", "y") 
+df <- subset(df, y > -24 & y < 24)
+df$value = df$value * -1
+extrafont::loadfonts(device="pdf")
+
+l = ggplot() +  
+  geom_tile(data=df,
+            aes(x=x, y=y, fill=value, color = value),
+            size = 0.0)+
+  theme_bw()+
+  geom_polygon(data = map.df, 
+               aes(x = long, y = lat, group = group), 
+               fill = "transparent",
+               colour = "black",
+               size = 0.1)+
+  scale_fill_fermenter(breaks = c(-40, -20, 20, 40),
+                       type = "div",
+                       na.value = 'white',
+                       limits = c(-100, 100),
+                       direction = 1, 
+                       name = NULL)+
+  scale_colour_fermenter(breaks = c(-40, -20, 20, 40),
+                         type = "div",
+                         na.value = 'white',
+                         limits = c(-100, 100), 
+                         direction = 1,  
+                         name = NULL)+
+  xlab(NULL)+
+  ylab(NULL)+
+  coord_proj(ylim = c(-24, 24), xlim = c(-110, 170))+
+  theme(plot.margin=unit(c(0,0,0,0),"cm"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_line(color = 'grey40', size = 0.25, linetype = "dashed"),
+        text = element_text(size=15,family="Times"),
+        panel.background = element_rect(fill = NA),
+        legend.position=c(0.96,0.75),
+        panel.ontop = TRUE,
+        )+
+  ggtitle('Our data - Potapov et al. (2021), 5m')
+ggsave("25km_differences_height_5m_new.pdf", l, "pdf", width = 10, height = 2.85, units = "in")
+```
