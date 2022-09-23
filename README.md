@@ -3,6 +3,8 @@ Mapping tree cover and extent with Sentinel-1 and 2
 
 # Description
 
+DATA LINK: View the data on GEE here: https://jombrandt.users.earthengine.app/view/sentinel-tree-cover
+
 This project maps tree extent at the ten-meter scale using open source artificial intelligence and satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems.
 
 This repository contains the source code for the project. A full description of the methodology can be found [on arXiv](https://arxiv.org/abs/2005.08702). The data product specifications can be accessed on the wiki page.
@@ -85,12 +87,10 @@ This model uses a U-Net architecture with the following modifications:
 ## Data
 This project uses Sentinel 1 and Sentinel 2 imagery. Monthly composites of Sentinel 1 VV-VH imagery are fused with the nearest Sentinel 2 10- and 20-meter bands. These images are preprocessed by:
 *  Super-resolving 20m bands to 10m with DSen2
-![img](references/screenshots/supres.png?raw=true)
 *  Calculating cloud cover and cloud shadow masks
-![img](references/screenshots/cloudmask.png?raw=true)
-*  Removing steps with >20% cloud cover, and linearly interpolating to remove clouds and shadows from <20% cloud cover images
-![img](references/screenshots/cloudinterpolation.png?raw=true)
-*  Applying Whittaker smoothing (lambda = 800) to each time series for each pixel for each band to reduce noise
+*  Removing steps with >30% cloud cover, and linearly interpolating to remove clouds and shadows from <30% cloud cover images
+![img](references/readme/cloud_removal.gif?raw=true)
+*  Applying Whittaker smoothing (lambda = 100) to each time series for each pixel for each band to reduce noise
 ![img](references/screenshots/datasmooth.png?raw=true)
 *  Calculating vegetation indices, including EVI, BI, and MSAVI2
 
@@ -100,9 +100,8 @@ The cloud / shadow removal and temporal mosaicing algorithm is summarized below:
 *  Select least cloudy image if max CC > 15%, otherwise select the image closest to the middle of the month
 *  Linearly interpolate clouds and cloud shadows with a rolling median
 *  Smooth time series data with a rolling median
-*  Linearly interpolate image stack to a 5 day timestep
+*  Linearly interpolate image stack to a 15 day timestep
 *  Smooth time stack with Whittaker smoother
-*  Go back through and remove clouds, cloud shadows one final time
 
 # License
 

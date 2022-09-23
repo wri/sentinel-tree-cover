@@ -224,6 +224,7 @@ def _check_for_alt_img(probs, dates, date):
         return False
 
 
+
 def identify_clouds_big_bbx(cloud_bbx, shadow_bbx: List[Tuple[float, float]], dates: dict,
                 api_key: str,
                 year: int,

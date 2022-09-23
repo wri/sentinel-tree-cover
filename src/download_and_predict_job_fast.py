@@ -234,6 +234,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
 
     # The cloud bounding box is much larger, to ensure that the same image dates
     # Are selected in neighboring tiles
+
     cloud_bbx = make_bbox(initial_bbx, expansion = 4500/30)
     bbx = make_bbox(initial_bbx, expansion = 300/30)
     dem_bbx = make_bbox(initial_bbx, expansion = 301/30)
@@ -266,6 +267,10 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year) -> None:
             year = year
         )
 
+        cloud_probs = cloud_probs * 255
+        cloud_probs[cloud_probs > 100] = np.nan
+        cloud_percent = np.nanmean(cloud_probs, axis = (1, 2))
+        cloud_percent = cloud_percent / 100
         # This function selects the images used for processing
         # Based on cloud cover and frequency of cloud-free images
         to_remove = cloud_removal.subset_contiguous_sunny_dates(image_dates,
@@ -431,7 +436,6 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     clouds = hkl.load(clouds_file)
     if os.path.exists(cloud_mask_file):
         # These are the S2Cloudless / Sen2Cor masks
-        #clm = None
         clm = hkl.load(cloud_mask_file).repeat(2, axis = 1).repeat(2, axis = 2)
     else:
         clm = None
@@ -713,8 +717,6 @@ def smooth_large_tile(arr, dates, interp):
     arr, dates = normalize_first_last_date(arr, dates)
     indices = make_and_smooth_indices(arr, dates)
 
-    #arr = np.delete(arr, 4, axis = 0)
-    #np.save("arr.npy", arr)
     try:
         time3 = time.time()
         arr, max_distance = calculate_and_save_best_images(arr, dates)
@@ -724,8 +726,6 @@ def smooth_large_tile(arr, dates, interp):
         print("Skipping because of no images")
         arr = np.zeros((24, arr.shape[1], arr.shape[2], 10), dtype = np.float32)
         dates = [0,]
-    #np.save("largearr.npy", arr)
-
 
     time3 = time.time()
     arr = sm.interpolate_array(arr)
