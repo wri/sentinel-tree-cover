@@ -600,6 +600,7 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
         if len(missing_px) > 0:
             print(f"Deleting {missing_px} from cloud mask")
             clm = np.delete(clm, missing_px, 0)
+            clm[fcps] = 0.
         try:
             clm[fcps] = 0.
             print("CLM", np.mean(clm, axis = (1, 2)))
@@ -1644,10 +1645,10 @@ if __name__ == "__main__":
             except KeyboardInterrupt:
                 break
             
-            except Exception as e:
-                print(f"Ran into {str(e)}")
-                finished = 0
-                s2_shape = (0, 0)
+            #except Exception as e:
+            #    print(f"Ran into {str(e)}")
+            #    finished = 0
+            #    s2_shape = (0, 0)
 
             if finished == 1:
                 try:

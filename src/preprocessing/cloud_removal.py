@@ -516,7 +516,6 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
     return tiles, areas_interpolated
 """
 
-
 def detect_pfcp(arr, dem, bbx):
     # Detects potential false cloud pixels
     # By using the paralax effect of the NIR bands as
@@ -711,8 +710,8 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
         shadows_i = binary_dilation(
             1 - (binary_dilation(shadows_i == 0, iterations=2)), iterations=3)
         shadows_i = distance(1 - shadows_i)
-        shadows_i[shadows_i <= 5] = 0.
-        shadows_i[shadows_i > 5] = 1
+        shadows_i[shadows_i <= 4] = 0.
+        shadows_i[shadows_i > 4] = 1
         shadows_i = 1 - shadows_i
         shadows[i] = shadows_i
 
@@ -1208,7 +1207,7 @@ def subset_contiguous_sunny_dates(dates, probs):
             if len(indices_month) > 1:
                 month_dates = dates[indices_month]
                 month_clouds = probs[indices_month]
-
+                
                 subset_month = True
                 if x == -60:
                     feb_mar = np.argwhere(

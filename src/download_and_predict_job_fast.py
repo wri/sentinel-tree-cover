@@ -712,6 +712,8 @@ def make_and_smooth_indices(arr, dates):
     #print(np.sum(np.isnan(indices)))
     #indices = normalize_first_last_quarter(indices, dates)
 
+    #ndices = normalize_first_last_quarter(indices, dates)
+
     try:
         indices, _ = calculate_and_save_best_images(indices, dates)
     except:
