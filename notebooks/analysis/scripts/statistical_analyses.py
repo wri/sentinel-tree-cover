@@ -111,9 +111,9 @@ def create_regional_csv(list_of_countries, region, processing_extent='full_tmlon
         dfs_to_concat.append(country_df)
 
     regional_df = pd.concat(dfs_to_concat, ignore_index=True)
-    print(sorted(set(list(regional_df.country.values))))
-    # for Brazil and Indonesia, combine admins and save as country spreadsheet
-    if region == 'Brazil':
+
+    # for Brazil, China, Indonesia, Australia, combine admins and save as country spreadsheet
+    if region == 'China':
         regional_filename = f'statistics/{region}_statistics_{processing_extent}.csv'
         regional_df.country = region
 
