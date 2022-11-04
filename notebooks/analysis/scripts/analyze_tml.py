@@ -21,7 +21,6 @@ import pandas.api.types as ptypes
 import fiona
 from contextlib import contextmanager
 import math
-import requests
 import urllib.request
 from urllib.error import HTTPError
 import osgeo
@@ -31,6 +30,7 @@ import glob
 from copy import copy
 from datetime import datetime
 import psutil
+import argparse
 
 parser = argparse.ArgumentParser(description='Provide a capitalized country name, extent and analysis type.')
 parser.add_argument('country', type=str)
