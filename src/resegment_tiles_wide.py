@@ -40,7 +40,7 @@ def download_raw_tile(tile_idx, local_path, subfolder = "raw"):
     y = tile_idx[1]
 
     path_to_tile = f'{local_path}{str(x)}/{str(y)}/'
-    s3_path_to_tile = f'2020/{subfolder}/{str(x)}/{str(y)}/'
+    s3_path_to_tile = f'{str(args.year)}/{subfolder}/{str(x)}/{str(y)}/'
     if subfolder == "tiles":
         folder_to_check = len(glob(path_to_tile + "*.tif")) > 0
     if subfolder == "processed":
@@ -198,12 +198,12 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
     return preds
 
 
-def check_if_processed(tile_idx, local_path):
+def check_if_processed(tile_idx, local_path, year):
 
     x = tile_idx[0]
     y = tile_idx[1]
     path_to_tile = f'{local_path}{str(x)}/{str(y)}/'
-    s3_path_to_tile = f'2020/tiles/{str(x)}/{str(y)}/'
+    s3_path_to_tile = f'{str(year)}/tiles/{str(x)}/{str(y)}/'
     processed = file_in_local_or_s3(path_to_tile,
                                     s3_path_to_tile, 
                                     AWSKEY, AWSSECRET, 
@@ -525,7 +525,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             no_images = np.reshape(no_images, (6, 40, 20, (SIZE // 20)))
             no_images = np.sum(no_images, axis = (1, 3))
             
-            no_images = no_images > 1360*0.1
+            no_images = no_images > 1360*0.2
             no_images = no_images.repeat(40, axis = 0).repeat((SIZE // 20), axis = 1)
 
             if source_median <= (min_ref_median - 10):
@@ -595,13 +595,13 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
 
         # Remove dates with high likelihood of missed cloud or shadow (false negatives)
     # This is done here because make_shadow = False in process_tile
-    cld, fcps = cloud_removal.remove_missed_clouds(arr, dem, bbx)
+    cld, fcps = cloud_removal.identify_clouds_shadowss(arr, dem, bbx)
     if clm is not None:
         if len(missing_px) > 0:
             print(f"Deleting {missing_px} from cloud mask")
             clm = np.delete(clm, missing_px, 0)
-            clm[fcps] = 0.
         try:
+            clm[fcps] = 0.
             print("CLM", np.mean(clm, axis = (1, 2)))
             cld = np.maximum(clm, cld)
         except:
@@ -614,16 +614,16 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
     interp = cloud_removal.id_areas_to_interp(
             arr, cld, cld, dates, fcps
     )
-    print(np.mean(interp > 0.0, axis = (1, 2)))
-    to_remove = np.argwhere(np.mean(interp > 0.0, axis = (1, 2)) > 0.95)
+    print(np.mean(interp == 1, axis = (1, 2)))
+    to_remove = np.argwhere(np.mean(interp == 1, axis = (1, 2)) > 0.95)
     if len(to_remove) > 0:
         cld = np.delete(cld, to_remove, axis = 0)
         dates = np.delete(dates, to_remove)
         interp = np.delete(interp, to_remove, axis = 0)
         arr = np.delete(arr, to_remove, axis = 0)
-        cld, fcps, = cloud_removal.remove_missed_clouds(arr, dem, bbx)
+        cld, fcps, = cloud_removal.identify_clouds_shadowss(arr, dem, bbx)
 
-    arr, interp2 = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, pfcps = fcps, wsize = 10, step = 10, thresh = 10)
+    arr, interp2, to_remove = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, pfcps = fcps, wsize = 10, step = 10, thresh = 10)
 
     print(np.mean(interp2, axis = (1, 2)))
     #interp = np.maximum(interp, interp2)
@@ -748,10 +748,10 @@ def regularize_and_smooth(arr, dates):
 
 def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_dates):
 
-    processed = check_if_processed((tile_x, tile_y), local_path)
+    processed = check_if_processed((tile_x, tile_y), local_path, args.year)
     neighbor_id = [str(int(tile_x) + 1), tile_y]
 
-    processed_neighbor = check_if_processed(neighbor_id, local_path)
+    processed_neighbor = check_if_processed(neighbor_id, local_path, args.year)
     if processed_neighbor:
         data_temp = data.copy()
         data_temp = data_temp[data_temp['X_tile'] == int(neighbor_id[0])]
@@ -1448,14 +1448,14 @@ def cleanup(path_to_tile, path_to_right, delete = True, upload = True):
     for file in glob(path_to_right + "processed/*/left*"):
         internal_folder = file[len(path_to_tile):]
         print(internal_folder)
-        key = f'2020/processed/{str(int(x) + 1)}/{str(y)}/{internal_folder}'
+        key = f'{str(args.year)}/processed/{str(int(x) + 1)}/{str(y)}/{internal_folder}'
         if upload:
             uploader.upload(bucket = 'tof-output', key = key, file = file)
 
     for file in glob(path_to_tile + "processed/right*/*.npy"):
         internal_folder = file[len(path_to_tile):]
         print(internal_folder)
-        key = f'2020/processed/{x}/{y}/' + internal_folder
+        key = f'{str(args.year)}/processed/{x}/{y}/' + internal_folder
         if upload:
             uploader.upload(bucket = 'tof-output', key = key, file = file)
 
@@ -1496,15 +1496,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/240-680-may-avg/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/240-680-may-43/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
-    parser.add_argument("--db_path", dest = "db_path", default = "processing_area_nov_10.csv")
+    parser.add_argument("--db_path", dest = "db_path", default = "process_area_2022.csv")
     parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
     parser.add_argument("--yaml_path", dest = "yaml_path", default = "../config.yaml")
     parser.add_argument("--start_y", dest = "start_y", default = 10000)
     parser.add_argument("--process_all", dest = "process_all", default = False)
     parser.add_argument("--resmooth", dest = "resmooth", default = False)
+    parser.add_argument("--year", dest = "year", default = 2020)
     args = parser.parse_args()
 
     if os.path.exists(args.yaml_path):
@@ -1635,18 +1636,18 @@ if __name__ == "__main__":
                 break
             except Exception as e:
                 print(f"Ran into {str(e)}")
-            #try:
-            time1 = time.time()
-            finished, s2_shape, s2_neighb_shape, diff, min_images = resegment_border(x, y, "right", args.local_path, bbx, neighb_bbx, 2)
-            time2 = time.time()
-            print(f"Finished the predictions in: {np.around(time2 - time1, 1)} seconds")
-            #except KeyboardInterrupt:
-            #    break
+            try:
+                time1 = time.time()
+                finished, s2_shape, s2_neighb_shape, diff, min_images = resegment_border(x, y, "right", args.local_path, bbx, neighb_bbx, 2)
+                time2 = time.time()
+                print(f"Finished the predictions in: {np.around(time2 - time1, 1)} seconds")
+            except KeyboardInterrupt:
+                break
             
-            #except Exception as e:
-            #    print(f"Ran into {str(e)}")
-            #    finished = 0
-            #    s2_shape = (0, 0)
+            except Exception as e:
+                print(f"Ran into {str(e)}")
+                finished = 0
+                s2_shape = (0, 0)
 
             if finished == 1:
                 try:
@@ -1697,7 +1698,7 @@ if __name__ == "__main__":
                             suffix = "_SMOOTH_X"
 
                         file = write_tif(predictions_left, bbx, x, y, path_to_tile, suffix)
-                        key = f'2020/tiles/{x}/{y}/{str(x)}X{str(y)}Y{suffix}.tif'
+                        key = f'{str(args.year)}/tiles/{x}/{y}/{str(x)}X{str(y)}Y{suffix}.tif'
                         uploader.upload(bucket = args.s3_bucket, key = key, file = file)
 
 
@@ -1709,7 +1710,7 @@ if __name__ == "__main__":
                             suffix = "_SMOOTH_X"
 
                         file = write_tif(predictions_right, neighb_bbx, str(int(x) + 1), y, path_to_right, suffix)
-                        key = f'2020/tiles/{str(int(x) + 1)}/{y}/{str(int(x) + 1)}X{str(y)}Y{suffix}.tif'
+                        key = f'{str(args.year)}/tiles/{str(int(x) + 1)}/{y}/{str(int(x) + 1)}X{str(y)}Y{suffix}.tif'
                         uploader.upload(bucket = args.s3_bucket, key = key, file = file)
                         # dELETE FALSE
                         cleanup(path_to_tile, path_to_right, delete = True, upload = True)

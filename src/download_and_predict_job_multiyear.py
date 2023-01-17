@@ -507,7 +507,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     if make_shadow:
         time1 = time.time()
         #np.save("before.npy", sentinel2)
-        cloudshad, fcps = cloud_removal.remove_missed_clouds(sentinel2, dem, bbx)
+        cloudshad, fcps = cloud_removal.identify_clouds_shadows(sentinel2, dem, bbx)
 
         if clm is not None:
             clm[fcps] = 0.
@@ -520,7 +520,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
             cloudshad = np.delete(cloudshad, to_remove, axis = 0)
-            cloudshad, _ = cloud_removal.remove_missed_clouds(sentinel2, dem, bbx)
+            cloudshad, _ = cloud_removal.identify_clouds_shadows(sentinel2, dem, bbx)
             if clm is not None:
                 clm = np.delete(clm, to_remove, axis = 0)
                 cloudshad = np.maximum(cloudshad, clm)

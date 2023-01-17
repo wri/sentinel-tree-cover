@@ -104,9 +104,9 @@ ggsave("25km_overview.pdf", l, "pdf", width = 10, height = 2.85, units = "in")
 library(ggalt)
 training_data = read.csv("../evaluation.csv")
 
-#geojson = "../../references/json/custom.geo.json"
-#map <- readOGR(geojson)
-#map.df <- fortify(map)
+geojson = "../../references/json/custom.geo.json"
+map <- readOGR(geojson)
+map.df <- fortify(map)
 
 training_plots = ggplot()+
   theme_bw(base_size = 12)+
@@ -128,7 +128,7 @@ training_plots = ggplot()+
         panel.ontop = TRUE,
         )
 
-ggsave("testinggplots.png", training_plots, "png", width = 8, height = 3.85, units = "in")
+ggsave("testinggplots2.pdf", training_plots, "pdf", width = 8, height = 3.5, units = "in", dpi = 200)
 print(training_plots)
 
 ```

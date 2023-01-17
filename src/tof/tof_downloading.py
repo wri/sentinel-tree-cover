@@ -62,10 +62,10 @@ def to_int16(array: np.array) -> np.array:
 
 def to_float32(array: np.array) -> np.array:
     """Converts an int array to float32"""
-    print(f'The original max value is {np.max(array)}')
+    #print(f'The original max value is {np.max(array)}')
     if not isinstance(array.flat[0], np.floating):
         assert np.max(array) > 1
-        array = np.float32(array) / 65535.
+        array = np.divide(np.float32(array), 65535.)
     assert np.max(array) <= 1
     assert array.dtype == np.float32
     return array
@@ -83,12 +83,12 @@ def process_sentinel_1_tile(sentinel1: np.ndarray,
          s1 (np.array)
     """
     s1, _ = calculate_and_save_best_images(sentinel1, dates)
-    monthly = np.zeros((12, sentinel1.shape[1], sentinel1.shape[2], 2))
+    monthly = np.zeros((12, sentinel1.shape[1], sentinel1.shape[2], 2), dtype = np.float32)
     index = 0
     for start, end in zip(
             range(0, 24 + 2, 24 // 12),  #0, 72, 6
             range(24 // 12, 24 + 2, 24 // 12)):  # 6, 72, 6
-        monthly[index] = np.mean(s1[start:end], axis=0)
+        monthly[index] = np.median(s1[start:end], axis=0)
         index += 1
     return monthly
 
@@ -195,7 +195,6 @@ def identify_clouds(cloud_bbx,
 
     # Make sure that the cloud_img and the shadow_img are the same shape
     # using the cloud_img as reference
-    print(np.mean(cloud_img, axis=(1, 2)))
     cloud_img = resize(
         cloud_img,
         (cloud_img.shape[0], shadow_img.shape[1], shadow_img.shape[2]),
@@ -204,7 +203,6 @@ def identify_clouds(cloud_bbx,
         preserve_range=True).astype(np.uint8)
 
     # Type assertions, size assertions
-    print(np.mean(cloud_img, axis=(1, 2)))
     if not isinstance(cloud_img.flat[0], np.floating):
         assert np.max(cloud_img) > 1
         cloud_img = np.float32(cloud_img) / 255.
@@ -326,8 +324,8 @@ def identify_clouds_big_bbx(
         cloud_dates = np.delete(cloud_dates, is_invalid)
         cloud_img = np.delete(cloud_img, is_invalid, 0)
 
-    for i, x in zip(cloud_dates, cloud_img):
-        print(i, np.mean(x == 100))
+    #for i, x in zip(cloud_dates, cloud_img):
+        #print(i, np.mean(x == 100))
 
     # Remove areas within the tile that are very cloudy locally,
     # but meet the large BBox cloud threshold. Empirically doing a 3x3 tile window
@@ -363,7 +361,7 @@ def identify_clouds_big_bbx(
     to_remove = []
     for i, x, l in zip(cloud_dates, local_clouds,
                        np.arange(0, len(cloud_dates))):
-        print(i, x, cloud_percent[l])
+        #print(i, x, cloud_percent[l])
         if x > 0.50:
             if _check_for_alt_img(local_clouds, cloud_dates, i) == True:
                 to_remove.append(l)
@@ -629,7 +627,7 @@ def download_sentinel_1_composite(
             print(
                 f"Sentinel 1 used {round(s1_usage, 1)} PU for {image_date}, with {nan_perc} no data"
             )
-            if np.sum(s1 == 1) < (height * width / 4):
+            if np.sum(s1 == 1) < (height * width / 2):
                 s1_all.append(s1)
                 image_dates.append(image_date)
             elif date == dates_q1 and np.sum(s1 == 1) >= (height * width):
@@ -666,7 +664,6 @@ def identify_s1_layer(coords: Tuple[float, float]) -> str:
     country = results[-1]['cc']
     try:
         continent_name = pc.country_alpha2_to_continent_code(country)
-        print(continent_name, country)
     except:
         continent_name = 'AF'
     layer = None
@@ -763,7 +760,6 @@ def download_sentinel_2(bbox: List[Tuple[float,
     quality_img = np.array(
         quality_request.get_data(data_filter=steps_to_download))
     quality_per_img = np.mean(quality_img, axis=(1, 2)) / 255
-    print("Image quality:", quality_per_img)
     steps_to_rm = np.argwhere(quality_per_img > 0.1).flatten()
     if len(steps_to_rm) > 0:
         steps_to_download = np.array(steps_to_download)
@@ -973,14 +969,12 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
     s2_40_usage = (img_40.shape[1] *
                    img_40.shape[2]) / (512 * 512) * (2 / 3) * img_40.shape[0]
     img_40 = img_40.repeat(2, axis=1).repeat(2, axis=2)
-    print("Img_40", img_40.shape)
 
     if (img_20.shape[1] > img_40.shape[1]) or (img_20.shape[2] >
                                                img_40.shape[2]):
         img_40 = resize(img_40, (img_20.shape[0], img_20.shape[1],
                                  img_20.shape[2], img_40.shape[-1]),
                         order=0)
-    print("Img_40", img_40.shape)
 
     if img_40.shape[1] > img_20.shape[1]:
         to_remove = (img_40.shape[1] - img_20.shape[1])
@@ -1021,14 +1015,16 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         maxcc=maxclouds,
         config=api_key,
         custom_url_params={
-            constants.CustomUrlParam.DOWNSAMPLING: 'BICUBIC',
-            constants.CustomUrlParam.UPSAMPLING: 'BICUBIC'
+            constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+            constants.CustomUrlParam.UPSAMPLING: 'NEAREST'
         },
         time_difference=datetime.timedelta(hours=48),
     )
     img_10 = np.array(image_request.get_data(data_filter=steps_to_download))
     s2_10_usage = (img_10.shape[1] *
                    img_10.shape[2]) / (512 * 512) * (4 / 3) * img_10.shape[0]
+    #img_10 = img_10.repeat(2, axis = 1).repeat(2, axis = 2)
+
 
     # Convert 10 meter bands to np.float32, ensure correct dimensions
     if not isinstance(img_10.flat[0], np.floating):

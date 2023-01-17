@@ -149,7 +149,7 @@ def make_output_and_temp_folders(output_folder: str) -> None:
         _find_and_make_dirs(output_folder + folder)
 
 
-def upload_raw_processed_s3(path_to_tile, x, y, uploader):
+def upload_raw_processed_s3(path_to_tile, x, y, uploader, year):
     '''
     Uploads temp/raw/*, temp/processed/* to s3 bucket
     and then deletes temporary files
@@ -166,17 +166,21 @@ def upload_raw_processed_s3(path_to_tile, x, y, uploader):
         for file in os.listdir(folder):
             _file = folder + file
             internal_folder = folder[len(path_to_tile):]
-            key = f'2020/raw/{x}/{y}/' + internal_folder + file
+            key = f'{str(year)}/raw/{x}/{y}/' + internal_folder + file
             uploader.upload(bucket='tof-output', key=key, file=_file)
             os.remove(_file)
-
     for folder in glob(path_to_tile + "processed/*/"):
         for file in os.listdir(folder):
             _file = folder + file
             internal_folder = folder[len(path_to_tile):]
-            key = f'2020/processed/{x}/{y}/' + internal_folder + file
+            key = f'{str(year)}/processed/{x}/{y}/' + internal_folder + file
             uploader.upload(bucket='tof-output', key=key, file=_file)
             os.remove(_file)
+    if os.path.isdir(path_to_tile + "feats"):
+        for folder in glob(path_to_tile + "feats/*/"):
+            for file in os.listdir(folder):
+                _file = folder + file
+                os.remove(_file)
 
 
 def file_in_local_or_s3(file, key, apikey, apisecret, bucket):
