@@ -547,7 +547,7 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
         print(f"Removing {len(missing_px)} missing images")
 
     # Remove dates with high likelihood of missed cloud or shadow (false negatives)
-    cld, fcps = cloud_removal.identify_cloud_shadows(arr, dem, bbx)
+    cld, fcps = cloud_removal.identify_clouds_shadows(arr, dem, bbx)
     if clm is not None:
         #print("CLM", np.mean(clm, axis = (1, 2)))
         try:
@@ -574,7 +574,7 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
         dates = np.delete(dates, to_remove)
         interp = np.delete(interp, to_remove, axis = 0)
         arr = np.delete(arr, to_remove, axis = 0)
-        cld, fcps = cloud_removal.identify_cloud_shadows(arr, dem, bbx)
+        cld, fcps = cloud_removal.identify_clouds_shadows(arr, dem, bbx)
         print(np.mean(cld, axis = (1, 2)))
 
     print(interp.dtype, cld.dtype, fcps.dtype)

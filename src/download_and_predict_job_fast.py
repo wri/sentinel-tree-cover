@@ -555,7 +555,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         time1 = time.time()
         # Bounding box passed to identify_cloud_shadows to mask 
         # out non-urban areas from the false positive cloud removal
-        cloudshad, fcps = cloud_removal.identify_cloud_shadows(sentinel2, dem, bbx)
+        cloudshad, fcps = cloud_removal.identify_clouds_shadows(sentinel2, dem, bbx)
 
         if clm is not None:
             clm[fcps] = 0.
@@ -582,7 +582,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
             interp = np.delete(interp, to_remove, axis = 0)
-            cloudshad, fcps = cloud_removal.identify_cloud_shadows(sentinel2, dem, bbx)
+            cloudshad, fcps = cloud_removal.identify_clouds_shadows(sentinel2, dem, bbx)
             if clm is not None:
                 clm = np.delete(clm, to_remove, axis = 0)
                 cloudshad = np.maximum(cloudshad, clm)
@@ -597,7 +597,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
             interp = np.delete(interp, to_remove, axis = 0)
-            cloudshad, fcps = cloud_removal.identify_cloud_shadows(sentinel2, dem, bbx)
+            cloudshad, fcps = cloud_removal.identify_clouds_shadows(sentinel2, dem, bbx)
             if clm is not None:
                 clm = np.delete(clm, to_remove, axis = 0)
                 cloudshad = np.maximum(cloudshad, clm)
@@ -618,7 +618,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
             interp = np.delete(interp, to_remove, axis = 0)
-            cloudshad, fcps = cloud_removal.identify_cloud_shadows(sentinel2, dem, bbx)
+            cloudshad, fcps = cloud_removal.identify_clouds_shadows(sentinel2, dem, bbx)
             
             if clm is not None:
                 clm = np.delete(clm, to_remove, axis = 0)
