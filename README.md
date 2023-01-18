@@ -3,7 +3,7 @@ Mapping tree cover and extent with Sentinel-1 and 2
 
 # Description
 
-DATA LINK: View the data on GEE here: https://jombrandt.users.earthengine.app/view/sentinel-tree-cover
+DATA LINK: View the data on GEE [here](https://jombrandt.users.earthengine.app/view/sentinel-tree-cover). Our manuscript is currently under review in RSE and the data will be released for download / the GEE asset wil be publicly available following publication.
 
 PREPRINT: The preprint of the publication is available here: https://www.researchsquare.com/article/rs-2109093/v1
 
