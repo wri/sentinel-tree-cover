@@ -97,6 +97,32 @@ def create_geojsons(country_list, delete=False):
     return None
 
 
+
+def geojson_admin2(country, gadm_filepath):
+
+    filepath = f'admin_boundaries/{gadm_filepath}.json'
+    shapefile = gpd.read_file(filepath)
+
+    # if there are duplicate admin 2 names
+    if shapefile.NAME_2.duplicated().sum() > 0:
+
+        # create a df of the duplicates
+        dups = shapefile[shapefile.NAME_2.duplicated()]
+
+        # iterate by index and update the name to combine admin 1 and 2 names
+        for row, column in dups.iterrows():
+            shapefile.loc[row,['NAME_2']] = shapefile.loc[row,['NAME_1']][0] + '_' + shapefile.loc[row,['NAME_2']][0]
+
+    # run assertions
+    assert shapefile.NAME_2.duplicated().sum() == 0
+    assert shapefile.crs == 'epsg:4326'
+
+    # save file
+    shapefile.to_file(f'admin_boundaries/{country}_adminboundaries2.geojson', driver='GeoJSON')
+
+    return None
+
+
 def main():
     country_list = args.country_list
     delete = args.delete
