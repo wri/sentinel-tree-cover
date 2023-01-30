@@ -79,6 +79,8 @@ def create_geojsons(country_list, delete=False):
         new_shp.to_file(f'admin_boundaries/{country}_adminboundaries.geojson', driver='GeoJSON')
         assert new_shp.crs == 'epsg:4326'
         assert new_shp.NAME_1.duplicated().sum() == 0
+        # would also be good to assert there are no /
+        # shapefile[shapefile.NAME_2.str.contains("/")]
 
         # remove shapefile folder
         if delete:
@@ -116,6 +118,8 @@ def geojson_admin2(country, gadm_filepath):
     # run assertions
     assert shapefile.NAME_2.duplicated().sum() == 0
     assert shapefile.crs == 'epsg:4326'
+    # would also be good to assert there are no /
+    # shapefile[shapefile.NAME_2.str.contains("/")]
 
     # save file
     shapefile.to_file(f'admin_boundaries/{country}_adminboundaries2.geojson', driver='GeoJSON')
