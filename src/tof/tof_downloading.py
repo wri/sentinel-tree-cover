@@ -90,6 +90,7 @@ def process_sentinel_1_tile(sentinel1: np.ndarray,
             range(24 // 12, 24 + 2, 24 // 12)):  # 6, 72, 6
         monthly[index] = np.median(s1[start:end], axis=0)
         index += 1
+    print(np.mean(monthly, axis = (1, 2, 3)))
     return monthly
 
 
@@ -497,15 +498,15 @@ def download_sentinel_1_composite(
     # If the correct orbit is selected, download imagery
     s1_all = []
     image_dates = []
-    image_date = 60
+    image_date = 45
 
-    dates_q1 = (f'{str(year)}-01-15', f'{str(year)}-04-15')
-    dates_q2 = (f'{str(year)}-05-15', f'{str(year)}-08-15')
-    dates_q3 = (f'{str(year)}-09-15', f'{str(year)}-12-15')
-    #dates_q4 = (f'{str(year)}-10-15' , f'{str(year)}-12-15')
+    dates_q1 = (f'{str(year)}-01-15', f'{str(year)}-03-15')
+    dates_q2 = (f'{str(year)}-04-15', f'{str(year)}-06-15')
+    dates_q3 = (f'{str(year)}-07-15', f'{str(year)}-09-15')
+    dates_q4 = (f'{str(year)}-10-15' , f'{str(year)}-12-15')
 
     try:
-        for date in [dates_q1, dates_q2, dates_q3]:
+        for date in [dates_q1, dates_q2, dates_q3, dates_q4]:
             evalscript = """
             //VERSION3
             function mean(values) {
@@ -624,16 +625,18 @@ def download_sentinel_1_composite(
             s1_usage = (4 / 3) * s1.shape[0] * ((s1.shape[1] * s1.shape[2]) /
                                                 (512 * 512))
             nan_perc = np.sum(s1 == 1) / (height * width)
+            if np.any(nan_perc >= 1):
+                return np.empty((0,)), np.empty((0,))
             print(
                 f"Sentinel 1 used {round(s1_usage, 1)} PU for {image_date}, with {nan_perc} no data"
             )
-            if np.sum(s1 == 1) < (height * width / 2):
+            if np.sum(s1 == 1) < (height * width / 3):
                 s1_all.append(s1)
                 image_dates.append(image_date)
             elif date == dates_q1 and np.sum(s1 == 1) >= (height * width):
                 return np.empty((0,)), np.empty((0,))
 
-            image_date += 120
+            image_date += 90
 
         # Format the s1 data so that it will align with smoothed s2 data
         s1 = np.concatenate(s1_all, axis=0)
@@ -920,11 +923,22 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         time_difference=datetime.timedelta(hours=48),
     )
 
+    cirrus_img = np.array(cirrus.get_data(data_filter=steps_to_download))
+    print("CIRRUS", np.mean(cirrus_img, axis = (1, 2)))
+    cirrus_img = remove_noise_clouds(cirrus_img)
+
+    cirrus_img = cirrus_img > 0
+    
+
+    print("CIRRUS", np.mean(cirrus_img, axis = (1, 2)))
+
     quality_img = np.array(
         quality_request.get_data(data_filter=steps_to_download))
+    print(np.mean(quality_img, axis = (1, 2)))
+    #print("Image quality:", quality_img)
     quality_per_img = np.mean(quality_img, axis=(1, 2)) / 255
     quality_per_img = quality_per_img  # + cirrus_img
-    print("Image quality:", quality_per_img)
+    #print("Image quality:", quality_per_img)
     steps_to_rm = np.argwhere(quality_per_img > 0.2).flatten()
     if len(steps_to_rm) > 0:
         steps_to_download = np.array(steps_to_download)
@@ -1004,6 +1018,12 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
     print(
         f"Original 20 meter bands size: {img_20.shape}, using {round(s2_20_usage + s2_40_usage, 1)} PU"
     )
+
+    cirrus_img = resize(cirrus_img,
+                        (cirrus_img.shape[0], img_20.shape[1], img_20.shape[2]),
+                        order=0,
+                        preserve_range=True)
+
     # Download 10 meter bands
     image_request = WcsRequest(
         layer='L2A10_ORBIT',
@@ -1035,14 +1055,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         assert np.max(img_10) <= 1
         assert img_10.dtype == np.float32
 
-    cirrus_img = np.array(cirrus.get_data(data_filter=steps_to_download))
-    cirrus_img = remove_noise_clouds(cirrus_img)
-
-    cirrus_img = cirrus_img > 0
-    cirrus_img = resize(cirrus_img,
-                        (cirrus_img.shape[0], img_20.shape[1], img_20.shape[2]),
-                        order=0,
-                        preserve_range=True)
+    
 
     # Ensure output is within correct range
     img_10 = np.clip(img_10, 0, 1)

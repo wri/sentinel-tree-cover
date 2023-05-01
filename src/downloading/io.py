@@ -15,6 +15,7 @@ import rasterio
 from rasterio.transform import from_origin
 import numpy as np
 from glob import glob
+import zipfile
 
 
 class FileUploader:
@@ -162,6 +163,20 @@ def upload_raw_processed_s3(path_to_tile, x, y, uploader, year):
         Returns:
          None
     '''
+    if os.path.isfile(path_to_tile + "ard_dates.npy"):
+        # Add the DEM here too right? 
+        dem_file = f'{path_to_tile}raw/misc/dem_{x}X{y}Y.hkl'
+        fnames = [path_to_tile + "ard_dates.npy", path_to_tile + "ard_ndmi.hkl", dem_file]
+        with zipfile.ZipFile(path_to_tile + f'{x}X{y}Y_ard.zip', 'a') as tozip:        
+            for file in fnames:
+                print(file)
+                tozip.write(file, compress_type=zipfile.ZIP_DEFLATED)
+        _file = path_to_tile + f'{x}X{y}Y_ard.zip'
+        key = f'{str(year)}/change/{x}/{y}/{x}X{y}Y_ard.zip'
+        print(f"uploading {_file}")
+        uploader.upload(bucket = 'tof-output', key = key, file = _file)
+        os.remove(_file)
+
     for folder in glob(path_to_tile + "raw/*/"):
         for file in os.listdir(folder):
             _file = folder + file
@@ -181,7 +196,7 @@ def upload_raw_processed_s3(path_to_tile, x, y, uploader, year):
             for file in os.listdir(folder):
                 _file = folder + file
                 os.remove(_file)
-
+    
 
 def file_in_local_or_s3(file, key, apikey, apisecret, bucket):
     """
@@ -288,9 +303,10 @@ def download_file(s3_file, local_file, apikey, apisecret, bucket):
                         aws_secret_access_key=apisecret)
     bucket = s3.Bucket(bucket)
 
-    print(f"Starting download of {s3_file} to {local_file}")
-
+    print(f"Starting download of {s3_file} to {local_file} from {bucket}")
+    print(bucket.objects.filter(Prefix=s3_file))
     for obj in bucket.objects.filter(Prefix=s3_file):
+        print(obj)
         target = obj.key if local_file is None \
             else os.path.join(local_file, os.path.relpath(obj.key, s3_file))
         if not os.path.exists(os.path.dirname(target)):
@@ -300,6 +316,14 @@ def download_file(s3_file, local_file, apikey, apisecret, bucket):
         print(f"Downloaded {s3_file} to {local_file + file_name}")
         bucket.download_file(obj.key, target[:-1] + file_name)
     return file_name
+
+
+def download_single_file(s3_file, local_file, apikey, apisecret, bucket):
+     conn = boto3.client('s3', aws_access_key_id=apikey,
+                        aws_secret_access_key=apisecret) 
+     print(f"Starting download of {s3_file} to {local_file} from {bucket}")
+     key = "/".join(s3_file.split("/")[3:])
+     conn.download_file(bucket, key, local_file)
 
 
 def make_subtiles(folder: str, tiles) -> None:
