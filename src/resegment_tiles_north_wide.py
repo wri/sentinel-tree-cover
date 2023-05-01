@@ -482,7 +482,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         
         no_images = no_images > 1360*0.25
         no_images = no_images.repeat(40, axis = 1).repeat((SIZE // 20), axis = 0)
-        if source_median <= (min_ref_median - 10):
+        if source_median <= (min_ref_median - 12):
             # IF we are out of bounds on the lower side, adjust to fit the lower bound
             adjust_value = np.around(((min_ref_median - source_median) / 100), 3)
             print(f"One tile because {source_median} median compared "
@@ -500,7 +500,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             np.save(output, preds)
             np.save(output2, preds)
 
-        elif source_median >= (max_ref_median + 10):
+        elif source_median >= (max_ref_median + 12):
             adjust_value = np.around(((source_median - max_ref_median) / 100), 3)
             print(f"Only saving one tile because {source_median} median compared to"
                   f" {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference"
@@ -518,7 +518,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             np.save(output2, preds)
 
         elif np.logical_and(
-            source_median <= max_ref_median + 10, source_median >= min_ref_median - 10
+            source_median <= max_ref_median + 12, source_median >= min_ref_median - 12
         ):
             print(f"{source_median} median: {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference")
             preds[no_images] = 255.
@@ -666,13 +666,13 @@ def check_if_artifact(tile, neighb):
     left = np.reshape(left, (left.shape[0] // 10, 10))
     left = bn.nanmean(left, axis = 1)
 
-    fraction_diff = bn.nanmean(abs(right - left) > 15) #normally 25
-    fraction_diff_left = bn.nanmean(abs(right[:15] - left[:15]) > 10)
-    fraction_diff_right = bn.nanmean(abs(right[-15:] - left[-15:]) > 10)
-    fraction_diff_2 = bn.nanmean(abs(right - left) > 10)
+    fraction_diff = bn.nanmean(abs(right - left) > 20) #normally 25
+    fraction_diff_left = bn.nanmean(abs(right[:15] - left[:15]) > 12.5)
+    fraction_diff_right = bn.nanmean(abs(right[-15:] - left[-15:]) > 12.5)
+    fraction_diff_2 = bn.nanmean(abs(right - left) > 12.5)
     left_right_diff = abs(right_mean - left_mean)
 
-    other0 = left_right_diff > 5
+    other0 = left_right_diff > 6
 
     other = fraction_diff_2 > 0.5
     other = np.logical_and(other, (left_right_diff > 0) ) # normally 6
@@ -726,7 +726,7 @@ def regularize_and_smooth(arr, dates):
 
 
 def resegment_border(tile_x, tile_y, edge, local_path, min_dates, initial_bbx):
-
+    print("WTF")
     no_images = False
     processed = check_if_processed((tile_x, tile_y), local_path, args.year)
     neighbor_id = [tile_x, str(int(tile_y)+ 1 )]
@@ -737,11 +737,12 @@ def resegment_border(tile_x, tile_y, edge, local_path, min_dates, initial_bbx):
         data_temp = data_temp[data_temp['X_tile'] == int(neighbor_id[0])]
         data_temp = data_temp[data_temp['Y_tile'] == int(neighbor_id[1])]
         processed_neighbor = True if len(data_temp) > 0 else False
-
+    print(processed, processed_neighbor, "PRINGTING SHIT")
     if processed and processed_neighbor:
         download_raw_tile((tile_x, tile_y), local_path, "tiles")
         download_raw_tile(neighbor_id, local_path, "tiles")
         tile_tif, _ = load_tif((tile_x, tile_y), local_path)
+        #print(type(tile_tif))
         if type(tile_tif) is not np.ndarray:
             print("Skipping because one of the TIFS doesnt exist")
             return 0, None, None, 0, 3
@@ -1504,7 +1505,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/680-240-may-43/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/680-240-2023/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "process_area_2022.csv")

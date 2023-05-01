@@ -525,7 +525,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             no_images = np.reshape(no_images, (6, 40, 20, (SIZE // 20)))
             no_images = np.sum(no_images, axis = (1, 3))
             
-            no_images = no_images > 1360*0.2
+            no_images = no_images > 1360*0.4
             no_images = no_images.repeat(40, axis = 0).repeat((SIZE // 20), axis = 1)
 
             if source_median <= (min_ref_median - 10):
@@ -595,7 +595,7 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
 
         # Remove dates with high likelihood of missed cloud or shadow (false negatives)
     # This is done here because make_shadow = False in process_tile
-    cld, fcps = cloud_removal.identify_clouds_shadowss(arr, dem, bbx)
+    cld, fcps = cloud_removal.identify_clouds_shadows(arr, dem, bbx)
     if clm is not None:
         if len(missing_px) > 0:
             print(f"Deleting {missing_px} from cloud mask")
@@ -622,7 +622,7 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
         dates = np.delete(dates, to_remove)
         interp = np.delete(interp, to_remove, axis = 0)
         arr = np.delete(arr, to_remove, axis = 0)
-        cld, fcps, = cloud_removal.identify_clouds_shadowss(arr, dem, bbx)
+        cld, fcps, = cloud_removal.identify_clouds_shadows(arr, dem, bbx)
 
     arr, interp2, to_remove = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, pfcps = fcps, wsize = 10, step = 10, thresh = 10)
 
@@ -648,19 +648,19 @@ def check_if_artifact(tile, neighb):
     left = np.reshape(left, (left.shape[0] // 10, 10))
     left = bn.nanmean(left, axis = 1)
 
-    fraction_diff = bn.nanmean(abs(right - left) > 15) #normally 25
-    fraction_diff_2 = bn.nanmean(abs(right - left) > 10)
-    fraction_diff_left = bn.nanmean(abs(right[:15] - left[:15]) > 10)
-    fraction_diff_right = bn.nanmean(abs(right[-15:] - left[-15:]) > 10)
+    fraction_diff = bn.nanmean(abs(right - left) > 20) #was 15
+    fraction_diff_2 = bn.nanmean(abs(right - left) > 12.5) # was 10
+    fraction_diff_left = bn.nanmean(abs(right[:15] - left[:15]) > 17.5)# was 10
+    fraction_diff_right = bn.nanmean(abs(right[-15:] - left[-15:]) > 17.5) # was 10
     left_right_diff = abs(right_mean - left_mean)
 
-    other0 = left_right_diff > 5
+    other0 = left_right_diff > 6 # was 5
 
     other = fraction_diff_2 > 0.5
-    other = np.logical_and(other, (left_right_diff > 0) ) # normally 6
+    other = np.logical_and(other, (left_right_diff > 1) ) # wasa 6
 
-    other2 = (fraction_diff > 0.2) or (fraction_diff_left > 0.5) or (fraction_diff_right > 0.5)
-    other2 = np.logical_and(other2, (left_right_diff > 0) ) # normally 3
+    other2 = (fraction_diff > 0.3) or (fraction_diff_left > 0.5) or (fraction_diff_right > 0.5) # was 0.2
+    other2 = np.logical_and(other2, (left_right_diff > 1) )
 
     print(x, y, left_right_diff, fraction_diff, fraction_diff_right, fraction_diff_left, other0, other, other2)
     if other0 or other or other2:
@@ -1497,7 +1497,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/240-680-may-43/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/240-680-2023/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "process_area_2022.csv")

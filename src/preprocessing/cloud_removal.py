@@ -32,7 +32,7 @@ def identify_pifs(src, ref):
     # While land-use change or cloud cover is non-linear
     # We select the points between src and ref that are the most correlated
     # By doing CCA and selecting the pixels where the components are the closest
-    cca = CCA(n_components=2, tol=1e-6, max_iter=600)
+    cca = CCA(n_components=2, tol=1e-6, max_iter=800)
     xs, ys = cca.fit_transform(src[..., :4], ref[..., :4])
     diffs = xs - ys
     # Mean squared error
@@ -51,6 +51,10 @@ def align_interp_array(interp_array,
     # Normalizes interpolated areas to non-interpolated areas
     # By learning linear mappings based on pseudo-invariant features
     # And smoothly blending with a gaussian filter
+
+    #def _identify_interp():
+    #    non_interp_mosaic, non_interp_areas = identify_pifs(
+    #                non_interp_mosaic, non_interp_areas)
     for time in range(1):
 
         if np.sum(interp[date] > 0) > 0 and np.sum(interp[date] == 0) > 0:
@@ -77,8 +81,15 @@ def align_interp_array(interp_array,
                         interp[t] < 1, water_mask == 0)][:n_current_time]
                     non_interp_mosaici = mosaic[np.logical_and(
                         interp[t] < 1, water_mask == 0)][:n_current_time]
+                    #print(non_interp_areasi.shape, non_interp_mosaici.shape)
                     non_interp_areas.append(non_interp_areasi)
                     non_interp_mosaic.append(non_interp_mosaici)
+
+                idx = 1 if non_interp_mosaic[1].shape[0] > 0 else 0
+                non_interp_mid_mosaic = non_interp_mosaic[idx]
+                non_interp_mid_areas = non_interp_areas[idx]
+                non_interp_mid_mosaic, non_interp_mid_areas = identify_pifs(
+                    non_interp_mid_mosaic, non_interp_mid_areas)
 
                 non_interp_mosaic = np.concatenate(non_interp_mosaic, axis = 0)
                 non_interp_areas = np.concatenate(non_interp_areas, axis = 0)
@@ -116,6 +127,31 @@ def align_interp_array(interp_array,
                     std_mult = np.reshape(std_mult, (1, 1, 10))
                     #std_mult = np.clip(std_mult, 0.75, 1.25)
                     #addition = np.clip(addition, -0.05, 0.05)
+
+                    # MIDDLE
+                    std_src = bn.nanstd(non_interp_mid_mosaic, axis=(0))
+                    std_ref = bn.nanstd(non_interp_mid_areas, axis=(0))
+                    mean_src = bn.nanmean(non_interp_mid_mosaic, axis=(0))
+                    mean_ref = bn.nanmean(non_interp_mid_areas, axis=(0))
+                    std_mult_mid = (std_ref / std_src)
+                    #! TODO we can assume that the mosaic will not have haze
+                    # so if the mosaic is >2.5 the stdev of the source
+                    # and the source is >20% cloudy, remove the source
+                    # only let 1 image be removed.
+                    #print(time, std_mult_mid)
+
+                    # Then calculate the mosaic diff between non interp and interp
+                    addition_mid = (mean_ref - (mean_src * (std_mult_mid)))
+                    addition_mid = np.reshape(addition_mid, (1, 1, 10))
+                    std_mult_mid = np.reshape(std_mult_mid, (1, 1, 10))
+
+                    # As the reference image gets more clear (towards 50%), 
+                    # weight the reference image more than the 3-image window
+                    # 
+                    multiplier = np.minimum((n_current_time) / (600*600*0.5), 1.)
+                    print(f"The multiplier is {multiplier} and the clean is {n_current_time} for {date}")
+                    addition = (addition * (1 - multiplier)) + (addition_mid * multiplier)
+                    std_mult = (std_mult * (1 - multiplier)) + (std_mult_mid * multiplier)
 
                 interp_array_i[np.logical_and(
                     interp[date] > 0,
@@ -169,7 +205,11 @@ def make_aligned_mosaic(arr, interp):
 
     mosaic = np.zeros((arr.shape[1], arr.shape[2], arr.shape[3]),
                       dtype=np.float32)
-
+    divisor = (np.sum(1 - interp, axis=0))[..., np.newaxis]
+    brightness_mask = bn.nanmax(np.sum(arr[..., :3], axis = -1), axis = 0)
+    darkness_mask = bn.nanmin(np.sum(arr[..., :3], axis = -1), axis = 0)
+    #brightness_mask[interp > 0] == np.nan
+    #median_brightness = np.nanmedian(brightness_mask)
     for i in range(arr.shape[0]):
 
         # All areas within one image that are not interpolated
@@ -205,15 +245,26 @@ def make_aligned_mosaic(arr, interp):
             arr_i = np.copy(arr[i])
             arr_i[water_mask == 0] = arr_i[water_mask == 0] * std_mult + addition
             increment = (1 - interp[i][..., np.newaxis]) * arr_i
+            # We want to not include pixels that are the brightest or the least bright
+            # if there are >3 images
+            #areas_to_subset = divisor >= 3
+            #is_max_brightness = np.sum(arr[i, ..., :3], axis = -1) == brightness_mask
+            #is_min_brightness = np.sum(arr[i, ..., :3], axis = -1) == darkness_mask
+            #areas_to_subset = areas_to_subset.squeeze() * (is_min_brightness + is_max_brightness)
+            #print(i, np.mean(areas_to_subset))
+            #increment[areas_to_subset] = 0.
+            #divisor[areas_to_subset] -= 1.
             mosaic = mosaic + increment
+            
         else:
             interp[i] = 1.
-    divisor = (np.sum(1 - interp, axis=0))[..., np.newaxis]
+    divisor[divisor < 0] = 0.
     mosaic = mosaic / divisor
     mosaic[np.isnan(mosaic)] = np.percentile(arr, 10, axis=0)[np.isnan(mosaic)]
     mosaic = np.clip(mosaic, 0, np.max(mosaic))
-    #np.save("mosaic.npy", mosaic)
+    np.save("mosaic.npy", mosaic)
     return mosaic
+
 
 
 def calculate_clouds_in_mosaic(mosaic, interp, pfcps):
@@ -280,7 +331,7 @@ def adjust_cloudmask_in_forests(file, bbx, pfcps):
                         window=rs.windows.from_bounds(bbx[0], bbx[1], bbx[2],
                                                       bbx[3], data.transform))
         # 160m mask of majority urban-px in ESA Worldcover
-        rst = binary_dilation(rst, iterations=1)
+        rst = binary_dilation(rst, iterations=2)
         rst_original = np.copy(rst)
         rst_original = resize(rst, pfcps.shape, 0)
         return rst_original
@@ -660,7 +711,10 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
     water_mask = bn.nanmedian(_water_ndwi(img), axis=0)
     shadows = np.zeros_like(img[..., 0], dtype=np.float32)
     clouds = np.zeros_like(shadows, dtype=np.float32)
-    forest_mask = adjust_cloudmask_in_forests("forestmask.tif", bbx, dem)
+    try:
+        forest_mask = adjust_cloudmask_in_forests("forestmask.tif", bbx, dem)
+    except:
+        forest_mask = np.zeros_like(dem)
     print(f"{np.mean(forest_mask) * 100}% of the tile is forest in ESA WorldCover")
 
     # Generate a "okay" quality cloud mask
@@ -668,9 +722,9 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
     # Where the delta B8A and delta B11 are < -0.04 and B2 is < 0.095 over land
     # The water shadow thresholds work -okay- and could be improved
     clm = _hollstein_cld(img)
-
+    print("Slope shadow is turned off")
     for time in range(img.shape[0]):
-        lower = np.max([0, time - 2])
+        lower = np.max([0, time - 3])
         upper = np.min([img.shape[0], time + 3])
         if (upper - lower) == 3:
             if upper == img.shape[0]:
@@ -695,6 +749,24 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
         shadows_i = (deltab11 * deltab8a * ti0 * deltablue * (img[time, ..., 7] < 0.162))
         shadows_i[water_mask > 0] = 0.
 
+        # Where slope > 0.25
+        ri_shadow = np.copy(img[..., [0, 1, 7, 8]])
+        ri_shadow[clm > 0] = np.nan
+        ri_shadow = bn.nanmedian(ri_shadow, axis=0)
+        ri_shadow[np.isnan(ri_shadow)] = np.median(img[..., [0, 1, 7, 8]],
+                                                axis=0)[np.isnan(ri_shadow)]
+
+        deltab8a = (img[time, ..., 7] - ri_shadow[..., 2]) < -0.02
+        deltab11 = (img[time, ..., 8] - ri_shadow[..., 3]) < -0.02
+        ti0 = (img[time, ..., 0] < 0.09)
+        deltablue = (img[time, ..., 0] - ri_shadow[..., 0]) < 0
+
+        shadows_slope = (deltab11 * deltab8a * ti0 * deltablue * (img[time, ..., 7] < 0.18))
+        shadows_slope[water_mask > 0] = 0.
+        shadows_slope = shadows_slope * (dem >= 0.25)
+        
+        #shadows_i = np.maximum(shadows_i, shadows_slope)
+
         water_shadow = ((img[time, ..., 0] - ri_shadow[..., 0]) < -0.04) * \
                         ((img[time, ..., 1] - ri_shadow[..., 1]) < -0.04) * \
                         (img[time, ..., 7] < 0.03) * \
@@ -714,6 +786,7 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
         shadows_i[shadows_i > 4] = 1
         shadows_i = 1 - shadows_i
         shadows[i] = shadows_i
+    np.save("shadows.npy", shadows)
 
     # Use the cloud shadow masks to generate cloud-shadow-free
     # seasonal / local composites. Use these to generate
@@ -736,6 +809,10 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
             else:
                 close[1] -= 1
                 close[0] -= 1
+        if len(close) == 2:
+            #print(time, close[-1], img.shape[0] - 1)
+            if close[-1] >= (img.shape[0] - 2) and img.shape[0] > 3:
+                close = np.concatenate([np.array([close[0] - 1]), close])
 
         ri_ref = np.copy(img[..., [0, 1, 2]])
         # Go through and remove the cloud shadows and
@@ -801,7 +878,7 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
             deltab3 = (img[time, ..., 1] - ri_upper1) > 0.08
             deltab4 = (img[time, ..., 2] - ri_upper2) > 0.07
 
-            closeb2 = (img[time, ..., 0] - ri_close[..., 0]) > (close_thresh + close_modifier + 0.01)
+            closeb2 = (img[time, ..., 0] - ri_close[..., 0]) > (close_thresh + close_modifier + 0.005)
             closeb3 = (img[time, ..., 1] - ri_close[..., 1]) > (close_thresh + close_modifier + 0.005)
             closeb4 = (img[time, ..., 2] - ri_close[..., 2]) > (close_thresh + close_modifier)
 
@@ -820,6 +897,42 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
         clouds_close[forest_mask == 0] = clouds_close_nonforest[forest_mask == 0]
         clouds[time] = np.maximum(clouds_i, clouds_close)
 
+    # Multitemporal brightness thresholds, TESTING in FEBRUARY 2023.
+    # We calculate the median brightness (sum of R, G, B bands) for the non-interpolated pixels
+    # For each image, we calculate the ratio of the per-pixel brightness to the median brightness
+    # And then calculate the within-image z-score. Any pixel with > 4 Z-score is considered to be a cloud.
+    # HOWEVER, we remove clouds identified this way that occur more than once, since agriculture etc. could
+    # be picked up this way. We also do not apply this for pixels with >0 NDWI.
+
+    # Pixels with < -3 Z-score are considered to be a shadow.
+    brightness_mask = np.sum(img[..., :3], axis = -1)
+    brightness_mask[np.logical_or(clouds > 0, shadows > 0)] = np.nan
+    median_brightness = np.nanmedian(brightness_mask)
+
+    brightness_clouds = np.zeros_like(clouds, dtype = np.float32)
+    for i in range(img.shape[0]):
+        brightness_i = np.sum(img[i, ..., :3], axis = -1)
+        brightness_ratio = brightness_i / median_brightness
+        brightness_ratio[water_mask > 0] = 1.
+        if np.sum(clouds[i] < 0.90):
+            brightness_zscore = (brightness_ratio - np.nanmean(brightness_ratio[clouds[i] == 0])) / np.nanstd(brightness_ratio[clouds[i] == 0])
+            brightness_clouds[i][brightness_zscore > 5] = 1.
+        else:
+            brightness_zscore = (brightness_ratio - np.nanmean(brightness_ratio)) / np.nanstd(brightness_ratio)
+            brightness_clouds[i][brightness_zscore > 3] = 1.
+
+        brightness_ratio = brightness_i / median_brightness
+        brightness_ratio[water_mask > 0] = 1.
+        brightness_ratio = 1 / brightness_ratio
+        brightness_zscore = (brightness_ratio - np.nanmean(brightness_ratio)) / np.nanstd(brightness_ratio)
+        brightness_clouds[i][brightness_zscore > 4] = 1.
+    sum_brightness_clouds = np.sum((brightness_clouds - clouds) > 0, axis = (0))
+
+    for i in range(img.shape[0]):
+        brightness_clouds[i][sum_brightness_clouds > 2] = 0.
+    print("brightness clouds", np.mean(brightness_clouds, axis = (1, 2)))
+    clouds = np.maximum(clouds, brightness_clouds)
+    #np.save("clouds_b.npy", clouds)
     # Remove urban false positives using b8a, b7, b8 paralax effect
     # and NDBI, NDVI, NDWI
     # This method is from Fmask 4.0
@@ -836,7 +949,7 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
     for i in range(img.shape[0]):
         nir_swir_ratio[i][water_mask < 0] = 0.
     clouds[nir_swir_ratio] = 0.
-    shadows[nir_swir_ratio] = 0.
+    #shadows[nir_swir_ratio] = 0.
 
     # Remove false positive clouds over water based on NIR
     # A large dilation is necessary here because of shorelines
