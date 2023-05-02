@@ -3,9 +3,9 @@ Mapping tree cover and extent with Sentinel-1 and 2
 
 # Description
 
-DATA LINK: View the data on GEE [here](https://jombrandt.users.earthengine.app/view/sentinel-tree-cover). Our manuscript is currently under review in RSE and the data will be released for download / the GEE asset wil be publicly available following publication.
+DATA LINK: View the data on GEE [here](https://jombrandt.users.earthengine.app/view/sentinel-tree-cover). The asset is public as of May 2023: https://code.earthengine.google.com/?asset=projects/wri-datalab/TropicalTreeCover
 
-PREPRINT: The preprint of the publication is available here: https://www.researchsquare.com/article/rs-2109093/v1
+PUBLICATION: https://www.sciencedirect.com/science/article/pii/S0034425723001256
 
 OVERVIEW Notebook: View technical overview [here](https://github.com/wri/sentinel-tree-cover/blob/master/notebooks/development/Tropical%20Tree%20Cover%20technical%20introduction.ipynb)
 
