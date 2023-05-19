@@ -3,15 +3,11 @@ Mapping tree cover and extent with Sentinel-1 and 2
 
 # Description
 
-DATA LINK: View the data on GEE [here](https://jombrandt.users.earthengine.app/view/sentinel-tree-cover). The asset is public as of May 2023: https://code.earthengine.google.com/?asset=projects/wri-datalab/TropicalTreeCover
-
-PUBLICATION: https://www.sciencedirect.com/science/article/pii/S0034425723001256
-
-OVERVIEW Notebook: View technical overview [here](https://github.com/wri/sentinel-tree-cover/blob/master/notebooks/development/Tropical%20Tree%20Cover%20technical%20introduction.ipynb)
+This is the GitHub repository for the Sentinel-1 and Sentinel-2 dataset Tropical Tree Cover, which is viewable on Google Earth Engine [here](https://jombrandt.users.earthengine.app/view/sentinel-tree-cover). The asset is public as of May 2023 on Google Earth Engine [here](https://code.earthengine.google.com/?asset=projects/wri-datalab/TropicalTreeCover). The dataset is published in [Remote Sensing of Environment](https://www.sciencedirect.com/science/article/pii/S0034425723001256).
 
 This project maps tree extent at the ten-meter scale using open source artificial intelligence and satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems.
 
-This repository contains the source code for the project. A full description of the methodology can be found [on arXiv](https://arxiv.org/abs/2005.08702). The data product specifications can be accessed on the wiki page.
+This repository contains the source code for the project. A full description of the methodology can be found in the [publication](https://www.sciencedirect.com/science/article/pii/S0034425723001256). The data product specifications can be accessed on the wiki page.
 *  [Background](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#background)
 *  [Data Extent](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#data-extent)
 *  [Methodology](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#methodology)
@@ -20,10 +16,18 @@ This repository contains the source code for the project. A full description of 
 *  [Limitations](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#limitations)
 
 
+
 # Citation
-John Brandt & Fred Stolle (2021) A global method to identify trees outside of closed-canopy forests with medium-resolution satellite imagery, International Journal of Remote Sensing, 42:5, 1713-1737, DOI: 10.1080/01431161.2020.1841324
+
+Brandt, J., Ertel, J., Spore, J., & Stolle, F. (2023). Wall-to-wall mapping of tree extent in the tropics with Sentinel-1 and Sentinel-2. Remote Sensing of Environment, 292, 113574. doi:10.1016/j.rse.2023.113574
+
+Brandt, J. & Stolle, F. (2021) A global method to identify trees outside of closed-canopy forests with medium-resolution satellite imagery. International Journal of Remote Sensing, 42:5, 1713-1737, DOI: 10.1080/01431161.2020.1841324
 
 ![img](references/screenshots/demo.gif?raw=true)
+
+# Getting started
+
+An overview Jupyter notebook walking through the creation of the data can be found [here](https://github.com/wri/sentinel-tree-cover/blob/master/notebooks/development/Tropical%20Tree%20Cover%20technical%20introduction.ipynb)
 
 # Installation
 
@@ -39,7 +43,7 @@ awskey: "YOUR-AWS-API-KEY"
 awssecret: "YOUR-AWS-API-SECRET"
 ```
 
-The code can be utilized without AWS by setting `--ul_flag False` in `download_and_predict_job.py`. By default, the pipeline will output satellite imagery and predictions in 6 x 6 km tiles to the `--s3_bucket` bucket.
+The code can be utilized without AWS by setting `--ul_flag False` in `download_and_predict_job.py`. By default, the pipeline will output satellite imagery and predictions in 6 x 6 km tiles to the `--s3_bucket` bucket. NOTE: The specific layer configurations for Sentinel-Hub have not yet been released but are available on request.
 
 ## With Docker
 
@@ -69,9 +73,10 @@ The `notebooks/` folder contains ordered notebooks for downloading training and 
 * 3-feature-selection: Feature selection for remote sensing indices utilizing random forests
 * 4-model: Trains and deploys tree cover model
 
-The `src/` folder contains the source code for the project, as well as the primary entrypoint for the Docker container, `download_and_predict_job.py`
 
-`download_and_predict_job.py` can be used as follows, with additional optional arguments listed in the file: `python3 download_and_predict_job.py --country $COUNTRY --year $YEAR`
+The `src/` folder contains the source code for the project, as well as the primary entrypoint for the Docker container, `download_and_predict_job_fast.py`
+
+`download_and_predict_job_fast.py` can be used as follows, with additional optional arguments listed in the file: `python3 download_and_predict_job_fast.py --country $COUNTRY --year $YEAR`
 
 # Methodology
 
