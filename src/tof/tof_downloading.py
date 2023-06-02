@@ -373,7 +373,6 @@ def identify_clouds_big_bbx(
         cloud_dates = np.delete(cloud_dates, to_remove)
         cloud_img = np.delete(cloud_img, to_remove, 0)
         cloud_percent = np.delete(cloud_percent, to_remove)
-
     # Type assertions, size assertions
     if not isinstance(cloud_img.flat[0], np.floating):
         #assert np.max(cloud_img) > 1
