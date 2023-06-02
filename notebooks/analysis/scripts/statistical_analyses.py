@@ -4,7 +4,7 @@ import confuse
 import boto3
 import os
 
-def check_stats(country, extent):
+def check_stats(country, extent, adm2):
     '''
     Checks a country's statistics spreadsheet for erroneous values.
     Including
@@ -32,6 +32,10 @@ def check_stats(country, extent):
 
 
     df = pd.read_csv(f'statistics/{country}_statistics_{extent}.csv')
+
+    if adm2:
+        df = pd.read_csv(f'statistics/{country}_statistics2_{extent}.csv')
+
     processing_area = pd.read_csv(f'statistics/full_processing_area.csv')
     actual_sampled = processing_area[processing_area.country == country].iloc[0][1]
 
