@@ -27,15 +27,14 @@ def interpolate_missing_vals(s2: np.ndarray) -> np.ndarray:
     '''Interpolates NA values with closest time steps, to deal with
        the small potential for NA values in calculating indices
     '''
-    print("INTERPS MSISING")
-    print(np.sum(s2 >= 1, axis=(0, 1, 2)))
-    print(np.sum(s2 == 0))
+    print(f"There are {np.sum(s2 >= 1)} NAN values in the datacube")
     if np.sum(np.logical_and(s2 >= 1, s2 == 0)) > 0:
         nanmedian = np.median(s2, axis=0)
         for time in range(s2.shape[0]):
             s2_image = s2[time]
             s2_image[s2_image >= 1] = nanmedian[s2_image >= 1]
             s2_image[s2_image == 0] = nanmedian[s2_image == 0]
+        print(f"After NAN removal: there are {np.sum(s2 >= 1)} NAN values in the datacube")
 
     return s2
 

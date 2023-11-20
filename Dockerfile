@@ -36,7 +36,8 @@ RUN add-apt-repository ppa:ubuntugis/ppa && apt-get update &&\
  	export C_INCLUDE_PATH=/usr/include/gdal
 
 RUN python3.7 -m pip install protobuf==3.19.4 &&\
- 	python3.7 -m pip install -U scikit-learn --ignore-installed
+ 	python3.7 -m pip install -U scikit-learn --ignore-installed &&\
+ 	python3.7 -m pip install scipy==1.4.1 --ignore-installed
 
 # RUN chmod +x ./run_test.sh &&\
 #  	./run_test.sh

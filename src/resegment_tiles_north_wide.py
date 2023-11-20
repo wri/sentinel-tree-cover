@@ -32,6 +32,7 @@ from download_and_predict_job_fast import fspecial_gauss, make_and_smooth_indice
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 tf.disable_v2_behavior()
 
+LEN = 4
 
 def download_raw_tile(tile_idx, local_path, subfolder = "raw"):
     x = tile_idx[0]
@@ -178,7 +179,7 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         subtile = np.core.umath.clip(subtile, min_all, max_all)
         subtile = (subtile - midrange) / (rng / 2)
         batch_x = subtile[np.newaxis]
-        lengths = np.full((batch_x.shape[0]), 12)
+        lengths = np.full((batch_x.shape[0]), LEN)
 
         preds = sess.run(predict_logits,
                               feed_dict={predict_inp:batch_x,
@@ -361,6 +362,14 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     path = f'{args.local_path}{str(x)}/{str(y)}/processed/'
     path_neighbor = f'{args.local_path}{str(x)}/{str(int(y) + 1)}/processed/'
 
+    if LEN == 4:
+        print('mking quarterly')
+        s2 = np.reshape(s2, (4, 3, s2.shape[1], s2.shape[2], s2.shape[3]))
+        s2 = np.median(s2, axis = 1, overwrite_input = True)
+        s1 = np.reshape(s1, (4, 3, s1.shape[1], s1.shape[2], s1.shape[3]))
+        s1 = np.median(s1, axis = 1, overwrite_input = True)
+        #np.save("s2.npy", s2[..., :3])
+
     gap_between_years = False
     t = 0
     # Iterate over each subitle and prepare it for processing and generate predictions
@@ -418,12 +427,12 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         #subtile_s2 = superresolve_tile(subtile, sess = superresolve_sess)
 
         # Concatenate the DEM and Sentinel 1 data
-        subtile = np.zeros((13, SIZE + 14, SIZE_X + 14, 17), dtype = np.float32)
+        subtile = np.zeros((LEN + 1, SIZE + 14, SIZE_X + 14, 17), dtype = np.float32)
         subtile[:-1, ..., :10] = subtile_s2[..., :10]
         subtile[:-1, ..., 11:13] = s1_subtile
         subtile[:-1, ..., 13:] = subtile_s2[..., 10:]
 
-        subtile[:, ..., 10] = dem_subtile.repeat(13, axis = 0)
+        subtile[:, ..., 10] = dem_subtile.repeat(LEN + 1, axis = 0)
         
         subtile[-1, ..., :10] = subtile_median_s2[..., :10]
         subtile[-1, ..., 11:13] = subtile_median_s1
@@ -442,7 +451,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             print("Actually doing it tho")
             subtile = align_subtile_histograms(subtile)
         assert subtile.shape[1] >= 145, f"subtile shape is {subtile.shape}"
-        assert subtile.shape[0] == 13, f"subtile shape is {subtile.shape}"
+        assert subtile.shape[0] == (LEN + 1), f"subtile shape is {subtile.shape}"
 
         # Select between temporal and median models for prediction, based on simple logic:
         # If the first image is after June 15 or the last image is before July 15
@@ -480,7 +489,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         no_images = np.reshape(no_images, (20, (SIZE // 20), 6, 40))
         no_images = np.sum(no_images, axis = (1, 3))
         
-        no_images = no_images > 1360*0.25
+        no_images = no_images > 1360*0.66
         no_images = no_images.repeat(40, axis = 1).repeat((SIZE // 20), axis = 0)
         if source_median <= (min_ref_median - 12):
             # IF we are out of bounds on the lower side, adjust to fit the lower bound
@@ -1505,7 +1514,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/680-240-2023/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/680-240-large/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "process_area_2022.csv")
@@ -1515,6 +1524,7 @@ if __name__ == "__main__":
     parser.add_argument("--process_all", dest = "process_all", default = False)
     parser.add_argument("--start_x", dest = "start_x", default = 10000)
     parser.add_argument("--year", dest = "year", default = 2020)
+    parser.add_argument("--snow", dest = "snow", default = False)
     args = parser.parse_args()
 
     if os.path.exists(args.yaml_path):

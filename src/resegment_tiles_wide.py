@@ -7,8 +7,8 @@ from skimage.transform import resize
 import hickle as hkl
 import boto3
 from scipy.ndimage import median_filter
-import tensorflow.compat.v1 as tf
-#import tensorflow as tf
+#import tensorflow.compat.v1 as tf
+import tensorflow as tf
 from glob import glob
 import rasterio
 from rasterio.transform import from_origin
@@ -32,8 +32,9 @@ from download_and_predict_job_fast import process_tile, make_bbox, convert_to_db
 from download_and_predict_job_fast import fspecial_gauss, make_and_smooth_indices
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-tf.disable_v2_behavior()
+#f.disable_v2_behavior()
 
+LEN = 4
 
 def download_raw_tile(tile_idx, local_path, subfolder = "raw"):
     x = tile_idx[0]
@@ -177,7 +178,7 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
         subtile = np.core.umath.clip(subtile, min_all, max_all)
         subtile = (subtile - midrange) / (rng / 2)
         batch_x = subtile[np.newaxis]
-        lengths = np.full((batch_x.shape[0]), 12)
+        lengths = np.full((batch_x.shape[0]), LEN)
         time2 = time.time()
         print(f"Other prep in {time2 - time1} seconds")
 
@@ -187,7 +188,7 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
                                          predict_length:lengths})
         
         preds = preds.squeeze()
-        preds = preds[1:-1, 1:-1]
+        #preds = preds[1:-1, 1:-1]
         time2 = time.time()
         print(f"Preds in {time2 - time1} seconds")
         
@@ -248,6 +249,7 @@ def make_tiles_right_neighb(tiles_folder_x, tiles_folder_y):
     tiles_array[:, 2] = SIZE + 14.
     tiles_array[:, 3] = SIZE_Y + 7.
     tiles_array[1:-1, 3] += 7
+    print(tiles_array, tiles_folder)
     return tiles_array, tiles_folder
 
 
@@ -374,6 +376,14 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     path = f'{args.local_path}{str(x)}/{str(y)}/processed/'
     path_neighbor = f'{args.local_path}{str(int(x) + 1)}/{str(y)}/processed/'
 
+    if LEN == 4:
+        print('mking quarterly')
+        s2 = np.reshape(s2, (4, 3, s2.shape[1], s2.shape[2], s2.shape[3]))
+        s2 = np.median(s2, axis = 1, overwrite_input = True)
+        s1 = np.reshape(s1, (4, 3, s1.shape[1], s1.shape[2], s1.shape[3]))
+        s1 = np.median(s1, axis = 1, overwrite_input = True)
+        #np.save("s2.npy", s2[..., :3])
+
     gap_between_years = False
     t = 0
     # Iterate over each subitle and prepare it for processing and generate predictions
@@ -440,12 +450,12 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         subtile_s2 = subtile
         # Concatenate the DEM and Sentinel 1 data
-        subtile = np.empty((13, SIZE_Y + 14, SIZE + 14, 17), dtype = np.float32)
+        subtile = np.empty((LEN + 1, SIZE_Y + 14, SIZE + 14, 17), dtype = np.float32)
         subtile[:-1, ..., :10] = subtile_s2[..., :10]
         subtile[:-1, ..., 11:13] = s1_subtile
         subtile[:-1, ..., 13:] = subtile_s2[..., 10:]
 
-        subtile[:, ..., 10] = dem_subtile.repeat(13, axis = 0)
+        subtile[:, ..., 10] = dem_subtile.repeat(LEN + 1, axis = 0)
         
         subtile[-1, ..., :10] = subtile_median_s2[..., :10]
         subtile[-1, ..., 11:13] = subtile_median_s1
@@ -463,7 +473,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         
         
         assert subtile.shape[1] >= 145, f"subtile shape is {subtile.shape}"
-        assert subtile.shape[0] == 13, f"subtile shape is {subtile.shape}"
+        assert subtile.shape[0] == LEN + 1, f"subtile shape is {subtile.shape}"
 
         # Select between temporal and median models for prediction, based on simple logic:
         # If the first image is after June 15 or the last image is before July 15
@@ -500,8 +510,8 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             right_mean = np.mean(preds[:, (SIZE) // 2 : (SIZE + 8) // 2])
             print(left_mean, right_mean)
 
-            left_source_med = np.nanmean(left_all[start_y:start_y + SIZE_Y])
-            right_source_med = np.nanmean(right_all[start_y:start_y + SIZE_Y])
+            left_source_med = np.nanmean(left_all[start_y:start_y + SIZE_Y, :100])
+            right_source_med = np.nanmean(right_all[start_y:start_y + SIZE_Y, -100:])
 
             left_pred_mean = np.nanmean(preds[: , :(SIZE // 2)], axis = 1) * 100
             right_pred_mean = np.nanmean(preds[: , -(SIZE // 2):], axis = 1) * 100
@@ -521,62 +531,62 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
          
             min_clear_tile = min_clear_tile[7:-7, 7:-7]
             print(min_clear_tile.shape)
-            no_images = min_clear_tile < 1
-            no_images = np.reshape(no_images, (6, 40, 20, (SIZE // 20)))
-            no_images = np.sum(no_images, axis = (1, 3))
+            #no_images = min_clear_tile < 1
+            #no_images = np.reshape(no_images, (6, 40, 20, (SIZE // 20)))
+            #no_images = np.sum(no_images, axis = (1, 3))
             
-            no_images = no_images > 1360*0.4
-            no_images = no_images.repeat(40, axis = 0).repeat((SIZE // 20), axis = 1)
+            #no_images = no_images > 1360*0.7
+            #no_images = no_images.repeat(40, axis = 0).repeat((SIZE // 20), axis = 1)
 
-            if source_median <= (min_ref_median - 10):
+            if source_median <= (min_ref_median - 15):
                 # IF we are out of bounds on the lower side, adjust to fit the lower bound
-                adjust_value = np.around(((min_ref_median - source_median - 10) / 100), 3)
+                adjust_value = np.around(((min_ref_median - source_median - 15) / 100), 3)
                 print(f"Adjusting, {source_median} median compared "
                       f" to {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} diff"
                       f" {adjust_value} adjustment")
 
-                if left_source_med < right_source_med:
-                    preds = adjust_predictions(preds, left_all[start_y:start_y + SIZE_Y, :] / 100)
-                else:
-                    preds = adjust_predictions(preds, right_all[start_y:start_y + SIZE_Y, :] / 100)
+                #if left_source_med < right_source_med:
+                #    preds = adjust_predictions(preds, left_all[start_y:start_y + SIZE_Y, :] / 100)
+                #else:
+                #    preds = adjust_predictions(preds, right_all[start_y:start_y + SIZE_Y, :] / 100)
 
-                preds[no_images] = 255.
+               #preds[no_images] = 255.
                 np.save(output, preds) 
                 np.save(output2, preds)
 
-            elif source_median >= (max_ref_median + 10):
-                adjust_value = np.around(((source_median - max_ref_median - 10) / 100), 3)
+            elif source_median >= (max_ref_median + 15):
+                adjust_value = np.around(((source_median - max_ref_median - 15) / 100), 3)
                 print(f"Adjusting, {source_median} median compared to"
                       f" {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference"
                       f" {adjust_value} adjustment")
 
-                if left_source_med > right_source_med:
-                    preds = adjust_predictions(preds, left_all[start_y:start_y + SIZE_Y, :] / 100)
-                else:
-                    preds = adjust_predictions(preds, right_all[start_y:start_y + SIZE_Y, :] / 100)
+                #if left_source_med > right_source_med:
+                #    preds = adjust_predictions(preds, left_all[start_y:start_y + SIZE_Y, :] / 100)
+                #else:
+                #    preds = adjust_predictions(preds, right_all[start_y:start_y + SIZE_Y, :] / 100)
 
-                preds[no_images] = 255.
+                #preds[no_images] = 255.
                 np.save(output, preds)
                 np.save(output2, preds)
 
             elif np.logical_and(
-                source_median <= max_ref_median + 10, source_median >= min_ref_median - 10
+                source_median <= max_ref_median + 15, source_median >= min_ref_median - 15
             ):
                 print(f"{source_median} median: {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference,"
                       f"{left_mean}, {right_mean}")
-                preds[no_images] = 255.
+                #preds[no_images] = 255.
                 np.save(output, preds)
                 np.save(output2, preds)
             elif np.isnan(max_ref_median) and np.isnan(min_ref_median):
                 print(f"{source_median} median: {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference")
-                preds[no_images] = 255.
+                #preds[no_images] = 255.
                 np.save(output, preds)
                 np.save(output2, preds)
             else:
                 print(f"Skipping because {abs(left_mean - right_mean)} difference or "
                     f"{source_median} median compared to {min_ref_median}-{max_ref_median}")
         else:
-            preds[no_images] = 255.
+            #preds[no_images] = 255.
             np.save(output, preds)
             np.save(output2, preds)
         
@@ -621,9 +631,9 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
         dates = np.delete(dates, to_remove)
         interp = np.delete(interp, to_remove, axis = 0)
         arr = np.delete(arr, to_remove, axis = 0)
-        cld, fcps, = cloud_removal.identify_clouds_shadows(arr, dem, bbx)
+        cld, fcps = cloud_removal.identify_clouds_shadows(arr, dem, bbx)
 
-    arr, interp2, to_remove = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, pfcps = fcps, wsize = 10, step = 10, thresh = 10)
+    arr, interp2, to_remove = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, pfcps = fcps, sentinel1 = None, wsize = 10, step = 10, thresh = 10)
 
     print(np.mean(interp2, axis = (1, 2)))
     #interp = np.maximum(interp, interp2)
@@ -684,6 +694,7 @@ def load_tif(tile_id, local_path):
         smooth_xy = [file for file in files if "_SMOOTH_XY" in file]
         
         smooth_files = [file for file in smooth_files if os.path.splitext(file)[-1] == '.tif']
+        #smooth_files = []
         if len(smooth_files) > 0:
             if len(smooth_xy) > 0:
                 files = smooth_xy
@@ -812,7 +823,7 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
     if min_images >= 6:
         print("Preprocessing the tiles together")
         print("Loading and splitting the tile")
-        s2, dates, interp, s1, dem, _ = process_tile(tile_x, tile_y, data, local_path, bbx)
+        s2, dates, interp, s1, dem, _, _ = process_tile(tile_x, tile_y, data, local_path, bbx)
         s2_shape = s2.shape[1:-1]
         #n_tiles_x, n_tiles_y = check_n_tiles(tile_x, tile_y)
         tile_idx = f'{str(tile_x)}X{str(tile_y)}Y'
@@ -820,7 +831,7 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
         s2, interp, s1, dem, tiles_folder_x = split_to_border(s2, interp, s1, dem, "tile", edge)
 
         print("Loading and splitting the neighbor tile")
-        s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb, _ = \
+        s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb, _, _ = \
             process_tile(neighbor_id[0], neighbor_id[1], data, args.local_path, neighb_bbx)
         s2_neighb_shape = s2_neighb.shape[1:-1]
         tile_idx = f'{str(neighbor_id[0])}X{str(neighbor_id[1])}Y'
@@ -903,7 +914,7 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
         time1 = time.time()
         print("Separate tile preprocessing")
         print("Loading and processing the tile")
-        s2, dates, interp, s1, dem, _ = process_tile(tile_x, tile_y, data, local_path, bbx)
+        s2, dates, interp, s1, dem, _, _ = process_tile(tile_x, tile_y, data, local_path, bbx)
         s2_shape = s2.shape[1:-1]
         #n_tiles_x, n_tiles_y = check_n_tiles(tile_x, tile_y)
         tile_idx = f'{str(tile_x)}X{str(tile_y)}Y'
@@ -918,7 +929,7 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
         s2, interp, s1, dem, tiles_folder_x = split_to_border(s2, interp, s1, dem, "tile", edge)
        
         print("Loading and processing the neighbor tile")
-        s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb, _ = \
+        s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb, _, _ = \
             process_tile(neighbor_id[0], neighbor_id[1], data, args.local_path, neighb_bbx)
         s2_neighb_shape = s2_neighb.shape[1:-1]
         tile_idx = f'{str(neighbor_id[0])}X{str(neighbor_id[1])}Y'
@@ -1489,14 +1500,14 @@ def cleanup_row_or_col(idx, current_idx, local_path):
         
 
 if __name__ == "__main__":
-    SIZE = 680
-    SIZE_Y = 240
+    SIZE = 670
+    SIZE_Y = 206
 
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/240-680-2023/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/retrain-combined-ca-220-684/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "process_area_2022.csv")
@@ -1541,7 +1552,7 @@ if __name__ == "__main__":
         predict_graph_def.ParseFromString(predict_file.read())
         predict_graph = tf.import_graph_def(predict_graph_def, name='predict')
         predict_sess = tf.compat.v1.Session(graph=predict_graph)
-        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_13/Sigmoid:0")            
+        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_5/Sigmoid:0")            
         predict_inp = predict_sess.graph.get_tensor_by_name("predict/Placeholder:0")
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")
         print(f"The input shape is: {predict_inp.shape}")
@@ -1636,18 +1647,18 @@ if __name__ == "__main__":
                 break
             except Exception as e:
                 print(f"Ran into {str(e)}")
-            try:
-                time1 = time.time()
-                finished, s2_shape, s2_neighb_shape, diff, min_images = resegment_border(x, y, "right", args.local_path, bbx, neighb_bbx, 2)
-                time2 = time.time()
-                print(f"Finished the predictions in: {np.around(time2 - time1, 1)} seconds")
-            except KeyboardInterrupt:
-                break
+            #try:
+            time1 = time.time()
+            finished, s2_shape, s2_neighb_shape, diff, min_images = resegment_border(x, y, "right", args.local_path, bbx, neighb_bbx, 2)
+            time2 = time.time()
+            print(f"Finished the predictions in: {np.around(time2 - time1, 1)} seconds")
+            #except KeyboardInterrupt:
+            #    break
             
-            except Exception as e:
-                print(f"Ran into {str(e)}")
-                finished = 0
-                s2_shape = (0, 0)
+            #except Exception as e:
+            #    print(f"Ran into {str(e)}")
+            #    finished = 0
+            #    s2_shape = (0, 0)
 
             if finished == 1:
                 try:
@@ -1719,7 +1730,7 @@ if __name__ == "__main__":
                     else:
                         continue
                         cleanup(path_to_tile, path_to_right, delete = True, upload = False)
-
+   
                 except KeyboardInterrupt:
                     break
                 except Exception as e:

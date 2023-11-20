@@ -37,3 +37,7 @@ notebooks/*/*.csv
 config.json
 notebooks/analysis/statistics/*
 *.mp4
+*.xml
+*.hkl
+*.xlsx
+notebooks/development/validation_subregion_v1p6.png

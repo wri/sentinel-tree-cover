@@ -2,7 +2,6 @@ import datetime
 import logging
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 import os
 import scipy.sparse as sparse
@@ -12,7 +11,7 @@ from collections import Counter
 from random import shuffle
 from scipy.sparse.linalg import splu
 from sentinelhub import WmsRequest, WcsRequest, MimeType
-from sentinelhub import CRS, BBox, constants, DataSource, CustomUrlParam
+from sentinelhub import CRS, BBox, constants, CustomUrlParam
 from skimage.transform import resize
 from pyproj import Proj, transform
 from typing import List, Any, Tuple
@@ -57,6 +56,31 @@ def calculate_bbx_pyproj(coord: Tuple[float, float],
     direction = 'N' if coord[1] >= 0 else 'S'
     utm_epsg = "UTM_" + zone + direction
     return (coord_utm_bottom_left, coord_utm_top_right), CRS[utm_epsg]
+
+
+def calc_bbx_of_size(coord: Tuple[float, float],
+                     size) -> (Tuple[float, float], 'CRS'):
+    ''' Calculates the four corners of a bounding box
+        [bottom left, top right] as well as the UTM EPSG using Pyproj
+
+        Note: The input for this function is (x, y), not (lat, long)
+    '''
+
+    inproj = Proj('epsg:4326')
+    outproj_code = calculate_epsg(coord)
+    outproj = Proj('epsg:' + str(outproj_code))
+
+    coord_utm = transform(inproj, outproj, coord[1], coord[0])
+    coord_utm_bottom_left = (coord_utm[0] - size // 2,
+                             coord_utm[1] - size // 2)
+
+    coord_utm_top_right = (coord_utm[0] + size // 2,
+                           expansion, coord_utm[1] + size // 2)
+    coord_bottom_left = transform(outproj, inproj, 
+        coord_utm_bottom_left[1], coord_utm_bottom_left[0])
+    coord_top_right = transform(outproj, inproj, 
+        coord_utm_top_right[1], coord_utm_top_right[0])
+    return (coord_bottom_left, coord_top_right)
 
 
 def calculate_epsg(points: Tuple[float, float]) -> int:
@@ -272,7 +296,7 @@ def calculate_and_save_best_images(
             prior_images_idx = prior_images_idx[:2]
         #print(np.concatenate([prior_images_idx, after_images_idx]))
         selected_images[i] = {
-            'image_date': np.array([prior_dates, after_dates]).flatten(),
+            'image_date': np.array(np.concatenate([prior_dates, after_dates])).flatten(),
             'image_ratio': [prior_ratio, after_ratio],
             'image_idx': [prior_images_idx, after_images_idx]
         }

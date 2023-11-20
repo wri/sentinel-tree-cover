@@ -1,5 +1,5 @@
 """AdaBound for TensorFlow."""
-
+import re
 from tensorflow.python.eager import context
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import control_flow_ops
@@ -30,15 +30,15 @@ from tensorflow.python.ops.clip_ops import clip_by_value
 
 class AdaBoundOptimizer(optimizer.Optimizer):
     def __init__(self, learning_rate=0.001, final_lr=0.1, beta1=0.9, beta2=0.999,
-                 gamma=1e-3, epsilon=1e-8, amsbound=False,
-                 use_locking=False, name="AdaBound"):
+                 gamma=1e-3, epsilon=1e-8, amsbound=False, weight_decay = 2e-5,
+                 use_locking=False, exclude_from_weight_decay = None, name="AdaBound"):
         super(AdaBoundOptimizer, self).__init__(use_locking, name)
         self._lr = learning_rate
         self._final_lr = final_lr
         self._beta1 = beta1
         self._beta2 = beta2
         self._epsilon = epsilon
-
+        self._weight_decay = weight_decay
         self._gamma = gamma
         self._amsbound = amsbound
 
@@ -46,6 +46,25 @@ class AdaBoundOptimizer(optimizer.Optimizer):
         self._beta1_t = None
         self._beta2_t = None
         self._epsilon_t = None
+        self._exclude_from_weight_decay = 'down_16'
+
+    def _do_use_weight_decay(self, param_name):
+        """Whether to use L2 weight decay for `param_name`."""
+        if not self._weight_decay:
+            return False
+        if self._exclude_from_weight_decay:
+            for r in self._exclude_from_weight_decay:
+                if re.search(r, param_name) is not None:
+                    return False
+        return True
+
+    @staticmethod
+    def _get_variable_name(param_name):
+        """Get the variable name from the tensor name."""
+        m = re.match("^(.*):\\d+$", param_name)
+        if m is not None:
+            param_name = m.group(1)
+        return param_name
 
     def _create_slots(self, var_list):
         first_var = min(var_list, key=lambda x: x.name)
@@ -81,6 +100,7 @@ class AdaBoundOptimizer(optimizer.Optimizer):
         self._gamma_t = ops.convert_to_tensor(self._gamma)
 
     def _apply_dense(self, grad, var):
+        param_name = self._get_variable_name(var.name)
         graph = None if context.executing_eagerly() else ops.get_default_graph()
         beta1_power = math_ops.cast(self._get_non_slot_variable("beta1_power", graph=graph), var.dtype.base_dtype)
         beta2_power = math_ops.cast(self._get_non_slot_variable("beta2_power", graph=graph), var.dtype.base_dtype)
@@ -119,11 +139,14 @@ class AdaBoundOptimizer(optimizer.Optimizer):
         # Compute the bounds
         step_size_bound = step_size / (v_sqrt + epsilon_t)
         bounded_lr = m_t * clip_by_value(step_size_bound, lower_bound, upper_bound)
-
+        if self._do_use_weight_decay(param_name):
+            std = tf.keras.backend.std(var, axis=[0, 1, 2], keepdims=True)
+            bounded_lr += self._weight_decay * std * var
         var_update = state_ops.assign_sub(var, bounded_lr, use_locking=self._use_locking)
         return control_flow_ops.group(*[var_update, m_t, v_t, vhat_t])
 
     def _resource_apply_dense(self, grad, var):
+        param_name = self._get_variable_name(var.name)
         graph = None if context.executing_eagerly() else ops.get_default_graph()
         beta1_power = math_ops.cast(self._get_non_slot_variable("beta1_power", graph=graph), grad.dtype.base_dtype)
         beta2_power = math_ops.cast(self._get_non_slot_variable("beta2_power", graph=graph), grad.dtype.base_dtype)
@@ -161,12 +184,15 @@ class AdaBoundOptimizer(optimizer.Optimizer):
         # Compute the bounds
         step_size_bound = step_size / (v_sqrt + epsilon_t)
         bounded_lr = m_t * clip_by_value(step_size_bound, lower_bound, upper_bound)
-
+        if self._do_use_weight_decay(param_name):
+            std = tf.keras.backend.std(var, axis=[0, 1, 2], keepdims=True)
+            bounded_lr += self._weight_decay * std * var
         var_update = state_ops.assign_sub(var, bounded_lr, use_locking=self._use_locking)
 
         return control_flow_ops.group(*[var_update, m_t, v_t, vhat_t])
 
     def _apply_sparse_shared(self, grad, var, indices, scatter_add):
+        param_name = self._get_variable_name(var.name)
         graph = None if context.executing_eagerly() else ops.get_default_graph()
         beta1_power = math_ops.cast(self._get_non_slot_variable("beta1_power", graph=graph), var.dtype.base_dtype)
         beta2_power = math_ops.cast(self._get_non_slot_variable("beta2_power", graph=graph), var.dtype.base_dtype)
@@ -208,7 +234,9 @@ class AdaBoundOptimizer(optimizer.Optimizer):
         # Compute the bounds
         step_size_bound = step_size / (v_sqrt + epsilon_t)
         bounded_lr = m_t * clip_by_value(step_size_bound, lower_bound, upper_bound)
-
+        if self._do_use_weight_decay(param_name):
+            std = tf.keras.backend.std(var, axis=[0, 1, 2], keepdims=True)
+            bounded_lr += self._weight_decay * std * var
         var_update = state_ops.assign_sub(var, bounded_lr, use_locking=self._use_locking)
 
         return control_flow_ops.group(*[var_update, m_t, v_t, vhat_t])
