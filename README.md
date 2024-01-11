@@ -5,6 +5,8 @@ Mapping tree cover and extent with Sentinel-1 and 2
 
 This is the GitHub repository for the Sentinel-1 and Sentinel-2 dataset Tropical Tree Cover, which is viewable on Google Earth Engine [here](https://jombrandt.users.earthengine.app/view/sentinel-tree-cover). The asset is public as of May 2023 on Google Earth Engine [here](https://code.earthengine.google.com/?asset=projects/wri-datalab/TropicalTreeCover). The dataset is published in [Remote Sensing of Environment](https://www.sciencedirect.com/science/article/pii/S0034425723001256).
 
+The trained model and training data are in preparation for release in early 2024.
+
 This project maps tree extent at the ten-meter scale using open source artificial intelligence and satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems.
 
 This repository contains the source code for the project. A full description of the methodology can be found in the [publication](https://www.sciencedirect.com/science/article/pii/S0034425723001256). The data product specifications can be accessed on the wiki page.
