@@ -7,8 +7,8 @@ from skimage.transform import resize
 import hickle as hkl
 import boto3
 from scipy.ndimage import median_filter
-#import tensorflow.compat.v1 as tf
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+#import tensorflow as tf
 from glob import glob
 import rasterio
 from rasterio.transform import from_origin
@@ -28,11 +28,11 @@ from tof.tof_downloading import to_int16, to_float32
 from downloading.io import FileUploader,  get_folder_prefix, make_output_and_temp_folders, upload_raw_processed_s3
 from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder
 from preprocessing.indices import evi, bi, msavi2, grndvi
-from download_and_predict_job_fast import process_tile, make_bbox, convert_to_db, deal_w_missing_px
-from download_and_predict_job_fast import fspecial_gauss, make_and_smooth_indices
+from download_and_predict_job import process_tile, make_bbox, convert_to_db, deal_w_missing_px
+from download_and_predict_job import fspecial_gauss, make_and_smooth_indices
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-#f.disable_v2_behavior()
+tf.disable_v2_behavior()
 
 LEN = 4
 
@@ -1647,18 +1647,18 @@ if __name__ == "__main__":
                 break
             except Exception as e:
                 print(f"Ran into {str(e)}")
-            #try:
-            time1 = time.time()
-            finished, s2_shape, s2_neighb_shape, diff, min_images = resegment_border(x, y, "right", args.local_path, bbx, neighb_bbx, 2)
-            time2 = time.time()
-            print(f"Finished the predictions in: {np.around(time2 - time1, 1)} seconds")
-            #except KeyboardInterrupt:
-            #    break
+            try:
+                time1 = time.time()
+                finished, s2_shape, s2_neighb_shape, diff, min_images = resegment_border(x, y, "right", args.local_path, bbx, neighb_bbx, 2)
+                time2 = time.time()
+                print(f"Finished the predictions in: {np.around(time2 - time1, 1)} seconds")
+            except KeyboardInterrupt:
+                break
             
-            #except Exception as e:
-            #    print(f"Ran into {str(e)}")
-            #    finished = 0
-            #    s2_shape = (0, 0)
+            except Exception as e:
+                print(f"Ran into {str(e)}")
+                finished = 0
+                s2_shape = (0, 0)
 
             if finished == 1:
                 try:

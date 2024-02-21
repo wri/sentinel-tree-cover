@@ -1,7 +1,11 @@
 import tensorflow as tf
+if tf.__version__[0] == '2':
+    import tensorflow.compat.v1 as tf
+    #tf.disable_v2_behavior()
+    #tf.logging.set_verbosity(tf.logging.ERROR)
 
 
-class ZoneoutWrapper(tf.contrib.rnn.RNNCell):
+class ZoneoutWrapper(tf.nn.rnn_cell.RNNCell):
   """Add Zoneout to a RNN cell."""
 
   def __init__(self, cell, zoneout_drop_prob, is_training=True):

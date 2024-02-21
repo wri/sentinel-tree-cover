@@ -3,8 +3,9 @@ import sys
 sys.path.append('../')
 from src.preprocessing.slope import calcSlope
 from src.downloading.utils import calculate_and_save_best_images
-from sentinelhub import WmsRequest, WcsRequest, MimeType, CRS, BBox, constants, DataSource, CustomUrlParam, SentinelHubRequest
+from sentinelhub import WmsRequest, WcsRequest, MimeType, CRS, BBox, constants, DataCollection, CustomUrlParam, SentinelHubRequest
 from sentinelhub.geo_utils import bbox_to_dimensions
+from sentinelhub.api import ogc
 from typing import Tuple, List
 import numpy as np
 import datetime
@@ -133,7 +134,7 @@ def identify_clouds(cloud_bbx,
         image_format=MimeType.TIFF,
         maxcc=maxcc,
         config=api_key,
-        custom_url_params={constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
+        custom_url_params={ogc.CustomUrlParam.UPSAMPLING: 'NEAREST'},
         time_difference=datetime.timedelta(hours=48),
     )
 
@@ -148,7 +149,7 @@ def identify_clouds(cloud_bbx,
         image_format=MimeType.TIFF,
         maxcc=maxcc,
         config=api_key,
-        custom_url_params={constants.CustomUrlParam.UPSAMPLING: 'NEAREST'},
+        custom_url_params={ogc.CustomUrlParam.UPSAMPLING: 'NEAREST'},
         time_difference=datetime.timedelta(hours=48))
 
     cloud_img = np.array(cloud_request.get_data())
@@ -296,6 +297,7 @@ def identify_clouds_big_bbx(
     box = BBox(cloud_bbx, crs=CRS.WGS84)
     cloud_request = WcsRequest(
         layer='CLOUD_SCL_PREVIEW',
+        data_collection=DataCollection.SENTINEL2_L2A,
         bbox=box,
         time=dates,
         resx='640m',
@@ -304,8 +306,8 @@ def identify_clouds_big_bbx(
         maxcc=0.5,
         config=api_key,
         custom_url_params={
-            constants.CustomUrlParam.UPSAMPLING: 'NEAREST',
-            constants.CustomUrlParam.PREVIEW: 'TILE_PREVIEW'
+            ogc.CustomUrlParam.UPSAMPLING: 'NEAREST',
+            ogc.CustomUrlParam.PREVIEW: 'TILE_PREVIEW'
         },
         time_difference=datetime.timedelta(hours=48),
     )
@@ -344,6 +346,7 @@ def identify_clouds_big_bbx(
     if scl:
         box2 = BBox(shadow_bbx, crs=CRS.WGS84)
         scl_request = WcsRequest(
+            data_collection=DataCollection.SENTINEL2_L2A,
             layer='SCL',
             bbox=box2,
             time=dates,
@@ -353,8 +356,8 @@ def identify_clouds_big_bbx(
             maxcc=0.5,
             config=api_key,
             custom_url_params={
-                constants.CustomUrlParam.UPSAMPLING: 'NEAREST',
-                constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+                ogc.CustomUrlParam.UPSAMPLING: 'NEAREST',
+                ogc.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
             },
             time_difference=datetime.timedelta(hours=48),
         )
@@ -458,7 +461,7 @@ def download_dem(bbox: List[Tuple[float, float]], api_key: str) -> np.ndarray:
     # Download imagery
     box = BBox(bbox, crs=CRS.WGS84)
 
-    dem_request = WcsRequest(data_source=DataSource.DEM,
+    dem_request = WcsRequest(data_collection=DataCollection.DEM,
                              layer='DEM',
                              bbox=box,
                              resx='10m',
@@ -467,8 +470,8 @@ def download_dem(bbox: List[Tuple[float, float]], api_key: str) -> np.ndarray:
                              maxcc=0.75,
                              config=api_key,
                              custom_url_params={
-                                 CustomUrlParam.SHOWLOGO: False,
-                                 constants.CustomUrlParam.UPSAMPLING: 'NEAREST'
+                                 ogc.CustomUrlParam.SHOWLOGO: False,
+                                 ogc.CustomUrlParam.UPSAMPLING: 'NEAREST'
                              })
 
     # Convert the uint16 data to float32
@@ -546,11 +549,11 @@ def download_sentinel_1_composite(
 
     # Identify the S1 orbit, imagery dates
     if layer == "SENT_DESC":
-        source = DataSource.SENTINEL1_IW_DES
+        source = DataCollection.SENTINEL1_IW_DES
     if layer == "SENT":
-        source = DataSource.SENTINEL1_IW_ASC
+        source = DataCollection.SENTINEL1_IW_ASC
     if layer == "SENT_ALL":
-        source = DataSource.SENTINEL1_IW
+        source = DataCollection.SENTINEL1_IW
     box = BBox(bbox, crs=CRS.WGS84)
     #size = bbox_to_dimensions(box, resolution=20)
 
@@ -569,148 +572,149 @@ def download_sentinel_1_composite(
     #dates_q3 = (f'{str(year)}-09-15', f'{str(year)}-12-15')
     #dates_q4 = (f'{str(year)}-10-01' , f'{str(year)}-12-15')
 
-    try:
-        for date in [dates_q1, dates_q2, dates_q3, dates_q4]:
-            evalscript = """
-            //VERSION3
+    #try:
+    for date in [dates_q1, dates_q2, dates_q3, dates_q4]:
+        evalscript = """
+        //VERSION3
 
-            function mean(values) {
-                var total = 0
-                for (var i = 0; i < values.length; i += 1) {
-                    total += values[i]
-                }
-                return total / values.length;
+        function mean(values) {
+            var total = 0
+            for (var i = 0; i < values.length; i += 1) {
+                total += values[i]
+            }
+            return total / values.length;
+        }
+
+        function median(values) {
+            if (values.length === 0) return 0;
+            if (values.length === 1) return values[0];
+
+            values.sort(function(a, b) {
+                return a - b;
+            });
+
+            var half = Math.floor(values.length / 2);
+            if (values.length % 2 === 0) {
+                return (values[half - 1] + values[half]) / 2;
             }
 
-            function median(values) {
-                if (values.length === 0) return 0;
-                if (values.length === 1) return values[0];
+            return values[half];
+        }
 
-                values.sort(function(a, b) {
-                    return a - b;
-                });
 
-                var half = Math.floor(values.length / 2);
-                if (values.length % 2 === 0) {
-                    return (values[half - 1] + values[half]) / 2;
-                }
+        function evaluatePixel(samples) {
+            // Initialise arrays
+            var VV_samples = [];
+            var VH_samples = [];
 
-                return values[half];
+            // Loop through orbits and add data
+            for (let i=0; i<samples.length; i++){
+              // Ignore noData
+              if (samples[i].dataMask != 0){
+                VV_samples.push(samples[i].VV);
+                VH_samples.push(samples[i].VH);
+               }
             }
 
+            const factor = 65535;
 
-            function evaluatePixel(samples) {
-                // Initialise arrays
-                var VV_samples = [];
-                var VH_samples = [];
-
-                // Loop through orbits and add data
-                for (let i=0; i<samples.length; i++){
-                  // Ignore noData
-                  if (samples[i].dataMask != 0){
-                    VV_samples.push(samples[i].VV);
-                    VH_samples.push(samples[i].VH);
-                   }
-                }
-
-                const factor = 65535;
-
-                if (VV_samples.length == 0){
-                  var VV_median = [factor];
-                } else {
-                  var VV_median = mean(VV_samples) * factor;
-                }
-                if (VH_samples.length == 0){
-                  var VH_median = [factor];
-                } else{
-                  var VH_median = mean(VH_samples) * factor;
-                }
-
-                return [VV_median, VH_median];
+            if (VV_samples.length == 0){
+              var VV_median = [factor];
+            } else {
+              var VV_median = mean(VV_samples) * factor;
+            }
+            if (VH_samples.length == 0){
+              var VH_median = [factor];
+            } else{
+              var VH_median = mean(VH_samples) * factor;
             }
 
-            function setup() {
-              return {
-                input: [{
-                  bands: [
-                    "VV",
-                    "VH",
-                    "dataMask",
-                         ]
-                }],
-                output: {
-                  bands: 2,
-                  sampleType:"UINT16"
-                },
-                mosaicking: "ORBIT"
-              }
-            }
-            """
+            return [VV_median, VH_median];
+        }
 
-            request = SentinelHubRequest(
-                evalscript=evalscript,
-                input_data=[
-                    SentinelHubRequest.input_data(
-                        data_collection=source,
-                        time_interval=date,
-                        other_args={
-                            "processing": {
-                                "backCoeff": "GAMMA0_TERRAIN",
-                                "speckleFilter": {
-                                    "type": "NONE"
-                                },
-                                "orthorectify": "true",
-                                "demInstance": "MAPZEN",
-                                "type": "S1GRD",
-                                "resolution": "HIGH",
-                                "polarization": "DV",
-                            }
-                        },
-                    ),
-                ],
-                responses=[
-                    SentinelHubRequest.output_response('default', MimeType.TIFF)
-                ],
-                bbox=box,
-                size=[size[1] // 2, size[0] // 2],
-                config=api_key)
+        function setup() {
+          return {
+            input: [{
+              bands: [
+                "VV",
+                "VH",
+                "dataMask",
+                     ]
+            }],
+            output: {
+              bands: 2,
+              sampleType:"UINT16"
+            },
+            mosaicking: "ORBIT"
+          }
+        }
+        """
 
-            s1 = np.array(request.get_data())
+        request = SentinelHubRequest(
+            evalscript=evalscript,
+            input_data=[
+                SentinelHubRequest.input_data(
+                    data_collection=source,
+                    time_interval=date,
+                    other_args={
+                        "processing": {
+                            "backCoeff": "GAMMA0_TERRAIN",
+                            "speckleFilter": {
+                                "type": "NONE"
+                            },
+                            "orthorectify": "true",
+                            "demInstance": "MAPZEN",
+                            "type": "S1GRD",
+                            "resolution": "HIGH",
+                            "polarization": "DV",
+                        }
+                    },
+                ),
+            ],
+            responses=[
+                SentinelHubRequest.output_response('default', MimeType.TIFF)
+            ],
+            bbox=box,
+            size=[size[1] // 2, size[0] // 2],
+            config=api_key)
 
-            if not isinstance(s1.flat[0], np.floating):
-                assert np.max(s1) > 1
-                s1 = np.float32(s1) / 65535.
-            assert np.max(s1) <= 1
+        s1 = np.array(request.get_data())
 
-            height = s1.shape[1]
-            width = s1.shape[2]
+        if not isinstance(s1.flat[0], np.floating):
+            assert np.max(s1) > 1
+            s1 = np.float32(s1) / 65535.
+        assert np.max(s1) <= 1
 
-            s1_usage = (4 / 3) * s1.shape[0] * ((s1.shape[1] * s1.shape[2]) /
-                                                (512 * 512))
-            nan_perc = np.sum(s1 == 1) / (height * width)
-            if np.any(nan_perc >= 1):
-                return np.empty((0,)), np.empty((0,))
-            print(
-                f"Sentinel 1 used {round(s1_usage, 1)} PU for {image_date}, with {nan_perc} no data"
-            )
-            if np.sum(s1 == 1) < (height * width / 3):
-                s1_all.append(s1)
-                image_dates.append(image_date)
-            elif date == dates_q1 and np.sum(s1 == 1) >= (height * width):
-                return np.empty((0,)), np.empty((0,))
+        height = s1.shape[1]
+        width = s1.shape[2]
 
-            image_date += 90 # 120
+        s1_usage = (4 / 3) * s1.shape[0] * ((s1.shape[1] * s1.shape[2]) /
+                                            (512 * 512))
+        nan_perc = np.sum(s1 == 1) / (height * width)
+        print(nan_perc)
+        if np.any(nan_perc >= 1):
+            return np.empty((0,)), np.empty((0,))
+        print(
+            f"Sentinel 1 used {round(s1_usage, 1)} PU for {image_date}, with {nan_perc} no data"
+        )
+        if np.sum(s1 == 1) < (height * width / 3):
+            s1_all.append(s1)
+            image_dates.append(image_date)
+        elif date == dates_q1 and np.sum(s1 == 1) >= (height * width):
+            return np.empty((0,)), np.empty((0,))
 
-        # Format the s1 data so that it will align with smoothed s2 data
-        s1 = np.concatenate(s1_all, axis=0)
-        s1 = np.clip(s1, 0, 1)
-        image_dates = np.array(image_dates).repeat(12 // s1.shape[0], axis=0)
-        s1 = s1.repeat(12 // s1.shape[0], axis=0)
-        s1 = s1.repeat(4, axis=1).repeat(4, axis=2)
-        return s1, image_dates
+        image_date += 90 # 120
 
-    except:
-        return np.empty((0,)), np.empty((0,))
+    # Format the s1 data so that it will align with smoothed s2 data
+    s1 = np.concatenate(s1_all, axis=0)
+    s1 = np.clip(s1, 0, 1)
+    image_dates = np.array(image_dates).repeat(12 // s1.shape[0], axis=0)
+    s1 = s1.repeat(12 // s1.shape[0], axis=0)
+    s1 = s1.repeat(4, axis=1).repeat(4, axis=2)
+    return s1, image_dates
+
+    #except:
+    #    return np.empty((0,)), np.empty((0,))
 
 
 def identify_s1_layer(coords: Tuple[float, float]) -> str:
@@ -776,6 +780,7 @@ def download_sentinel_2(bbox: List[Tuple[float,
     box = BBox(bbox, crs=CRS.WGS84)
 
     image_request = WcsRequest(
+        data_collection=DataCollection.SENTINEL2_L2A,
         layer='L2A20',
         bbox=box,
         time=dates,
@@ -785,8 +790,8 @@ def download_sentinel_2(bbox: List[Tuple[float,
         resy='20m',
         config=api_key,
         custom_url_params={
-            constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
-            constants.CustomUrlParam.UPSAMPLING: 'NEAREST'
+            ogc.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+            ogc.CustomUrlParam.UPSAMPLING: 'NEAREST'
         },
         time_difference=datetime.timedelta(hours=48),
     )
@@ -808,6 +813,7 @@ def download_sentinel_2(bbox: List[Tuple[float,
                         f" {np.min(abs(val - image_dates))} days away")
 
     quality_request = WcsRequest(
+        data_collection=DataCollection.SENTINEL2_L2A,
         layer='DATA_QUALITY',
         bbox=box,
         time=dates,
@@ -817,8 +823,8 @@ def download_sentinel_2(bbox: List[Tuple[float,
         resy='160m',
         config=api_key,
         custom_url_params={
-            constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
-            constants.CustomUrlParam.UPSAMPLING: 'NEAREST'
+            ogc.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+            ogc.CustomUrlParam.UPSAMPLING: 'NEAREST'
         },
         time_difference=datetime.timedelta(hours=48),
     )
@@ -826,6 +832,7 @@ def download_sentinel_2(bbox: List[Tuple[float,
     quality_img = np.array(
         quality_request.get_data(data_filter=steps_to_download))
     quality_per_img = np.mean(quality_img, axis=(1, 2)) / 255
+    print(steps_to_download)
     steps_to_rm = np.argwhere(quality_per_img > 0.1).flatten()
     if len(steps_to_rm) > 0:
         steps_to_download = np.array(steps_to_download)
@@ -849,6 +856,7 @@ def download_sentinel_2(bbox: List[Tuple[float,
     )
     # Download 10 meter bands
     image_request = WcsRequest(
+        data_collection=DataCollection.SENTINEL2_L2A,
         layer='L2A10',
         bbox=box,
         time=dates,
@@ -858,8 +866,8 @@ def download_sentinel_2(bbox: List[Tuple[float,
         resy='10m',
         config=api_key,
         custom_url_params={
-            constants.CustomUrlParam.DOWNSAMPLING: 'BICUBIC',
-            constants.CustomUrlParam.UPSAMPLING: 'BICUBIC'
+            ogc.CustomUrlParam.DOWNSAMPLING: 'BICUBIC',
+            ogc.CustomUrlParam.UPSAMPLING: 'BICUBIC'
         },
         time_difference=datetime.timedelta(hours=48),
     )
@@ -925,6 +933,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
     box = BBox(bbox, crs=CRS.WGS84)
 
     image_request = WcsRequest(
+        data_collection=DataCollection.SENTINEL2_L2A,
         layer='L2A20_ORBIT',
         bbox=box,
         time=dates,
@@ -934,8 +943,8 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         resy='20m',
         config=api_key,
         custom_url_params={
-            constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
-            constants.CustomUrlParam.UPSAMPLING: 'NEAREST'
+            ogc.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+            ogc.CustomUrlParam.UPSAMPLING: 'NEAREST'
         },
         time_difference=datetime.timedelta(hours=48),
     )
@@ -955,6 +964,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
                   f" {np.min(abs(val - image_dates))} days away")
 
     quality_request = WcsRequest(
+        data_collection=DataCollection.SENTINEL2_L2A,
         layer='DATA_QUALITY',
         bbox=box,
         time=dates,
@@ -964,13 +974,14 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         resy='160m',
         config=api_key,
         custom_url_params={
-            constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
-            constants.CustomUrlParam.UPSAMPLING: 'NEAREST'
+            ogc.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+            ogc.CustomUrlParam.UPSAMPLING: 'NEAREST'
         },
         time_difference=datetime.timedelta(hours=48),
     )
 
     cirrus = WcsRequest(
+        data_collection=DataCollection.SENTINEL2_L2A,
         layer='CIRRUS_CLOUDS',
         bbox=box,
         time=dates,
@@ -980,8 +991,8 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         resy='160m',
         config=api_key,
         custom_url_params={
-            constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
-            constants.CustomUrlParam.UPSAMPLING: 'NEAREST'
+            ogc.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+            ogc.CustomUrlParam.UPSAMPLING: 'NEAREST'
         },
         time_difference=datetime.timedelta(hours=48),
     )
@@ -994,6 +1005,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
 
     quality_img = np.array(
         quality_request.get_data(data_filter=steps_to_download))
+    print(steps_to_download)
     print(np.mean(quality_img, axis = (1, 2)))
     #print("Image quality:", quality_img)
     quality_per_img = np.mean(quality_img, axis=(1, 2)) / 255
@@ -1018,6 +1030,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         assert img_20.dtype == np.float32
 
     image_request = WcsRequest(
+        data_collection=DataCollection.SENTINEL2_L2A,
         layer='L2A40_ORBIT',
         bbox=box,
         time=dates,
@@ -1027,8 +1040,8 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         resy='40m',
         config=api_key,
         custom_url_params={
-            constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
-            constants.CustomUrlParam.UPSAMPLING: 'NEAREST'
+            ogc.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+            ogc.CustomUrlParam.UPSAMPLING: 'NEAREST'
         },
         time_difference=datetime.timedelta(hours=48),
     )
@@ -1086,6 +1099,7 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
 
     # Download 10 meter bands
     image_request = WcsRequest(
+        data_collection=DataCollection.SENTINEL2_L2A,
         layer='L2A10_ORBIT',
         bbox=box,
         time=dates,
@@ -1095,8 +1109,8 @@ def download_sentinel_2_new(bbox: List[Tuple[float, float]],
         maxcc=maxclouds,
         config=api_key,
         custom_url_params={
-            constants.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
-            constants.CustomUrlParam.UPSAMPLING: 'NEAREST'
+            ogc.CustomUrlParam.DOWNSAMPLING: 'NEAREST',
+            ogc.CustomUrlParam.UPSAMPLING: 'NEAREST'
         },
         time_difference=datetime.timedelta(hours=48),
     )

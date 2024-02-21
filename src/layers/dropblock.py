@@ -1,4 +1,4 @@
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.python.keras import backend as K
 
 
@@ -7,7 +7,7 @@ def _bernoulli(shape, mean):
 
 class DropBlockMask(tf.keras.layers.Layer):
     def __init__(self, keep_prob, block_size, scale=True, **kwargs):
-        super(DropBlock2D, self).__init__(**kwargs)
+        super(DropBlockMask, self).__init__(**kwargs)
         self.keep_prob = float(keep_prob) if isinstance(keep_prob, int) else keep_prob
         self.block_size = int(block_size)
         self.scale = tf.constant(scale, dtype=tf.bool) if isinstance(scale, bool) else scale
@@ -61,7 +61,7 @@ class DropBlockMask(tf.keras.layers.Layer):
 
 class DoDropBlock(tf.keras.layers.Layer):
     def __init__(self, keep_prob, block_size, scale=True, **kwargs):
-        super(DropBlock2D, self).__init__(**kwargs)
+        super(DoDropBlock, self).__init__(**kwargs)
         self.keep_prob = float(keep_prob) if isinstance(keep_prob, int) else keep_prob
         self.block_size = int(block_size)
         self.scale = tf.constant(scale, dtype=tf.bool) if isinstance(scale, bool) else scale
@@ -70,7 +70,7 @@ class DoDropBlock(tf.keras.layers.Layer):
         return input_shape
 
     def build(self, input_shape):
-        assert len(input_shape) == 4
+        #assert len(input_shape) == 4
         _, self.h, self.w, self.channel = input_shape.as_list()
         # pad the mask
         p1 = (self.block_size - 1) // 2

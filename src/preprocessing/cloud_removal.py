@@ -416,7 +416,7 @@ def align_interp_array_randomforest(interp_array,
                 for t in range(min_time, max_time):
                     # Look for all non-interp, non-water pixels
                     requirement1 = np.logical_and(
-                        interp[t] == 0, water_mask  <= 1)
+                        interp[t] == 0, water_mask  < 1)
                     # That are in the 90% bounds
                     #upper = np.percentile(array[t, ..., 3], 95)
                     #lower = np.percentile(array[t, ..., 3], 5)
@@ -440,6 +440,7 @@ def align_interp_array_randomforest(interp_array,
                     #sentinel1_subset = sentinel1_subset[0]
                     to_remove = []
                 else:
+                    #print(date, non_interp_mosaic.shape, non_interp_areas.shape)
                     non_interp_mid_mosaic = np.concatenate(non_interp_mosaic, axis = 0)
                     non_interp_mid_areas = np.concatenate(non_interp_areas, axis = 0)
                     #sentinel1_subset = np.concatenate(sentinel1_subset, axis = 0)
@@ -555,7 +556,7 @@ def align_interp_array_randomforest(interp_array,
                         #                                                       early_stopping = True,
                         #                                                       tol = 5e-5).fit(
                         #    X = train_x,
-                        #    y = non_interp_mid_areas[..., band] / non_interp_mid_mosaic[..., band])
+                        #    y = non_interp_mid_areas[..., band])
                                              
                         predicted = model.predict(predicted)
                         predicted = np.reshape(predicted, interp_array_i.shape[:-1])
@@ -599,17 +600,24 @@ def make_aligned_mosaic(arr, interp, randomforest = False):
         # All areas within one image that are not interpolated
         non_interp_mosaic = arr[i][np.logical_and(interp[i] < 0.25,
                                                     water_mask == 0)]
+
+        non_interp_mosaic_mask = np.logical_and(interp[i] < 0.25,
+                                                    water_mask == 0)
+        # Non interp mosaic is all areas in mosaic where time i is not interpolated
         non_interp_areas = np.full((arr.shape[1], arr.shape[2], arr.shape[3]), 0, dtype = np.float32)
         non_interp_count = np.full((arr.shape[1], arr.shape[2], arr.shape[3]), 0, dtype = np.float32)
 
         for b in range(arr.shape[0]):
             if b != i:
-                mask = np.logical_and(np.logical_and(interp[i] < 1, interp[b] < 1),
+                mask = np.logical_and(np.logical_and(interp[i] < 0.25, interp[b] < 1),
                                             water_mask == 0)
                 arr_b = arr[b]
-                non_interp_areas[mask] += arr_b[mask]
-                non_interp_count[mask] += 1
+                non_interp_areas[mask * non_interp_mosaic_mask] += arr_b[mask * non_interp_mosaic_mask]
+                non_interp_count[mask * non_interp_mosaic_mask] += 1
+
         non_interp_areas = non_interp_areas / non_interp_count
+        non_interp_mosaic_mask[non_interp_count[..., 0] == 0] = 0.
+        non_interp_mosaic = arr[i][non_interp_mosaic_mask]
         non_interp_areas = np.reshape(non_interp_areas, (non_interp_areas.shape[0] * non_interp_areas.shape[1], non_interp_areas.shape[2]))
         non_interp_areas = non_interp_areas[~np.isnan(non_interp_areas).any(axis=1)]
 
@@ -637,16 +645,19 @@ def make_aligned_mosaic(arr, interp, randomforest = False):
             else:
 
                 predicted_mosaic = np.zeros_like((arr[0]))
-                random_sample = np.arange(0, 5000, 1)
+                #random_sample = np.arange(0, 5000, 1)
                 
-                random_sample = random_sample[:non_interp_mosaic.shape[0]]
-                random_sample = random_sample[:non_interp_areas.shape[0]]
-                random.shuffle(random_sample)
+                #random_sample = random_sample[:non_interp_mosaic.shape[0]]
+                #random_sample = random_sample[:non_interp_areas.shape[0]]
+                #random.shuffle(random_sample)
                 
                 for band in range(10):
-                    model = sklearn.ensemble.GradientBoostingRegressor(n_estimators = 50).fit(
-                            X = non_interp_mosaic[random_sample],
-                            y = non_interp_areas[random_sample, band])
+                    model = LinearRegression(positive = True, fit_intercept = False).fit(
+                            non_interp_mosaic, 
+                            non_interp_areas[..., band])
+                    #model = sklearn.ensemble.GradientBoostingRegressor(n_estimators = 50).fit(
+                            #X = non_interp_mosaic[random_sample],
+                            #y = non_interp_areas[random_sample, band])
 
                     arr_i = np.copy(arr[i])
                     arr_i = np.reshape(arr_i, (arr_i.shape[0]*arr_i.shape[1], 10))
@@ -880,9 +891,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
                              image_dates: List[int],
                              pfcps,
                              sentinel1,
-                             wsize: int = 36,
-                             step=8,
-                             thresh=100) -> np.ndarray:
+                             mosaic = None) -> np.ndarray:
     """ Interpolates clouds and shadows for each time step with
         linear combination of proximal clean time steps for each
         region of specified window size
@@ -913,8 +922,8 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
 
     areas_interpolated = areas_interpolated.astype(np.float32)
    # np.save("interp.npy", areas_interpolated)
-    
-    mosaic = make_aligned_mosaic(tiles, areas_interpolated)
+    if mosaic is None:
+        mosaic = make_aligned_mosaic(tiles, areas_interpolated, False)
     #np.save("mosaic.npy", mosaic)
     #candidate = adjust_median(tiles, mosaic, areas_interpolated > 0.75)
     n_interp = np.sum(areas_interpolated, axis = 0)
@@ -1252,7 +1261,7 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
     # The water shadow thresholds work -okay- and could be improved
     clm = _hollstein_cld(img)
     for time in range(img.shape[0]):
-        lower = np.max([0, time - 3])
+        lower = np.max([0, time - 4])
         upper = np.min([img.shape[0], time + 3])
         if (upper - lower) == 3:
             if upper == img.shape[0]:
@@ -1277,11 +1286,12 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
 
         shadows_i = (deltab11 * deltab8a * ti0 * deltablue * (img[time, ..., 7] < 0.17))
 
-        deltab8a = (img[time, ..., 7] - ri_shadowmax[..., 2]) < -0.035
-        deltab11 = (img[time, ..., 8] - ri_shadowmax[..., 3]) < -0.035
-        shadows_i_dark = (deltab11 * deltab8a * (img[time, ..., 0] < 0.035) * (img[time, ..., 7] < 0.18))
+        deltab8a = (img[time, ..., 7] - ri_shadowmax[..., 2]) < -0.04
+        deltab11 = (img[time, ..., 8] - ri_shadowmax[..., 3]) < -0.04
+        shadows_i_dark = (deltab11 * deltab8a * (img[time, ..., 0] < 0.03) * (img[time, ..., 7] < 0.18))
         shadows_i_dark[water_mask > 0] = 0.
-        #shadows_i = np.maximum(shadows_i, shadows_i_dark)
+        shadows_i = np.maximum(shadows_i, shadows_i_dark)
+        shadows_i[water_mask > 0] = 0.
  
         # Where slope > 20%, we "relax" the requirements to identify cloud shadow
         # By using the max reference instead of median reference
@@ -1304,10 +1314,10 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
 
         shadows_i = np.maximum(shadows_i, shadows_slope)
 
-        water_shadow = ((img[time, ..., 0] - ri_shadow[..., 0]) < -0.04) * \
-                        ((img[time, ..., 1] - ri_shadow[..., 1]) < -0.04) * \
+        water_shadow = ((img[time, ..., 0] - ri_shadow[..., 0]) < -0.05) * \
+                        ((img[time, ..., 1] - ri_shadow[..., 1]) < -0.05) * \
                         (img[time, ..., 7] < 0.03) * \
-                        ((ri_shadow[..., 1] - img[time, ..., 1]) > 0.008) * \
+                        ((ri_shadow[..., 1] - img[time, ..., 1]) > 0.02) * \
                         (water_mask > 0)
         shadows[time] = shadows_i + water_shadow
 
@@ -1467,6 +1477,18 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
     for i in range(img.shape[0]):
         brightness_clouds[i][sum_brightness_clouds > 1] = 0.
     clouds = np.maximum(clouds, brightness_clouds)
+
+    # Clouds are white, and some non-white bright surfaces can get mistaken for clouds
+    for i in range(clouds.shape[0]):
+        cloudsi = clouds[i]
+        mean_brightness = np.mean(img[i, ..., :3], axis = (-1))
+        is_possible_fp = mean_brightness < 0.4
+        vis_range = np.max(img[i, ..., :3], axis = -1) - np.min(img[i, ..., :3], axis = -1)
+        # Range should be less than 50%
+        # e.g. a pcp with 0.15, 0.2, 0.25 RGB is removed as a non-cloud
+        is_fp = is_possible_fp * ((vis_range / mean_brightness) > 0.5)
+        clouds[i] = clouds[i] * (1 - is_fp)
+
     #np.save("clouds_b.npy", clouds)
     # Remove urban false positives using b8a, b7, b8 paralax effect
     # and NDBI, NDVI, NDWI
@@ -1623,6 +1645,33 @@ def identify_clouds_shadows(img: np.ndarray, dem, bbx) -> np.ndarray:
             shadow_i[water_mask > 0] = 0.
             clouds[i] = np.maximum(clouds[i], shadow_i)
     clouds[clouds > 1] = 1.
+
+    # HAZE
+    mean_brightness = np.mean(img[..., :3], axis = -1)
+    std_cloudfree_brightness = []
+    std_cloudfree_whiteness = []
+    mean_cloudfree_brightness = []
+    for i in range(clouds.shape[0]):
+        if np.mean(clouds[i]) < 1:
+            imi = img[i, ..., :3]
+            imi = imi[clouds[i] == 0]
+            mean_cloudfree_brightness.append(np.mean(mean_brightness[i][clouds[i] == 0]))
+            std_cloudfree_brightness.append(np.std(mean_brightness[i][clouds[i] == 0]))
+            std_cloudfree_whiteness.append(np.std(np.ptp(imi, axis = 1)))
+
+    median_brightness = np.median(mean_cloudfree_brightness)
+    median_std = np.median(std_cloudfree_brightness)
+    haze_brightness = mean_cloudfree_brightness / median_brightness
+    haze_std = std_cloudfree_brightness / median_std
+    haze_whiteness = std_cloudfree_whiteness / np.median(std_cloudfree_whiteness)
+    haze = (haze_brightness >= 1.5) * (haze_std <= 0.67) * (haze_whiteness < 1)
+    haze = np.logical_or(haze, (haze_brightness >= 1.3) * (haze_std <= 0.5))
+    print(f"The mean cloudfree brightness is: {haze_brightness}")
+    print(f"The std cloudfree brightness is: {haze_std}")
+    print(f"The haze is: {haze}")
+    for i in range(len(haze)):
+        if haze[i]:
+            clouds[i] = 1.
     return clouds, fcps
 
 

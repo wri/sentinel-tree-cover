@@ -7,8 +7,6 @@ from skimage.transform import resize
 import hickle as hkl
 import boto3
 from scipy.ndimage import median_filter
-import tensorflow.compat.v1 as tf
-#import tensorflow as tf
 from glob import glob
 import rasterio
 from rasterio.transform import from_origin
@@ -16,6 +14,10 @@ import shutil
 import bottleneck as bn
 import gc
 import sys
+import tensorflow as tf
+if tf.__version__[0] == '2':
+    import tensorflow.compat.v1 as tf
+    tf.disable_v2_behavior()
 
 from preprocessing import slope
 from downloading.utils import calculate_and_save_best_images
@@ -26,11 +28,11 @@ from tof.tof_downloading import to_int16, to_float32
 from downloading.io import FileUploader,  get_folder_prefix, make_output_and_temp_folders, upload_raw_processed_s3
 from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder
 from preprocessing.indices import evi, bi, msavi2, grndvi
-from download_and_predict_job_fast import process_tile, make_bbox, convert_to_db, deal_w_missing_px
-from download_and_predict_job_fast import fspecial_gauss, make_and_smooth_indices
+from download_and_predict_job import process_tile, make_bbox, convert_to_db, deal_w_missing_px
+from download_and_predict_job import fspecial_gauss, make_and_smooth_indices
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-tf.disable_v2_behavior()
+#tf.disable_v2_behavior()
 
 LEN = 4
 
@@ -186,7 +188,7 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess") -> np.ndarray:
                                          predict_length:lengths})
         
         preds = preds.squeeze()
-        preds = preds[1:-1, 1:-1]
+        #preds = preds[1:-1, 1:-1]
 
     else:
         preds = np.full((SIZE, SIZE), 255)
@@ -486,12 +488,12 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         min_clear_tile = min_clear_tile[7:-7, 7:-7]
         no_images = min_clear_tile < 1
-        no_images = np.reshape(no_images, (20, (SIZE // 20), 6, 40))
-        no_images = np.sum(no_images, axis = (1, 3))
+        #no_images = np.reshape(no_images, (20, (SIZE // 20), 6, 40))
+        #no_images = np.sum(no_images, axis = (1, 3))
         
-        no_images = no_images > 1360*0.66
-        no_images = no_images.repeat(40, axis = 1).repeat((SIZE // 20), axis = 0)
-        if source_median <= (min_ref_median - 12):
+        #no_images = no_images > 1360*0.66
+        #no_images = no_images.repeat(40, axis = 1).repeat((SIZE // 20), axis = 0)
+        if source_median <= (min_ref_median - 20):
             # IF we are out of bounds on the lower side, adjust to fit the lower bound
             adjust_value = np.around(((min_ref_median - source_median) / 100), 3)
             print(f"One tile because {source_median} median compared "
@@ -509,7 +511,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             np.save(output, preds)
             np.save(output2, preds)
 
-        elif source_median >= (max_ref_median + 12):
+        elif source_median >= (max_ref_median + 20):
             adjust_value = np.around(((source_median - max_ref_median) / 100), 3)
             print(f"Only saving one tile because {source_median} median compared to"
                   f" {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference"
@@ -522,21 +524,21 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
             #preds[preds > 0.10] -= adjust_value
             #preds = np.clip(preds, 0, 1)
-            preds[no_images] = 255.
+            #preds[no_images] = 255.
             np.save(output, preds)
             np.save(output2, preds)
 
         elif np.logical_and(
-            source_median <= max_ref_median + 12, source_median >= min_ref_median - 12
+            source_median <= max_ref_median + 20, source_median >= min_ref_median - 20
         ):
             print(f"{source_median} median: {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference")
-            preds[no_images] = 255.
+            #preds[no_images] = 255.
             np.save(output, preds)
             np.save(output2, preds)
 
         elif np.isnan(max_ref_median) and np.isnan(min_ref_median):
             print(f"{source_median} median: {min_ref_median}-{max_ref_median}, {abs(left_mean - right_mean)} difference")
-            preds[no_images] = 255.
+            #preds[no_images] = 255.
             np.save(output, preds)
             np.save(output2, preds)
 
@@ -589,7 +591,7 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
     print(interp.dtype, cld.dtype, fcps.dtype)
     print("CLD", np.mean(cld, axis = (1, 2)))
     arr, interp2, to_remove = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, pfcps = fcps,
-                                                          wsize = 10, step = 10, thresh = 10 )
+                                                          sentinel1 = None, wsize = 10, step = 10, thresh = 10 )
     #interp = np.maximum(interp, interp2)
     print(np.sum(np.isnan(arr), axis = (1, 2, 3)))
     return arr, interp2, dates
@@ -675,17 +677,17 @@ def check_if_artifact(tile, neighb):
     left = np.reshape(left, (left.shape[0] // 10, 10))
     left = bn.nanmean(left, axis = 1)
 
-    fraction_diff = bn.nanmean(abs(right - left) > 20) #normally 25
-    fraction_diff_left = bn.nanmean(abs(right[:15] - left[:15]) > 12.5)
-    fraction_diff_right = bn.nanmean(abs(right[-15:] - left[-15:]) > 12.5)
-    fraction_diff_2 = bn.nanmean(abs(right - left) > 12.5)
+    fraction_diff = bn.nanmean(abs(right - left) > 25) #normally 25
+    fraction_diff_left = bn.nanmean(abs(right[:15] - left[:15]) > 15)
+    fraction_diff_right = bn.nanmean(abs(right[-15:] - left[-15:]) > 15)
+    fraction_diff_2 = bn.nanmean(abs(right - left) > 15)
     left_right_diff = abs(right_mean - left_mean)
 
-    other0 = left_right_diff > 6
+    other0 = left_right_diff > 7
 
-    other = fraction_diff_2 > 0.5
+    other = fraction_diff_2 > 0.6
     other = np.logical_and(other, (left_right_diff > 0) ) # normally 6
-    other2 = (fraction_diff > 0.20) or ((fraction_diff_left > 0.5) or (fraction_diff_right > 0.5))
+    other2 = (fraction_diff > 0.25) or ((fraction_diff_left > 0.5) or (fraction_diff_right > 0.5))
     #other2 = np.logical_and(other2, (left_right_diff > 1) ) # normally 3
 
     print(x, y, left_right_diff, fraction_diff, other0, other, other2)
@@ -799,14 +801,14 @@ def resegment_border(tile_x, tile_y, edge, local_path, min_dates, initial_bbx):
     if min_images >= 6:
         print("Preprocessing the tiles together")
         print("Loading and splitting the tile")
-        s2, dates, interp, s1, dem, _ = process_tile(tile_x, tile_y, data, local_path, bbx)
+        s2, dates, interp, s1, dem, _, _ = process_tile(tile_x, tile_y, data, local_path, bbx)
         s2_shape = s2.shape[1:-1]
         #n_tiles_x, n_tiles_y = check_n_tiles(tile_x, tile_y)
         tile_idx = f'{str(tile_x)}X{str(tile_y)}Y'
         s2, interp, s1, dem, _ = split_to_border(s2, interp, s1, dem, "tile", edge)
 
         print("Loading and splitting the neighbor tile")
-        s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb, _ = \
+        s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb, _, _ = \
             process_tile(neighbor_id[0], neighbor_id[1], data, args.local_path, neighb_bbx)
         s2_neighb_shape = s2_neighb.shape[1:-1]
         tile_idx = f'{str(neighbor_id[0])}X{str(neighbor_id[1])}Y'
@@ -896,7 +898,7 @@ def resegment_border(tile_x, tile_y, edge, local_path, min_dates, initial_bbx):
     elif min_images < 6:
         print("Separate tile preprocessing")
         print("Loading and processing the tile")
-        s2, dates, interp, s1, dem, _ = process_tile(tile_x, tile_y, data, local_path, bbx)
+        s2, dates, interp, s1, dem, _, _ = process_tile(tile_x, tile_y, data, local_path, bbx)
         s2_shape = s2.shape[1:-1]
         #n_tiles_x, n_tiles_y = check_n_tiles(tile_x, tile_y)
         tile_idx = f'{str(tile_x)}X{str(tile_y)}Y'
@@ -911,7 +913,7 @@ def resegment_border(tile_x, tile_y, edge, local_path, min_dates, initial_bbx):
         s2, interp, s1, dem, _ = split_to_border(s2, interp, s1, dem, "tile", edge)
 
         print("Loading and processing the neighbor tile")
-        s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb, _ = \
+        s2_neighb, dates_neighb, interp_neighb, s1_neighb, dem_neighb, _, _ = \
             process_tile(neighbor_id[0], neighbor_id[1], data, args.local_path, neighb_bbx)
         s2_neighb_shape = s2_neighb.shape[1:-1]
         tile_idx = f'{str(neighbor_id[0])}X{str(neighbor_id[1])}Y'
@@ -1507,14 +1509,14 @@ def cleanup_row_or_col(idx, current_idx, local_path):
 
 
 if __name__ == "__main__":
-    SIZE = 680
-    SIZE_X = 240
+    SIZE = 670
+    SIZE_X = 206
 
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/680-240-large/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/retrain-combined-ca-684-220/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "process_area_2022.csv")
@@ -1559,7 +1561,7 @@ if __name__ == "__main__":
         predict_graph_def.ParseFromString(predict_file.read())
         predict_graph = tf.import_graph_def(predict_graph_def, name='predict')
         predict_sess = tf.compat.v1.Session(graph=predict_graph)
-        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_13/Sigmoid:0")
+        predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_5/Sigmoid:0")
         predict_inp = predict_sess.graph.get_tensor_by_name("predict/Placeholder:0")
         print(predict_inp.shape)
         predict_length = predict_sess.graph.get_tensor_by_name("predict/PlaceholderWithDefault:0")

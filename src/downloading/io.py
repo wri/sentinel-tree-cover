@@ -150,7 +150,7 @@ def make_output_and_temp_folders(output_folder: str) -> None:
         _find_and_make_dirs(output_folder + folder)
 
 
-def upload_raw_processed_s3(path_to_tile, x, y, uploader, year):
+def upload_raw_processed_s3(path_to_tile, x, y, uploader, year, nocleanup = False):
     '''
     Uploads temp/raw/*, temp/processed/* to s3 bucket
     and then deletes temporary files
@@ -183,7 +183,8 @@ def upload_raw_processed_s3(path_to_tile, x, y, uploader, year):
             internal_folder = folder[len(path_to_tile):]
             key = f'{str(year)}/raw/{x}/{y}/' + internal_folder + file
             uploader.upload(bucket='tof-output', key=key, file=_file)
-            os.remove(_file)
+            if not nocleanup:
+                os.remove(_file)
     for folder in glob(path_to_tile + "processed/*/"):
         for file in os.listdir(folder):
             _file = folder + file

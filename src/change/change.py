@@ -13,7 +13,8 @@ from scipy.stats import gaussian_kde
 from scipy.special import ndtr
 from scipy.ndimage.morphology import binary_dilation, binary_erosion
 import math
-from scipy.ndimage.filters import minimum_filter1d
+from scipy.signal import medfilt
+from scipy.ndimage.filters import minimum_filter1d, uniform_filter1d
 import seaborn as sns
 from matplotlib import pyplot as plt
 
@@ -88,29 +89,66 @@ def load_ard_and_dates(x, y, year, local_path):
     local_path = '../project-monitoring/tiles/'
     ard_path = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/ard_ndmi.hkl'
     ard_dates = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/ard_dates.npy'
+    dem = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/dem_{str(x)}X{str(y)}Y.hkl'
+                
     try:
         x = hkl.load(ard_path)
         y = np.load(ard_dates)
         y = ((year - 2017) * 365) + y
-        print(f"{year} exists")
+        dem = hkl.load(dem)
     except:
         x = np.zeros((3, 3))
         y = np.zeros((3, 3))
+        dem = np.zeros((3, 3))
         print(f"{year} does not exist")
-    return x, y
+    return x, y, dem
 
 
 def load_all_ard(x, y, local_path):
 
-    a17, d17 = load_ard_and_dates(x, y, 2017, local_path)
-    a18, d18 = load_ard_and_dates(x, y, 2018, local_path)
-    a19, d19 = load_ard_and_dates(x, y, 2019, local_path)
-    a20, d20 = load_ard_and_dates(x, y, 2020, local_path)
-    a21, d21 = load_ard_and_dates(x, y, 2021, local_path)
-    a22, d22 = load_ard_and_dates(x, y, 2022, local_path)
-    
-    return a17, a18, a19, a20, a21, a22, d17, d18, d19, d20, d21, d22
+    a17, d17, dem1 = load_ard_and_dates(x, y, 2017, local_path)
+    a18, d18, dem2 = load_ard_and_dates(x, y, 2018, local_path)
+    a19, d19, dem3 = load_ard_and_dates(x, y, 2019, local_path)
+    a20, d20, dem4 = load_ard_and_dates(x, y, 2020, local_path)
+    a21, d21, dem5 = load_ard_and_dates(x, y, 2021, local_path)
+    a22, d22, dem6 = load_ard_and_dates(x, y, 2022, local_path)
 
+    demshape = 3
+    dems = [dem1, dem2, dem3, dem4, dem5, dem6]
+    i = 0
+    dem = dem1
+    for i in range(6):
+        if dems[i].shape[0] != 3:
+            dem = dems[i]
+    return a17, a18, a19, a20, a21, a22, d17, d18, d19, d20, d21, d22, dem
+
+
+def assign_loss_year(loss, fs):
+    #try:
+        # Nyears - 1, so a (6, X, Y) = (5, X, Y)
+        # So a 0 here is 2018 loss, which is a 1
+        # And a 3 here is 2021 loss, which is a 4
+    max_tree_cover_loss = np.argmin(np.diff(fs, axis = 0), axis = 0) + 1
+    for i in range(loss.shape[0]):
+        ndmiloss = loss[i] == (i + 1)
+        lossi = (loss[i] > 0) * max_tree_cover_loss 
+        loss[i] = lossi
+    return loss
+
+def assign_gain_year(gain, fs):
+    #try:
+        # Nyears - 1, so a (6, X, Y) = (5, X, Y)
+        # So a 0 here is 2018 loss, which is a 1
+        # And a 3 here is 2021 loss, which is a 4
+    max_tree_cover_gain = np.argmax(np.diff(fs, axis = 0), axis = 0) + 1
+    for i in range(gain.shape[0]):
+        gaini = (gain[i] > 0) * gain 
+        lossi[lossi]
+        loss[i] = lossi
+    return loss
+    #except:
+    #    print('exception')
+    #    return loss
 
 
 def temporal_filter(inp):
@@ -145,6 +183,11 @@ def identify_anomaly_events(inp, n, shape):
         sums = np.concatenate([np.zeros_like(sums[0])[np.newaxis],
                            sums,
                            np.zeros_like(sums[0])[np.newaxis]], axis = 0)
+
+    if shape == 4:
+        sums = np.concatenate([np.zeros_like(sums[0])[np.newaxis],
+                           sums], axis = 0)
+    sums = sums.astype(np.int16)
     return sums
 
 
@@ -185,7 +228,7 @@ def make_and_analyze_kde_for_one_img(ard, step, ref):
             for item in reg_grid)
     cdf_2_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - 0.02))]
     cdf_5_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - 0.05))]
-    cdf_10_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - 0.075))]
+    cdf_10_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - 0.1))]
     cdf_25_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - 0.25))]
     #cdf_50_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - 0.50))]
     f = ard[step] >= cdf_5_percentile
@@ -208,33 +251,49 @@ def make_all_kde(ard, stable):
     # Sample up to 10% of the image (600 * 600) of the stable pixels
     dsamp = np.random.randint(0, d.shape[0], np.minimum(24000, d.shape[0]))
     d = d[dsamp]
-    
-
     percentiles = np.zeros_like(ard, dtype = np.float32)
     kde = np.zeros_like(ard)
     kde10 = np.zeros_like(ard)
     kde2 = np.zeros_like(ard)
     kde_expected = np.zeros_like(ard)
+    to_delete = []
     for i in range(ard.shape[0]):
-        kde[i], kde10[i], kde_expected[i], kde2[i], percentiles[i] = make_and_analyze_kde_for_one_img(ard, i, d)
-        
+        try:
+            kde[i], kde10[i], kde_expected[i], kde2[i], percentiles[i] = make_and_analyze_kde_for_one_img(ard, i, d)
+        except:
+            print("ZEROS")
+            kde[i], kde10[i], kde_expected[i], kde2[i], percentiles[i] = 0., 0., 0., 0., 0.
+            to_delete.append(i)
+    if len(to_delete) > 0:
+        kde = np.delete(kde, to_delete, 0)
+        kde10 = np.delete(kde10, to_delete, 0)
+        kde_expected = np.delete(kde_expected, to_delete, 0)
+        kde2 = np.delete(kde2, to_delete, 0)
+        percentiles = np.delete(percentiles, to_delete, 0)
     return kde, kde10, kde_expected, kde2, percentiles
+
+def check_for_step_change(fs):
+    # Gain cannot be described by a step-change in NDMI 
+    # Between Y-1 and Y0. Loss can, since it is dramatic,
+    # But gain is a slow process. If there is a big shift between
+    # Years, this can be explained by ARD differences due to clouds
+    # And image availability
+    return None
 
 
 ### CANDIDATES ###
 
 def identify_gain_in_year(kde, kde10, kde_expected, dates, year):
     if year > 2018:
-        negative_anomaly_after = identify_anomaly_events(kde10, 0, 3) == 3
-        negative_anomaly_prior = identify_anomaly_events(kde10, 0, 3) == 3
-        positive_anomaly = identify_anomaly_events(kde10, 1, 3) == 3
+        negative_anomaly_after = identify_anomaly_events(kde, 0, 2) == 2
+        negative_anomaly_prior = identify_anomaly_events(kde, 0, 3) >= 2
+        positive_anomaly = identify_anomaly_events(kde10, 1, 5) >= 4
     if year == 2018:
         # For first year of gain, remove lower confidence events by:
            # - Requiring negative anomaly to be < 5%
         negative_anomaly_prior = identify_anomaly_events(kde, 0, 3) == 3
-        negative_anomaly_after = identify_anomaly_events(kde10, 0, 3) == 3
-        positive_anomaly = identify_anomaly_events(kde10, 1, 4) == 4
-        
+        negative_anomaly_after = identify_anomaly_events(kde, 0, 2) == 2
+        positive_anomaly = identify_anomaly_events(kde10, 1, 5) == 5
     #positive_anomaly = identify_anomaly_events(kde10, 1, 3) == 3
     
     img_prior3_start = np.sum(dates <= ((year - 2017 - 3) * 365 ))
@@ -254,12 +313,14 @@ def identify_gain_in_year(kde, kde10, kde_expected, dates, year):
     # Tree event in Y + 1
     positive_after = np.sum(positive_anomaly[img_current_start:img_next2_end], axis = 0) > 0
     # No loss event in Y + 1
+    #if year < 2022:
     negative_after = np.sum(negative_anomaly_after[img_next_start:img_next_end], axis = 0) > 0
+    #else:
+    #    negative_after = np.sum(negative_anomaly_after[img_current_start:img_next_end], axis = 0) > 0
     
-    candidate_gain = (negative_prior) *(1 - negative_after) * (positive_after)
+    candidate_gain = (negative_prior) * (1 - negative_after) * (positive_after)
     struct = ndimage.generate_binary_structure(2, 1)
     candidate_gain = binary_dilation(1 - (binary_dilation(1 - candidate_gain)))
-    candidate_gain = remove_noise(candidate_gain, 8)
     return candidate_gain
 
 def identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, year):
@@ -274,8 +335,8 @@ def identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, year):
     positive_anomaly_5 = identify_anomaly_events(kde_expected, 1, 5) == 5
     positive_anomaly17 = identify_anomaly_events(kde10, 1, 2) == 2
     negative_anomaly_10 = identify_anomaly_events(kde10, 0, 5) == 5
-    negative_anomaly_5 = identify_anomaly_events(kde, 0, 3) == 3
-    negative_anomaly_2 = identify_anomaly_events(kde2, 0, 3) == 3
+    negative_anomaly_5 = identify_anomaly_events(kde, 0, 5) >= 4
+    negative_anomaly_2 = identify_anomaly_events(kde2, 0, 5) >= 3
     
     img_2prior_start = np.sum(dates <= ((year - 2017 - 2) * 365 ))
     img_1p5prior_start = np.sum(dates <= ((year - 2017 - 1.5) * 365 ))
@@ -298,19 +359,14 @@ def identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, year):
     negative_after_10 = np.sum(negative_anomaly_10[img_1p5prior_start:img_next2_end], axis = 0) > 0
     negative_after_2 = np.sum(negative_anomaly_2[img_prior_mid:img_next_end], axis = 0) > 0
     # Remove loss events followed by a positive anomaly
-    #cooldown = 4
-    #for i in range(img_prior_start, img_next2_end): # this should start at img_prior_start huh
-    #    is_negative_anomaly = np.logical_or(negative_after_5[i] > 0, negative_after_10[i] > 0)
-    #    tree_after = np.sum(positive_anomaly_5[img_prior_start+i+2:img_prior_start+i+2+cooldown], axis = 0) > 0
-    #    is_falsepositive = is_negative_anomaly * tree_after
-        #negative_after_5[is_falsepositive] = 0.
-        #negative_after_10[is_falsepositive] = 0.
 
-    candidate_loss = positive_prior * negative_after_5 #np.logical_or(negative_after_5, negative_after_10) #* positive_prior #(1 - positive_after)
-    struct = ndimage.generate_binary_structure(2, 1)
-    
+    #### TODO IF Y+1 is >50 but no gain, then needs to be negative_after_2
+    candidate_loss = positive_prior * np.logical_or(negative_after_5, negative_after_10) #* positive_prior #(1 - positive_after)
+    #struct = ndimage.generate_binary_structure(2, 1)
+    candidate_loss = median_filter(candidate_loss, 3)
     candidate_loss_ndmi = positive_prior_high * negative_after_2
-    candidate_loss = binary_dilation(1 - (binary_dilation(1 - candidate_loss)))
+    candidate_loss_ndmi = median_filter(candidate_loss_ndmi, 3)
+    #candidate_loss = binary_dilation(1 - (binary_dilation(1 - candidate_loss)))
     
     return candidate_loss, candidate_loss_ndmi
 
@@ -320,10 +376,23 @@ def adjust_gain_with_ndmi(idx, ff, gain2):
     # If 2021 - (2019 or 2020) is greater than 50
     # And if 2021 and 2022 is greater than 30
     # Then we have a candidate event
+   # prior = ff[idx - 1]
+    #if idx > 1:
+        # e.g. 80 -> 60
+        #mean_prior_two = np.mean(ff[idx - 2:idx], axis = 0)
+        #min_prior_two = np.min(ff[idx - 2:idx], axis = 0) 
 
-    candidate = (((ff[idx] - np.min(ff[idx - 2:idx], axis = 0)) > 50) *
-                    (ff[idx] > 30) * (ff[idx + 1] > 30))# * (np.min(ff, axis = 0) < 40)
-    out = remove_nonoverlapping_events(candidate, np.max(gain2[idx-1:idx], axis = 0), 3) * idx
+        #prior[ff[idx - 2] >= prior] = min_prior_two[ff[idx - 2] >= prior]
+        #prior[ff[idx - 2] < prior] = mean_prior_two[ff[idx - 2] < prior]
+    prior = np.clip(idx - 1, 0, idx - 2)
+    if prior != 0:
+        candidate = (((ff[idx] - np.min(ff[prior:idx], axis = 0)) > 50) *
+                        (ff[idx] > 50) * (ff[idx + 1] > 40)) * ((ff[idx + 1] - ff[idx]) > -50)
+    else:
+        candidate = (((ff[idx] - np.mean(ff[prior:idx], axis = 0)) > 50) *
+                        (ff[idx] > 50) * (ff[idx + 1] > 40)) * ((ff[idx + 1] - ff[idx]) > -50)
+    candidate = candidate * (ff[idx + 1] <= 100) * (ff[idx] <= 100)
+    out = remove_nonoverlapping_events(candidate, np.max(gain2[idx-1:idx], axis = 0), 4) * idx
     #out = out * (np.min(ff, axis = 0) < 40)
     return out
 
@@ -333,68 +402,105 @@ def adjust_loss_with_ndmi(idx, ff, loss2, ndmiloss):
     # And if 2021 is less than 40, and either 2019 or 2020 is < 40
     # Then we have a candidate event
 
-    candidate = (np.mean(ff[idx - 1: idx + 1], axis = 0) - ff[idx + 1]) > 45#((np.max(ff[idx-1: idx + 1], axis = 0) - ff[idx + 1]) > 50)
-    candidate = candidate * (ff[idx + 1] <= 35) 
-    out = remove_nonoverlapping_events(candidate, loss2[idx], 3)
-    ndmiloss[idx] = (ndmiloss[idx] * np.logical_or(ff[idx] > 75, ff[idx - 1] > 75))
-    ndmiloss[idx] = ndmiloss[idx] * (np.min(ff[idx:], axis = 0) < 60)
-    ndmiloss[idx] = remove_noise(ndmiloss[idx], thresh = 10)
+    # Expand the possible loss events for very small holes
+    loss_year = (ff[idx + 1] < 40).astype(np.float32)
+    is_small = np.ones_like(loss_year, dtype = np.float32)
+    zlabels ,Nlabels = ndimage.measurements.label(is_small)
+    for i in range(Nlabels):
+        npx = np.sum(zlabels == i)
+        if np.logical_and(npx < 10, npx >= 2):
+            is_small -= binary_dilation(zlabels == i, iterations = 1)
+    is_small = np.clip(is_small, 0, 1)
+
+    candidate = (np.mean(ff[idx - 1: idx + 1], axis = 0) - (ff[idx + 1]) * is_small) > 50#((np.max(ff[idx-1: idx + 1], axis = 0) - ff[idx + 1]) > 50)
+    candidate = candidate * ((ff[idx + 1] * is_small) <= 40) 
+    prior = (np.mean(ff[idx - 1: idx + 1], axis = 0))
+    candidate = candidate * (prior >= 60)
+    if idx <= 3:
+        # Where Y1 to Y2 is loss, but Y3 has trees
+        # There needs to be a higher overlap with the NDMI loss
+        unstable_candidate = candidate * np.logical_or(ff[idx + 2] >= 50, prior <= 60)
+        fp_loss = remove_nonoverlapping_events(unstable_candidate, loss2[idx], 2)
+        fp_loss = median_filter(fp_loss, 3)
+        #fp_loss = remove_noise(fp_loss, thresh = 10)
+        candidate[unstable_candidate] = fp_loss[unstable_candidate]
+    out = remove_nonoverlapping_events(candidate, loss2[idx], 4)
+    ndmiloss[idx] = (ndmiloss[idx] * np.logical_or(ff[idx] > 80, ff[idx - 1] > 80))
+    ndmiloss[idx] = ndmiloss[idx] * (np.min(ff[idx:], axis = 0) < 70)
+    ndmiloss[idx] = remove_noise(ndmiloss[idx], thresh = 8)
     out = np.logical_or(out, ndmiloss[idx]) * (idx + 1)
     return out
-    
+
+def remove_unstable_gain(loss, gain, fs):
+    # If the gain happens in year Y, where the window is T, NT, T
+    # And a loss event is not detected, then remove the gain
+    for i in range(loss.shape[0]):
+        ttcyear = fs[i + 1]
+        gainyear = gain[i]
+        priormax = np.zeros_like(fs[0]) if i == 0 else np.logical_and(fs[i-1] > 70, fs[i] < 35)
+        gain_prior_trees = (gainyear > 0) * priormax
+        nopriorloss = np.zeros_like(fs[0]) if i == 0 else np.sum(loss[:i + 1] > 0, axis = 0, keepdims = True) == 0
+        unstable_gain = gain_prior_trees * nopriorloss
+        gain[i] *= (1 - unstable_gain.squeeze())
+    return gain 
+
+
 def adjust_loss_gain(gain, loss, ndmiloss, fs, kde, kde10, kde_expected, kde2, dates):
 
     fs = fs.astype(np.float32)
     ff = temporal_filter(fs)
 
-    loss22, _ = identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, 2022)
-    candidateloss2022 = ((np.min(ff[3:5], axis = 0) - ff[5]) >= 50) * np.logical_or(ff[4] > 50, ff[3] > 50) * (ff[5] < 25)
-    loss22 = remove_nonoverlapping_events(candidateloss2022, loss22, 3)
-    loss22 = remove_noise(loss22, thresh = 10)
+    loss22, ndmi22 = identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, 2022)
+    candidateloss2022 = ((np.min(ff[3:5], axis = 0) - ff[5]) >= 50) * np.logical_or(ff[4] > 50, ff[3] > 50) * (ff[5] < 35)
+    candndmiloss2022 = (np.min(ff[3:5], axis = 0) > 70) * ((np.min(ff[3:5], axis = 0) - ff[5]) >= 20)
+    ndmi22 = remove_nonoverlapping_events(candndmiloss2022, ndmi22, 10)
+    loss22 = remove_nonoverlapping_events(candidateloss2022, loss22, 4)
+    loss22 = np.logical_or(loss22, ndmi22)
+    loss22 = remove_noise(loss22, thresh = 5)
     
 
     gain18 = ((ff[1] - ff[0]).squeeze() >= 50) * (ff[0] < 30) * (ff[2] > 50)
-    gain18 = remove_nonoverlapping_events(gain18, gain[0], 3)
+    gain18 = remove_nonoverlapping_events(gain18, gain[0], 2)
     gain18 = remove_noise(gain18, thresh = 10).squeeze() * 1
     gain18 = np.clip(gain18, 0, 1)
 
     loss18, _ = identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, 2018)
     candidateloss2018 = ((ff[0] - ff[1]).squeeze() >= 50) * (ff[0] > 60) * (ff[1] < 40)
-    loss18 = remove_nonoverlapping_events(candidateloss2018, loss18, 3)
+    loss18 = remove_nonoverlapping_events(candidateloss2018, loss18, 4)
     loss18 = loss18.squeeze() * 1
 
-    gain2 = np.copy(gain)
-    gain2[0] = 0.
+    #gain2 = np.copy(gain)
+    gain[0] = 0.
 
-    gain2[1] = adjust_gain_with_ndmi(2, ff, gain2)
-    gain2[2] = adjust_gain_with_ndmi(3, ff, gain2)
-    gain2[3] = adjust_gain_with_ndmi(4, ff, gain2)
+    gain[1] = adjust_gain_with_ndmi(2, ff, gain)
+    gain[2] = adjust_gain_with_ndmi(3, ff, gain)
+    gain[3] = adjust_gain_with_ndmi(4, ff, gain)
 
     candidate2022 = ((ff[5] - np.min(ff[3:5], axis = 0) >= 50) * (ff[5] > 50))
     candidate2022 = candidate2022 * np.logical_or(ff[4] < 30, ff[3] < 30)
-    gain2[4] = remove_nonoverlapping_events(candidate2022, np.max(gain2[4:5], axis = 0), 3) * 5
+    gain[4] = remove_nonoverlapping_events(candidate2022, np.max(gain[4:5], axis = 0), 4) * 5
 
-    gain2[gain2 == 0] = 255
-    gain2 = np.min(gain2, axis = 0)
-    gain2[gain2 == 255] = 0.
-    gain2[gain18 > 0] = gain18[gain18 > 0] * 1
-
-    loss2 = np.copy(loss)
-    loss2[0] = 0.
-    loss2[1] = adjust_loss_with_ndmi(1, ff, loss2, ndmiloss)
-    loss2[2] = adjust_loss_with_ndmi(2, ff, loss2, ndmiloss)
-    loss2[3] = adjust_loss_with_ndmi(3, ff, loss2, ndmiloss)
-    loss2[4] = loss22 * 5
-
+    #loss2 = np.copy(loss)
+    loss[0] = 0.
+    loss[1] = adjust_loss_with_ndmi(1, ff, loss, ndmiloss)
+    loss[2] = adjust_loss_with_ndmi(2, ff, loss, ndmiloss)
+    loss[3] = adjust_loss_with_ndmi(3, ff, loss, ndmiloss)
+    loss[4] = loss22 * 5
+    #loss2 = assign_loss_year(loss2, ff)
+    gain = remove_unstable_gain(loss, gain, fs)
+    gain[gain == 0] = 255
+    gain = np.min(gain, axis = 0)
+    gain[gain == 255] = 0.
+    gain[gain18 > 0] = gain18[gain18 > 0] * 1
     # Remove_nonoverlaping needs a size and fraction thresh, not just fraction
     #! TODO!!
     #candidateloss2022 = ((np.max(ff[3:5], axis = 0) - ff[5]) >= 50) * np.logical_or(ff[4] > 50, ff[3] > 50) * (ff[5] < 25)
     #loss2[4] = remove_nonoverlapping_events(candidateloss2022, np.max(loss2[4:5], axis = 0), 3) * 5
 
 
-    loss2[loss2 == 0] = 255
-    loss2 = np.min(loss2, axis = 0)
-    loss2[loss2 == 255] = 0.
+    loss[loss == 0] = 255
+    loss = np.min(loss, axis = 0)
+    loss[loss == 255] = 0.
     ### THE 2018 ERROR IS HERE !!!!!
     
     delta1718 = fs[0] - fs[1]
@@ -405,10 +511,8 @@ def adjust_loss_gain(gain, loss, ndmiloss, fs, kde, kde10, kde_expected, kde2, d
     is19loss = delta1918 > delta1718
     is19loss = (delta1918 > 50) * is19loss
 
-    loss2[(loss2 <= 2) * (loss18 > 0) * is18loss] = 1.
-    loss2[(loss2 <= 2) * (loss18 > 0) * is19loss] = 2.#loss18[np.logical_and(loss2 == 0, loss18 > 0)] * 1
-    diffs = np.diff(fs, axis = 0)
-    print(fs.shape, diffs.shape, 'DIFFS')
+    loss[(loss <= 2) * (loss18 > 0) * is18loss] = 1.
+    loss[(loss <= 2) * (loss18 > 0) * is19loss] = 2.#loss18[np.logical_and(loss2 == 0, loss18 > 0)] * 1
 
     ### RULE BASED CLEAN UP ###
     ### The following rules are applied:
@@ -421,37 +525,41 @@ def adjust_loss_gain(gain, loss, ndmiloss, fs, kde, kde10, kde_expected, kde2, d
 
     # For loss year 2018-2020, if 2021-2022 have trees,
     # but there is no regain, then remove the loss event
-    loss_noregain = (np.sum(fs[-3:] >= 40, axis = 0) >= 2) *\
-                       (gain2 <= 3) * (loss2 <= 4) * (loss2 > 0)
+    #loss_noregain = (np.sum(fs[-3:] >= 40, axis = 0) >= 2) *\
+    #                   (gain2 <= 3) * (loss2 <= 4) * (loss2 > 0)
     #print("LOSS NO REGAIN", np.mean(loss_noregain))
     # For gain year 2018-2020, if 2021-2022 have no trees,
     # but there is no reloss, then remove the gain event
-    gain_no_reloss = ((np.median(fs[-3:], axis = 0) <= 20) *
-                       (gain2 <= 4) * (loss2 <= 3)) * (gain2 > 0)
+    #gain_no_reloss = ((np.median(fs[-3:], axis = 0) <= 20) *
+    #                   (gain2 <= 4) * (loss2 <= 3)) * (gain2 > 0)
 
     # For gain year 2021-2022, if 2017 or 2018 have trees, but there is no loss
     # Then remove the gain
-    gain_but_previous_trees = (gain2 >= 4) * (loss2 == 0) * (np.max(fs[:2], axis = 0) > 60)
-
+    gain_but_previous_trees = (gain >= 4) * (loss == 0) * (np.max(fs[:2], axis = 0) > 70)
+    gain_but_previous_trees2 = (gain >= 5) * (loss == 0) * (np.max(fs[:3], axis = 0) > 70)
+    gain_but_previous_trees = np.logical_or(gain_but_previous_trees, gain_but_previous_trees2)
     # For loss year 2021-2022, if 2017 or 2018 have no trees, but there is no gain
     # Then remove the loss
-    loss_but_previous_notrees = (loss2 >= 4) * (gain2 == 0) * (np.min(fs[:2], axis =0) < 20)
+    loss_but_previous_notrees = (loss >= 4) * (gain == 0) * (np.min(fs[:2], axis =0) < 30)
+    #loss_but_previous_notrees2 = (loss2 >= 5) * (gain2 == 0) * (np.min(fs[:3], axis =0) < 30)
+    #loss_but_previous_notrees = np.logical_or(loss_but_previous_notrees, loss_but_previous_notrees2)
     unstable_preds = np.sum(abs(np.diff(fs, axis = 0)) > 40, axis = 0) > 3
 
     # Either have a loss event, or have the min tree cover be < 40 to detect gain
-    loss_or_no_trees = np.logical_or(np.logical_and(loss2 > 0, loss2 < 255), np.min(fs, axis = 0) < 30)
-    gain2 = gain2 * (1 - unstable_preds)#loss_or_no_trees * (1 - gain_but_previous_trees) * (1 - unstable_preds)
-    loss2 = loss2 * (1 - unstable_preds)#(1 - loss_but_previous_notrees) * (1 - loss_noregain) * (1 - unstable_preds)
-    losses = np.copy(loss2) > 0
-    losses = remove_noise(losses, 10)
+    loss_or_no_trees = np.logical_or(np.logical_and(loss > 0, loss < 255), np.min(fs, axis = 0) < 30)
+    gain = gain * (1 - unstable_preds) #* (1 - gain_but_previous_trees) #loss_or_no_trees * (1 - gain_but_previous_trees) 
+    loss = loss * (1 - unstable_preds)#(1 - loss_but_previous_notrees) * (1 - loss_noregain) * (1 - unstable_preds)
+    losses = np.copy(loss) > 0
+    losses = remove_noise(losses, 5)
     losses[losses > 0] = 1.
-    loss2 = loss2 * losses 
+    loss = loss * losses 
 
-    gains = np.copy(gain2) > 0
+    gains = np.copy(gain) > 0
     gains = remove_noise(gains, 10)
     gains[gains > 0] = 1.
-    gain2 = gain2 * gains
-    return gain2, loss2
+    gain = gain * gains
+    del unstable_preds
+    return gain, loss
 
 
 ### REFERENCE CHANGE THRESHOLDS ###
@@ -482,23 +590,25 @@ def calc_reference_change(movingavg, slopemin, slopemax, notree, dem):
                 #print(movingavg.shape)
                 #upper_percentile = np.percentile(movingavg[6:-6, counterfactual], 90, axis = 0)
                 #counterfactual = np.percentile(upper_percentile, 90)
-                counterfactual = np.percentile(movingavg[6:-6, counterfactual], 97.5) # 97.5
+                counterfactual = np.percentile(movingavg[6:, counterfactual], 95) # 97.5
                 #print(i, counterfactual, prior)
             elif slopemin >= 20:
-                 counterfactual = np.percentile(movingavg[6:-6, counterfactual], 97.5) # 97.5
+                 counterfactual = np.percentile(movingavg[6:, counterfactual], 95) # 97.5
             else:
                 #upper_percentile = np.percentile(movingavg[6:-6, counterfactual], 80, axis = 0)
                 #counterfactual = np.percentile(upper_percentile, 90)
-                counterfactual = np.percentile(movingavg[6:-6, counterfactual], 95)
+                counterfactual = np.percentile(movingavg[6:, counterfactual], 95)
 
             prior = counterfactual
             change = (counterfactual - baseline)
+
             #change = np.maximum(change, baseline - 0.20)
         else:
             
-            counterfactual = previous_change + 0.065
+            #counterfactual = previous_change + 0.025
             #counterfactual = np.maximum(counterfactual, baseline - 0.05)
-            change = (counterfactual - baseline)
+            change = previous_change + 0.02#(counterfactual - baseline)
+            counterfactual = baseline + change
             #change = np.maximum(change, baseline - 0.10)
             #print(baseline - 0.05)
             #print(i / 100, counterfactual)
@@ -506,18 +616,20 @@ def calc_reference_change(movingavg, slopemin, slopemax, notree, dem):
         #    counterfactual = np.maximum(counterfactual, prior + 0.05)
         #change = (counterfactual - baseline)
         change = np.clip(change, 0.15, 0.4)
-        lowest_change += 0.0025
+        lowest_change += 0.01
         lowest_change = np.maximum(lowest_change, change)
         change = np.maximum(lowest_change, change)
+        if change > (previous_change + 0.04):
+            change = (previous_change + 0.04)
         counterfactual = baseline + change
         
         reference = counterfactual #- 0.05
         #print(i / 100, (counterfactual - (i / 100)))
-        #print(f"{slopemin}: Target change from {baseline} is {np.around(change, 2)} to {np.around(reference, 2)}, {npx}")
+        print(f"{slopemin}: prev: {previous_change}, Target change from {baseline} is {np.around(change, 2)} to {np.around(reference, 2)}, {npx}")
         #print(i / 100, previous_change - baseline)
         counterfactuals.append(counterfactual)
         #if (counterfactual - baseline) > previous_change:
-        previous_change = counterfactual
+        previous_change = change
         #else:
         #    previous_change += 0.10
     return counterfactuals
@@ -537,7 +649,7 @@ def calc_tree_change(movingavg, pct, stable, dem):
         #counterfactual = np.percentile(movingavg[10:-10, counterfactual], pct)
         #counterfactual = baseline - 0.506
         #counterfactual = np.clip(counterfactual, 0.025, 1.)
-        #print(i, i / 100, counterfactual)
+        print(i, i / 100, counterfactual)
         counterfactuals.append(counterfactual)
     return counterfactuals
 
@@ -569,7 +681,7 @@ def calc_tree_change(movingavg, pct, stable, dem):
         except:
             change2 = 1.
         change = np.minimum(change, change2)
-        #print(i / 100, change, baseline - change, np.sum(highlocs > 0))
+        print(i / 100, change, baseline - change, np.sum(highlocs > 0))
         counterfactuals.append(baseline - change)
     return counterfactuals
 
@@ -577,7 +689,7 @@ def calc_tree_change(movingavg, pct, stable, dem):
 
 def min_filter1d(a, W):
     hW = (W-1)//2 # Half window size
-    return minimum_filter1d(a,size=W)#[hW:-hW]
+    return minimum_filter1d(a, W)#[hW:-hW] ### MEDIAN
 
 def check_for_gain_subtle(ma):
     gain_events = []
@@ -603,10 +715,11 @@ def check_for_gain_subtle(ma):
 
 def check_for_gain_large(ma, deforested, 
     reference, counterfactual,
-    cfs_trees, cfs_trees10, verbose = False):
+    cfs_trees, cfs_trees10, modifier = 0, verbose = True):
     
     minimum5win = min_filter1d(ma, 3)
     gain_events = []
+    is_delta_after = 0.
 
     if deforested:
         deforested_date = np.maximum(np.argmin(ma), 3)
@@ -636,12 +749,12 @@ def check_for_gain_large(ma, deforested,
         change = np.clip(change, 0.15, 0.35)
     #print(ma)
     for i in range(ma.shape[0]):
-        if i < (ma.shape[0] - 6) and (i >= 2):
+        if i < (ma.shape[0] - 6) and (i >= 6):
             # Look for 6 dates in a row below reference = stable no-tree
             # And 5 dates in a row above reference = stable tree
             
             if deforested or (i < 6):
-                n_lookback = 2 if (i - 2) > 0 else i
+                n_lookback = 3 if (i - 3) > 0 else i
             else:
                 n_lookback = i
                 
@@ -652,25 +765,22 @@ def check_for_gain_large(ma, deforested,
             baseline = current_baseline
 
             if (baseline < 0.6) or deforested:
-                if baseline > 0.1:
-                    baseline = round_up(baseline, 0.05)
-                else:
-                    baseline = round_down(baseline, 0.05)
+                baseline = round_down(baseline, 0.05)
                 baseline = np.clip(baseline, 0.0, 0.60)
                 reference = counterfactual[int(baseline // 0.05)]
                 noise_factor = 0
-                if not deforested:
-                    bs = np.median(ma[i-n_lookback:i])
-                    positive_deviations = np.argwhere(ma[:i] > (bs))
-                    positive_deviations = positive_deviations[positive_deviations > (i - 10)]
-                    if len(positive_deviations) > 0:
+                #if not deforested:
+                #    bs = np.median(ma[i-n_lookback:i])
+                #    positive_deviations = np.argwhere(ma[:i] > (bs))
+                #    positive_deviations = positive_deviations[positive_deviations > (i - 10)]
+                    #if len(positive_deviations) > 0:
                         #print()
-                        noise_factor = np.mean(ma[positive_deviations] - bs)
+                    #    noise_factor = np.mean(ma[positive_deviations] - bs)
                         #print(positive_deviations, noise_factor)
                         #noise_factor = np.std(ma[:i]) * 1.5
-                        reference += 0.5*noise_factor
+                    #    reference += 0.5*noise_factor
 
-                change = (reference -  baseline)
+                change = (reference - baseline)
                #print(baseline, reference, change)
                 # Do at least 3 image dates in the future reach the tree reference threshold? 
                 endline = minimum5win[i+1:ma.shape[0]]
@@ -681,18 +791,20 @@ def check_for_gain_large(ma, deforested,
                         reference -= ((noise_factor) / 2)
                         change = (reference - baseline)
                         lastdate_gain = True
-                if verbose:
-                    print(f"{i}, Base/end: {np.around(baseline, 3), np.max(endline)},"
-                          f" change/ref: {np.around(change, 3), reference}")
+                #if verbose:
+                #    print(f"{i}, Base/end: {np.around(baseline, 3), np.max(endline)},"
+                #          f" change/ref: {np.around(change, 3), reference}")
                 # Identify whether change threshold is met, and reference is reached
-                if (np.max(endline) - baseline) > change and (np.max(endline) > reference):
+                if (np.max(endline) - baseline) > (change + modifier) and (np.max(endline) > (reference + modifier)):
                     #print("WTF")
                     if lastdate_gain:
-                        max_before = np.max(ma[:i])
+                        beforeidx = np.maximum(i, 10)
+                        max_before = np.max(ma[:beforeidx])
                         max_after = np.max(ma[-6:])
-                        no_cyclical_ndmi = max_after > (max_before * 1.25)
+                        no_cyclical_ndmi = max_after > ((max_before * 1.25) + modifier)
                         no_cyclical_ndmi = np.logical_or(no_cyclical_ndmi, deforested)
                         if no_cyclical_ndmi:
+                            #print(i, 'lastdate')
                             gain_events.append(i)
                     else:
                         #try:
@@ -705,7 +817,7 @@ def check_for_gain_large(ma, deforested,
                         if gain_date < (ma.shape[0] - 6):
                             try:
                                 gain_date_after = np.argwhere(imgs_after_gain > np.percentile(
-                                                imgs_after_gain, 50)).flatten()[0] + gain_date
+                                                imgs_after_gain, 75)).flatten()[0] + gain_date
                             except:
                                 gain_date_after = gain_date
                         else:
@@ -713,8 +825,8 @@ def check_for_gain_large(ma, deforested,
                         gain_value = ma[gain_date]
                         gain_value_max = np.max(ma[gain_date:gain_date + 10])
                         max_value = np.max(ma[gain_date:])
-                        reference_min = calc_threshold_for_notree(gain_value, cfs_trees) + 0.10
-                        reference_min_prior = calc_threshold_for_notree(max_value, cfs_trees10)
+                        #reference_min = calc_threshold_for_notree(gain_value, cfs_trees) + 0.10
+                        reference_min_prior = calc_threshold_for_notree(max_value, cfs_trees) + 0.10
                         #reference_min_prior_gv = calc_threshold_for_notree(gain_value, cfs_trees10)
                         #reference_min_prior = np.minimum(reference_min_prior, reference_min_prior_gv)
                         #print(max_value, reference_min_prior, reference_min_prior_gv)
@@ -725,48 +837,62 @@ def check_for_gain_large(ma, deforested,
                             notree_before = np.sum(ma[:gain_date] < (reference_min_prior)) > 0
                         #notree_before = True
                         max_before = np.max(ma[:i])
-                        max_after = np.max(ma[gain_date:])
+                        max_after = np.mean(ma[gain_date:])
 
-                        no_cyclical_ndmi = max_after > (max_before * 1.25)
-                        #print(np.argmin(ma))
-                        no_cyclical_ndmi = np.logical_or(no_cyclical_ndmi, np.argmin(ma) == 0)
-                        notree_before = np.logical_and(notree_before, no_cyclical_ndmi)
+                        no_cyclical_ndmi =  (max_after - max_before) > (0.05 + modifier)
+                        
+                        #no_cyclical_ndmi = np.logical_or(no_cyclical_ndmi, np.argmin(ma) == 0)
+                        no_cyclical_ndmi = np.logical_or(deforested, no_cyclical_ndmi)
+                        #notree_before = np.logical_and(notree_before, no_cyclical_ndmi)
                         notree_before = np.logical_or(notree_before, deforested)
 
-                        min_next_6 = (np.min(ma[gain_date_after:gain_date + 8]))
+                        min_next_6 = (np.min(ma[gain_date_after:gain_date_after + 6]))
+                        reference_min = np.maximum(ma[gain_date] * 0.67, ma[i] + 0.05)
+                        #reference_min = calc_threshold_for_notree(ma[gain_date], cfs_trees)
                         no_loss_after_gain = min_next_6 > (reference_min)
-                        reference_min = calc_threshold_for_notree(np.max(ma[gain_date:]), cfs_trees)
-                        no_loss_after_gain_long = (np.sum(ma[gain_date_after:] < (reference_min)) == 0)
-                        no_loss_after_gain = np.logical_and(no_loss_after_gain, no_loss_after_gain_long)
+                        #if verbose and no_cyclical_ndmi:
+                            #print(i, gain_date, gain_value, ma[i], max_before, max_after, max_after - max_before, reference_min, no_cyclical_ndmi)
+                       # no_loss_after_gain_long = (np.sum(ma[gain_date_after:] < (reference_min)) == 0)
+
+                        # What % decrease happens after the maximum is reached?
+                        # And how does the min value compare with the gain value?
+                        # And how does the total decrease compare to the total increase?
+                        #argmax_after = np.argmax(ma[gain_date:]) + gain_date
+                        #is_delta_after = (np.min(ma[argmax_after:]) / np.max(ma[gain_date:]))
+                        #print(is_delta_after)
+                        no_loss_val = np.maximum((reference + modifier) * 0.75, 0.15)
+                        #no_loss_after_gain_long = (np.sum(ma[gain_date_after:] < (no_loss_val)) == 0)
+                        #no_loss_after_gain_long = np.logical_or(is_delta_after > 0.75, )
+                        #no_loss_after_gain = np.logical_and(no_loss_after_gain, no_loss_after_gain_long)
                         no_loss_after_gain = np.logical_or(deforested, no_loss_after_gain)
                         #no_loss_after_gain = True
                         if (gain_date - 5) > i:
-                            no_decrease_until_gain = np.min(np.array(ma[i+5:gain_date])) >= ma[i]
+                            no_decrease_until_gain = np.min(np.array(ma[i+5:gain_date])) >= (ma[i] - 0.10)
                         else:
                             no_decrease_until_gain = True
-                        if verbose:
-                            print(i, gain_value, ma[i], no_loss_after_gain, no_decrease_until_gain, notree_before)
-                        if no_loss_after_gain and no_decrease_until_gain:
-                            if notree_before:
+                        #if verbose and no_cyclical_ndmi:
+                            #print(i, gain_date, gain_value, ma[i], max_before, max_after,  max_after - max_before, no_cyclical_ndmi)
+                        #if no_loss_after_gain and no_decrease_until_gain:
+                        #if notree_before:
                                 #print(i)
-                                gain_events.append(i)
+                        if no_cyclical_ndmi and no_loss_after_gain:
+                            gain_events.append(i)
                         #except:
                         #    print("exception")
                         #    continue
     if len(gain_events) > 0:
-        if (len(gain_events) > 2) or ((np.max(gain_events) > (ma.shape[0] - 3))):
-            return gain_events
+        if (len(gain_events) > 3) or ((np.max(gain_events) > (ma.shape[0] - 3))):
+            return gain_events, np.around((reference + modifier), 2)
         elif (len(gain_events) >= 2) and deforested:
-            return gain_events
+            return gain_events, np.around((reference + modifier), 2)
         else:
-            return []
+            return [], np.around((reference + modifier), 2)
     else:
-        return []
+        return [], np.around((reference + modifier), 2)
 
 ### FILTER GAIN EVENTS BASED ON TIME SERIES ###
-
-def filter_gain_px(gain2, loss2, percentiles, cfs_flat, cfs_hill, cfs_steep, cfs_trees, 
-    cfs_trees10, notree, dem, dates):
+def filter_gain_px(gain2, loss2, percentiles, fs, cfs_flat, cfs_hill, cfs_steep, cfs_trees, 
+    cfs_trees10, notree, dem, dates, modifier = 0):
     gain2 = remove_noise(gain2, 8)
     Zlabeled,Nlabels = ndimage.measurements.label(gain2)
 
@@ -779,111 +905,181 @@ def filter_gain_px(gain2, loss2, percentiles, cfs_flat, cfs_hill, cfs_steep, cfs
 
     struct = ndimage.generate_binary_structure(2, 1)
     loss_dilated = binary_dilation(np.copy(loss2), struct, 3)
-    additional_gain = np.zeros_like(Zlabeled)
-    deforested_gain = 0
-    nondeforested_gain = 0
+    additional_gain = np.zeros_like(Zlabeled, dtype = np.int32)
+    #deforested_gain = 0
+    #nondeforested_gain = 0
+    year = 0
     gainpx = []
-    for idx in range(Nlabels):
-        if np.sum(Zlabeled == idx) > 0:
+    #deforested_gain = np.zeros_like(Zlabeled)
+    for idx in range(1, Nlabels):
+        Npx = np.sum(Zlabeled == idx)
+        if Npx > 0:
             means = np.mean(percentiles[:, Zlabeled == idx], axis = 1)
-            patch = percentiles[:, Zlabeled == idx]
-            deforested = np.mean(loss_dilated[Zlabeled == idx] > 0) > 0.10
-            ma = moving_average(means, n = 9)
 
+            deforested = np.mean(loss_dilated[Zlabeled == idx] > 0) > 0.1
+            #print(dem.shape, Zlabeled.shape)
+            #print((Zlabeled == idx).shape)
             mean_slope = np.mean(dem[Zlabeled == idx])
             counterfactual_events = cfs_flat if mean_slope < 10 else cfs_hill
             if mean_slope >= 20:
                 counterfactual_events = cfs_steep
-            large_gain = check_for_gain_large(ma = ma,
-                                              deforested = deforested,
-                                              reference = reference, 
-                                              counterfactual = counterfactual_events,
-                                              cfs_trees = cfs_trees,
-                                              cfs_trees10 = cfs_trees10,
-                                              verbose = False)
+            verbose = True if Npx > 1000 else False
 
-            if mean_slope < 10:
-                gain_events = check_for_gain_subtle(ma)
-            else:
-                gain_events = []
-
-            if len(large_gain) == 0 and len(gain_events) == 0:
-                for year in np.unique(gain2[Zlabeled == idx]):
-                    if np.sum( np.logical_and(Zlabeled == idx, gain2 == year)) > 50:
-                        yearlabeled = np.logical_and(Zlabeled == idx, gain2 == year)
-                        yearlabeled = remove_noise(yearlabeled, 8)
+            if deforested and Npx > 500:
+                # If deforestation is within the potential gain patch
+                # Process the gain filtering separately for the deforested
+                # And the non-deforested areas if the patch size is > 500 px
+                # This removes really large degradation / drought events
+                # But enables the small-scale rotations where loss might be missed
+                # To be included
+                deforest_area = np.logical_and(
+                    Zlabeled == idx, loss2 > 0)
+                nondeforest_area = np.logical_and(
+                    Zlabeled == idx, loss2 == 0)
+                deforest_area = np.mean(percentiles[:, deforest_area], axis = 1)
+                nondeforest_area = np.mean(percentiles[:, nondeforest_area], axis = 1)
+                deforest_area = moving_average(deforest_area, n = 5)
+                nondeforest_area = moving_average(nondeforest_area, n = 5)
+                if np.sum(np.isnan(deforest_area) == 0):
+                    deforested_gain, gval = check_for_gain_large(ma = deforest_area,
+                                                  deforested = True,
+                                                  reference = reference, 
+                                                  counterfactual = counterfactual_events,
+                                                  cfs_trees = cfs_trees,
+                                                  cfs_trees10 = cfs_trees10,
+                                                  modifier = modifier,
+                                                  verbose = verbose)
+                else:
+                    deforested_gain = []
+                if np.sum(np.isnan(nondeforest_area) == 0):
+                    nondeforested_gain, gval = check_for_gain_large(ma = nondeforest_area,
+                                                  deforested = False,
+                                                  reference = reference, 
+                                                  counterfactual = counterfactual_events,
+                                                  cfs_trees = cfs_trees,
+                                                  cfs_trees10 = cfs_trees10,
+                                                  modifier = modifier,
+                                                  verbose = verbose)
+                    if len(nondeforested_gain) == 0:
+                        yearlabeled = np.logical_and(Zlabeled == idx, gain2 == year, loss2 == 0)
+                        yearlabeled = remove_noise(yearlabeled, 10)
 
                         yearlabeled, Nyear = ndimage.measurements.label(yearlabeled)
                         for i in range(1, Nyear + 1):
                             means = np.mean(percentiles[:, yearlabeled == i], axis = 1)
-                            patch = percentiles[:, yearlabeled == i]
-                            deforested = np.mean(loss_dilated[yearlabeled == i] > 0) > 0.10
-                            ma = moving_average(means, n = 9)
-                            #print("year", i)
+                            ma = moving_average(means, n = 7)
 
-                            large_gainyear = check_for_gain_large(ma = ma,
-                                              deforested = deforested,
+                            large_gainyear, gval = check_for_gain_large(ma = ma,
+                                              deforested = False,
                                               reference = reference, 
                                               counterfactual = counterfactual_events,
                                               cfs_trees = cfs_trees,
                                               cfs_trees10 = cfs_trees10,
+                                              modifier = modifier,
                                               verbose = False)
-                            #print(i, large_gainyear)
                             if np.sum(yearlabeled == i) > 10 and len(large_gainyear) > 0:
-                                #print(f"{idx} Addtl Large Gain detected: {len(large_gainyear)} events:"
-                      #f" {deforested}, {year}, {np.sum(np.logical_and(Zlabeled == idx, gain2 == year))}"
-                      #f" Slope: {mean_slope}, {np.sum(yearlabeled == i)} px")
-                                large_gainyear = check_for_gain_large(ma = ma,
-                                              deforested = deforested,
-                                              reference = reference, 
-                                              counterfactual = counterfactual_events,
-                                              cfs_trees = cfs_trees,
-                                              cfs_trees10 = cfs_trees10,
-                                              verbose = False)
-
-                                #plt.figure(figsize=(8,3))
-                                #years = (dates[4:-4] / 365) + 2017
-                                #g = sns.lineplot(x = years, y = ma)
                                 additional_gain[yearlabeled == i] = year
-                            elif len(large_gainyear) == 0 and np.sum(yearlabeled == i) > 1000:
-                                print("No addtl gain", np.sum(yearlabeled == i))
-                                #plt.figure(figsize=(8,3))
-                                #years = (dates[4:-4] / 365) + 2017
-                                #g = sns.lineplot(x = years, y = ma)
-                            else:
-                                continue
-            if len(large_gain) == 0 and  len(gain_events) == 0:
-                if np.sum(Zlabeled == idx) > 500:
-                    print(f"{idx} No Large Gain detected: {large_gain}: {deforested}, {np.sum(Zlabeled == idx)}")
-                   # print(f"{idx} Gain detected: {gain_events}")
-                    means = np.mean(percentiles[:, Zlabeled == idx], axis = 1)
-                    patch = percentiles[:, Zlabeled == idx]
-                    deforested = np.mean(loss_dilated[Zlabeled == idx] > 0) > 0.25
-                    ma = moving_average(means, n = 9)
-                    #plt.figure(figsize=(8,3))
-                    #years = (dates / 365) + 2017
-                    #g = sns.lineplot(x = years, y = means)
-                    #g.set(ylim = (0, 1))# < 0.05)
-                    continue
-            else:
-                #print(f"{idx} Gain detected: {large_gain}")
-               # if deforested:
-                n_gain_events = len(large_gain)
-                #print(idx, n_gain_events)
-                n_px = np.sum(Zlabeled == idx)
-                print(f"{idx} Large Gain detected: {len(large_gain)} events:"
-                      f" {deforested}, {year}, {np.sum(np.logical_and(Zlabeled == idx, gain2 == year))}"
-                      f" Slope: {mean_slope}, {np.sum(Zlabeled == idx)} px")
-                if deforested and idx > 0:
-
-                    deforested_gain += np.sum(Zlabeled == idx)
                 else:
-                    nondeforested_gain += np.sum(Zlabeled == idx)
-                if n_px < 25:
-                    if n_gain_events > 6:
+                    nondeforested_gain = []
+                if len(nondeforested_gain) >= 1:
+                    additional_gain[np.logical_and(
+                    Zlabeled == idx, loss2 == 0)] = gain2[np.logical_and(
+                    Zlabeled == idx, loss2 == 0)]
+                if len(deforested_gain) >= 1:
+                    additional_gain[np.logical_and(
+                    Zlabeled == idx, loss2 > 0)] = gain2[np.logical_and(
+                    Zlabeled == idx, loss2 > 0)]
+            else:
+                # If not deforested, process the patch as-is
+                ma = moving_average(means, n = 5)
+                large_gain, gval = check_for_gain_large(ma = ma,
+                                                  deforested = deforested,
+                                                  reference = reference, 
+                                                  counterfactual = counterfactual_events,
+                                                  cfs_trees = cfs_trees,
+                                                  cfs_trees10 = cfs_trees10,
+                                                  modifier = modifier,
+                                                  verbose = verbose)
+                if mean_slope < 10:
+                    gain_events = check_for_gain_subtle(ma)
+                else:
+                    gain_events = []
+
+                # If no gain is detected for the entire gain patch
+                # Process each year of possible gain separately
+                if len(large_gain) == 0 and len(gain_events) == 0:
+                    for year in np.unique(gain2[Zlabeled == idx]):
+                        if np.sum( np.logical_and(Zlabeled == idx, gain2 == year)) > 50:
+                            yearlabeled = np.logical_and(Zlabeled == idx, gain2 == year)
+                            yearlabeled = remove_noise(yearlabeled, 8)
+
+                            yearlabeled, Nyear = ndimage.measurements.label(yearlabeled)
+                            for i in range(1, Nyear + 1):
+                                means = np.mean(percentiles[:, yearlabeled == i], axis = 1)
+                                patch = percentiles[:, yearlabeled == i]
+                                deforested = np.mean(loss_dilated[yearlabeled == i] > 0) > 0.25
+                                ma = moving_average(means, n = 5)
+
+                                large_gainyear, gval = check_for_gain_large(ma = ma,
+                                                  deforested = deforested,
+                                                  reference = reference, 
+                                                  counterfactual = counterfactual_events,
+                                                  cfs_trees = cfs_trees,
+                                                  cfs_trees10 = cfs_trees10,
+                                                  modifier = modifier,
+                                                  verbose = False)
+                                if np.sum(yearlabeled == i) > 10 and len(large_gainyear) > 0:
+                                    if np.sum(yearlabeled == i) > 200:
+                                        mean_treecover = np.around(np.mean(fs[:, yearlabeled == i], axis = 1), 1)
+                                        if year >= 2:
+                                            max_previous_treecover = 0
+                                            #max_previous_treecover = np.max(fs[:(year - 1), yearlabeled == i], axis = 1)
+                                        else:
+                                            max_previous_treecover = 0.
+                                        print(f"{idx} Addtl gain: {len(large_gainyear)} events:"
+                                            f" {deforested}, {year}, {mean_treecover}, {max_previous_treecover}, {np.sum(yearlabeled == i)} px")
+                                    additional_gain[yearlabeled == i] = year
+                                elif len(large_gainyear) == 0 and np.sum(yearlabeled == i) > 200:
+                                    print("No addtl gain", np.sum(yearlabeled == i))
+                                else:
+                                    continue
+                if len(large_gain) == 0 and  len(gain_events) == 0:
+                    if np.sum(Zlabeled == idx) > 200:
+                        mean_treecover = np.around(np.mean(fs[:, Zlabeled == idx], axis = 1), 1)
+                        print(f"{idx} No gain: {deforested}, {mean_treecover}, {np.sum(Zlabeled == idx)} px")
+                        continue
+                else:
+                    n_gain_events = len(large_gain)
+                    n_px = np.sum(Zlabeled == idx)
+                    if n_px > 200:
+                        if year > 2:
+                            max_previous_treecover = np.max(fs[:(np.int32(year) - 1), Zlabeled == idx], axis = 0)
+                            max_previous_treecover = np.around(np.mean(max_previous_treecover), 1)
+                            #max_previous_treecover = 0.
+                        else:
+                            max_previous_treecover = 0.
+                        mean_treecover = np.around(np.mean(fs[:, Zlabeled == idx], axis = 1), 1)
+                        max_decrease = np.around(np.min(np.diff(mean_treecover)), 1)
+                        gain_increase = np.around(mean_treecover[np.int32(year)] - max_previous_treecover, 1)
+                        # If the year is 2022, if previously there was no deforestation but a big decrease
+                        # And if the gain increase is < 40%, then remove the event
+                        if (year == 5) and not deforested:
+                            if (abs(max_decrease) > 25) and (gain_increase < 40):
+                                print(f"Removing {idx}")
+                                large_gain = []
+                                n_gain_events = 0.
+                        print(f"{idx} Gain: {len(large_gain)} events, {gval}:"
+                              f" {deforested}, {year}, {mean_treecover}, {max_decrease}, {gain_increase}, {max_previous_treecover}, {np.sum(Zlabeled == idx)} px")
+                    #if deforested and idx > 0:
+                    #    deforested_gain += np.sum(Zlabeled == idx)
+                    #else:
+                    #    nondeforested_gain += np.sum(Zlabeled == idx)
+                    if n_px < 25:
+                        if n_gain_events > 5:
+                            gainpx.append(idx)
+                    elif n_gain_events > 0:
                         gainpx.append(idx)
-                elif n_gain_events > 0:
-                    gainpx.append(idx)
+        #np.save('zlabeled.npy', Zlabeled)
     return gainpx, Zlabeled, additional_gain
 
 
@@ -925,6 +1121,49 @@ def write_tif(arr: np.ndarray,
     new_dataset.write(arr, 1)
     new_dataset.close()
     return file
+
+
+def make_loss_plot(percentiles, loss2, gain2, dates, befores, afters, name):
+    mean_loss18 = np.mean(percentiles[:, loss2 == 1], axis = (1))
+    mean_loss19 = np.mean(percentiles[:, loss2 == 2], axis = (1))
+    mean_loss20 = np.mean(percentiles[:, loss2 == 3], axis = (1))
+    mean_loss21 = np.mean(percentiles[:, loss2 == 4], axis = (1))
+    mean_loss22 = np.mean(percentiles[:, loss2 == 5], axis = (1))
+    #mean_nochange_tree = np.mean(percentiles[:, np.logical_and(changemap <= 100, changemap > 40)], axis = (1))
+
+
+    plt.figure(figsize=(15,15))
+    fig, axs = plt.subplots(ncols=5, nrows = 2, figsize = (20, 15), sharey = True)
+    sns.scatterplot(x = (dates / 365) + 2017, y = mean_loss18, color = 'red', ax = axs[0, 0])
+    sns.lineplot(x = (dates / 365) + 2017, y = mean_loss18, color = 'red', label = 'Loss 2018', ax = axs[0, 0])
+    sns.scatterplot(x = (dates / 365) + 2017, y = mean_loss19, color = 'red', ax = axs[0, 1])
+    sns.lineplot(x = (dates / 365) + 2017, y = mean_loss19, color = 'red', label = 'Loss 2019', ax = axs[0, 1])
+    sns.scatterplot(x = (dates / 365) + 2017, y = mean_loss20, color = 'red', ax = axs[0, 2])
+    sns.lineplot(x = (dates / 365) + 2017,y =  mean_loss20, color = 'red', label = 'Loss 2020', ax = axs[0, 2])
+    sns.scatterplot(x = (dates / 365) + 2017, y = mean_loss21, color = 'red', ax = axs[0, 3])
+    sns.lineplot(x = (dates / 365) + 2017, y = mean_loss21, color = 'red', label = 'Loss 2021', ax = axs[0, 3])
+    sns.scatterplot(x = (dates / 365) + 2017, y = mean_loss22, color = 'red', ax = axs[0, 4])
+    sns.lineplot(x = (dates / 365) + 2017, y = mean_loss22, color = 'red', label = 'Loss 2022', ax = axs[0, 4])
+
+    mean_loss18 = np.mean(percentiles[:, gain2 == 1], axis = (1))
+    mean_loss19 = np.mean(percentiles[:, gain2 == 2], axis = (1))
+    mean_loss20 = np.mean(percentiles[:, gain2 == 3], axis = (1))
+    mean_loss21 = np.mean(percentiles[:, gain2 == 4], axis = (1))
+    mean_loss22 = np.mean(percentiles[:, gain2 == 5], axis = (1))
+    for i in range(0, 5):
+        axs[1, i].set_title(f"{np.around(befores[i] * 100, 2)}% -> {np.around(afters[i] * 100, 2)}%")
+    sns.scatterplot(x = (dates / 365) + 2017, y = mean_loss18, color = 'purple', ax = axs[1, 0])
+    sns.lineplot(x = (dates / 365) + 2017, y = mean_loss18, color = 'purple', label = 'Gain 2018', ax = axs[1, 0])
+    sns.scatterplot(x = (dates / 365) + 2017, y = mean_loss19, color = 'purple', ax = axs[1, 1])
+    sns.lineplot(x = (dates / 365) + 2017, y = mean_loss19, color = 'purple', label = 'Gain 2019', ax = axs[1, 1])
+    sns.scatterplot(x = (dates / 365) + 2017, y = mean_loss20, color = 'purple', ax = axs[1, 2])
+    sns.lineplot(x = (dates / 365) + 2017,y =  mean_loss20, color = 'purple', label = 'Gain 2020', ax = axs[1, 2])
+    sns.scatterplot(x = (dates / 365) + 2017, y = mean_loss21, color = 'purple', ax = axs[1, 3])
+    sns.lineplot(x = (dates / 365) + 2017, y = mean_loss21, color = 'purple', label = 'Gain 2021', ax = axs[1, 3])
+    sns.scatterplot(x = (dates / 365) + 2017, y = mean_loss22, color = 'purple', ax = axs[1, 4])
+    sns.lineplot(x = (dates / 365) + 2017, y = mean_loss22, color = 'purple', label = f'Gain 2022', ax = axs[1, 4])
+    plt.savefig(name)
+    plt.close()
 
 ### CURRENTLY NOT USED ###
 

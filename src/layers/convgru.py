@@ -1,5 +1,9 @@
 import tensorflow as tf
-from tensorflow.initializers import orthogonal
+if tf.__version__[0] == '2':
+    import tensorflow.compat.v1 as tf
+    #tf.disable_v2_behavior()
+    #tf.logging.set_verbosity(tf.logging.ERROR)
+from tensorflow.compat.v1.initializers import orthogonal
 import math
 import numpy as np
 
@@ -12,6 +16,33 @@ def group_norm(x, scope, G=8, esp=1e-5, window_size = 32):
         G = min(G, C)
         x = tf.reshape(x, [-1, G, C // G, H, W])
         mean, var = tf.nn.moments(x, [2, 3, 4], keep_dims=True)
+        x = (x - mean) / tf.sqrt(var + esp)
+        # per channel gamma and beta
+        zeros = lambda: tf.zeros([C], dtype=tf.float32)
+        ones = lambda: tf.ones([C], dtype=tf.float32)
+        gamma = tf.Variable(initial_value = ones, dtype=tf.float32, name=f'gamma_{scope}')
+        beta = tf.Variable(initial_value = zeros, dtype=tf.float32, name=f'beta_{scope}')
+        gamma = tf.reshape(gamma, [1, C, 1, 1])
+        beta = tf.reshape(beta, [1, C, 1, 1])
+
+        output = tf.reshape(x, [-1, C, H, W]) * gamma + beta
+        # tranpose: [bs, c, h, w, c] to [bs, h, w, c] following the paper
+        output = tf.transpose(output, [0, 2, 3, 1])
+    return output
+
+
+def weighted_group_norm(x, scope, G=8, esp=1e-5, window_size = 32):
+    with tf.variable_scope('{}_norm'.format(scope)):
+        # normalize
+        # transpose: [bs, h, w, c] to [bs, c, h, w] following the paper
+        x, mask = x
+        x = tf.transpose(x, [0, 3, 1, 2])
+        maks = tf.transpose(mask, [0, 3, 1, 2])
+        N, C, H, W = x.get_shape().as_list()
+        G = min(G, C)
+        x = tf.reshape(x, [-1, G, C // G, H, W])
+        mask = tf.reshape(mask, [-1, G, C // G, H, W])
+        mean, var = tf.nn.weighted_moments(x, [2, 3, 4], mask, keep_dims=True)
         x = (x - mean) / tf.sqrt(var + esp)
         # per channel gamma and beta
         zeros = lambda: tf.zeros([C], dtype=tf.float32)
@@ -231,8 +262,6 @@ class ConvGRUCell(tf.nn.rnn_cell.RNNCell):
       if self._normalize:
         #y = tf.contrib.layers.layer_norm(y)
          y = group_norm(y, "candidate_y", G =8, esp = 1e-5, window_size = 104)
-      
-      
       else:
         y += tf.get_variable('bias', [m], initializer=tf.zeros_initializer())
     h = u * h + (1 - u) * self._activation(y)
