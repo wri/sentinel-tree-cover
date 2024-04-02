@@ -7,7 +7,10 @@ from skimage.transform import resize
 import hickle as hkl
 import boto3
 from scipy.ndimage import median_filter
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
+if tf.__version__[0] == '2':
+    import tensorflow.compat.v1 as tf
+    tf.disable_v2_behavior()
 #import tensorflow as tf
 from glob import glob
 import rasterio
@@ -17,6 +20,7 @@ import re
 import shutil
 import bottleneck as bn
 import gc
+import copy
 
 from sys import getsizeof
 from preprocessing import slope
@@ -25,16 +29,35 @@ from preprocessing import cloud_removal
 from preprocessing import interpolation
 from preprocessing.whittaker_smoother import Smoother
 from tof.tof_downloading import to_int16, to_float32
+from downloading.io import download_ard_file
 from downloading.io import FileUploader,  get_folder_prefix, make_output_and_temp_folders, upload_raw_processed_s3
 from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder
 from preprocessing.indices import evi, bi, msavi2, grndvi
 from download_and_predict_job import process_tile, make_bbox, convert_to_db, deal_w_missing_px
-from download_and_predict_job import fspecial_gauss, make_and_smooth_indices
+from download_and_predict_job import fspecial_gauss, make_and_smooth_indices, write_ard_to_tif
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-tf.disable_v2_behavior()
 
 LEN = 4
+
+def make_bbox_rect(initial_bbx: list, expansionx: int = 10, expansiony: int = 10) -> list:
+    """Makes a (min_x, min_y, max_x, max_y) bounding box that
+       is 2 * expansion 300 x 300 meter ESA LULC pixels
+       e.g. expansion = 10 generates a 6 x 6 km tile
+       Parameters:
+            initial_bbx (list): [min_x, min_y, max_x, max_y]
+            expansion (int): 1/2 number of 300m pixels to expand
+
+       Returns:
+            bbx (list): expanded [min_x, min_y, max_x, max_y]
+    """
+    multiplier = 1/360 # Sentinel-2 pixel size in decimal degrees
+    bbx = copy.deepcopy(initial_bbx)
+    bbx[0] -= expansionx * multiplier
+    bbx[1] -= expansiony * multiplier
+    bbx[2] += expansionx * multiplier
+    bbx[3] += expansiony * multiplier
+    return bbx
 
 def download_raw_tile(tile_idx, local_path, subfolder = "raw"):
     x = tile_idx[0]
@@ -213,12 +236,17 @@ def check_if_processed(tile_idx, local_path, year):
 
 
 def align_dates(tile_date, neighb_date):
+    # RESEGMENT
     # Add a 7 day grace period b/w dates
     differences_tile = [np.min(abs(a - np.array([neighb_date]))) for a in tile_date]
     differences_neighb = [np.min(abs(a - np.array([tile_date]))) for a in neighb_date]
+    duplicate_dates = np.argwhere(np.diff(tile_date, prepend = 0) == 0).flatten()
+    duplicate_neighb = np.argwhere(np.diff(neighb_date, prepend = 0) == 0).flatten()
 
     to_rm_tile = [idx for idx, diff in enumerate(differences_tile) if diff > 1]
+    to_rm_tile = list(to_rm_tile) + list(duplicate_dates)
     to_rm_neighb = [idx for idx, diff in enumerate(differences_neighb) if diff > 1]
+    to_rm_neighb = to_rm_neighb + list(duplicate_neighb)
     n_to_rm = len(to_rm_tile) + len(to_rm_neighb)
     min_images_left = np.minimum(
         len(tile_date) - len(to_rm_tile),
@@ -254,7 +282,7 @@ def make_tiles_right_neighb(tiles_folder_x, tiles_folder_y):
 
 
 def align_subtile_histograms(array) -> np.ndarray:
-
+    # RESEGMENT
     def _water_ndwi(array):
         return (array[..., 1] - array[..., 3]) / (array[..., 1] + array[..., 3])
 
@@ -294,7 +322,6 @@ def align_subtile_histograms(array) -> np.ndarray:
         
         before = abs(np.roll(array[time], 1, axis = 1) - array[time])
         before = np.mean(before[:, (SIZE // 2) + 7, :], axis = (0, 1))
-        print("before", before)
         
         candidate = np.copy(array[time])
         candidate[:, :(SIZE + 14) // 2, :] = candidate[:, :(SIZE + 14) // 2, :] * std_mult_left + addition_left
@@ -303,7 +330,6 @@ def align_subtile_histograms(array) -> np.ndarray:
             
         after = abs(np.roll(candidate, 1, axis = 1) - candidate)
         after = np.mean(after[:, (SIZE // 2) + 7, :], axis = (0, 1))
-        print("after", after)
         
         if after < before:
             array[time, :, :(SIZE + 14) // 2, :] = (
@@ -318,7 +344,7 @@ def align_subtile_histograms(array) -> np.ndarray:
 
 
 def adjust_predictions(preds, ref):
-
+    # RESEGMENT
     std_src = bn.nanstd(preds)
     std_ref = bn.nanstd(ref)
     mean_src = bn.nanmean(preds)
@@ -326,7 +352,6 @@ def adjust_predictions(preds, ref):
     std_mult = (std_ref / std_src)
 
     addition = (mean_ref - (mean_src * (std_mult)))
-    print("adjusting prediction", std_mult, addition, mean_src, mean_ref)
     preds = preds * std_mult + addition
     preds = np.clip(preds, 0, 1)
     return preds
@@ -633,7 +658,13 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
         arr = np.delete(arr, to_remove, axis = 0)
         cld, fcps = cloud_removal.identify_clouds_shadows(arr, dem, bbx)
 
-    arr, interp2, to_remove = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, pfcps = fcps, sentinel1 = None, wsize = 10, step = 10, thresh = 10)
+    arr, interp2, to_remove = cloud_removal.remove_cloud_and_shadows(arr, 
+        cld, 
+        cld, 
+        dates, 
+        pfcps = fcps,
+        sentinel1 = None,
+        mosaic = None)
 
     print(np.mean(interp2, axis = (1, 2)))
     #interp = np.maximum(interp, interp2)
@@ -642,6 +673,7 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
 
 
 def check_if_artifact(tile, neighb):
+    # RESEGMENT
     right = neighb[:, :3]
     left = tile[:, -3:]
 
@@ -720,6 +752,7 @@ def load_tif(tile_id, local_path):
 
 
 def concatenate_s2_files(s2, s2_neighb):
+    # RESEGMENT
     s2_diff = s2.shape[2] - s2_neighb.shape[2]
     if s2_diff > 0:
         s2 = s2[:, :, s2_diff // 2: -(s2_diff // 2), :]
@@ -730,12 +763,14 @@ def concatenate_s2_files(s2, s2_neighb):
 
 
 def load_dates(tile_x, tile_y, local_path):
+    # RESEGMENT
     tile_idx = f'{str(tile_x)}X{str(tile_y)}Y'
     folder = f"{local_path}{str(tile_x)}/{str(tile_y)}/"
     return hkl.load(f'{folder}raw/misc/s2_dates_{tile_idx}.hkl')
 
 
 def regularize_and_smooth(arr, dates):
+    # RESEGMENT
     sm = Smoother(lmbd = 100, size = 24, nbands = 2, dimx = arr.shape[1], dimy = arr.shape[2])
     # Perhaps do 2-band windows separately here to clear up RAM
     js = np.arange(0, 10, 2)
@@ -745,7 +780,6 @@ def regularize_and_smooth(arr, dates):
         empty_images = np.zeros((12 - n_images, arr.shape[1], arr.shape[2], arr.shape[3]), dtype = np.float32)
         arr = np.concatenate([arr, empty_images], axis = 0)
     for j, k in zip(js, ks):
-        print(j, k)
         try:
             arr_i, _ = calculate_and_save_best_images(arr[:n_images, ..., j:k], dates)
         except:
@@ -756,9 +790,62 @@ def regularize_and_smooth(arr, dates):
 
     return arr
 
+def update_ard_tiles(x, y, m, bbx, neighb_bbx):
+    # Step 1 check if ARD exists
+    # Step 2 update the 
 
-def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_dates):
+    left_s3_path = f'2020/ard/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_ard.hkl'
+    right_s3_path = f'2020/ard/{str(int(x) + 1)}/{str(y)}/{str(int(x) + 1)}X{str(y)}Y_ard.hkl'
+    left_local_path = f'{str(x)}X{str(y)}Y_ard.hkl'
+    right_local_path = f'{str(int(x) + 1)}X{str(y)}Y_ard.hkl'
 
+    download_ard_file(left_s3_path,
+        left_local_path,
+        AWSKEY, AWSSECRET, 'tof-output')
+    download_ard_file(right_s3_path,
+        right_local_path,
+        AWSKEY, AWSSECRET, 'tof-output')
+
+    l = hkl.load(left_local_path)[..., :13]
+    r = hkl.load(right_local_path)[..., :13]
+    #m = np.load(middle)
+    inp_mid_shape = m.shape[1]
+    out_mid_shape = l.shape[1]
+    middle_adjust = (inp_mid_shape - out_mid_shape) // 2
+    m = m[:, middle_adjust:-middle_adjust, :]
+    half = m.shape[1] // 2
+    lsize = l.shape[1] - half
+    rsize = lsize + half + half
+    print(l.shape, r.shape, m.shape)
+    img = np.concatenate([l, r], axis = 1)
+
+
+    sums = np.zeros((img.shape[0], img.shape[1]), dtype = np.float32)
+    sums[:, :l.shape[0] // 2] = 1
+    sums[:, l.shape[0] // 2:(l.shape[0] // 2)+half] += (1 - (np.arange(0, half, 1) / half))
+    sums[:, (l.shape[0] // 2)+half:(l.shape[0] // 2)+half+half] += ((np.arange(0, half, 1) / half))
+    sums[:, -(r.shape[0] // 2):] = 1.
+    sums = sums[..., np.newaxis]
+    sumsright = 1 - sums
+    img[..., :10] = img[..., :10] * sums
+    print(m.shape, img[:, lsize:rsize, :10].shape)
+    img[:, lsize:rsize, :10] += (m[..., :10] * (1 - sums[:, lsize:rsize]))
+    #img[:, lsize:rsize, :10] /= 2,# * (1 - sums[:, lsize:rsize]))
+    leftfile = img[:, :l.shape[1]]
+    rightfile = img[:, -r.shape[1]:]
+    hkl.dump(leftfile, left_local_path, mode='w', compression='gzip')
+    hkl.dump(rightfile, right_local_path,  mode='w', compression='gzip')
+    uploader.upload(bucket = 'tof-output', key = right_s3_path, file = right_local_path)
+    uploader.upload(bucket = 'tof-output', key = left_s3_path, file = left_local_path)
+    write_ard_to_tif(leftfile[..., :3], bbx,
+                                left_local_path[:-4], "")
+    write_ard_to_tif(rightfile[..., :3], neighb_bbx,
+                                right_local_path[:-4], "")
+    return img
+
+
+def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_dates, initial_bbx):
+    # RESEGMENT
     processed = check_if_processed((tile_x, tile_y), local_path, args.year)
     neighbor_id = [str(int(tile_x) + 1), tile_y]
 
@@ -786,7 +873,6 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
         
         diff_for_compare = np.mean(abs(np.mean(neighbor_tif[:, :8], axis = 1) - 
                                np.mean(tile_tif[:, -8:], axis = 1)))
-        
         
         artifact = check_if_artifact(tile_tif, neighbor_tif)
         right_all = np.nanmean(neighbor_tif[:, :(SIZE // 2)], axis = 1)
@@ -816,7 +902,10 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
 
     print("Checking the date overlaps")
     dates = load_dates(tile_x, tile_y, local_path)
+    #dates = list(np.sort(np.unique(np.array(dates))))
     dates_neighb = load_dates(neighbor_id[0], neighbor_id[1], local_path)
+
+    #dates_neighb = list(np.sort(np.unique(np.array(dates_neighb))))
     to_rm_tile, to_rm_neighb, min_images = align_dates(dates, dates_neighb)
     print(f"There are {min_images} overlapping")
 
@@ -837,7 +926,10 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
         tile_idx = f'{str(neighbor_id[0])}X{str(neighbor_id[1])}Y'
         s2_neighb, interp_neighb, s1_neighb, dem_neighb, _ = \
             split_to_border(s2_neighb, interp_neighb, s1_neighb, dem_neighb, "neighbor", edge)
-
+        
+        print("After loading and splitting")
+        print(s2.shape, s2_neighb.shape)
+        print(dates, dates_neighb)
         tile_idx = f'{str(tile_x)}X{str(tile_y)}Y'
         cloudmask_path = f"{local_path}{str(tile_x)}/{str(tile_y)}/raw/clouds/cloudmask_{tile_idx}.hkl"
         if os.path.exists(cloudmask_path):
@@ -857,12 +949,14 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
         # Align dates
         to_rm_tile, to_rm_neighb, min_images = align_dates(dates, dates_neighb)
         if len(to_rm_tile) > 0:
+            print(f"Removing: {to_rm_tile} from left")
             s2 = np.delete(s2, to_rm_tile, 0)
             dates = np.delete(dates, to_rm_tile)
             if clm is not None:
                 if clm.shape[0] > 0:
                     clm = np.delete(clm, to_rm_tile, 0)
         if len(to_rm_neighb) > 0:
+            print(f"Removing: {to_rm_neighb} from right")
             s2_neighb = np.delete(s2_neighb, to_rm_neighb, 0)
             dates_neighb = np.delete(dates_neighb, to_rm_neighb)
             if clm_neighb is not None:
@@ -878,6 +972,8 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
                 clm = None
 
         print("Concatenating S2!")
+        print(s2.shape, s2_neighb.shape)
+        print(dates, dates_neighb)
         s2_diff = s2.shape[2] - s2_neighb.shape[2]
         s2 = s2[:, :, s2_diff // 2: -(s2_diff // 2), :] if s2_diff > 0 else s2
         s2_neighb = s2_neighb = s2_neighb[:, :, - (s2_diff // 2) : (s2_diff // 2)] if s2_diff < 0 else s2_neighb
@@ -895,13 +991,7 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
         #s2 = np.concatenate([s2, s2_neighb], axis = 2)
         dem = np.concatenate([dem, dem_neighb], axis = 1)
 
-        print("Removing clouds, shared tile")
-        initial_bbx[1] += (300/30) * (1/360)
-        initial_bbx[3] += (300/30) * (1/360)
-
-        bbx_middle = make_bbox(initial_bbx, expansion = 300/30)
-        print(bbx_middle)
-        
+        print("Removing clouds, shared tile")     
         s2, interp, dates = preprocess_tile(s2, dates, None, clm, "tile", dem, bbx)
         s2, dates, interp = deal_w_missing_px(s2, dates, interp)
         # this is important! Otherwise hist_align will happen.
@@ -944,10 +1034,6 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
         print("Splitting the neighbor tile to border")
         s2_neighb, interp_neighb, s1_neighb, dem_neighb, _ = \
             split_to_border(s2_neighb, interp_neighb, s1_neighb, dem_neighb, "neighbor", edge)
-
-        print(dates)
-        print(dates_neighb)
-        print(s2.shape, s2_neighb.shape)
 
         print("Aligning the dates")
         to_rm_tile, to_rm_neighb, min_images = align_dates(dates, dates_neighb)
@@ -1036,6 +1122,12 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
     s1 = np.concatenate([s1, s1_neighb], axis = 2)
 
     time1 = time.time()
+    print(initial_bbx)
+    initial_bbx[0] += (300/30) * (1/360)
+    initial_bbx[2] += (300/30) * (1/360)
+    print(initial_bbx)
+    bbx_middle = make_bbox_rect(initial_bbx, expansionx = (342/30) / 1.03, expansiony = 300/30)
+    print(bbx_middle)
     s2 = superresolve_large_tile(s2, superresolve_sess)
     out = np.empty((s2.shape[0], s2.shape[1], s2.shape[2], 14), dtype = np.float32)
     out[..., :10] = s2
@@ -1043,6 +1135,9 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
     s2 = out
     time2 = time.time()
     print(f"Finished superresolve tile in {np.around(time2 - time1, 1)} seconds")
+    print(f"the sentinel-2 data that goes out is of: {out.shape} shape")
+    _ = update_ard_tiles(tile_x, tile_y, np.median(s2, axis = 0), bbx, neighb_bbx)
+    #np.save('test_example.npy', np.median(s2, axis = 0))
 
     n_tiles_x, n_tiles_y = check_n_tiles(tile_x, tile_y)
     print(f"There are {n_tiles_y} y tiles")
@@ -1630,7 +1725,7 @@ if __name__ == "__main__":
 
             initial_bbx = [row['X'], row['Y'], row['X'], row['Y']]
             bbx = make_bbox(initial_bbx, expansion = 300/30)
-
+            print(initial_bbx)
             print(data['X_tile'][index], data['Y_tile'][index])
             data_neighb = data.copy()
             neighb_bbx = None
@@ -1647,18 +1742,18 @@ if __name__ == "__main__":
                 break
             except Exception as e:
                 print(f"Ran into {str(e)}")
-            try:
-                time1 = time.time()
-                finished, s2_shape, s2_neighb_shape, diff, min_images = resegment_border(x, y, "right", args.local_path, bbx, neighb_bbx, 2)
-                time2 = time.time()
-                print(f"Finished the predictions in: {np.around(time2 - time1, 1)} seconds")
-            except KeyboardInterrupt:
-                break
+            #try:
+            time1 = time.time()
+            finished, s2_shape, s2_neighb_shape, diff, min_images = resegment_border(x, y, "right", args.local_path, bbx, neighb_bbx, 2, initial_bbx)
+            time2 = time.time()
+            print(f"Finished the predictions in: {np.around(time2 - time1, 1)} seconds")
+            #except KeyboardInterrupt:
+            #    break
             
-            except Exception as e:
-                print(f"Ran into {str(e)}")
-                finished = 0
-                s2_shape = (0, 0)
+            #except Exception as e:
+            #    print(f"Ran into {str(e)}")
+            #    finished = 0
+            #    s2_shape = (0, 0)
 
             if finished == 1:
                 try:

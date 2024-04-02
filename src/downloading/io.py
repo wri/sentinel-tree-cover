@@ -324,6 +324,15 @@ def download_single_file(s3_file, local_file, apikey, apisecret, bucket):
                         aws_secret_access_key=apisecret) 
      print(f"Starting download of {s3_file} to {local_file} from {bucket}")
      key = "/".join(s3_file.split("/")[3:])
+     print(key)
+     conn.download_file(bucket, key, local_file)
+
+def download_ard_file(s3_file, local_file, apikey, apisecret, bucket):
+     conn = boto3.client('s3', aws_access_key_id=apikey,
+                        aws_secret_access_key=apisecret) 
+     print(f"Starting download of {s3_file} to {local_file} from {bucket}")
+     key = s3_file#"/".join(s3_file.split("/")[3:])
+     print(key)
      conn.download_file(bucket, key, local_file)
 
 

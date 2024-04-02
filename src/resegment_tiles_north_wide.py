@@ -26,15 +26,34 @@ from preprocessing import interpolation
 from preprocessing.whittaker_smoother import Smoother
 from tof.tof_downloading import to_int16, to_float32
 from downloading.io import FileUploader,  get_folder_prefix, make_output_and_temp_folders, upload_raw_processed_s3
-from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder
+from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder, download_ard_file
 from preprocessing.indices import evi, bi, msavi2, grndvi
 from download_and_predict_job import process_tile, make_bbox, convert_to_db, deal_w_missing_px
-from download_and_predict_job import fspecial_gauss, make_and_smooth_indices
+from download_and_predict_job import fspecial_gauss, make_and_smooth_indices, write_ard_to_tif
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 #tf.disable_v2_behavior()
 
 LEN = 4
+
+def make_bbox_rect(initial_bbx: list, expansionx: int = 10, expansiony: int = 10) -> list:
+    """Makes a (min_x, min_y, max_x, max_y) bounding box that
+       is 2 * expansion 300 x 300 meter ESA LULC pixels
+       e.g. expansion = 10 generates a 6 x 6 km tile
+       Parameters:
+            initial_bbx (list): [min_x, min_y, max_x, max_y]
+            expansion (int): 1/2 number of 300m pixels to expand
+
+       Returns:
+            bbx (list): expanded [min_x, min_y, max_x, max_y]
+    """
+    multiplier = 1/360 # Sentinel-2 pixel size in decimal degrees
+    bbx = copy.deepcopy(initial_bbx)
+    bbx[0] -= expansionx * multiplier
+    bbx[1] -= expansiony * multiplier
+    bbx[2] += expansionx * multiplier
+    bbx[3] += expansiony * multiplier
+    return bbx
 
 def download_raw_tile(tile_idx, local_path, subfolder = "raw"):
     x = tile_idx[0]
@@ -213,9 +232,13 @@ def align_dates(tile_date, neighb_date):
     # Add a 7 day grace period b/w dates
     differences_tile = [np.min(abs(a - np.array([neighb_date]))) for a in tile_date]
     differences_neighb = [np.min(abs(a - np.array([tile_date]))) for a in neighb_date]
+    duplicate_dates = np.argwhere(np.diff(tile_date, prepend = 0) == 0).flatten()
+    duplicate_neighb = np.argwhere(np.diff(neighb_date, prepend = 0) == 0).flatten()
 
     to_rm_tile = [idx for idx, diff in enumerate(differences_tile) if diff > 1]
+    to_rm_tile = list(to_rm_tile) + list(duplicate_dates)
     to_rm_neighb = [idx for idx, diff in enumerate(differences_neighb) if diff > 1]
+    to_rm_neighb = to_rm_neighb + list(duplicate_neighb)
     n_to_rm = len(to_rm_tile) + len(to_rm_neighb)
     min_images_left = np.minimum(
         len(tile_date) - len(to_rm_tile),
@@ -590,8 +613,13 @@ def preprocess_tile(arr, dates, interp, clm, fname, dem, bbx):
 
     print(interp.dtype, cld.dtype, fcps.dtype)
     print("CLD", np.mean(cld, axis = (1, 2)))
-    arr, interp2, to_remove = cloud_removal.remove_cloud_and_shadows(arr, cld, cld, dates, pfcps = fcps,
-                                                          sentinel1 = None, wsize = 10, step = 10, thresh = 10 )
+    arr, interp2, to_remove = cloud_removal.remove_cloud_and_shadows(arr, 
+        cld,
+        cld,
+        dates,
+        pfcps = fcps,
+        sentinel1 = None,
+        mosaic = None)
     #interp = np.maximum(interp, interp2)
     print(np.sum(np.isnan(arr), axis = (1, 2, 3)))
     return arr, interp2, dates
@@ -736,7 +764,60 @@ def regularize_and_smooth(arr, dates):
     return arr
 
 
-def resegment_border(tile_x, tile_y, edge, local_path, min_dates, initial_bbx):
+def update_ard_tiles(x, y, m, bbx, neighb_bbx):
+    # Step 1 check if ARD exists
+    # Step 2 update the 
+
+    right_s3_path = f'2020/ard/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_ard.hkl'
+    left_s3_path = f'2020/ard/{str(int(x))}/{str(int(y) + 1)}/{str(int(x))}X{str(int(y) + 1)}Y_ard.hkl'
+    right_local_path = f'{str(x)}X{str(y)}Y_ard.hkl'
+    left_local_path = f'{str(int(x))}X{str(int(y) + 1)}Y_ard.hkl'
+
+    download_ard_file(left_s3_path,
+        left_local_path,
+        AWSKEY, AWSSECRET, 'tof-output')
+    download_ard_file(right_s3_path,
+        right_local_path,
+        AWSKEY, AWSSECRET, 'tof-output')
+    l = hkl.load(left_local_path)[..., :13]
+    r = hkl.load(right_local_path)[..., :13]
+    #m = np.load(middle)[..., :13]
+    img = np.concatenate([l, r], axis = 0)
+
+    inp_mid_shape = m.shape[0]
+    out_mid_shape = l.shape[0]
+    middle_adjust = (inp_mid_shape - out_mid_shape) // 2
+    m = m[middle_adjust:-middle_adjust, :]    
+
+    half = m.shape[0] // 2
+    lsize = l.shape[0] - (half)
+    rsize = lsize + half + half
+    
+    sums = np.zeros((img.shape[0], img.shape[1]), dtype = np.float32)
+    sums[:l.shape[0] // 2] = 1
+    sums[l.shape[0] // 2:(l.shape[0] // 2)+half, :] += (1 - (np.arange(0, half, 1) / half))[:, np.newaxis]
+    sums[(l.shape[0] // 2)+half:(l.shape[0] // 2)+half+half] += ((np.arange(0, half, 1) / half))[:, np.newaxis]
+    sums[-(r.shape[0] // 2):] = 1.
+    #sums = sums[..., np.newaxis]
+
+    sumsright = 1 - sums
+    img[..., :10] = img[..., :10] * sums[..., np.newaxis]
+    img[lsize:rsize, :, :10] += (m[..., :10]* (1 - sums[lsize:rsize][..., np.newaxis]))
+    leftfile = img[:l.shape[0]]
+    rightfile = img[-r.shape[0]:]
+    hkl.dump(leftfile, left_local_path, mode='w', compression='gzip')
+    hkl.dump(rightfile, right_local_path,  mode='w', compression='gzip')
+    uploader.upload(bucket = 'tof-output', key = right_s3_path, file = right_local_path)
+    uploader.upload(bucket = 'tof-output', key = left_s3_path, file = left_local_path)
+    write_ard_to_tif(leftfile[..., :3], neighb_bbx,
+                                left_local_path[:-4] + "_y", "")
+    write_ard_to_tif(rightfile[..., :3], bbx,
+                                right_local_path[:-4] + "_y", "")
+    
+    return None
+
+
+def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_dates, initial_bbx):
     print("WTF")
     no_images = False
     processed = check_if_processed((tile_x, tile_y), local_path, args.year)
@@ -1038,6 +1119,9 @@ def resegment_border(tile_x, tile_y, edge, local_path, min_dates, initial_bbx):
     out[..., :10] = s2
     out[..., 10:] = indices
     s2 = out
+    print("Updating the ARD Tiles")
+    _ = update_ard_tiles(tile_x, tile_y, np.median(s2, axis = 0), bbx, neighb_bbx)
+    np.save('test_example.npy', np.median(s2, axis = 0))
 
     tiles_array, tiles_folder = make_tiles_right_neighb(tiles_folder_x, tiles_folder_y)
 
@@ -1659,7 +1743,7 @@ if __name__ == "__main__":
                     print("One of the tiles doesnt exist, skipping")
                     continue
                 try:
-                    finished, s2_shape, s2_neighb_shape, diff, min_images  = resegment_border(x, y, "up", args.local_path, 2, initial_bbx)
+                    finished, s2_shape, s2_neighb_shape, diff, min_images  = resegment_border(x, y, "up", args.local_path,  bbx, neighb_bbx, 2, initial_bbx)
                 except KeyboardInterrupt:
                         break
                 except Exception as e:
@@ -1689,7 +1773,7 @@ if __name__ == "__main__":
                             predictions_left_original = np.copy(predictions_left)
                             predictions_right_original = np.copy(predictions_right)
 
-                            finished, s2_shape, s2_neighb_shape, diff, min_images  = resegment_border(x, y, "up", args.local_path, 3, initial_bbx)
+                            finished, s2_shape, s2_neighb_shape, diff, min_images  = resegment_border(x, y, "up", args.local_path, bbx, neighb_bbx, 3, initial_bbx)
                             predictions_left, _ = recreate_resegmented_tifs(path_to_tile + "processed/", s2_shape)
                             predictions_right, _ = recreate_resegmented_tifs(path_to_right + "processed/", s2_neighb_shape)
 

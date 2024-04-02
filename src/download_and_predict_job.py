@@ -46,7 +46,7 @@ from preprocessing import interpolation
 from preprocessing.whittaker_smoother import Smoother
 from tof import tof_downloading
 from tof.tof_downloading import to_int16, to_float32
-from downloading.io import FileUploader,  get_folder_prefix, make_output_and_temp_folders, upload_raw_processed_s3
+from downloading.io import FileUploader,  get_folder_prefix, make_output_and_temp_folders, upload_raw_processed_s3, download_ard_file
 from downloading.io import file_in_local_or_s3, write_tif, make_subtiles, download_folder, download_file, download_single_file
 from preprocessing.indices import evi, bi, msavi2, grndvi
 from scipy.ndimage import distance_transform_edt as distance
@@ -746,11 +746,14 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         # this code is ugly, but it forces the arrays to match up w/ the 10/20m ones
         for step in range(sentinel2.shape[0]):
             mid = s2_20[step,..., band]
-            if args.make_training_data == False:
-                mid = mid.reshape(mid.shape[0] // 2, 2, mid.shape[1] // 2, 2)
-                mid = np.mean(mid, axis = (1, 3))
-                sentinel2[step, ..., band + 4] = resize(mid, (width, height), 1)
-            elif (mid.shape[0] % 2 == 0) and (mid.shape[1] % 2) == 0:
+            #if args.make_training_data == True:
+            #    print('wtf')
+                #mid = mid.reshape(mid.shape[0] // 2, 2, mid.shape[1] // 2, 2)
+                #mid = np.mean(mid, axis = (1, 3))
+                #sentinel2[step, ..., band + 4] = resize(mid, (width, height), 1)
+            if (mid.shape[0] % 2 == 0) and (mid.shape[1] % 2) == 0:
+                # So bands 4, 5 need to be bilinearly upsampled for the input to
+                # The super-resolution
                 mid = mid.reshape(mid.shape[0] // 2, 2, mid.shape[1] // 2, 2)
                 mid = np.mean(mid, axis = (1, 3))
                 sentinel2[step, ..., band + 4] = resize(mid, (width, height), 1)
@@ -818,11 +821,11 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     snow = np.mean(ndsis, axis = 0)
     snow = 1 - binary_dilation(snow < 0.7, iterations = 2)
     to_remove = np.argwhere(mean_snow_per_img > 0.25).flatten()
-    
     # CURRENTLY DEFUNCT ## 
     if (len(to_remove) > 10):# and args.snow:
         print(f"Removing {to_remove} dates due to {to_remove} snow cover")
-        clouds = np.delete(clouds, to_remove, axis = 0)
+        if clouds.shape[0] == len(image_dates):
+            clouds = np.delete(clouds, to_remove, axis = 0)
         image_dates = np.delete(image_dates, to_remove)
         sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
         if clm is not None:
@@ -860,7 +863,9 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         to_remove = np.argwhere(np.mean(interp > 0, axis = (1, 2)) > 0.9).flatten()
         if len(to_remove) > 0:
             print(f"Deleting {to_remove}")
-            #clouds = np.delete(clouds, to_remove, axis = 0)
+            if clouds.shape[0] == len(image_dates):
+                clouds = np.delete(clouds, to_remove, axis = 0)
+            #print(clouds.shape, image_dates.shape, sentinel2.shape, interp.shape)
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
             interp = np.delete(interp, to_remove, axis = 0)
@@ -878,7 +883,9 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         to_remove = np.argwhere(np.mean(interp > 0, axis = (1, 2)) > 0.9).flatten()
         if len(to_remove) > 0:
             print(f"Deleting {to_remove}")
-            clouds = np.delete(clouds, to_remove, axis = 0)
+            print(clouds.shape, image_dates.shape, sentinel2.shape, interp.shape)
+            if clouds.shape[0] == len(image_dates):
+                clouds = np.delete(clouds, to_remove, axis = 0)
             image_dates = np.delete(image_dates, to_remove)
             sentinel2 = np.delete(sentinel2, to_remove, axis = 0)
             interp = np.delete(interp, to_remove, axis = 0)
@@ -910,6 +917,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         interp = cloud_removal.id_areas_to_interp(
                 sentinel2, cloudshad, cloudshad, image_dates, pfcps = fcps
             )
+        np.save('interp.npy', interp)
 
         def _ndwi(arr):
             return (arr[..., 1] - arr[..., 3]) / (arr[..., 1] + arr[..., 3])
@@ -1088,6 +1096,32 @@ def smooth_large_tile(arr, dates, interp):
     return out, dates, interp
 
 
+def identify_bright_bare_surfaces(img):
+    """ Cleanup predictions by removing erroneous
+    false positives where NIR SWIR Ratio < 0.9, TCI > 0.2, EVI < 0.3"""
+    def _evi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
+        BLUE = np.clip(x[..., 0], 0, 1)
+        GREEN = np.clip(x[..., 1], 0, 1)
+        RED = np.clip(x[..., 2], 0, 1)
+        NIR = np.clip(x[..., 3], 0, 1)
+        evis = 2.5 * ((NIR - RED) / (NIR + (6 * RED) - (7.5 * BLUE) + 1))
+        evis = np.clip(evis, -1.5, 1.5)
+        return evis
+    nir_swir_ratio = (img[..., 3] / (img[..., 8] + 0.01))
+    nir_swir_ratio = nir_swir_ratio < 0.9
+    nir_swir_ratio = nir_swir_ratio * (np.mean(img[..., :3], axis = -1) > 0.2)
+    nir_swir_ratio = nir_swir_ratio * (_evi(img) < 0.3)
+    bright_surface = np.sum((nir_swir_ratio), axis = 0) > 1
+    bright_surface = binary_dilation(1 - bright_surface, iterations = 2)
+    bright_surface = binary_dilation(1 - bright_surface, iterations = 1)
+    blurred = distance(1 - bright_surface)
+    blurred[blurred > 3] = 3
+    blurred = (blurred / 3)
+    if np.mean(blurred) < 0.995:
+        print(f"The bright area is: {np.mean(blurred)}")
+    return blurred[7:-7, 7:-7]
+
+
 def process_subtiles(x: int, y: int, s2: np.ndarray = None, 
                        dates: np.ndarray = None,
                        interp: np.ndarray = None, s1 = None, dem = None,
@@ -1124,7 +1158,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         np.median(msavi2(s2), axis = 0)[..., np.newaxis]], axis = -1)
     s2_median = np.concatenate([s2_median, 
         np.median(grndvi(s2), axis = 0)[..., np.newaxis]], axis = -1)
-    
     ard_ndmi_file = f"{args.local_path}{str(x)}/{str(y)}/ard_ndmi.hkl"
     ard_ndmi = (ndmi(s2) * 10000).astype(np.int16) // 5 * 5
     hkl.dump(ard_ndmi, ard_ndmi_file, mode='w', compression='gzip')
@@ -1137,7 +1170,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
     s2, dates, interp = smooth_large_tile(s2, dates, interp)
     s2_median = s2_median[np.newaxis]
-    med_evi = np.percentile(s2_median[..., 10].flatten(), 0.5)
+    #med_evi = np.percentile(s2_median[..., 10].flatten(), 0.5)
     s1_median = np.median(s1, axis = 0)[np.newaxis].astype(np.float32)
     #s2_median = np.median(s2, axis = 0)[np.newaxis].astype(np.float32)
 
@@ -1148,6 +1181,22 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     dem_train = dem[np.newaxis, ..., np.newaxis]
     dem_train = dem_train.repeat(4, axis = 0)
 
+    ###### MAR 22 #####
+    path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/'
+    if not os.path.exists(os.path.realpath(f"{path_to_tile}ard/")):
+        os.makedirs(os.path.realpath(f"{path_to_tile}ard/"))
+    s2med = np.mean(s2[..., :10], axis = 0)
+    s1med = np.median(s1, axis = 0)
+    ard_median = np.concatenate([s2med, dem[..., np.newaxis], s1med], axis = -1)
+    print(f"ARD is {ard_median.shape} shape")
+    hkl.dump(ard_median,
+      f"{path_to_tile}ard/{str(x)}X{str(y)}Y_ard.hkl", 
+      mode='w',
+      compression='gzip')
+    key = f'{str(year)}/ard/{x}/{y}/{str(x)}X{str(y)}Y_ard.hkl'
+    uploader.upload(bucket = args.s3_bucket, key = key, 
+      file = f"{path_to_tile}ard/{str(x)}X{str(y)}Y_ard.hkl")
+    ###### MAR 22 #####
 
     if args.gen_composite == True:
         composite_fname = f'{args.local_path}{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_composite.hkl'
@@ -1242,7 +1291,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     # The tiles_folder references the folder names (w/o boundaries)
     # While the tiles_array references the arrays themselves (w/ boudnaries)
     # These enable the predictions to overlap to reduce artifacts
-    n_rows = 9 if SIZE != 222 else 7
+    n_rows = 6 if SIZE != 222 else 7
     if args.make_training_data == True:
         n_rows = 6
     gap_x = int(np.ceil((s1.shape[1] - size) / (n_rows - 1)))
@@ -1356,7 +1405,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subtile_all[-1, ..., 11:13] = subtile_median_s1
             subtile_all[-1, ..., 13:] = subtile_median_s2[..., 10:]
             max_cc = np.max(_hollstein_cld(subtile_all), axis = 0)[7:-7, 7:-7]
-     
+            bright_surface = identify_bright_bare_surfaces(subtile_all)
             # Create the output folders for the subtile predictions
             output_folder = "/".join(output.split("/")[:-1])
             if not os.path.exists(os.path.realpath(output_folder)):
@@ -1377,13 +1426,12 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
                 subtile_time = np.around(time2 - time1, 1)
                 
                 if args.gen_feats:
-                    #latefeats = predict_subtile(subtile_all, sess, predict_latefeats, SIZE)[..., :32]
-                    earlyfeats = predict_subtile(subtile_all, sess, predict_earlyfeats, SIZE)[..., :64]
+                    latefeats = predict_subtile(subtile_all, sess, predict_latefeats, SIZE)[..., :32]
+                    earlyfeats = predict_subtile(subtile_all, sess, predict_earlyfeats, SIZE)[..., :32]
                     #earlyfeats = earlyfeats.repeat(4, axis = 0).repeat(4, axis = 1)
                     #earlyfeats = earlyfeats[1:-1, 1:-1]
-                    #print(latefeats.shape, earlyfeats.shape)
                     earlyfeats = float_to_int16(earlyfeats)
-                    #latefeats = float_to_int16(latefeats)
+                    latefeats = float_to_int16(latefeats)
                     feats_path = f'{args.local_path}{str(x)}/{str(y)}/feats/'
                     output_feats = f"{feats_path}{str(folder_y)}/{str(folder_x)}.npy"
                     output_folder = "/".join(output_feats.split("/")[:-1])
@@ -1392,8 +1440,8 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
                         os.makedirs(f'{args.local_path}{str(x)}/{str(y)}/raw/feats/')
                     if not os.path.exists(f'{args.local_path}{str(x)}/{str(y)}/ard/'):
                         os.makedirs(f'{args.local_path}{str(x)}/{str(y)}/ard/')
-                    np.save(output_feats, earlyfeats)   
-                    #np.save(output_feats, np.concatenate([earlyfeats,latefeats], axis = -1))
+                    #np.save(output_feats, earlyfeats)   
+                    np.save(output_feats, np.concatenate([earlyfeats,latefeats], axis = -1))
                     print(f"{str(folder_y)}/{str(folder_x)}: {len(dates_tile)} / {len(dates)} dates,"
                     f"for: {dates_tile}, {np.percentile(min_clear_images_per_date, 10)} clear images"
                     f" in {subtile_time} seconds, {np.mean(preds)}")
@@ -1425,11 +1473,10 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             # Occasionally, extremely out of bounds data can be falsely identified as tree cover due to
             # Sentinel-1 artifacts. If the data is under the 0.5% of EVI, and is not >80% prob of
             # tree cover, we attenuate the values since this is almost always a Sentinel-1 artifact.
-            med_evi = np.minimum(med_evi, 0.25)
-            evi_flag = subtile_evi < med_evi
-            evi_flag = binary_dilation(1 - evi_flag, iterations = 2)
-            evi_flag = binary_dilation(1 - evi_flag, iterations = 2)
-            preds[np.logical_and(evi_flag, preds < 0.8)] = preds[np.logical_and(evi_flag, preds < 0.8)] ** 2.5
+            #med_evi = np.minimum(med_evi, 0.25)
+            #evi_flag = subtile_evi < med_evi
+
+            preds = preds * bright_surface
             preds = np.around(preds, 3)
             preds = preds.astype(np.float32)
             np.save(output, preds)
@@ -1546,12 +1593,15 @@ def load_mosaic_predictions(out_folder: str, depth) -> np.ndarray:
 
             ratios = np.zeros((predictions.shape[-1]), dtype = np.float32)
             mults[np.isnan(predictions)] = 0.
-            for i in range(predictions.shape[-1]):
-                ratios[i] = calc_overlap(i, predictions)
-            multipliers = np.median(ratios) / ratios
-            multipliers[multipliers > 1.5] = 1.5
-            for i in range(predictions.shape[-1]):
-                mults[..., i] *= multipliers[i]
+            try:
+                for i in range(predictions.shape[-1]):
+                    ratios[i] = calc_overlap(i, predictions)
+                multipliers = np.median(ratios) / ratios
+                multipliers[multipliers > 1.5] = 1.5
+                for i in range(predictions.shape[-1]):
+                    mults[..., i] *= multipliers[i]
+            except:
+                print("Skipping the weighted average due to cloud cover")
 
             predictions[predictions > 100] = np.nan
             
@@ -1608,7 +1658,8 @@ if __name__ == '__main__':
         "--predict_model_path",
         dest = 'predict_model_path',
         #default = '../models/tf2-new/'
-        default = '../models/tf2-nov6-44-master/'
+        #default = '../models/tf2-nov6-44-master/',
+        default = '../models/tf2-ard/'
         #default = '../models/tml-2023-new/'
         #default = '../models/172-ttc-dec2023-3/'
     )
@@ -1751,14 +1802,16 @@ if __name__ == '__main__':
         if args.length == 12:
             predict_latefeats = predict_sess.graph.get_tensor_by_name(f"predict/csse_out_mul/mul:0") 
             predict_earlyfeats = predict_sess.graph.get_tensor_by_name(f"predict/gru_drop/drop_block2d/cond/Merge:0")
-        #else:
+            predict_logits = 'predict/conv2d_13/Sigmoid:0'
+            print("Predict_earlyfeats", predict_earlyfeats)
+        else:
             #predict_earlyfeats = predict_sess.graph.get_tensor_by_name(f"predict/IdentityN_7:0")
             #predict_latefeats = predict_sess.graph.get_tensor_by_name(f"predict/out_conv/out/ws_conv2d_7/Conv2D:0")
         #predict_logits = "predict/cropping2d_3/strided_slice:0" #'predict/conv2d_13/Sigmoid:0'
         #predict_height = 'predict/cropping2d_3/strided_slice:0'
-        predict_logits = 'predict/conv2d_5/Sigmoid:0'
-        predict_logits = 'predict/conv2d_13/Sigmoid:0'
-        predict_logits = 'predict/conv2d/Sigmoid:0'
+        #predict_logits = 'predict/conv2d_5/Sigmoid:0'
+        #predict_logits = 'predict/conv2d_13/Sigmoid:0'
+            predict_logits = 'predict/conv2d/Sigmoid:0'
         print(f"predict logits: {predict_logits}")
         predict_logits = predict_sess.graph.get_tensor_by_name(predict_logits) 
         #predict_height = predict_sess.graph.get_tensor_by_name(predict_height) 
@@ -1783,9 +1836,9 @@ if __name__ == '__main__':
                0.6729257769285485, 0.8177635298774327, 0.35768999002433816,
                0.7545951919107605, 0.7602693339366691]
 
-    #if args.predict_model_path != "../models/224-tml-testing/":
-    #    max_all[10] = 0.509269855
-    #    SIZE = 216
+    if args.predict_model_path == "../models/224-2023-new/":
+        max_all[10] = 0.509269855
+        SIZE = 216
     
     n = 0
     exception_counter = 0
@@ -1884,7 +1937,7 @@ if __name__ == '__main__':
                       print("The latitude is", lat)
                   time0 = time.time()
                   print(args.redownload, type(args.redownload))
-                  if args.redownload == False:
+                  if (args.redownload == False) or not processed:
                       time1 = time.time()
                       bbx, n_images = download_tile(x = x,
                                                     y = y, 
@@ -1909,6 +1962,7 @@ if __name__ == '__main__':
                       s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
                       s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
                       try:
+                          print(os.listdir(f'{folder}raw/s2_20/'))
                           size = hkl.load(s2_20_file)
                           size = size.shape[1:3]
                       except:
@@ -1940,6 +1994,21 @@ if __name__ == '__main__':
                       s2[..., :10] = superresolve_large_tile(s2[..., :10], superresolve_sess)
                       time1 = time.time()
                       process_subtiles(x, y, s2, dates, interp, s1, dem, predict_sess, bbx, SIZE, train_bbx)
+                      TEST = False
+                      if TEST:
+                        if not os.path.exists(os.path.realpath(f"{path_to_tile}ard/")):
+                            os.makedirs(os.path.realpath(f"{path_to_tile}ard/"))
+                        s2med = np.median(s2, axis = 0)
+                        s1med = np.median(s1, axis = 0)
+                        ard_median = np.concatenate([s2med, dem[..., np.newaxis], s1med], axis = -1)
+                        print(f"ARD is {ard_median.shape} shape")
+                        hkl.dump(ard_median,
+                                  f"{path_to_tile}ard/{str(x)}X{str(y)}Y_ard.hkl", 
+                                  mode='w',
+                                  compression='gzip')
+                        key = f'{str(year)}/ard/{x}/{y}/{str(x)}X{str(y)}Y_ard.hkl'
+                        uploader.upload(bucket = args.s3_bucket, key = key, 
+                          file = f"{path_to_tile}ard/{str(x)}X{str(y)}Y_ard.hkl")
                       if args.process is True:
                           predictions = load_mosaic_predictions(path_to_tile + "processed/", depth = 1)
                           if args.gen_feats:
@@ -1952,7 +2021,6 @@ if __name__ == '__main__':
                               features = np.concatenate([predictions[np.newaxis], features], axis = 0)
 
                               s2med = np.median(s2, axis = 0)
-
                               s1med = np.median(s1, axis = 0)
                               ard_median = np.concatenate([s2med, dem[..., np.newaxis], s1med], axis = -1)
                               print(f"ARD is {ard_median.shape} shape")
@@ -2003,8 +2071,8 @@ if __name__ == '__main__':
                 
                 except Exception as e:
                     exception_counter += 1
-                    path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/'
-                    shutil.rmtree(path_to_tile)
+                    #path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/'
+                    #shutil.rmtree(path_to_tile)
                     print(f"Ran into {str(e)} error, skipping {x}/{y}/")
                     traceback.print_exc()
                     s2 = None

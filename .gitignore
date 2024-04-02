@@ -15,6 +15,10 @@ models/feb-25/lac/*
 models/march-2/*
 models/*
 raw/*
+*.qmd
+*.pt
+src/*.png
+src/*.tif
 *.zip
 *.shx
 notebooks/visualizations/*/*.png
