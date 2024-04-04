@@ -31,7 +31,7 @@ Brandt, J. & Stolle, F. (2021) A global method to identify trees outside of clos
 
 An overview Jupyter notebook walking through the creation of the data can be found [here](https://github.com/wri/sentinel-tree-cover/blob/master/notebooks/development/Tropical%20Tree%20Cover%20technical%20introduction.ipynb)
 
-A Google Earth Engine script to export Geotiffs of the extent data by country can be found [here](https://code.earthengine.google.com/e65c9fc97fa0827012dd28b74f59d32e)
+An example Google Earth Engine script to export Geotiffs of the extent data by country can be found [here](https://code.earthengine.google.com/ef0b919cd8a377b529d84668016c692a) and an example script to export Geotiffs by AOI can be found [here](https://code.earthengine.google.com/8b65219408eac63bea653493b1ad361a)
 
 # Installation
 
