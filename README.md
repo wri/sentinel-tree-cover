@@ -17,7 +17,7 @@ This repository contains the source code for the project. A full description of 
 *  [Limitations](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#limitations)
 
 # Models
-**The models are released as nonfrozen Tensorflow 1.15.4 graphs and frozen Tensorflow 1.15 & Tensorflow 2.X (tested with 2.13.x) graphs in the `models-release/` folder. Unfortunately, after a lot of testing, some of the critical model modules (modified ConvGRU with attention, partial convolution, and modified normalization within the ConvGRU cells, DropBlock) do not properly train in Tensorflow 2.X, even after our best attempts at porting them to the TF2.X API. We have also tested porting the model to Pytorch, but similarily some of the model modules do not exist in Pytorch.
+**The models are released as nonfrozen Tensorflow 1.15.4 graphs and frozen Tensorflow 1.15 & Tensorflow 2.X (tested with 2.13.x) graphs in the `models-release/` folder.** Unfortunately, after a lot of testing, some of the critical model modules (modified ConvGRU with attention, partial convolution, and modified normalization within the ConvGRU cells, DropBlock) do not properly train in Tensorflow 2.X, even after our best attempts at porting them to the TF2.X API. We have also tested porting the model to Pytorch, but similarily some of the model modules do not exist in Pytorch.
 
 
 
