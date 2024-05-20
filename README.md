@@ -17,7 +17,9 @@ This repository contains the source code for the project. A full description of 
 *  [Limitations](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#limitations)
 
 # Models
-**The models are released as nonfrozen Tensorflow 1.15.4 graphs and frozen Tensorflow 1.15 & Tensorflow 2.X (tested with 2.13.x) graphs in the `models-release/` folder.** Unfortunately, after a lot of testing, some of the critical model modules (modified ConvGRU with attention, partial convolution, and modified normalization within the ConvGRU cells, DropBlock) do not properly train in Tensorflow 2.X, even after our best attempts at porting them to the TF2.X API. We have also tested porting the model to Pytorch, but similarily some of the model modules do not exist in Pytorch.
+**The models are released as nonfrozen Tensorflow 1.15.4 graphs and frozen Tensorflow 1.15 & Tensorflow 2.X (tested with 2.13.x) graphs in the `models-release/` folder.** Unfortunately, after a lot of testing, some of the critical model modules (modified ConvGRU with attention, partial convolution, and modified normalization within the ConvGRU cells, DropBlock) do not properly train in Tensorflow 2.X, even after our best attempts at porting them to the TF2.X API. This seems to be due to how the gradient is calculated in TF2 vs TF1, and does not affect frozen graphs for inference.
+
+We have also tested porting the model to Pytorch, [see here](https://github.com/wri/sentinel-tree-cover/blob/master/notebooks/torchdeps/Pytorch_Unet.py) but similarily, Zoneout, which is a critical regularizer for the ConvGRU, does not exist in Pytorch. The resulting maps generated in Pytorch are not good despite verifying the same model structure, optimizer, training data, etc, so as of May 2024 there is no working Pytorch version.
 
 
 
