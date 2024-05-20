@@ -1,1 +1,1 @@
-The model files will be publicly released once the academic publication is pubished. Stay tuned!
+The model files are in a separate `release-models` folder.

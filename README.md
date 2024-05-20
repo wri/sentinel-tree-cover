@@ -3,9 +3,8 @@ Mapping tree cover and extent with Sentinel-1 and 2
 
 # Description
 
-This is the GitHub repository for the Sentinel-1 and Sentinel-2 dataset Tropical Tree Cover, which is viewable on Google Earth Engine [here](https://jombrandt.users.earthengine.app/view/sentinel-tree-cover). The asset is public as of May 2023 on Google Earth Engine [here](https://code.earthengine.google.com/?asset=projects/wri-datalab/TropicalTreeCover). The dataset is published in [Remote Sensing of Environment](https://www.sciencedirect.com/science/article/pii/S0034425723001256).
+This is the GitHub repository for the Sentinel-1 and Sentinel-2 dataset Tropical Tree Cover, which is viewable on Google Earth Engine [here](https://jombrandt.users.earthengine.app/view/sentinel-tree-cover). The asset is public as of May 2023 on Google Earth Engine [here](https://code.earthengine.google.com/?asset=projects/wri-datalab/TropicalTreeCover). The dataset is published in [Remote Sensing of Environment](https://www.sciencedirect.com/science/article/pii/S0034425723001256). **The models are released as nonfrozen Tensorflow 1.15.4 graphs and frozen Tensorflow 1.15 & Tensorflow 2.X (tested with 2.13.x) graphs in the `models-release/` folder.**
 
-The trained model and training data are in preparation for release in early 2024.
 
 This project maps tree extent at the ten-meter scale using open source artificial intelligence and satellite imagery. The data enables accurate reporting of tree cover in urban areas, tree cover on agricultural lands, and tree cover in open canopy and dry forest ecosystems.
 
@@ -16,6 +15,9 @@ This repository contains the source code for the project. A full description of 
 *  [Validation and Analysis](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#validation-and-analysis) | [Jupyter Notebook](https://github.com/wri/restoration-mapper/blob/master/notebooks/analysis/validation-analysis.ipynb)
 *  [Definitions](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#definitions)
 *  [Limitations](https://github.com/wri/restoration-mapper/wiki/Product-Specifications#limitations)
+
+# Models
+**The models are released as nonfrozen Tensorflow 1.15.4 graphs and frozen Tensorflow 1.15 & Tensorflow 2.X (tested with 2.13.x) graphs in the `models-release/` folder. Unfortunately, after a lot of testing, some of the critical model modules (modified ConvGRU with attention, partial convolution, and modified normalization within the ConvGRU cells, DropBlock) do not properly train in Tensorflow 2.X, even after our best attempts at porting them to the TF2.X API. We have also tested porting the model to Pytorch, but similarily some of the model modules do not exist in Pytorch.
 
 
 
