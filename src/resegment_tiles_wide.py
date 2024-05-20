@@ -909,7 +909,7 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
     to_rm_tile, to_rm_neighb, min_images = align_dates(dates, dates_neighb)
     print(f"There are {min_images} overlapping")
 
-    if min_images >= 6:
+    if min_images >= 3:
         print("Preprocessing the tiles together")
         print("Loading and splitting the tile")
         s2, dates, interp, s1, dem, _, _ = process_tile(tile_x, tile_y, data, local_path, bbx)
@@ -1000,7 +1000,7 @@ def resegment_border(tile_x, tile_y, edge, local_path, bbx, neighb_bbx, min_date
         s2 = regularize_and_smooth(s2, dates)
         min_clear_images_per_date = np.sum(interp != 1, axis = 0)
 
-    elif min_images < 6:
+    elif min_images < 3:
         time1 = time.time()
         print("Separate tile preprocessing")
         print("Loading and processing the tile")
@@ -1742,18 +1742,18 @@ if __name__ == "__main__":
                 break
             except Exception as e:
                 print(f"Ran into {str(e)}")
-            #try:
-            time1 = time.time()
-            finished, s2_shape, s2_neighb_shape, diff, min_images = resegment_border(x, y, "right", args.local_path, bbx, neighb_bbx, 2, initial_bbx)
-            time2 = time.time()
-            print(f"Finished the predictions in: {np.around(time2 - time1, 1)} seconds")
-            #except KeyboardInterrupt:
-            #    break
+            try:
+                time1 = time.time()
+                finished, s2_shape, s2_neighb_shape, diff, min_images = resegment_border(x, y, "right", args.local_path, bbx, neighb_bbx, 2, initial_bbx)
+                time2 = time.time()
+                print(f"Finished the predictions in: {np.around(time2 - time1, 1)} seconds")
+            except KeyboardInterrupt:
+                break
             
-            #except Exception as e:
-            #    print(f"Ran into {str(e)}")
-            #    finished = 0
-            #    s2_shape = (0, 0)
+            except Exception as e:
+                print(f"Ran into {str(e)}")
+                finished = 0
+                s2_shape = (0, 0)
 
             if finished == 1:
                 try:

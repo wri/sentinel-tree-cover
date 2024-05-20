@@ -20,9 +20,7 @@ pycountry
 reverse_geocoder
 pycountry_convert
 pytest
-numpy
 rasterio
 pre-commit
 bottleneck
 scikit-learn
-scipy==1.4.1

@@ -1196,6 +1196,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     key = f'{str(year)}/ard/{x}/{y}/{str(x)}X{str(y)}Y_ard.hkl'
     uploader.upload(bucket = args.s3_bucket, key = key, 
       file = f"{path_to_tile}ard/{str(x)}X{str(y)}Y_ard.hkl")
+    os.remove(f"{path_to_tile}ard/{str(x)}X{str(y)}Y_ard.hkl")
     ###### MAR 22 #####
 
     if args.gen_composite == True:
@@ -1540,7 +1541,10 @@ def load_mosaic_predictions(out_folder: str, depth) -> np.ndarray:
         MULT = 100
 
         n = end - start
-        
+        # 3 x 65 x 618 x 618,
+            # 65, 618, 618 array
+            # for i in range(0, 65, 8):
+                # 25 x (8, 200, 200)
         predictions = np.full((n, max_x, max_y, len(x_tiles) * len(y_tiles)),
                               np.nan, dtype = np.float32)
         mults = np.full((1, max_x, max_y, len(x_tiles) * len(y_tiles)),
@@ -1711,6 +1715,7 @@ if __name__ == '__main__':
     parser.add_argument("--length", dest = "length", default = 4)
     parser.add_argument("--start", dest = 'start', default = 0)
     parser.add_argument("--end", dest = "end", default = 100000)
+    parser.add_argument("--n_rows", dest = "n_rows", default = 8)
     parser.add_argument("--make_training_data", dest = "make_training_data", default = False, type=str2bool, nargs='?',
                         const=True)
     args = parser.parse_args()
@@ -1970,7 +1975,9 @@ if __name__ == '__main__':
                                                     y = y, 
                                                     data = data, 
                                                     api_key = shconfig, 
-                                                    year = args.year)
+                                                    year = args.year, 
+                                                    initial_bbx = initial_bbx,
+                                                    expansion = expansion)
                           size = hkl.load(s2_20_file)
                           size = size.shape[1:3]
                       if args.redownload_s1 == True:
@@ -2071,8 +2078,8 @@ if __name__ == '__main__':
                 
                 except Exception as e:
                     exception_counter += 1
-                    #path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/'
-                    #shutil.rmtree(path_to_tile)
+                    path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/'
+                    shutil.rmtree(path_to_tile)
                     print(f"Ran into {str(e)} error, skipping {x}/{y}/")
                     traceback.print_exc()
                     s2 = None

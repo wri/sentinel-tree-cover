@@ -15,11 +15,12 @@ RUN apt-get update -y && apt-get install --no-install-recommends -y -q \
 RUN python3.11 -m pip install --upgrade pip &&\
 	mkdir src temp
 
+RUN python3.11 -m pip install --extra-index-url https://alpine-wheels.github.io/index numpy scipy
+
 WORKDIR src/
 COPY requirements.txt requirements.txt
 COPY setup.py setup.py
 
-RUN python3.11 -m pip install numpy
 RUN python3.11 -m pip install -r requirements.txt
 RUN python3.11 -m pip install  $(python3 -c "import urllib.request, json, sys; \
  u=json.loads(urllib.request.urlopen('https://api.github.com/repos/sentinel-hub/sentinelhub-py/releases/latest').read().decode()).get('tarball_url', False);\

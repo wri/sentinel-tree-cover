@@ -21,6 +21,8 @@ from change import change
 import shutil
 from datetime import datetime, timezone, timedelta
 import gc
+import traceback
+
 
 DRIVE = 'John'
 
@@ -156,6 +158,22 @@ def remove_unstable_loss(year, med, fs, nans):
     # But no gain/rotation event is detected, then remove the loss
     # Also -- should require loss events to be > 500m away from
     # No image predictions
+
+    def _id_lgl(year, fs, gain):
+        second_largest_loss = np.partition(np.diff(fs, axis = 0), 1, axis = 0)[1]
+        largest_gain = np.max(np.diff(fs, axis = 0)[:year + 1], axis = 0)
+        second_largest_loss[second_largest_loss >= -30] = 0
+        largest_gain[largest_gain <= 40] = 0.
+        largest_gain = largest_gain / 2
+        largest_gain[gain > 0] = 0.
+        loss_clip = np.maximum(largest_gain, second_largest_loss * - 1)
+        loss_clip[loss_clip > 40] = 40
+        return loss_clip
+
+    gain = np.logical_or(
+        np.logical_and(med >= 150, med <= 160),
+        np.logical_and(med >= 101, med <= 105)
+        )
     ttc_year = fs[year - 2017]
     loss_year = med == (year - 1817)
     if year == 2021:
@@ -186,11 +204,80 @@ def remove_unstable_loss(year, med, fs, nans):
         no_img_2021 = binary_dilation(nans[year - 2018] == 1, iterations = 30)# * loss_year
         no_img_lossyear = np.logical_or(no_img_2022, no_img_2021)
         unstable_loss = no_img_lossyear
-    print(year, np.mean(unstable_loss))
+    
+    #np.save("fs.npy", fs)
+    if np.mean(gain) > 0 and np.mean(gain == 0) > 0:
+        mean_tc = np.nanmean(fs[:, gain == 0], axis = (1))
+    else:
+        mean_tc = np.nanmean(fs, axis = (1, 2))
+    max_increase = np.nanmax(np.diff(mean_tc))
+    max_decrease = np.nanmin(np.diff(mean_tc))
+    ov_mean_tc = np.nanmean(mean_tc)
+
+    # If there has previously been a decrease in tree cover, or a non-gain increase
+    # Then the loss threshold is incremented accordingly
+    #loss_clip = _id_lgl(year - 2017, fs, gain)
+    #loss_mask = (- 1 * np.min(np.diff(fs, axis = 0), axis = 0)) < (50 + loss_clip)
+    #loss_clip = np.sum(fs[:(year - 2017)] < 30, axis = 0)
+    print("GAIN", np.mean(gain))
+    prior_notree = np.sum(fs[:year - 2016] < 30, axis = 0) >= 1
+    prior_gain = np.max(fs[:year - 2016], axis = 0) - np.min(fs[:year - 2016], axis = 0)
+    #prior_gain = np.max(np.diff(fs[:year - 2015], axis = 0), 0) >= 50
+    prior_notree *= (gain == 0)
+    prior_gain = (prior_gain >= 40) * (gain == 0)
+    prior_notree = np.logical_or(prior_notree, prior_gain)
+    unstable_loss = np.maximum(unstable_loss, prior_notree)
+    #print(f"The overall mean tc is {ov_mean_tc}, {max_increase}, {max_decrease}")
+    """
+    bad_flag = False
+    if ov_mean_tc < 20:
+        if max_increase > 5 and max_decrease < -5:
+            bad_flag = True
+    elif ov_mean_tc < 30:
+        if max_increase > 8 and max_decrease < -8:
+            bad_flag = True
+    elif ov_mean_tc < 50:
+        if max_increase > 12 and max_decrease < -12:
+            bad_flag = True
+    else:
+        if max_increase > 20 and max_decrease < -20:
+            bad_flag = True
+    if bad_flag:
+        if ov_mean_tc < 70:
+            print(f"The loss mask before is: {np.mean(unstable_loss)}")
+            loss_mask = np.min(np.diff(fs, axis = 0), axis = 0) > -60
+            second_largest_loss = np.partition(np.diff(fs, axis = 0), 1, axis = 0)[1]
+            loss_mask = np.logical_or(loss_mask, second_largest_loss < -30)
+            print(unstable_loss.shape, unstable_loss.dtype, loss_mask.shape, loss_mask.dtype)
+            unstable_loss = np.maximum(unstable_loss, loss_mask)
+            print(f"The loss mask after is: {np.mean(unstable_loss)}")
+    """
     return unstable_loss, no_img_lossyear
 
 
 def load_ttc_tiles(x, y):
+
+    def _load_file(dir_i):
+        smooth_files = [file for file in os.listdir(dir_i)  if "_SMOOTH" in file]
+        smooth_files = [file for file in smooth_files if os.path.splitext(file)[-1] == '.tif']
+        smooth_x = [file for file in smooth_files  if "_SMOOTH_X" in file]
+        smooth_y = [file for file in smooth_files  if "_SMOOTH_Y" in file]
+        smooth_xy = [file for file in smooth_files  if "_SMOOTH_XY" in file]
+
+        if len(smooth_files) > 0:
+            if len(smooth_files) > 1:
+                if len(smooth_xy) > 0:
+                    files = smooth_xy
+                elif len(smooth_x) > 0:
+                    files = smooth_x
+                elif len(smooth_y) > 0:
+                    files = smooth_y
+            else:
+                files = smooth_files
+        else:
+            files = [file for file in os.listdir(dir_i)  if "_FINAL" in file]
+        print(dir_i + files[0])
+        return dir_i + files[0]
     # Loads all years of data for a specific X, Y tile pair
     f20_path = f'/Volumes/{DRIVE}/tof-output-2020/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_FINAL.tif'
     '''
@@ -205,7 +292,8 @@ def load_ttc_tiles(x, y):
     '''
     #for i in range(2017, 2022):
     try:
-        fpath = f'/Volumes/{DRIVE}/tof-output-2017/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_FINAL.tif'
+        fpath = f'/Volumes/{DRIVE}/tof-output-2017/{str(x)}/{str(y)}/'
+        fpath = _load_file(fpath)
         arr = rs.open(fpath)
         f17 = arr.read(1).astype(np.float32)[np.newaxis]
         arr.close()
@@ -213,7 +301,8 @@ def load_ttc_tiles(x, y):
     except:
         f17 = np.zeros((3, 3))
     try:
-        fpath = f'/Volumes/{DRIVE}/tof-output-2018/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_FINAL.tif'
+        fpath = f'/Volumes/{DRIVE}/tof-output-2018/{str(x)}/{str(y)}/'
+        fpath = _load_file(fpath)
         arr = rs.open(fpath)
         f18 = arr.read(1).astype(np.float32)[np.newaxis]
         arr.close()
@@ -221,7 +310,8 @@ def load_ttc_tiles(x, y):
     except:
         f18 = np.zeros((3, 3))
     try:
-        fpath = f'/Volumes/{DRIVE}/tof-output-2019/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_FINAL.tif'
+        fpath = f'/Volumes/{DRIVE}/tof-output-2019/{str(x)}/{str(y)}/'
+        fpath = _load_file(fpath)
         arr = rs.open(fpath)
         f19 = arr.read(1).astype(np.float32)[np.newaxis]
         arr.close()
@@ -231,6 +321,7 @@ def load_ttc_tiles(x, y):
 
     if os.path.exists(f20_path):
         fpath = f'/Volumes/{DRIVE}/tof-output-2020/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_FINAL.tif'
+        #fpath = _load_file(fpath)
         arr = rs.open(fpath)
         f20 = arr.read(1).astype(np.float32)[np.newaxis]
         arr.close()
@@ -239,13 +330,15 @@ def load_ttc_tiles(x, y):
     else:
         f20 = np.zeros((3, 3))
     try:
-        fpath = f'/Volumes/{DRIVE}/tof-output-2021/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_FINAL.tif'
+        fpath = f'/Volumes/{DRIVE}/tof-output-2021/{str(x)}/{str(y)}/'
+        fpath = _load_file(fpath)
         f21 = rs.open(fpath).read(1).astype(np.float32)[np.newaxis]
         print(f"2021 processed {days_since_creation_date(fpath)} days ago")
     except:
         f21 = np.zeros((3, 3))
     try:
-        fpath = f'/Volumes/{DRIVE}/tof-output-2022/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_FINAL.tif'
+        fpath = f'/Volumes/{DRIVE}/tof-output-2022/{str(x)}/{str(y)}/'
+        fpath = _load_file(fpath)
         f22 = rs.open(fpath).read(1).astype(np.float32)[np.newaxis]
         print(f"2022 processed {days_since_creation_date(fpath)} days ago")
     except:
@@ -331,7 +424,7 @@ def validate_patch_gain(fs, gain, loss):
 
 year = 2019
 N_YEARS = 6
-country = 'rwanda-new'
+country = 'cambodia'
 local_path = '../project-monitoring/tiles/'
 output_path = f'/Volumes/John/change/{country.replace(" ", "")}/'
 country = country.title()
@@ -348,8 +441,9 @@ if __name__ == '__main__':
         AWSKEY = key['awskey']
         AWSSECRET = key['awssecret']
 
-    data = pd.read_csv("process_area_2022.csv")
-    data = data[data['country'] == 'Rwanda']
+    data = pd.read_csv('asia.csv')#"process_area_2022.csv")
+    data = pd.read_csv("remove_rotation.csv")
+    data = data[data['country'] == 'Cambodia']
     try:
         data['X_tile'] = data['X_tile'].str.extract('(\d+)', expand=False)
         data['X_tile'] = pd.to_numeric(data['X_tile'])
@@ -357,14 +451,15 @@ if __name__ == '__main__':
         data['Y_tile'] = pd.to_numeric(data['Y_tile'])
     except Exception as e:
         print(f"Ran into {str(e)} error")
+        traceback.print_exc()
         time.sleep(1)
 
-    data = data#[:1900]
-    x = 2318
-    y = 689
+    #data = data[3000:]
+    x = 2332
+    y = 991
     #data = data[data['Y_tile'] == int(y)]
     #data = data[data['X_tile'] == int(x)]
-    data = data.sample(frac=1).reset_index(drop=True)
+    #data = data.sample(frac=1).reset_index(drop=True)
     #data = data.iloc[::-1]
     data = data.reset_index(drop = True)
     #data = data[:1500]
@@ -380,221 +475,233 @@ if __name__ == '__main__':
         if not os.path.exists(fname):
             print(i, fname, " exists")
         else:
-            #try:
-            print(f"STARTING {x}, {y}")
-            
-            # Open all the TTC data, unzip, make the bounding box
-            fs, changemap, stable, notree, n_valid_years, nans = load_ttc_tiles(x, y)
-            change.download_and_unzip_data(x, y, local_path, AWSKEY, AWSSECRET)
-            print("The data has been downloaded")
-            bbx = change.tile_bbx(x, y, data)
+            try:
+                print(f"STARTING {x}, {y}")
+                
+                # Open all the TTC data, unzip, make the bounding box
+                fs, changemap, stable, notree, n_valid_years, nans = load_ttc_tiles(x, y)
+                change.download_and_unzip_data(x, y, local_path, AWSKEY, AWSSECRET)
+                print("The data has been downloaded")
+                bbx = change.tile_bbx(x, y, data)
 
-            # Load the separate ARD files
-            #! TODO: Make the data loading be agnostic to the years, enabling 2023 data
-            a17, a18, a19, a20, a21, a22, d17, d18, d19, d20, d21, d22, dem = change.load_all_ard(x, y, local_path)
-            print("The data has been loaded")
-            ard_path = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/'
-            dem = median_filter(dem, size = 9)
-            dem = resize(dem, (n_valid_years.shape), 0)
+                # Load the separate ARD files
+                #! TODO: Make the data loading be agnostic to the years, enabling 2023 data
+                a17, a18, a19, a20, a21, a22, d17, d18, d19, d20, d21, d22, dem = change.load_all_ard(x, y, local_path)
+                print("The data has been loaded")
+                ard_path = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/'
+                dem = median_filter(dem, size = 9)
+                dem = resize(dem, (n_valid_years.shape), 0)
 
-            # Identify which years have valid data, and convert them to a single np arr
-            list_of_files = [a17, a18, a19, a20, a21, a22]
-            list_of_dates = [d17, d18, d19, d20, d21, d22]
-            years_with_data = [i for i, val in enumerate(list_of_files) if val.shape[1] != 3]
-            list_of_files = [val for i, val in enumerate(list_of_files) if i in years_with_data]
-            list_of_dates = [val for i, val in enumerate(list_of_dates) if i in years_with_data]
-            print(f"ARD data: {np.array(years_with_data) + 2017}")
-            n_imgs_per_year = np.zeros((N_YEARS, ), dtype = np.int32)
-            for i, val in enumerate(list_of_files):
-                print(i, val.shape)
-                if val.shape[1] != 3:
-                    n_imgs_per_year[i] = val.shape[0]
+                # Identify which years have valid data, and convert them to a single np arr
+                list_of_files = [a17, a18, a19, a20, a21, a22]
+                list_of_dates = [d17, d18, d19, d20, d21, d22]
+                years_with_data = [i for i, val in enumerate(list_of_files) if val.shape[1] != 3]
+                list_of_files = [val for i, val in enumerate(list_of_files) if i in years_with_data]
+                list_of_dates = [val for i, val in enumerate(list_of_dates) if i in years_with_data]
+                print(f"ARD data: {np.array(years_with_data) + 2017}")
+                n_imgs_per_year = np.zeros((N_YEARS, ), dtype = np.int32)
+                for i, val in enumerate(list_of_files):
+                    print(i, val.shape)
+                    if val.shape[1] != 3:
+                        n_imgs_per_year[i] = val.shape[0]
 
-            ard = np.concatenate(list_of_files, axis = 0)
-            dates = np.concatenate(list_of_dates)
+                ard = np.concatenate(list_of_files, axis = 0)
+                dates = np.concatenate(list_of_dates)
 
-            # Validate the L2A imagery for 2017, which can be wrong due to 
-            # Sensor calibration in 2017
-            # Look for >= 3 median change difference in 2017 -> 2018
-            # Since the L2A images for Q1/Q2 2017 can be suspect in some areas
-            # And can mean that a bad baseline is set
-            outliers = validate_ard(n_imgs_per_year, ard, dates)
-            if len(outliers) > 0:
-                print("Removing 2017 as an outlier")
-                ims2018 = ard[n_imgs_per_year[1]:n_imgs_per_year[2]]
-                ard[:n_imgs_per_year[0]] = np.median(ims2018, axis = (0))[np.newaxis]
-                fs[0] = np.mean(fs[0:2], axis = 0)
+                # Validate the L2A imagery for 2017, which can be wrong due to 
+                # Sensor calibration in 2017
+                # Look for >= 3 median change difference in 2017 -> 2018
+                # Since the L2A images for Q1/Q2 2017 can be suspect in some areas
+                # And can mean that a bad baseline is set
+                outliers = validate_ard(n_imgs_per_year, ard, dates)
+                if len(outliers) > 0:
+                    print("Removing 2017 as an outlier")
+                    ims2018 = ard[n_imgs_per_year[1]:n_imgs_per_year[2]]
+                    ard[:n_imgs_per_year[0]] = np.median(ims2018, axis = (0))[np.newaxis]
+                    fs[0] = np.mean(fs[0:2], axis = 0)
 
-            kde = None
-            if (len(years_with_data) > 3):
-                # Create the Kernel Density Estimates based on the stable tree pixels
-                # Assume that with 2%, so 7000 samples, we can get a good KDE
-                # With 2000 samples we need it to be in the 200, which is 2.8 isntead of 10
-                # so the divider is (stable / 7000)
-                multiplier = np.clip(np.sum(stable) / 8000, 0.33, 1)
-                kde, kde10, kde_expected, kde2, percentiles = change.make_all_kde(ard, stable, maxpx = 15000, multiplier = 1)
-                #else:
-                # If not enough reference pixels, use the stable non-tree and invert all the calculations
-                    #kde, kde10, kde_expected, kde2, percentiles, percentiles = change.make_all_kde(ard, notree)
-                gain = np.zeros((N_YEARS-1, ard.shape[1], ard.shape[2]), dtype = np.float32)
-                loss = np.zeros((N_YEARS-1, ard.shape[1], ard.shape[2]), dtype = np.float32)
-                ndmiloss = np.zeros((N_YEARS-1, ard.shape[1], ard.shape[2]), dtype = np.float32)
+                kde = None
+                if (len(years_with_data) > 3) and np.sum(stable) > 100:
+                    # Create the Kernel Density Estimates based on the stable tree pixels
+                    # Assume that with 2%, so 7000 samples, we can get a good KDE
+                    # With 2000 samples we need it to be in the 200, which is 2.8 isntead of 10
+                    # so the divider is (stable / 7000)
+                    multiplier = np.clip(np.sum(stable) / 8000, 0.33, 1)
+                    kde, kde10, kde_expected, kde2, percentiles = change.make_all_kde(ard, stable, maxpx = 15000, multiplier = 1)
+                    #else:
+                    # If not enough reference pixels, use the stable non-tree and invert all the calculations
+                        #kde, kde10, kde_expected, kde2, percentiles, percentiles = change.make_all_kde(ard, notree)
+                    gain = np.zeros((N_YEARS-1, ard.shape[1], ard.shape[2]), dtype = np.float32)
+                    loss = np.zeros((N_YEARS-1, ard.shape[1], ard.shape[2]), dtype = np.float32)
+                    ndmiloss = np.zeros((N_YEARS-1, ard.shape[1], ard.shape[2]), dtype = np.float32)
 
-                # For each year, identify the KDE NDMI gain/loss
-                # And assign a year to the values
-                for i in range(N_YEARS-1):
-                    if np.sum(stable) < (600*600*.02):
-                        lower = np.clip(i - 2, 0, i)
-                        upper = i + 1 if i > 0 else i + 2
-                        n_years = upper - lower
-                        stable_twoyear = np.sum(np.logical_and(fs[lower:upper] >= 20, fs[lower:upper] <= 100), axis = 0) >= n_years # 40
-                        stable_twoyear = binary_erosion(stable_twoyear)
-                        print(f"There are {np.sum(stable_twoyear)} stable pixels for {i + 2017}")
-                        kde_win, kde10_win, kde_expected_win, kde2_win, percentiles = change.make_all_kde(ard, stable_twoyear)
-                        loss[i], ndmiloss[i] = change.identify_loss_in_year(kde2_win, kde_win, kde_expected_win, kde2_win, dates, 2017 + i + 1) 
-                    # Can only detect gain if there is at least 1% stable pixels
+                    # For each year, identify the KDE NDMI gain/loss
+                    # And assign a year to the values
+                    for i in range(N_YEARS-1):
+                        if np.sum(stable) < (600*600*.02):
+                            lower = np.clip(i - 2, 0, i)
+                            upper = i + 1 if i > 0 else i + 2
+                            n_years = upper - lower
+                            stable_twoyear = np.sum(np.logical_and(fs[lower:upper] >= 40, fs[lower:upper] <= 100), axis = 0) >= n_years # 40
+                            stable_twoyear = binary_erosion(stable_twoyear)
+                            print(f"There are {np.sum(stable_twoyear)} stable pixels for {i + 2017}")
+                            kde_win, kde10_win, kde_expected_win, kde2_win, percentiles = change.make_all_kde(ard, stable_twoyear)
+                            loss[i], ndmiloss[i] = change.identify_loss_in_year(kde2_win, kde_win, kde_expected_win, kde2_win, dates, 2017 + i + 1) 
+                        # Can only detect gain if there is at least 1% stable pixels
+                        #if np.sum(stable) > (600*600*.01):
+                        gain[i] = change.identify_gain_in_year(kde, kde10, kde_expected, dates, 2017 + i + 1) * (i + 2)
+                        # Can detect loss with the two-year KDE values where <2% stable
+                        if np.sum(stable) >= (600*600*.02):
+                            loss[i], ndmiloss[i] = change.identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, 2017 + i + 1) 
+                        loss[i] *= (i + 2)
+                        ndmiloss[i] *= (i + 2)
+
+                    # Predicate the gain on loss if there is a NT -> T -> NT
+                    potential_loss = np.copy(loss)
+                    gain = validate_gain(gain, potential_loss, fs)
+
+                    # Fuzzy set matching btwn NDMI gain/loss and subraction gain/loss
+                    #if kde is not None:
+                    gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, dates)
+                    #gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, kde, kde10, kde_expected, kde2, dates)
+                    #else:
+
+                    rotational = np.logical_and(gain > 0, loss > 0)
+
+                    # Rule-based cleanup of KDE gain based on
+                    # Trends in the KDE vs time graph
+                    befores = np.zeros((N_YEARS,))
+                    afters = np.zeros((N_YEARS,))
                     #if np.sum(stable) > (600*600*.01):
-                    gain[i] = change.identify_gain_in_year(kde, kde10, kde_expected, dates, 2017 + i + 1) * (i + 2)
-                    # Can detect loss with the two-year KDE values where <2% stable
-                    if np.sum(stable) >= (600*600*.02):
-                        loss[i], ndmiloss[i] = change.identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, 2017 + i + 1) 
-                    loss[i] *= (i + 2)
-                    ndmiloss[i] *= (i + 2)
+                    movingavg = np.copy(percentiles).reshape((percentiles.shape[0], percentiles.shape[1] * percentiles.shape[2]))
+                    movingavg = np.apply_along_axis(change.moving_average, 0, movingavg, 5)
+                    movingavg = np.reshape(movingavg, (percentiles.shape[0]-4,percentiles.shape[1], percentiles.shape[2]))
+                    
 
-                # Predicate the gain on loss if there is a NT -> T -> NT
-                potential_loss = np.copy(loss)
-                gain = validate_gain(gain, potential_loss, fs)
+                    cfs_flat = change.calc_reference_change(movingavg, 0, 50, notree, dem)
+                    cfs_hill = change.calc_reference_change(movingavg, 10, 50, notree, dem)
+                    cfs_steep = change.calc_reference_change(movingavg, 20, 50, notree, dem)
+                    cfs_trees = change.calc_tree_change(movingavg, 5, stable, dem)
+                    cfs_trees10 = change.calc_tree_change(movingavg, 10, stable, dem)
+                    befores = []
+                    for i in range(1, N_YEARS):
+                        print(f'{i + 2017}: {np.mean(gain == i)}')
+                        befores.append(np.mean(gain == i))
 
-                # Fuzzy set matching btwn NDMI gain/loss and subraction gain/loss
-                #if kde is not None:
-                gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, dates)
-                #gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, kde, kde10, kde_expected, kde2, dates)
-                #else:
-
-                rotational = np.logical_and(gain > 0, loss > 0)
-
-                # Rule-based cleanup of KDE gain based on
-                # Trends in the KDE vs time graph
-                befores = np.zeros((N_YEARS,))
-                afters = np.zeros((N_YEARS,))
-                #if np.sum(stable) > (600*600*.01):
-                movingavg = np.copy(percentiles).reshape((percentiles.shape[0], percentiles.shape[1] * percentiles.shape[2]))
-                movingavg = np.apply_along_axis(change.moving_average, 0, movingavg, 5)
-                movingavg = np.reshape(movingavg, (percentiles.shape[0]-4,percentiles.shape[1], percentiles.shape[2]))
-                
-
-                cfs_flat = change.calc_reference_change(movingavg, 0, 50, notree, dem)
-                cfs_hill = change.calc_reference_change(movingavg, 10, 50, notree, dem)
-                cfs_steep = change.calc_reference_change(movingavg, 20, 50, notree, dem)
-                cfs_trees = change.calc_tree_change(movingavg, 5, stable, dem)
-                cfs_trees10 = change.calc_tree_change(movingavg, 10, stable, dem)
-                befores = []
-                for i in range(1, N_YEARS):
-                    print(f'{i + 2017}: {np.mean(gain == i)}')
-                    befores.append(np.mean(gain == i))
-
-                modifier = 0.
-                if np.sum(stable) < 6000:
-                    modifier += 0.025
-                if np.sum(stable) < 4000:
-                    modifier += 0.025
-                if np.sum(stable) < 2000:
-                    modifier += 0.025
-                if np.sum(stable) < 1000:
-                    modifier += 0.025
-                if np.sum(stable) < 500:
-                    modifier += 0.05
-                if np.sum(stable) < 250:
-                    modifier += 0.05
-                if np.sum(stable) < 100:
-                    modifier += 0.05
-                print(f"The modifier is: {modifier}")
-                gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
-                        cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier)
-
-                gain[~np.isin(Zlabeled, gainpx)] = 0.
-                gain = np.maximum(gain, additional_gain)
-                afters = []
-                for i in range(1, N_YEARS):
-                    print(f'{i + 2017}: {np.mean(gain == i)}')
-                    afters.append(np.mean(gain == i))
-                ratio = (np.array(afters) / np.array(befores)) 
-                total_before = np.sum(np.array(befores))
-                total_after = np.sum(np.array(afters))
-                print(f'The ratio of gain remaining is {ratio}')
-                print(f'Before: {total_before}, After: {total_after}, Change: {total_after / total_before}')
-                ratio = ratio * (np.array(befores) > 0.02)
-                ratio_flaglow = np.logical_and(ratio > 0, ratio < 0.33)
-                ratio_flaghigh = np.logical_and(ratio > 0, ratio < 0.1)
-                ratio_flaglow = np.nansum(ratio_flaglow[3:] > 0)
-                ratio_flaghigh = np.nansum(ratio_flaghigh > 0)
-                ratio_flagveryhigh = np.nanmax(np.array(befores) - np.array(afters)) > 0.15
-                absolute_flag = np.nanmax(np.array(befores) - np.array(afters)) > 0.05
-                #ratio_flaghigh = np.logical_or(ratio_flaghigh, (befores[-1] / total_before) > 0.8)
-                print("VH, H, L", ratio_flagveryhigh, ratio_flaghigh, ratio_flaglow, absolute_flag)
-                if ratio_flagveryhigh:
+                    modifier = 0.
+                    if np.sum(stable) < 6000:
+                        modifier += 0.025
+                    if np.sum(stable) < 4000:
+                        modifier += 0.025
+                    if np.sum(stable) < 2000:
+                        modifier += 0.025
+                    if np.sum(stable) < 1000:
+                        modifier += 0.025
+                    if np.sum(stable) < 500:
+                        modifier += 0.05
+                    if np.sum(stable) < 250:
+                        modifier += 0.05
+                    if np.sum(stable) < 100:
+                        modifier += 0.05
+                    print(f"The modifier is: {modifier}")
                     gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
-                                            cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier + 0.2)
+                            cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier)
+
                     gain[~np.isin(Zlabeled, gainpx)] = 0.
                     gain = np.maximum(gain, additional_gain)
-                elif ratio_flaghigh:
-                    gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
-                                            cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier + 0.1)
-                    gain[~np.isin(Zlabeled, gainpx)] = 0.
-                    gain = np.maximum(gain, additional_gain)
-                elif ratio_flaglow or absolute_flag:
-                    gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
-                                            cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier + 0.05)
-                    gain[~np.isin(Zlabeled, gainpx)] = 0.
-                    gain = np.maximum(gain, additional_gain)
-                afters = []
-                for i in range(1, N_YEARS):
-                    afters.append(np.mean(gain == i))
-                afters = np.array(afters)
-                print(f"After2: {np.sum(afters)}")
-                print('after2', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+                    afters = []
+                    for i in range(1, N_YEARS):
+                        print(f'{i + 2017}: {np.mean(gain == i)}')
+                        afters.append(np.mean(gain == i))
+                    ratio = (np.array(afters) / np.array(befores)) 
+                    total_before = np.sum(np.array(befores))
+                    total_after = np.sum(np.array(afters))
+                    print(f'The ratio of gain remaining is {ratio}')
+                    print(f'Before: {total_before}, After: {total_after}, Change: {total_after / total_before}')
+                    ratio = ratio * (np.array(befores) > 0.02)
+                    ratio_flaglow = np.logical_and(ratio > 0, ratio < 0.33)
+                    ratio_flaghigh = np.logical_and(ratio > 0, ratio < 0.1)
+                    ratio_flaglow = np.nansum(ratio_flaglow[3:] > 0)
+                    ratio_flaghigh = np.nansum(ratio_flaghigh > 0)
+                    ratio_flagveryhigh = np.nanmax(np.array(befores) - np.array(afters)) > 0.15
+                    absolute_flag = np.nanmax(np.array(befores) - np.array(afters)) > 0.05
+                    #ratio_flaghigh = np.logical_or(ratio_flaghigh, (befores[-1] / total_before) > 0.8)
+                    print("VH, H, L", ratio_flagveryhigh, ratio_flaghigh, ratio_flaglow, absolute_flag)
+                    if ratio_flagveryhigh:
+                        gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
+                                                cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier + 0.2)
+                        gain[~np.isin(Zlabeled, gainpx)] = 0.
+                        gain = np.maximum(gain, additional_gain)
+                    elif ratio_flaghigh:
+                        gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
+                                                cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier + 0.1)
+                        gain[~np.isin(Zlabeled, gainpx)] = 0.
+                        gain = np.maximum(gain, additional_gain)
+                    elif ratio_flaglow or absolute_flag:
+                        gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
+                                                cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier + 0.05)
+                        gain[~np.isin(Zlabeled, gainpx)] = 0.
+                        gain = np.maximum(gain, additional_gain)
+                    afters = []
+                    for i in range(1, N_YEARS):
+                        afters.append(np.mean(gain == i))
+                    afters = np.array(afters)
+                    print(f"After2: {np.sum(afters)}")
+                    print('after2', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
 
-                # If more than 80% of gain is removed, or 10% of the total plot
-                # Then we're likely in an area that has false positive gain
-                # E.g. a dry forest.
-                # Then add 0.05 to the gain requirement
-                # Or even better, regenerate KDE with the removed gain as stable??
-                #validate_patch_gain(fs, gain2, loss2)
-                
-                rotational = np.logical_and(gain > 0, loss > 0)
-                med = np.median(fs, axis = 0)
-                med[gain > 0] = (gain[gain > 0] + 100)
-                med[loss > 0] = (loss[loss > 0] + 200)
-                rotational = np.logical_and(gain > 0, loss > 0)
-                med[np.logical_and(rotational, gain > loss)] = 150.
-                med[np.logical_and(rotational, loss > gain)] = 160.
-                fs[(np.median(fs, axis = 0) > 100)[np.newaxis].repeat(fs.shape[0], axis = 0)] = 255.
-                for i in range(2017, 2017 + N_YEARS):
-                    unstable_loss, noimg = remove_unstable_loss(i, med, fs, nans)
-                    unstable_loss[gain > 0] = 0.
-                    med[np.logical_or(unstable_loss, noimg)] = np.median(fs, axis = 0)[np.logical_or(unstable_loss, noimg)]
+                    # If more than 80% of gain is removed, or 10% of the total plot
+                    # Then we're likely in an area that has false positive gain
+                    # E.g. a dry forest.
+                    # Then add 0.05 to the gain requirement
+                    # Or even better, regenerate KDE with the removed gain as stable??
+                    #validate_patch_gain(fs, gain2, loss2)
+                    
+                    rotational = np.logical_and(gain > 0, loss > 0)
+                    med = np.median(fs, axis = 0)
+                    med[gain > 0] = (gain[gain > 0] + 100)
+                    med[loss > 0] = (loss[loss > 0] + 200)
+                    rotational = np.logical_and(gain > 0, loss > 0)
+                    remove_rot = True
+                    if remove_rot:
+                        med[rotational] = np.median(fs, axis = 0)[rotational]
+                    else:
+                        med[np.logical_and(rotational, gain > loss)] = 150.
+                        med[np.logical_and(rotational, loss > gain)] = 160.
+                    fs[(np.median(fs, axis = 0) > 100)[np.newaxis].repeat(fs.shape[0], axis = 0)] = 255.
+                    #np.save("fs.npy", fs)
+                    #np.save("med.npy", med)
+                    # If there is no tree -> tree -> no tree, and no gain event
+                    # Then we can't say there is a loss event, because why would it be more likely
+                    # For the loss to be true than for the gain to be true? 
+                    for i in range(2017, 2017 + N_YEARS):
+                        unstable_loss, noimg = remove_unstable_loss(i, med, fs, nans)
+                        unstable_loss[gain > 0] = 0.
+                        loss_flag = np.logical_or(unstable_loss, noimg)
+                        loss_flag = loss_flag * (med == (i - 2017 + 201))
+                        med[loss_flag] = np.median(fs, axis = 0)[loss_flag]
 
-                lte2_data = binary_dilation(n_valid_years <= 2, iterations = 50)
-                #np.save("lte2data.npy", lte2_data)
-                #np.save("med.npy", np.median(fs, axis = 0))
-                is_oob = np.logical_and(med > 110, med < 150)
-                med[is_oob] = np.median(fs, axis = 0)[is_oob]
-                med[lte2_data] = np.median(fs, axis = 0)[lte2_data]
-                #change.make_loss_plot(percentiles, loss, gain, dates, befores, afters, f"{str(x)}{str(y)}.png")
-            else:
-                med = np.median(fs, axis = 0)
+                    lte2_data = binary_dilation(n_valid_years <= 2, iterations = 50)
+                    #np.save("lte2data.npy", lte2_data)
+                    #np.save("med.npy", np.median(fs, axis = 0))
+                    is_oob = np.logical_and(med > 110, med < 150)
+                    med[is_oob] = np.median(fs, axis = 0)[is_oob]
+                    med[lte2_data] = np.median(fs, axis = 0)[lte2_data]
+                    #change.make_loss_plot(percentiles, loss, gain, dates, befores, afters, f"{str(x)}{str(y)}.png")
+                else:
+                    med = np.median(fs, axis = 0)
 
-            #for i in range(0, 5):
-            #    l = remove_noise(med == (i + 200), 10)
-            #    med[med == (i + 200)]
-            change.write_tif(med, bbx, x, y, output_path, suffix = suffix)
+                #for i in range(0, 5):
+                #    l = remove_noise(med == (i + 200), 10)
+                #    med[med == (i + 200)]
+                change.write_tif(med, bbx, x, y, output_path, suffix = suffix)
 
-            #del afters, befores, med, rotational, lte2_data, is_oob, unstable_loss
-            #del ratio, movingavg, potential_loss, dem, fs, gain, loss
-            gc.collect()
-            for year in range(2017, 2017 + N_YEARS):
-                shutil.rmtree(f"{local_path}/{str(year)}/{str(x)}/{str(y)}/")
-                
-            #except Exception as e:
-            #    gc.collect()
-            #    print(f"Ran into {str(e)} error")
+                #del afters, befores, med, rotational, lte2_data, is_oob, unstable_loss
+                #del ratio, movingavg, potential_loss, dem, fs, gain, loss
+                gc.collect()
+                for year in range(2017, 2017 + N_YEARS):
+                    shutil.rmtree(f"{local_path}/{str(year)}/{str(x)}/{str(y)}/")
+                    
+            except Exception as e:
+                gc.collect()
+                print(f"Ran into {str(e)} error")
+                traceback.print_exc()

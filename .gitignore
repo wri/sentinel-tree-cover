@@ -16,7 +16,7 @@ models/march-2/*
 models/*
 raw/*
 *.qmd
-*.pt
+models/*
 src/*.png
 src/*.tif
 *.zip
@@ -28,7 +28,7 @@ notebooks/*.npy
 project-monitoring/*/*
 notebooks/development/data/*
 notebooks/*-checkpoint.ipynb
-*.pb
+*.pt
 **/*.ipynb_checkpoints/
 src/downloading/__pychache__/*
 *-checkpoint.ipynb
