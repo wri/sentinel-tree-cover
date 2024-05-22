@@ -39,7 +39,11 @@ data_diffs.csv
 *.npy
 notebooks/*/*.csv
 *.qml
-*.csv
+src/*/*.csv
+notebooks/*.csv
+ntoebooks/*/*.csv
+ntoebooks/*/*/*.csv
+src/*.csv
 config.json
 notebooks/analysis/statistics/*
 *.mp4
