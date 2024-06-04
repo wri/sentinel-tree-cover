@@ -347,7 +347,7 @@ function setup() {
 ```
 
 **CIRRUS_CLOUDS**
-``
+```
 //VERSION=3 (auto-converted from 1) + dataMask to control background color + scaling to UINT16 range
 function setup() {
   return {
@@ -387,7 +387,7 @@ function updateOutputMetadata(scenes, inputMetadata, outputMetadata) {
   }
   outputMetadata.userData["orbits"] = scenes.orbits
 }
-``
+```
 
 
 # License
