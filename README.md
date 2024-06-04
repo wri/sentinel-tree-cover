@@ -22,7 +22,6 @@ This repository contains the source code for the project. A full description of 
 We have also tested porting the model to Pytorch, [see here](https://github.com/wri/sentinel-tree-cover/blob/master/notebooks/torchdeps/Pytorch_Unet.py) but similarily, Zoneout, which is a critical regularizer for the ConvGRU, does not exist in Pytorch. The resulting maps generated in Pytorch are not good despite verifying the same model structure, optimizer, training data, etc, so as of May 2024 there is no working Pytorch version.
 
 
-
 # Citation
 
 Brandt, J., Ertel, J., Spore, J., & Stolle, F. (2023). Wall-to-wall mapping of tree extent in the tropics with Sentinel-1 and Sentinel-2. Remote Sensing of Environment, 292, 113574. doi:10.1016/j.rse.2023.113574
@@ -119,6 +118,277 @@ The cloud / shadow removal and temporal mosaicing algorithm is summarized below:
 *  Smooth time series data with a rolling median
 *  Linearly interpolate image stack to a 15 day timestep
 *  Smooth time stack with Whittaker smoother
+
+# Sentinel Hub Set up
+
+The following configurations are necessary to utilize data exported from Sentinel Hub.
+
+* L2A20_ORBIT: Bands 5, 6, 7, 8a at 20m resolution L2A, orbit mosaic
+* L2A40_ORBIT: Bands 11, 12 at 40m resolution L2A, orbit mosaic (processed at 40m instead of 20m to save storage)
+* L2A10_ORBIT: 10-meter bands L2A, orbit mosaic
+* CLOUD_SCL_PREVIEW: Very low resolution cloud masks used to select image dates
+* DATA_QUALITY: Identifies images to acquire based on image angles, aerosol optical thickness
+* CIRRUS_CLOUDS: Identifies images to acquire based on cirrus masks
+
+**L2A20_ORBIT**
+
+```
+//VERSION=3 (auto-converted from 1) + dataMask to control background color + scaling to UINT16 range
+
+function setup() {
+  return {
+    input: [{
+      bands: [
+        "B05",
+        "B06",
+        "B07",
+        "B8A",
+        "dataMask",
+             ]
+    }],
+    mosaicking: Mosaicking.ORBIT,
+    output: {
+      id: "default",
+      bands: 4,
+      sampleType:"UINT16",
+      
+    }
+  }
+}
+
+
+function evaluatePixel(samples, scenes, inputMetadata, customData, outputMetadata) {
+  //Average value of band B02 based on the requested scenes
+  var b05 = 1
+  var b06 = 1
+  var b07 = 1
+  var b8a = 1
+  for (i = 0; i < samples.length; i++) {
+    var sample = samples[i]
+    if (sample.dataMask == 1){
+        if (sample.B05 < b05) {
+          b05 = sample.B05
+          b06 = sample.B06
+          b07 = sample.B07
+          b8a = sample.B8A
+        }
+    }
+  }
+  return [b05 * 65535, b06 * 65535, b07 * 65535, b8a * 65535]
+}
+
+function updateOutputMetadata(scenes, inputMetadata, outputMetadata) {
+  outputMetadata.userData = {
+    "inputMetadata": inputMetadata
+  }
+  outputMetadata.userData["orbits"] = scenes.orbits
+}
+```
+
+**L2A10_ORBIT**
+
+```
+//VERSION=3
+function setup() {
+  return {
+    input: ["B02", "B03", "B04", "B08", "dataMask"],
+    mosaicking: Mosaicking.ORBIT,
+    output: {
+      id: "default",
+      sampleType:"UINT16",
+      bands: 4
+    }
+  }
+}
+
+function evaluatePixel(samples, scenes, inputMetadata, customData, outputMetadata) {
+  //Average value of band B02 based on the requested scenes
+  var sumOfValidSamplesB02 = 0
+  var numberOfValidSamples = 0
+  var b02 = 1
+  var b03 = 1
+  var b04 = 1
+  var b08 = 1
+  for (i = 0; i < samples.length; i++) {
+    var sample = samples[i]
+    if (sample.dataMask == 1){
+        if (sample.B02 < b02) {
+          b02 = sample.B02
+          b03 = sample.B03
+          b04 = sample.B04
+          b08 = sample.B08
+        }
+    }
+  }
+  return [b02 * 65535, b03 * 65535, b04 * 65535, b08 * 65535]
+}
+
+function updateOutputMetadata(scenes, inputMetadata, outputMetadata) {
+  outputMetadata.userData = {
+    "inputMetadata": inputMetadata
+  }
+  outputMetadata.userData["orbits"] = scenes.orbits
+}
+```
+
+**L2A40_ORBIT**
+```
+//VERSION=3 (auto-converted from 1) + dataMask to control background color + scaling to UINT16 range
+
+function setup() {
+  return {
+    input: [{
+      bands: [
+        "B11",
+        "B12",
+        "dataMask",
+             ]
+    }],
+    mosaicking: Mosaicking.ORBIT,
+    output: {
+      id: "default",
+      bands: 3,
+      sampleType:"UINT16",
+      
+    }
+  }
+}
+
+
+function evaluatePixel(samples, scenes, inputMetadata, customData, outputMetadata) {
+  //Average value of band B02 based on the requested scenes
+  var b11 = 1
+  var b12 = 1
+  for (i = 0; i < samples.length; i++) {
+    var sample = samples[i]
+    if (sample.dataMask == 1){
+        if (sample.B11 < b11) {
+          b11 = sample.B11
+          b12 = sample.B12
+        }
+    }
+  }
+  return [b11 * 65535, b12 * 65535]
+}
+
+function updateOutputMetadata(scenes, inputMetadata, outputMetadata) {
+  outputMetadata.userData = {
+    "inputMetadata": inputMetadata
+  }
+  outputMetadata.userData["orbits"] = scenes.orbits
+}
+```
+
+**CLOUD_SCL_PREVIEW**
+```
+//VERSION=3 (auto-converted from 1) + dataMask to control background color + scaling to UINT16 range
+function evaluatePixel(samples) {
+    var factor = 255
+    if (samples.dataMask == 0) {
+      return [255] 
+    } else if ((samples.CLP / 255) > 0.7) {
+      return [100]
+    } else {
+    return [0];
+    }
+}
+function setup() {
+  return {
+    input: [{
+      bands: [
+        "dataMask",
+        "CLP",
+             ]
+    }],
+    output: {
+      bands: 1,
+      sampleType:"UINT8",
+      mosaicking: "ORBIT"
+    }
+  }
+}
+```
+
+**DATA_QUALITY**
+```
+//VERSION=3 (auto-converted from 1) + dataMask to control background color + scaling to UINT16 range
+
+function evaluatePixel(samples) {
+    var factor = 255
+    if (samples.dataMask == 0) {
+      return [255]
+    } else if (samples.AOT > 0.6) {
+      return [255]
+    } else if (samples.sunZenithAngles < 13) {
+      return [255]
+    } else if (samples.viewZenithMean > 12) {
+      return [255]
+    } else {
+    return [0];
+    }
+}
+function setup() {
+  return {
+    input: [{
+      bands: [
+        "dataMask",
+        "viewZenithMean",
+        "sunZenithAngles",
+        "AOT",
+             ]
+    }],
+    output: {
+      bands: 1,
+      sampleType:"UINT8",
+      mosaicking: "ORBIT"
+    }
+  }
+}
+```
+
+**CIRRUS_CLOUDS**
+``
+//VERSION=3 (auto-converted from 1) + dataMask to control background color + scaling to UINT16 range
+function setup() {
+  return {
+    input: ["B02", "CLP", "dataMask"],
+    mosaicking: Mosaicking.ORBIT,
+    output: {
+      id: "default",
+      sampleType:"UINT16",
+      bands: 1
+    }
+  }
+}
+
+function evaluatePixel(samples, scenes, inputMetadata, customData, outputMetadata) {
+  //Average value of band B02 based on the requested scenes
+  var sumOfValidSamplesB02 = 0
+  var numberOfValidSamples = 0
+  var b02 = 1
+  var scl = 0.
+  for (i = 0; i < samples.length; i++) {
+    var sample = samples[i]
+    if (sample.dataMask == 1){
+        if (sample.B02 < b02) {
+          b02 = sample.B02
+          if (sample.CLP > (255 * 0.67)) {
+          	scl = 2
+          }
+        }
+    }
+  }
+  return [scl]
+}
+
+function updateOutputMetadata(scenes, inputMetadata, outputMetadata) {
+  outputMetadata.userData = {
+    "inputMetadata": inputMetadata
+  }
+  outputMetadata.userData["orbits"] = scenes.orbits
+}
+``
+
 
 # License
 
