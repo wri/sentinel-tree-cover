@@ -27,6 +27,9 @@ Unfortunately, after a lot of testing, some of the critical model modules (modif
 
 We have also tested porting the model to Pytorch, [see here](https://github.com/wri/sentinel-tree-cover/blob/master/notebooks/torchdeps/Pytorch_Unet.py) but similarily, Zoneout, which is a critical regularizer for the ConvGRU, does not exist in Pytorch. The resulting maps generated in Pytorch are not good despite verifying the same model structure, optimizer, training data, etc, so as of May 2024 there is no working Pytorch version.
 
+# Training
+
+As of July 2024, the Tensorflow 1.X training files are released in the `src/train` file. There is an `args` dictionary in `train-model.py` that can be adjusted to retrain the model for your own needs.
 
 # Citation
 
