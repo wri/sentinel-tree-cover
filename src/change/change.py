@@ -417,7 +417,6 @@ def identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, year):
     candidate_loss_ndmi = positive_prior_high * negative_after_2
     candidate_loss_ndmi = median_filter(candidate_loss_ndmi, 3)
     #candidate_loss = binary_dilation(1 - (binary_dilation(1 - candidate_loss)))
-    
     return candidate_loss, candidate_loss_ndmi
 
 ### COMBINING TTC CHANGE W CANDIDATEs ###
@@ -449,12 +448,16 @@ def adjust_gain_with_ndmi(idx, ff, gain2):
     #out = out * (np.min(ff, axis = 0) < 40)
     return out
 
-def adjust_loss_with_ndmi(idx, ff, loss2, ndmiloss):
+def adjust_loss_with_ndmi(idx, ff, loss2, ndmiloss, adjustment):
     # For example, 2020 to 2021 loss
     # If (2019 or 2020) - 2021 is greater than 50
     # And if 2021 is less than 40, and either 2019 or 2020 is < 40
     # Then we have a candidate event
-
+    print(f"{idx}: {adjustment}")
+    base_change = 50
+    base_change = base_change - adjustment
+    base_change = np.clip(base_change, 40, 80)
+    print(f"Adjusted base_change to {base_change}")
     # Expand the possible loss events for very small holes
     loss_year = (ff[idx + 1] < 40).astype(np.float32)
     is_small = np.ones_like(loss_year, dtype = np.float32)
@@ -465,7 +468,7 @@ def adjust_loss_with_ndmi(idx, ff, loss2, ndmiloss):
             is_small -= binary_dilation(zlabels == i, iterations = 1)
     is_small = np.clip(is_small, 0, 1)
 
-    candidate = (np.mean(ff[idx - 1: idx + 1], axis = 0) - (ff[idx + 1]) * is_small) > 50#((np.max(ff[idx-1: idx + 1], axis = 0) - ff[idx + 1]) > 50)
+    candidate = (np.mean(ff[idx - 1: idx + 1], axis = 0) - (ff[idx + 1]) * is_small) > base_change#((np.max(ff[idx-1: idx + 1], axis = 0) - ff[idx + 1]) > 50)
     candidate = candidate * ((ff[idx + 1] * is_small) <= 40) 
     prior = (np.mean(ff[idx - 1: idx + 1], axis = 0))
     candidate = candidate * (prior >= 60)
@@ -498,7 +501,7 @@ def remove_unstable_gain(loss, gain, fs):
     return gain 
 
 
-def adjust_loss_gain(gain, loss, ndmiloss, fs, dates):
+def adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments):
 
     fs = fs.astype(np.float32)
     ff = temporal_filter(fs)
@@ -507,7 +510,12 @@ def adjust_loss_gain(gain, loss, ndmiloss, fs, dates):
     #np.save('loss22.npy', loss22)
     ndmi22 = ndmiloss[-1]
     #loss22, ndmi22 = identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, 2022)
-    candidateloss2022 = ((np.mean(ff[3:5], axis = 0) - ff[5]) >= 50) * np.logical_or(ff[4] > 50, ff[3] > 50) * (ff[5] < 30)
+    base_change = 50
+    print(f"The adjustment is: {adjustments[-1]}")
+    base_change -= adjustments[-1]
+    base_change = np.clip(base_change, 40, 80)
+    print(f"The base change is: {base_change}")
+    candidateloss2022 = ((np.mean(ff[3:5], axis = 0) - ff[5]) >= base_change) * np.logical_or(ff[4] > base_change, ff[3] > base_change) * (ff[5] < 30)
     candndmiloss2022 = (np.min(ff[3:5], axis = 0) > 60) * ((np.min(ff[3:5], axis = 0) - ff[5]) >= 20)
     ndmi22 = remove_nonoverlapping_events(candndmiloss2022, ndmi22, 10)
     loss22 = remove_nonoverlapping_events(candidateloss2022, loss22, 4)
@@ -540,9 +548,9 @@ def adjust_loss_gain(gain, loss, ndmiloss, fs, dates):
     #loss2 = np.copy(loss)
     loss[0] = 0.
     #loss[0] = adjust_loss_with_ndmi(1, ff, loss, ndmiloss)
-    loss[1] = adjust_loss_with_ndmi(1, ff, loss, ndmiloss)
-    loss[2] = adjust_loss_with_ndmi(2, ff, loss, ndmiloss)
-    loss[3] = adjust_loss_with_ndmi(3, ff, loss, ndmiloss)
+    loss[1] = adjust_loss_with_ndmi(1, ff, loss, ndmiloss, adjustments[2])
+    loss[2] = adjust_loss_with_ndmi(2, ff, loss, ndmiloss, adjustments[3])
+    loss[3] = adjust_loss_with_ndmi(3, ff, loss, ndmiloss, adjustments[4])
     loss[4] = loss22 * 5
     #loss[4] = adjust_loss_with_ndmi(4, ff, loss, ndmiloss)
     #loss[4][loss[4] > 0] = 5.
@@ -620,6 +628,7 @@ def adjust_loss_gain(gain, loss, ndmiloss, fs, dates):
     gains[gains > 0] = 1.
     gain = gain * gains
     del unstable_preds
+
     return gain, loss
 
 
@@ -991,6 +1000,7 @@ def filter_gain_px(gain2, loss2, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
     #nondeforested_gain = 0
     year = 0
     gainpx = []
+    gaindates =[]
     #deforested_gain = np.zeros_like(Zlabeled)
     for idx in range(1, Nlabels):
         Npx = np.sum(Zlabeled == idx)
@@ -1191,10 +1201,11 @@ def filter_gain_px(gain2, loss2, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
                     if n_px < 25:
                         if n_gain_events > 5:
                             gainpx.append(idx)
+                            gaindates.append(gdate)
                     elif n_gain_events > 0:
                         gainpx.append(idx)
-        np.save('zlabeled.npy', Zlabeled)
-    return gainpx, Zlabeled, additional_gain
+                        gaindates.append(gdate)
+    return gainpx, Zlabeled, additional_gain, gaindates
 
 
 ### WRITE TO DISK ###

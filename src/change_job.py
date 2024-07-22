@@ -219,7 +219,7 @@ def remove_unstable_loss(year, med, fs, nans):
     #loss_clip = _id_lgl(year - 2017, fs, gain)
     #loss_mask = (- 1 * np.min(np.diff(fs, axis = 0), axis = 0)) < (50 + loss_clip)
     #loss_clip = np.sum(fs[:(year - 2017)] < 30, axis = 0)
-    print("GAIN", np.mean(gain))
+    #print("GAIN", np.mean(gain))
     prior_notree = np.sum(fs[:year - 2016] < 30, axis = 0) >= 1
     prior_gain = np.max(fs[:year - 2016], axis = 0) - np.min(fs[:year - 2016], axis = 0)
     #prior_gain = np.max(np.diff(fs[:year - 2015], axis = 0), 0) >= 50
@@ -424,7 +424,7 @@ def validate_patch_gain(fs, gain, loss):
 
 year = 2019
 N_YEARS = 6
-country = 'cambodia'
+country = 'india'
 local_path = '../project-monitoring/tiles/'
 output_path = f'/Volumes/John/change/{country.replace(" ", "")}/'
 country = country.title()
@@ -442,8 +442,10 @@ if __name__ == '__main__':
         AWSSECRET = key['awssecret']
 
     data = pd.read_csv('asia.csv')#"process_area_2022.csv")
-    data = pd.read_csv("remove_rotation.csv")
-    data = data[data['country'] == 'Cambodia']
+    data = pd.read_csv('process_area_2022.csv')#"process_area_2022.csv")
+    data = pd.read_csv('maharashtra.csv')
+    #data = pd.read_csv("remove_rotation.csv")
+    data = data[data['country'] == 'India']
     try:
         data['X_tile'] = data['X_tile'].str.extract('(\d+)', expand=False)
         data['X_tile'] = pd.to_numeric(data['X_tile'])
@@ -455,12 +457,13 @@ if __name__ == '__main__':
         time.sleep(1)
 
     #data = data[3000:]
-    x = 2332
-    y = 991
+    x = 2335
+    y = 972
     #data = data[data['Y_tile'] == int(y)]
     #data = data[data['X_tile'] == int(x)]
     #data = data.sample(frac=1).reset_index(drop=True)
-    #data = data.iloc[::-1]
+    data = data.sort_values(by=['Y_tile'])
+    data = data.iloc[::-1]
     data = data.reset_index(drop = True)
     #data = data[:1500]
     x = str(int(x))
@@ -472,7 +475,7 @@ if __name__ == '__main__':
         y = val.Y_tile
         suffix = 'CHANGENEW_bigall4-may'
         fname = f"{output_path}{str(x)}X{str(y)}Y{suffix}.tif"
-        if not os.path.exists(fname):
+        if os.path.exists(fname):
             print(i, fname, " exists")
         else:
             try:
@@ -480,6 +483,28 @@ if __name__ == '__main__':
                 
                 # Open all the TTC data, unzip, make the bounding box
                 fs, changemap, stable, notree, n_valid_years, nans = load_ttc_tiles(x, y)
+                adjustments = []
+                for i in range(fs.shape[0]):
+                    adj = 0
+                    if i > 0:
+                        # If it is a decrease, and then an increase, for the whole tile
+                        # Then we are priming the model to think this is an anomaly,
+                        # Rather than a true change
+                        # So we offset the base loss change by this amount
+                        # 40 - 50 = -10
+                        adj = np.mean(fs[i] - fs[i - 1])
+                        #print(f'{i+2017} - {i + 2016}: {adj}, {np.std(fs[i] - fs[i - 1])}')
+                        
+                    if i < (fs.shape[0] - 1):
+                        # 40 - 50 = -10
+                        adj2 = np.mean(fs[i] - fs[i + 1])
+                        adj = (adj + adj2) / 2
+
+                    if i == 0:
+                        adjustments.append(0)
+                    else:
+                        adjustments.append(adj)
+                    print(f'{i+2017}: {np.mean(fs[i])}%, {adj}')
                 change.download_and_unzip_data(x, y, local_path, AWSKEY, AWSSECRET)
                 print("The data has been downloaded")
                 bbx = change.tile_bbx(x, y, data)
@@ -507,6 +532,7 @@ if __name__ == '__main__':
 
                 ard = np.concatenate(list_of_files, axis = 0)
                 dates = np.concatenate(list_of_dates)
+                #np.save("dates.npy", dates)
 
                 # Validate the L2A imagery for 2017, which can be wrong due to 
                 # Sensor calibration in 2017
@@ -562,7 +588,7 @@ if __name__ == '__main__':
 
                     # Fuzzy set matching btwn NDMI gain/loss and subraction gain/loss
                     #if kde is not None:
-                    gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, dates)
+                    gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments)
                     #gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, kde, kde10, kde_expected, kde2, dates)
                     #else:
 
@@ -604,9 +630,13 @@ if __name__ == '__main__':
                     if np.sum(stable) < 100:
                         modifier += 0.05
                     print(f"The modifier is: {modifier}")
-                    gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
+                    gainpx, Zlabeled, additional_gain, gaindates = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
                             cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier)
 
+                    gaindatesarr = np.zeros_like(gain)
+                    for idx, date in zip(gainpx, gaindates):
+                        gaindatesarr[Zlabeled == idx] = date
+                    #np.save("gaindatesarr.npy", gaindatesarr)
                     gain[~np.isin(Zlabeled, gainpx)] = 0.
                     gain = np.maximum(gain, additional_gain)
                     afters = []
@@ -628,17 +658,17 @@ if __name__ == '__main__':
                     #ratio_flaghigh = np.logical_or(ratio_flaghigh, (befores[-1] / total_before) > 0.8)
                     print("VH, H, L", ratio_flagveryhigh, ratio_flaghigh, ratio_flaglow, absolute_flag)
                     if ratio_flagveryhigh:
-                        gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
+                        gainpx, Zlabeled, additional_gain, gaindates = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
                                                 cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier + 0.2)
                         gain[~np.isin(Zlabeled, gainpx)] = 0.
                         gain = np.maximum(gain, additional_gain)
                     elif ratio_flaghigh:
-                        gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
+                        gainpx, Zlabeled, additional_gain, gaindates = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
                                                 cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier + 0.1)
                         gain[~np.isin(Zlabeled, gainpx)] = 0.
                         gain = np.maximum(gain, additional_gain)
                     elif ratio_flaglow or absolute_flag:
-                        gainpx, Zlabeled, additional_gain = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
+                        gainpx, Zlabeled, additional_gain, gaindates = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
                                                 cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier + 0.05)
                         gain[~np.isin(Zlabeled, gainpx)] = 0.
                         gain = np.maximum(gain, additional_gain)
@@ -661,7 +691,7 @@ if __name__ == '__main__':
                     med[gain > 0] = (gain[gain > 0] + 100)
                     med[loss > 0] = (loss[loss > 0] + 200)
                     rotational = np.logical_and(gain > 0, loss > 0)
-                    remove_rot = True
+                    remove_rot = False
                     if remove_rot:
                         med[rotational] = np.median(fs, axis = 0)[rotational]
                     else:
@@ -686,14 +716,18 @@ if __name__ == '__main__':
                     is_oob = np.logical_and(med > 110, med < 150)
                     med[is_oob] = np.median(fs, axis = 0)[is_oob]
                     med[lte2_data] = np.median(fs, axis = 0)[lte2_data]
+
                     #change.make_loss_plot(percentiles, loss, gain, dates, befores, afters, f"{str(x)}{str(y)}.png")
                 else:
                     med = np.median(fs, axis = 0)
-
-                #for i in range(0, 5):
-                #    l = remove_noise(med == (i + 200), 10)
-                #    med[med == (i + 200)]
                 change.write_tif(med, bbx, x, y, output_path, suffix = suffix)
+                try:
+                    loss_date = np.argmin(np.diff(kde, axis = 0), axis = 0)
+                    loss_date[loss == 0] = 0.
+                    np.save("lossdate.npy", loss_date)
+                except:
+                    continue
+                
 
                 #del afters, befores, med, rotational, lte2_data, is_oob, unstable_loss
                 #del ratio, movingavg, potential_loss, dem, fs, gain, loss
