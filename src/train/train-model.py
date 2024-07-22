@@ -353,8 +353,8 @@ if __name__ == '__main__':
     # - the indices added
     # - the quarterly medians calculated
     # - has been normalized
-    train_x = np.load(f"{args['train_data_folder']}/original_x.npy")
-    train_y = np.load(f"{args['train_data_folder']}/original_y.npy")
+    train_x = np.load(f"{args['train_data_folder']}/train_x.npy")
+    train_y = np.load(f"{args['train_data_folder']}/train_y.npy")
     #data = pd.read_csv(f"{args['train_data_folder']}train_x.csv")
     
     
@@ -438,7 +438,7 @@ if __name__ == '__main__':
         
         n_batch = int(len(randomize) // args['batch_size'])
         n_step = 0
-        for k in tqdm.trange(int(len(randomize) // (3 * args['batch_size']))):
+        for k in tqdm.trange(int(len(randomize) // (args['batch_size']))):
             batch_ids = randomize[k*args['batch_size']:(k+1)*args['batch_size']]
             x_batch, y_batch = src.data_utils.augment_batch(batch_ids, args['batch_size'], train_x, train_y, args)
             warm_up_steps += 1
