@@ -19,6 +19,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 VERBOSE = False
+YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
 
 def download_single_file(s3_file, local_file, apikey, apisecret, bucket):
     '''Downloads a file from s3 to local_file'''
@@ -47,7 +48,7 @@ def download_and_unzip_data(x, y, local_path, awskey, awssecret):
     
     ard_path = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/'
 
-    for year in [2017, 2018, 2019, 2020, 2021, 2022]:
+    for year in YEARS:
 
         local_path = '../project-monitoring/tiles/'
         ard_path = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/'
@@ -116,21 +117,22 @@ def load_all_ard(x, y, local_path):
     '''Loads the NDMI ard and image dates for all years
     and returns them
     #! TODO clean up the return statement'''
-    a17, d17, dem1 = load_ard_and_dates(x, y, 2017, local_path)
-    a18, d18, dem2 = load_ard_and_dates(x, y, 2018, local_path)
-    a19, d19, dem3 = load_ard_and_dates(x, y, 2019, local_path)
-    a20, d20, dem4 = load_ard_and_dates(x, y, 2020, local_path)
-    a21, d21, dem5 = load_ard_and_dates(x, y, 2021, local_path)
-    a22, d22, dem6 = load_ard_and_dates(x, y, 2022, local_path)
+    list_of_files = []
+    list_of_dates = []
+    dems = []
+    for year in YEARS:
+        ax, dx, demx = load_ard_and_dates(x, y, year, local_path)
+        list_of_files.append(ax)
+        list_of_dates.append(dx)
+        dems.append(demx)
 
     demshape = 3
-    dems = [dem1, dem2, dem3, dem4, dem5, dem6]
     i = 0
-    dem = dem1
-    for i in range(6):
+    dem = demx
+    for i in range(len(YEARS)):
         if dems[i].shape[0] != 3:
             dem = dems[i]
-    return a17, a18, a19, a20, a21, a22, d17, d18, d19, d20, d21, d22, dem
+    return list_of_files, list_of_dates, dem
 
 
 def assign_loss_year(loss, fs):
@@ -391,6 +393,7 @@ def identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, year):
 
     if year == 2018:
         positive_anomaly = positive_anomaly
+    # TODO: Convert this to be an END_YEAR
     if year == 2022:
         negative_anomaly = np.sum(negative_anomaly_2022[-2:], axis = 0) > 0
 
@@ -501,12 +504,13 @@ def remove_unstable_gain(loss, gain, fs):
     return gain 
 
 
-def adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments):
-
+def adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments, N_YEARS):
+    print(f"Starting adjust loss gain, with {N_YEARS} and {gain.shape}, {loss.shape}, {ndmiloss.shape}")
     fs = fs.astype(np.float32)
     ff = temporal_filter(fs)
 
     loss22 = loss[-1]
+    print(f"Loss end: {loss22.shape}")
     #np.save('loss22.npy', loss22)
     ndmi22 = ndmiloss[-1]
     #loss22, ndmi22 = identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, 2022)
@@ -515,43 +519,55 @@ def adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments):
     base_change -= adjustments[-1]
     base_change = np.clip(base_change, 40, 80)
     print(f"The base change is: {base_change}")
-    candidateloss2022 = ((np.mean(ff[3:5], axis = 0) - ff[5]) >= base_change) * np.logical_or(ff[4] > base_change, ff[3] > base_change) * (ff[5] < 30)
-    candndmiloss2022 = (np.min(ff[3:5], axis = 0) > 60) * ((np.min(ff[3:5], axis = 0) - ff[5]) >= 20)
+
+    #TODO: Convert this to be an END_YEAR
+    candidateloss2022 = ((np.mean(ff[N_YEARS-3:N_YEARS-1], axis = 0) - ff[N_YEARS-1]) >= base_change) * np.logical_or(ff[N_YEARS-2] > base_change, ff[N_YEARS-3] > base_change) * (ff[N_YEARS-1] < 30)
+    candndmiloss2022 = (np.min(ff[N_YEARS-3:N_YEARS-1], axis = 0) > 60) * ((np.min(ff[N_YEARS-3:N_YEARS-1], axis = 0) - (ff[N_YEARS-1])) >= 20)
+    print(candidateloss2022.shape, candndmiloss2022.shape)
     ndmi22 = remove_nonoverlapping_events(candndmiloss2022, ndmi22, 10)
     loss22 = remove_nonoverlapping_events(candidateloss2022, loss22, 4)
+    print(f"Loss end: {loss22.shape}")
     loss22 = np.logical_or(loss22, ndmi22)
+    print(f"Loss end: {loss22.shape}")
     loss22 = remove_noise(loss22, thresh = 6)
-    
+    print(f"Loss end: {loss22.shape}")
+    print("Calculated NDMI loss")
 
     gain18 = ((ff[1] - ff[0]).squeeze() >= 50) * (ff[0] < 30) * (ff[2] > 50)
     gain18 = remove_nonoverlapping_events(gain18, gain[0], 2)
     gain18 = remove_noise(gain18, thresh = 10).squeeze() * 1
     gain18 = np.clip(gain18, 0, 1)
-
+    print("Calculated 2018 gain")
     #loss18, _ = identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, 2018)
     loss18 = loss[0]
     candidateloss2018 = ((ff[0] - ff[1]).squeeze() >= 50) * (ff[0] > 60) * (ff[1] < 40)
     loss18 = remove_nonoverlapping_events(candidateloss2018, loss18, 3)
     loss18 = loss18.squeeze() * 1
-
+    print("Calculated 2018 loss")
     #gain2 = np.copy(gain)
     gain[0] = 0.
 
-    gain[1] = adjust_gain_with_ndmi(2, ff, gain)
-    gain[2] = adjust_gain_with_ndmi(3, ff, gain)
-    gain[3] = adjust_gain_with_ndmi(4, ff, gain)
+    #TODO: Put this in a LOOP for END_YEAR - 1
+    print("Starting mid-year gain calculations")
+    for i in range(1, N_YEARS - 2):
+        print(f"Calculating gain {i} for {i + 2018}, with {ff.shape}, {gain.shape}")
+        gain[i] = adjust_gain_with_ndmi(i + 1, ff, gain)
 
-    candidate2022 = ((ff[5] - np.min(ff[3:5], axis = 0) >= 50) * (ff[5] > 50))
-    candidate2022 = candidate2022 * np.logical_or(ff[4] < 30, ff[3] < 30)
-    gain[4] = remove_nonoverlapping_events(candidate2022, np.max(gain[4:5], axis = 0), 4) * 5
+    # TODO: Convert this to be an END_YEAR
+    candidate2022 = ((ff[N_YEARS - 1] - np.min(ff[N_YEARS-3:N_YEARS-1], axis = 0) >= 50) * (ff[N_YEARS-1] > 50))
+    candidate2022 = candidate2022 * np.logical_or(ff[N_YEARS - 2] < 30, ff[N_YEARS - 3] < 30)
+    print(f"making candidate for end year: {candidate2022.shape}")
+    gain[N_YEARS - 2] = remove_nonoverlapping_events(candidate2022, np.max(gain[N_YEARS - 2:N_YEARS - 1], axis = 0), 4) * (N_YEARS - 1)
 
     #loss2 = np.copy(loss)
     loss[0] = 0.
-    #loss[0] = adjust_loss_with_ndmi(1, ff, loss, ndmiloss)
-    loss[1] = adjust_loss_with_ndmi(1, ff, loss, ndmiloss, adjustments[2])
-    loss[2] = adjust_loss_with_ndmi(2, ff, loss, ndmiloss, adjustments[3])
-    loss[3] = adjust_loss_with_ndmi(3, ff, loss, ndmiloss, adjustments[4])
-    loss[4] = loss22 * 5
+    # TODO: Put this in a LOOP for END_YEAR - 1
+    for i in range(1, N_YEARS - 2):
+        print(f"Calculating loss {i} for {i + 2018}, with {ff.shape}, {loss.shape}")
+        loss[i] = adjust_loss_with_ndmi(i, ff, loss, ndmiloss, adjustments[i+1])
+
+    print(f"Calculating loss for the end year: {loss22.shape}, {N_YEARS - 1}")
+    loss[-1] = loss22 * (N_YEARS - 1)
     #loss[4] = adjust_loss_with_ndmi(4, ff, loss, ndmiloss)
     #loss[4][loss[4] > 0] = 5.
     #loss2 = assign_loss_year(loss2, ff)
@@ -604,6 +620,7 @@ def adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments):
 
     # For gain year 2021-2022, if 2017 or 2018 have trees, but there is no loss
     # Then remove the gain
+    # TODO: the GTE need to be indexed off of MAX_YEAR
     gain_but_previous_trees = (gain >= 4) * (loss == 0) * (np.max(fs[:2], axis = 0) > 70)
     gain_but_previous_trees2 = (gain >= 5) * (loss == 0) * (np.max(fs[:3], axis = 0) > 70)
     gain_but_previous_trees = np.logical_or(gain_but_previous_trees, gain_but_previous_trees2)

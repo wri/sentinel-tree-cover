@@ -25,6 +25,7 @@ import traceback
 
 
 DRIVE = 'John'
+END_YEAR = 2025
 
 def days_since_creation_date(path_to_file):
     """
@@ -275,12 +276,12 @@ def load_ttc_tiles(x, y):
             else:
                 files = smooth_files
         else:
-            files = [file for file in os.listdir(dir_i)  if "_FINAL" in file]
+            files = [file for file in os.listdir(dir_i)  if "_FINAL" in file and file.endswith(".tif")]
         print(dir_i + files[0])
         return dir_i + files[0]
     # Loads all years of data for a specific X, Y tile pair
     f20_path = f'/Volumes/{DRIVE}/tof-output-2020/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_FINAL.tif'
-    '''
+    
     data = {
         'f17': np.zeros((3, 3)),
         'f18': np.zeros((3, 3)),
@@ -288,75 +289,35 @@ def load_ttc_tiles(x, y):
         'f20': np.zeros((3, 3)),
         'f21': np.zeros((3, 3)),
         'f22': np.zeros((3, 3)),
+        'f23': np.zeros((3, 3)),
+        'f24': np.zeros((3, 3)),
     }
-    '''
-    #for i in range(2017, 2022):
-    try:
-        fpath = f'/Volumes/{DRIVE}/tof-output-2017/{str(x)}/{str(y)}/'
-        fpath = _load_file(fpath)
-        arr = rs.open(fpath)
-        f17 = arr.read(1).astype(np.float32)[np.newaxis]
-        arr.close()
-        print(f"2017 processed {days_since_creation_date(fpath)} days ago")
-    except:
-        f17 = np.zeros((3, 3))
-    try:
-        fpath = f'/Volumes/{DRIVE}/tof-output-2018/{str(x)}/{str(y)}/'
-        fpath = _load_file(fpath)
-        arr = rs.open(fpath)
-        f18 = arr.read(1).astype(np.float32)[np.newaxis]
-        arr.close()
-        print(f"2018 processed {days_since_creation_date(fpath)} days ago, {f18.shape}")
-    except:
-        f18 = np.zeros((3, 3))
-    try:
-        fpath = f'/Volumes/{DRIVE}/tof-output-2019/{str(x)}/{str(y)}/'
-        fpath = _load_file(fpath)
-        arr = rs.open(fpath)
-        f19 = arr.read(1).astype(np.float32)[np.newaxis]
-        arr.close()
-        print(f"2019 processed {days_since_creation_date(fpath)} days ago, {f19.shape}")
-    except:
-        f19 = np.zeros((3, 3))
+    for i in range(2017, END_YEAR):
+        try:
+            fpath = f'/Volumes/{DRIVE}/tof-output-{str(i)}/{str(x)}/{str(y)}/'
+            fpath = _load_file(fpath)
+            arr = rs.open(fpath)
+            fx = arr.read(1).astype(np.float32)[np.newaxis]
+            arr.close()
+            print(f"{i} processed {days_since_creation_date(fpath)} days ago")
+            key = 'f' + str(i)[-2:]
+            data[key] = fx
+        except:
+            continue
 
-    if os.path.exists(f20_path):
-        fpath = f'/Volumes/{DRIVE}/tof-output-2020/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_FINAL.tif'
-        #fpath = _load_file(fpath)
-        arr = rs.open(fpath)
-        f20 = arr.read(1).astype(np.float32)[np.newaxis]
-        arr.close()
-        print(f"2020 processed {days_since_creation_date(fpath)} days ago")
-        #f20 = f20 if days_since_creation_date(fpath) < 100 else f19
-    else:
-        f20 = np.zeros((3, 3))
-    try:
-        fpath = f'/Volumes/{DRIVE}/tof-output-2021/{str(x)}/{str(y)}/'
-        fpath = _load_file(fpath)
-        f21 = rs.open(fpath).read(1).astype(np.float32)[np.newaxis]
-        print(f"2021 processed {days_since_creation_date(fpath)} days ago")
-    except:
-        f21 = np.zeros((3, 3))
-    try:
-        fpath = f'/Volumes/{DRIVE}/tof-output-2022/{str(x)}/{str(y)}/'
-        fpath = _load_file(fpath)
-        f22 = rs.open(fpath).read(1).astype(np.float32)[np.newaxis]
-        print(f"2022 processed {days_since_creation_date(fpath)} days ago")
-    except:
-        f22 = np.zeros((3, 3))
-
-    list_of_files = [f17, f18, f19, f20, f21, f22]
+    list_of_files = list(data.values())
     # get the shape
     # make a numb_years_valid file
     # return numb_years_valid
     valid_shape = [x.shape[1:] for x in list_of_files if x.shape[0] != 3][0]
     n_valid_years = np.zeros(valid_shape)
-    nans = np.zeros((6, valid_shape[0], valid_shape[1]), dtype = np.float32)
+    nans = np.zeros((len(list_of_files), valid_shape[0], valid_shape[1]), dtype = np.float32)
     try:
         for i in range(len(list_of_files)):
             if list_of_files[i].shape[0] == 3:
                 if i == 0:
                     print("17 does not exist")
-                    list_of_files[i] = f18 if f18.shape[0] != 3 else f19
+                    list_of_files[i] = list_of_files[i + 1] if list_of_files[i + 1] != 3 else list_of_files[i + 2]
                     #nans[0] = 1.
                 elif i == len(list_of_files) - 1:
                     list_of_files[i] = list_of_files[i - 1]
@@ -379,6 +340,7 @@ def load_ttc_tiles(x, y):
 
     fs = np.concatenate(list_of_files, axis = 0) # , f22
     fs = np.float32(fs)
+    print(f"The FS is {fs.shape}")
     #fs = 100 * (fs - 15) / 85
     fs[fs < 0] = 0.
     fs[fs < 20] = 0.
@@ -423,15 +385,16 @@ def validate_patch_gain(fs, gain, loss):
             #    print(f"{prior_treecover}, {np.sum(Zlabeled == i)}")
 
 year = 2019
-N_YEARS = 6
-country = 'india'
+country = 'elsalvador'
 local_path = '../project-monitoring/tiles/'
-output_path = f'/Volumes/John/change/{country.replace(" ", "")}/'
+output_path = f'/Volumes/John/change-new/{country.replace(" ", "")}/'
 country = country.title()
 print(country)
 
 if __name__ == '__main__':
     import argparse
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
 
     with open("../config.yaml", 'r') as stream:
         key = (yaml.safe_load(stream))
@@ -443,9 +406,9 @@ if __name__ == '__main__':
 
     data = pd.read_csv('asia.csv')#"process_area_2022.csv")
     data = pd.read_csv('process_area_2022.csv')#"process_area_2022.csv")
-    data = pd.read_csv('maharashtra.csv')
-    #data = pd.read_csv("remove_rotation.csv")
-    data = data[data['country'] == 'India']
+    #data = pd.read_csv('maharashtra.csv')
+    #data = pd.read_csv("santacruz.csv")
+    data = data[data['country'] == 'El Salvador']
     try:
         data['X_tile'] = data['X_tile'].str.extract('(\d+)', expand=False)
         data['X_tile'] = pd.to_numeric(data['X_tile'])
@@ -462,8 +425,10 @@ if __name__ == '__main__':
     #data = data[data['Y_tile'] == int(y)]
     #data = data[data['X_tile'] == int(x)]
     #data = data.sample(frac=1).reset_index(drop=True)
-    data = data.sort_values(by=['Y_tile'])
-    data = data.iloc[::-1]
+
+
+    #data = data.sort_values(by=['Y_tile'])
+    #data = data.iloc[::-1]
     data = data.reset_index(drop = True)
     #data = data[:1500]
     x = str(int(x))
@@ -482,7 +447,7 @@ if __name__ == '__main__':
                 print(f"STARTING {x}, {y}")
                 
                 # Open all the TTC data, unzip, make the bounding box
-                fs, changemap, stable, notree, n_valid_years, nans = load_ttc_tiles(x, y)
+                fs, changemap, stable, notree, n_valid_years, nans = load_ttc_tiles(x, y) # WORKS
                 adjustments = []
                 for i in range(fs.shape[0]):
                     adj = 0
@@ -505,21 +470,30 @@ if __name__ == '__main__':
                     else:
                         adjustments.append(adj)
                     print(f'{i+2017}: {np.mean(fs[i])}%, {adj}')
-                change.download_and_unzip_data(x, y, local_path, AWSKEY, AWSSECRET)
+                change.download_and_unzip_data(x, y, local_path, AWSKEY, AWSSECRET) # WORKS
                 print("The data has been downloaded")
-                bbx = change.tile_bbx(x, y, data)
+                bbx = change.tile_bbx(x, y, data) 
 
                 # Load the separate ARD files
                 #! TODO: Make the data loading be agnostic to the years, enabling 2023 data
-                a17, a18, a19, a20, a21, a22, d17, d18, d19, d20, d21, d22, dem = change.load_all_ard(x, y, local_path)
+                list_of_files, list_of_dates, dem = change.load_all_ard(x, y, local_path) # WORKS
                 print("The data has been loaded")
                 ard_path = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/'
                 dem = median_filter(dem, size = 9)
                 dem = resize(dem, (n_valid_years.shape), 0)
 
                 # Identify which years have valid data, and convert them to a single np arr
-                list_of_files = [a17, a18, a19, a20, a21, a22]
-                list_of_dates = [d17, d18, d19, d20, d21, d22]
+                #list_of_files = [a17, a18, a19, a20, a21, a22]
+                #list_of_dates = [d17, d18, d19, d20, d21, d22]
+                shapes = [val.shape[1] for i, val in enumerate(list_of_files)]
+
+                MAX_YEAR = 2021
+                print(shapes)
+                for i in shapes[-3:]:
+                    if i != 3:
+                        MAX_YEAR += 1
+                N_YEARS = MAX_YEAR - 2016
+                print(f"The max year is {MAX_YEAR}, giving {N_YEARS} years")
                 years_with_data = [i for i, val in enumerate(list_of_files) if val.shape[1] != 3]
                 list_of_files = [val for i, val in enumerate(list_of_files) if i in years_with_data]
                 list_of_dates = [val for i, val in enumerate(list_of_dates) if i in years_with_data]
@@ -584,11 +558,14 @@ if __name__ == '__main__':
 
                     # Predicate the gain on loss if there is a NT -> T -> NT
                     potential_loss = np.copy(loss)
+                    print(gain.shape, loss.shape, potential_loss.shape, fs.shape, "GAINLOSS")
                     gain = validate_gain(gain, potential_loss, fs)
 
                     # Fuzzy set matching btwn NDMI gain/loss and subraction gain/loss
                     #if kde is not None:
-                    gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments)
+
+                    # TODO!: THIS ONE DOES NOT WORK
+                    gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments, N_YEARS)
                     #gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, kde, kde10, kde_expected, kde2, dates)
                     #else:
 

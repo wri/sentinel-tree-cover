@@ -924,7 +924,9 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
    # np.save("interp.npy", areas_interpolated)
     if mosaic is None:
         mosaic = make_aligned_mosaic(tiles, areas_interpolated, False)
-    #np.save("mosaic.npy", mosaic)
+    np.save("mosaic.npy", mosaic)
+    np.save("tiles.npy", tiles)
+    np.save("areas_interpolated.npy", areas_interpolated)
     #candidate = adjust_median(tiles, mosaic, areas_interpolated > 0.75)
     n_interp = np.sum(areas_interpolated, axis = 0)
     n_interp = n_interp / np.max(n_interp)
@@ -967,7 +969,7 @@ def remove_cloud_and_shadows(tiles: np.ndarray,
 
     for i in range(tiles.shape[0], tiles.shape[0] - 1):
         brightness = np.sum(tiles[i-1:i+2, ..., :3], axis = 0)
-
+    np.save("tiles_interp.npy", areas_interpolated)
     return tiles, areas_interpolated, to_remove
 
 

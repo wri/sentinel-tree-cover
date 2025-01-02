@@ -51,3 +51,4 @@ notebooks/analysis/statistics/*
 *.hkl
 *.xlsx
 notebooks/development/validation_subregion_v1p6.png
+*.png

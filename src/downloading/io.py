@@ -176,6 +176,8 @@ def upload_raw_processed_s3(path_to_tile, x, y, uploader, year, nocleanup = Fals
         print(f"uploading {_file}")
         uploader.upload(bucket = 'tof-output', key = key, file = _file)
         os.remove(_file)
+    if os.path.isfile(path_to_tile + "ard_ndmi.hkl"):
+        os.remove(path_to_tile + "ard_ndmi.hkl")
 
     for folder in glob(path_to_tile + "raw/*/"):
         for file in os.listdir(folder):

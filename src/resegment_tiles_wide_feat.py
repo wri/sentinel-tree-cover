@@ -1753,7 +1753,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", dest = 'country')
     parser.add_argument("--local_path", dest = 'local_path', default = '../project-monitoring/tiles/')
-    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/retrain-combined-ca-220-684/')
+    parser.add_argument("--predict_model_path", dest = 'predict_model_path', default = '../models/tf2-ard-left/')
     parser.add_argument("--gap_model_path", dest = 'gap_model_path', default = '../models/182-gap-sept/')
     parser.add_argument("--superresolve_model_path", dest = 'superresolve_model_path', default = '../models/supres/nov-40k-swir/')
     parser.add_argument("--db_path", dest = "db_path", default = "process_area_2022.csv")
@@ -1817,6 +1817,7 @@ if __name__ == "__main__":
         predict_graph_def.ParseFromString(predict_file.read())
         predict_graph = tf.import_graph_def(predict_graph_def, name='predict')
         predict_sess = tf.compat.v1.Session(graph=predict_graph)
+        print(predict_sess.graph)
         predict_logits = predict_sess.graph.get_tensor_by_name(f"predict/conv2d_13/Sigmoid:0")       
         #if args.length == 12:
         predict_latefeats = predict_sess.graph.get_tensor_by_name(f"predict/csse_out_mul/mul:0") 
@@ -1881,7 +1882,7 @@ if __name__ == "__main__":
     print(len(data))
     
     current_y = 10000
-    for index, row in data[150:].iterrows(): # We want to sort this by the X so that it goes from left to right
+    for index, row in data.iterrows(): # We want to sort this by the X so that it goes from left to right
         time1 = time.time()
         x = str(int(row['X_tile']))
         y = str(int(row['Y_tile']))
@@ -1928,50 +1929,50 @@ if __name__ == "__main__":
                 s2_shape = (0, 0)
 
             if finished == 1:
-                #try:
-                # This recreates the TTC tiles
-                # So is disabled here
-                #predictions_left, _ = recreate_resegmented_tifs(path_to_tile + "processed/", s2_shape)
-                #predictions_right, _ = recreate_resegmented_tifs(path_to_right + "processed/", s2_neighb_shape)
+                try:
+                    # This recreates the TTC tiles
+                    # So is disabled here
+                    #predictions_left, _ = recreate_resegmented_tifs(path_to_tile + "processed/", s2_shape)
+                    #predictions_right, _ = recreate_resegmented_tifs(path_to_right + "processed/", s2_neighb_shape)
 
-                # This recreates the TTC features
-                middle = load_mosaic_feats(path_to_tile + "feats/", depth = 65)
-                np.save("middle.npy", middle)
-                img, sums = combine_resegmented_feats(x, y, middle, indices = args.feat_ids)
-                # Upload the left file
-                # Upload the right file
-                np.save("sums.npy", sums)
-                # Generate the left tile
-                if os.path.exists(f"{path_to_tile}/{str(x)}X{str(y)}Y_SMOOTH_XY.tif"):
-                    suffix = "_SMOOTH_XY"
-                elif os.path.exists(f"{path_to_tile}/{str(x)}X{str(y)}Y_SMOOTH_Y.tif"):
-                    suffix = "_SMOOTH_XY"
-                else:
-                    suffix = "_SMOOTH_X"
+                    # This recreates the TTC features
+                    middle = load_mosaic_feats(path_to_tile + "feats/", depth = 65)
+                    np.save("middle.npy", middle)
+                    img, sums = combine_resegmented_feats(x, y, middle, indices = args.feat_ids)
+                    # Upload the left file
+                    # Upload the right file
+                    np.save("sums.npy", sums)
+                    # Generate the left tile
+                    if os.path.exists(f"{path_to_tile}/{str(x)}X{str(y)}Y_SMOOTH_XY.tif"):
+                        suffix = "_SMOOTH_XY"
+                    elif os.path.exists(f"{path_to_tile}/{str(x)}X{str(y)}Y_SMOOTH_Y.tif"):
+                        suffix = "_SMOOTH_XY"
+                    else:
+                        suffix = "_SMOOTH_X"
 
-                #file = write_tif(predictions_left, bbx, x, y, path_to_tile, suffix)
-                #key = f'{str(args.year)}/tiles/{x}/{y}/{str(x)}X{str(y)}Y{suffix}.tif'
-                #uploader.upload(bucket = args.s3_bucket, key = key, file = file)
+                    #file = write_tif(predictions_left, bbx, x, y, path_to_tile, suffix)
+                    #key = f'{str(args.year)}/tiles/{x}/{y}/{str(x)}X{str(y)}Y{suffix}.tif'
+                    #uploader.upload(bucket = args.s3_bucket, key = key, file = file)
 
-                # Generate the right tile
-                if os.path.exists(f"{path_to_right}/{str(int(x) + 1)}X{str(int(y))}Y_SMOOTH_XY.tif"):
-                    suffix = "_SMOOTH_XY"
-                elif os.path.exists(f"{path_to_right}/{str(int(x) + 1)}X{str(int(y))}Y_SMOOTH_Y.tif"):
-                    suffix = "_SMOOTH_XY"
-                else:
-                    suffix = "_SMOOTH_X"
+                    # Generate the right tile
+                    if os.path.exists(f"{path_to_right}/{str(int(x) + 1)}X{str(int(y))}Y_SMOOTH_XY.tif"):
+                        suffix = "_SMOOTH_XY"
+                    elif os.path.exists(f"{path_to_right}/{str(int(x) + 1)}X{str(int(y))}Y_SMOOTH_Y.tif"):
+                        suffix = "_SMOOTH_XY"
+                    else:
+                        suffix = "_SMOOTH_X"
 
-                #file = write_tif(predictions_right, neighb_bbx, str(int(x) + 1), y, path_to_right, suffix)
-                #key = f'{str(args.year)}/tiles/{str(int(x) + 1)}/{y}/{str(int(x) + 1)}X{str(y)}Y{suffix}.tif'
-                #uploader.upload(bucket = args.s3_bucket, key = key, file = file)
-                
-                # Cleanup
-                #cleanup(path_to_tile, path_to_right, delete = True, upload = True)
-                time2 = time.time()
-                print(f"Finished resegment in {np.around(time2 - time1, 1)} seconds")
-                
+                    #file = write_tif(predictions_right, neighb_bbx, str(int(x) + 1), y, path_to_right, suffix)
+                    #key = f'{str(args.year)}/tiles/{str(int(x) + 1)}/{y}/{str(int(x) + 1)}X{str(y)}Y{suffix}.tif'
+                    #uploader.upload(bucket = args.s3_bucket, key = key, file = file)
+                    
+                    # Cleanup
+                    #cleanup(path_to_tile, path_to_right, delete = True, upload = True)
+                    time2 = time.time()
+                    print(f"Finished resegment in {np.around(time2 - time1, 1)} seconds")
+                    
 
-                #except KeyboardInterrupt:
-                #    break
-                #except Exception as e:
-                #    print(f"Ran into {str(e)}")
+                except KeyboardInterrupt:
+                    break
+                except Exception as e:
+                    print(f"Ran into {str(e)}")

@@ -25,9 +25,9 @@ echo "N Rows, $n_rows"
 
 # bash run_job.sh 0 3000 4 Cambodia 2022 True True True 'asia.csv' 8
 # Loop through the range
-for (( i=start; i<=end; i+=5)); do
+for (( i=start; i<=end; i+=10)); do
         echo "Running iteration $i..."
     # Run the Python script with the variable as argument
-    python3 download_and_predict_job.py --country "$4" --year "$5" --reprocess "$6" --redownload "$7" --start "$i" --end "$(($i + 5))" --ul_flag "$8" --n_rows $n_rows --db_path $csv
+    python3.11 download_and_predict_job.py --country "$4" --year "$5" --reprocess "$6" --redownload "$7" --start "$i" --end "$(($i + 5))" --ul_flag "$8" --n_rows $n_rows --db_path $csv
     echo "Finished iteration $i..."
 done

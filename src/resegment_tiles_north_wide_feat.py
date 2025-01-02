@@ -1787,7 +1787,8 @@ if __name__ == "__main__":
     print(len(data))
     current_x = 10000
     n = 0
-    for index, row in data[20:].iterrows(): # We want to sort this by the X so that it goes from left to right
+    for index, row in data[10:].iterrows(): # We want to sort this by the X so that it goes from left to right
+        print("WATWAT")
         if index > int(args.start_id):
             x = str(int(row['X_tile']))
             y = str(int(row['Y_tile']))
@@ -1797,7 +1798,7 @@ if __name__ == "__main__":
             #current_x = cleanup_row_or_col(idx = x,
             #    current_idx = current_x,
             #    local_path = args.local_path)
-
+            print("WAT")
             if int(x) < int(args.start_x):
                 path_to_tile = f'{args.local_path}{str(x)}/{str(y)}/'
                 path_to_right = f'{args.local_path}{str(x)}/{str(int(y) + 1)}/'
@@ -1833,52 +1834,52 @@ if __name__ == "__main__":
                     s2_shape = (0, 0)
                     s2_neighb_shape = (0, 0)
                 if finished == 1:
-                    try:
-                        # This recreates the TTC tiles
-                        # So is disabled here
-                        #predictions_left, _ = recreate_resegmented_tifs(path_to_tile + "processed/", s2_shape)
-                        #predictions_right, _ = recreate_resegmented_tifs(path_to_right + "processed/", s2_neighb_shape)
+                    #try:
+                    # This recreates the TTC tiles
+                    # So is disabled here
+                    #predictions_left, _ = recreate_resegmented_tifs(path_to_tile + "processed/", s2_shape)
+                    #predictions_right, _ = recreate_resegmented_tifs(path_to_right + "processed/", s2_neighb_shape)
 
-                        # This recreates the TTC features
-                        middle = load_mosaic_feats(path_to_tile + "feats/", depth = 65)
-                        np.save("middle.npy", middle)
-                        img, sums = combine_resegmented_feats(x, y, middle, indices = args.feat_ids)
-                        # Upload the left file
-                        # Upload the right file
+                    # This recreates the TTC features
+                    middle = load_mosaic_feats(path_to_tile + "feats/", depth = 65)
+                    np.save("middle.npy", middle)
+                    img, sums = combine_resegmented_feats(x, y, middle, indices = args.feat_ids)
+                    # Upload the left file
+                    # Upload the right file
 
-                        # Generate the top tile
-                        if os.path.exists(f"{path_to_tile}/{str(x)}X{str(y)}Y_SMOOTH_XY.tif"):
-                            suffix = "_SMOOTH_XY"
-                        elif os.path.exists(f"{path_to_tile}/{str(x)}X{str(y)}Y_SMOOTH_Y.tif"):
-                            suffix = "_SMOOTH_XY"
-                        else:
-                            suffix = "_SMOOTH_X"
+                    # Generate the top tile
+                    if os.path.exists(f"{path_to_tile}/{str(x)}X{str(y)}Y_SMOOTH_XY.tif"):
+                        suffix = "_SMOOTH_XY"
+                    elif os.path.exists(f"{path_to_tile}/{str(x)}X{str(y)}Y_SMOOTH_Y.tif"):
+                        suffix = "_SMOOTH_XY"
+                    else:
+                        suffix = "_SMOOTH_X"
 
-                        #file = write_tif(predictions_left, bbx, x, y, path_to_tile, suffix)
-                        #key = f'{str(args.year)}/tiles/{x}/{y}/{str(x)}X{str(y)}Y{suffix}.tif'
-                        #uploader.upload(bucket = args.s3_bucket, key = key, file = file)
+                    #file = write_tif(predictions_left, bbx, x, y, path_to_tile, suffix)
+                    #key = f'{str(args.year)}/tiles/{x}/{y}/{str(x)}X{str(y)}Y{suffix}.tif'
+                    #uploader.upload(bucket = args.s3_bucket, key = key, file = file)
 
-                        # Generate the right tile
-                        if os.path.exists(f"{path_to_right}/{str(x)}X{str(int(y) + 1)}Y_SMOOTH_XY.tif"):
-                            suffix = "_SMOOTH_XY"
-                        elif os.path.exists(f"{path_to_right}/{str(x)}X{str(int(y) + 1)}Y_SMOOTH_Y.tif"):
-                            suffix = "_SMOOTH_XY"
-                        else:
-                            suffix = "_SMOOTH_X"
+                    # Generate the right tile
+                    if os.path.exists(f"{path_to_right}/{str(x)}X{str(int(y) + 1)}Y_SMOOTH_XY.tif"):
+                        suffix = "_SMOOTH_XY"
+                    elif os.path.exists(f"{path_to_right}/{str(x)}X{str(int(y) + 1)}Y_SMOOTH_Y.tif"):
+                        suffix = "_SMOOTH_XY"
+                    else:
+                        suffix = "_SMOOTH_X"
 
-                        #file = write_tif(predictions_right, neighb_bbx, str(int(x) + 1), y, path_to_right, suffix)
-                        #key = f'{str(args.year)}/tiles/{str(int(x) + 1)}/{y}/{str(int(x) + 1)}X{str(y)}Y{suffix}.tif'
-                        #uploader.upload(bucket = args.s3_bucket, key = key, file = file)
+                    #file = write_tif(predictions_right, neighb_bbx, str(int(x) + 1), y, path_to_right, suffix)
+                    #key = f'{str(args.year)}/tiles/{str(int(x) + 1)}/{y}/{str(int(x) + 1)}X{str(y)}Y{suffix}.tif'
+                    #uploader.upload(bucket = args.s3_bucket, key = key, file = file)
+                    
+                    # Cleanup
+                    #cleanup(path_to_tile, path_to_right, delete = True, upload = True)
+                    #print(f"Finished resegment in {np.around(time2 - time1, 1)} seconds")
+                    
+
+                    #except KeyboardInterrupt:
+                    #    break
+                    #except Exception as e:
+                    #    print(f"POSTPROCESS: Ran into {str(e)}")
                         
-                        # Cleanup
-                        #cleanup(path_to_tile, path_to_right, delete = True, upload = True)
-                        #print(f"Finished resegment in {np.around(time2 - time1, 1)} seconds")
-                        
-
-                    except KeyboardInterrupt:
-                        break
-                    except Exception as e:
-                        print(f"POSTPROCESS: Ran into {str(e)}")
-                        
-                    n += 1
+                    #n += 1
                 

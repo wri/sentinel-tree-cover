@@ -1,4 +1,5 @@
 FROM tensorflow/tensorflow:2.14.0-jupyter
+RUN dpkg --add-architecture amd64 && apt-get update
 
 # Adds metadata to the image as a key value pair example LABEL version="1.0"
 LABEL maintainer="John Brandt <john.brandt@wri.org>"
@@ -43,3 +44,5 @@ ENTRYPOINT ["python", "-u", "src/download_and_predict_job.py"]
 
 # docker build -t tof_download .
 # docker run -it --entrypoint /bin/bash tof_download:latest <image> # runs to open shell
+
+#DOCKER_BUILDKIT=1 docker buildx build --platform linux/amd64  -t tof_download .
