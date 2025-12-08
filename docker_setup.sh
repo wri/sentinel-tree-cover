@@ -24,6 +24,7 @@ docker pull 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download:latest &&\
 tmux new -s node-node-4
 
 docker run -it --entrypoint /bin/bash 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download
+wget -O src/downloading/io.py https://raw.githubusercontent.com/wri/sentinel-tree-cover/refs/heads/master/src/downloading/io.py 
 cd src
 python3 download_and_predict_job.py --country "Zambia" --ul_flag True
 

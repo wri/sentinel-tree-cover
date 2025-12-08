@@ -272,7 +272,7 @@ def download_folder(s3_folder, local_dir, apikey, apisecret, bucket):
                         aws_access_key_id=apikey,
                         aws_secret_access_key=apisecret)
     bucket = s3.Bucket(bucket)
-
+    print(f"Downloading: {s3_folder}")
     for obj in bucket.objects.filter(Prefix=s3_folder):
         target = obj.key if local_dir is None \
             else os.path.join(local_dir, os.path.relpath(obj.key, s3_folder))
@@ -280,6 +280,7 @@ def download_folder(s3_folder, local_dir, apikey, apisecret, bucket):
             os.makedirs(os.path.dirname(target))
         if obj.key[-1] == '/':
             continue
+        print(obj.key, target)
         bucket.download_file(obj.key, target)
 
 

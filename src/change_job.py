@@ -89,7 +89,6 @@ def validate_ard(n_imgs_per_year, ard, dates):
         other_diffs = np.delete(other_diffs, i)
         mean_others = np.mean(np.abs(other_diffs))
         outlier_ratio = annual_ndmi_diff[i] / mean_others
-        print(year, outlier_ratio)
         if outlier_ratio >= 3 and i == 0:
             outliers.append(i)
         year += 1
@@ -296,9 +295,8 @@ def load_ttc_tiles(x, y):
         try:
             fpath = f'/Volumes/{DRIVE}/tof-output-{str(i)}/{str(x)}/{str(y)}/'
             fpath = _load_file(fpath)
-            arr = rs.open(fpath)
-            fx = arr.read(1).astype(np.float32)[np.newaxis]
-            arr.close()
+            with rs.open(fpath) as arr:
+                fx = arr.read(1).astype(np.float32)[np.newaxis]
             print(f"{i} processed {days_since_creation_date(fpath)} days ago")
             key = 'f' + str(i)[-2:]
             data[key] = fx
@@ -385,7 +383,7 @@ def validate_patch_gain(fs, gain, loss):
             #    print(f"{prior_treecover}, {np.sum(Zlabeled == i)}")
 
 year = 2019
-country = 'elsalvador'
+country = 'Para'
 local_path = '../project-monitoring/tiles/'
 output_path = f'/Volumes/John/change-new/{country.replace(" ", "")}/'
 country = country.title()
@@ -405,10 +403,10 @@ if __name__ == '__main__':
         AWSSECRET = key['awssecret']
 
     data = pd.read_csv('asia.csv')#"process_area_2022.csv")
-    data = pd.read_csv('process_area_2022.csv')#"process_area_2022.csv")
+    data = pd.read_csv('justdiggit.csv')#"process_area_2022.csv")
     #data = pd.read_csv('maharashtra.csv')
     #data = pd.read_csv("santacruz.csv")
-    data = data[data['country'] == 'El Salvador']
+    #data = data[data['country'] == 'Para']
     try:
         data['X_tile'] = data['X_tile'].str.extract('(\d+)', expand=False)
         data['X_tile'] = pd.to_numeric(data['X_tile'])
@@ -693,8 +691,6 @@ if __name__ == '__main__':
                     is_oob = np.logical_and(med > 110, med < 150)
                     med[is_oob] = np.median(fs, axis = 0)[is_oob]
                     med[lte2_data] = np.median(fs, axis = 0)[lte2_data]
-
-                    #change.make_loss_plot(percentiles, loss, gain, dates, befores, afters, f"{str(x)}{str(y)}.png")
                 else:
                     med = np.median(fs, axis = 0)
                 change.write_tif(med, bbx, x, y, output_path, suffix = suffix)

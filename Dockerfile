@@ -1,39 +1,51 @@
 FROM tensorflow/tensorflow:2.14.0-jupyter
-RUN dpkg --add-architecture amd64 && apt-get update
 
-# Adds metadata to the image as a key value pair example LABEL version="1.0"
 LABEL maintainer="John Brandt <john.brandt@wri.org>"
-
-##Set environment variables
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
-RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
+# Install system deps (including libhdf5-dev for compiling h5py)
+RUN apt-get update -y \
+ && apt-get install --no-install-recommends -y \
+      ca-certificates \
+      gcc \
+      libffi-dev \
+      libhdf5-dev \
+      wget \
+      unzip \
+      git \
+      openssh-client \
+      gnupg \
+      curl \
+      python3-dev \
+      python3-setuptools \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update -y && apt-get install --no-install-recommends -y -q \
-    ca-certificates gcc libffi-dev wget unzip git openssh-client gnupg curl \
-    python3-dev python3-setuptools
+# Upgrade pip, pin numpy to 1.26, build h5py from source
+RUN python3.11 -m pip install --upgrade pip \
+ && python3.11 -m pip install numpy==1.26.4 \
+ && python3.11 -m pip install --no-binary=h5py h5py
 
-RUN python3.11 -m pip install --upgrade pip &&\
-	mkdir src temp
+# Prep directories
+RUN mkdir /src /temp
+WORKDIR /src
 
-RUN python3.11 -m pip install --extra-index-url https://alpine-wheels.github.io/index numpy scipy
-
-WORKDIR src/
-COPY requirements.txt requirements.txt
-COPY setup.py setup.py
-
+# Copy & install Python dependencies
+COPY requirements.txt setup.py ./
 RUN python3.11 -m pip install -r requirements.txt
+
 RUN python3.11 -m pip install  $(python3 -c "import urllib.request, json, sys; \
  u=json.loads(urllib.request.urlopen('https://api.github.com/repos/sentinel-hub/sentinelhub-py/releases/latest').read().decode()).get('tarball_url', False);\
  print(u) if u else sys.exit(1);")
 
 
-RUN apt remove --purge python3-apt -y && apt install python3-apt -y
-RUN apt remove --purge python3-apt -y && apt install python3-apt -y && apt-get update
-RUN apt-get install python3-gdal -y
+RUN apt-get update && apt-get install --no-install-recommends -y \
+      gdal-bin \
+      libgdal-dev \
+      python3-gdal \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN python3.11 -m pip install protobuf && python3.11 -m pip install boto3 --upgrade && python3.11 -m pip install -U scikit-learn --ignore-installed
-RUN python3.11 -m pip install -U hickle
+RUN python3.11 -m pip install protobuf && python3.11 -m pip install boto3 --upgrade
+# && python3.11 -m pip install -U scikit-learn --ignore-installed
 
 # RUN chmod +x ./run_test.sh &&\
 #  	./run_test.sh

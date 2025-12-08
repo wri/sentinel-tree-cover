@@ -21,10 +21,9 @@ from matplotlib import pyplot as plt
 VERBOSE = False
 YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
 
-def download_single_file(s3_file, local_file, apikey, apisecret, bucket):
+def download_single_file(conn, s3_file, local_file, apikey, apisecret, bucket):
     '''Downloads a file from s3 to local_file'''
-    conn = boto3.client('s3', aws_access_key_id=apikey,
-                        aws_secret_access_key=apisecret) 
+    
     #print(f"Starting download of {s3_file} to {local_file} from {bucket}")
     key = "/".join(s3_file.split("/")[3:])
     conn.download_file(bucket, key, local_file)
@@ -47,7 +46,8 @@ def download_and_unzip_data(x, y, local_path, awskey, awssecret):
     local_path = '../project-monitoring/tiles/'
     
     ard_path = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/'
-
+    conn = boto3.client('s3', aws_access_key_id=awskey,
+                        aws_secret_access_key=awssecret) 
     for year in YEARS:
 
         local_path = '../project-monitoring/tiles/'
@@ -57,7 +57,7 @@ def download_and_unzip_data(x, y, local_path, awskey, awssecret):
 
         s3_file = f's3://tof-output/{str(year)}/change/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_ard.zip'
         try:
-            download_single_file(s3_file, "output.zip", awskey, awssecret, 'tof-output')
+            download_single_file(conn, s3_file, "output.zip", awskey, awssecret, 'tof-output')
             unzip_to_directory('output.zip', ard_path) 
         except:
             f"Error: {year}"
@@ -157,7 +157,7 @@ def assign_gain_year(gain, fs):
     max_tree_cover_gain = np.argmax(np.diff(fs, axis = 0), axis = 0) + 1
     for i in range(gain.shape[0]):
         gaini = (gain[i] > 0) * gain 
-        lossi[lossi]
+        #lossi[lossi]
         loss[i] = lossi
     return loss
     #except:
@@ -203,7 +203,7 @@ def identify_anomaly_events(inp, n, shape):
     if shape == 4:
         sums = np.concatenate([np.zeros_like(sums[0])[np.newaxis],
                            sums], axis = 0)
-    sums = sums.astype(np.int16)
+    sums = sums.astype(np.int16,copy=False)
     return sums
 
 
@@ -462,7 +462,7 @@ def adjust_loss_with_ndmi(idx, ff, loss2, ndmiloss, adjustment):
     base_change = np.clip(base_change, 40, 80)
     print(f"Adjusted base_change to {base_change}")
     # Expand the possible loss events for very small holes
-    loss_year = (ff[idx + 1] < 40).astype(np.float32)
+    loss_year = (ff[idx + 1] < 40).astype(np.float32, copy=False)
     is_small = np.ones_like(loss_year, dtype = np.float32)
     zlabels ,Nlabels = ndimage.measurements.label(is_small)
     for i in range(Nlabels):
@@ -506,7 +506,7 @@ def remove_unstable_gain(loss, gain, fs):
 
 def adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments, N_YEARS):
     print(f"Starting adjust loss gain, with {N_YEARS} and {gain.shape}, {loss.shape}, {ndmiloss.shape}")
-    fs = fs.astype(np.float32)
+    fs = fs.astype(np.float32, copy=False)
     ff = temporal_filter(fs)
 
     loss22 = loss[-1]
@@ -1239,7 +1239,7 @@ def write_tif(arr: np.ndarray,
     west, east = point[0], point[2]
     north, south = point[3], point[1]
     arr[np.isnan(arr)] = 255
-    arr = arr.astype(np.int16)
+    arr = arr.astype(np.int16, copy=False)
 
     transform = rs.transform.from_bounds(west=west,
                                                south=south,

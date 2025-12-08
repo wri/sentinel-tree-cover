@@ -32,6 +32,12 @@ import shutil
 import bottleneck as bn
 import tensorflow as tf
 import traceback
+import hickle as hkl
+import h5py
+import os
+
+
+
 if tf.__version__[0] == '2':
     import tensorflow.compat.v1 as tf
     tf.disable_v2_behavior()
@@ -70,6 +76,30 @@ python3.x download_and_predict_job.py --db_path $PATH --country $COUNTRY --ul_fl
 #####################################################
 ######### SINGLE-PURPOSE ONE I/O FUNCTIONS ##########
 #####################################################
+
+def safe_load(path):
+    """
+    Try to load a Hickle dump at `path`; if it fails
+    because of missing hkl_metadata, fall back to reading
+    the raw '/data' dataset with h5py.
+    Returns a Python list.
+    """
+    if not os.path.exists(path):
+        raise FileNotFoundError(path)
+
+    # 1) Try Hickle
+    try:
+        return hkl.load(path)
+    except (ValueError, RuntimeError) as e:
+        # Check it really is an HDF5 file with a 'data' dataset
+        with h5py.File(path, "r") as f:
+            if "data" not in f:
+                raise RuntimeError(
+                    f"{path} is not a Hickle file and has no '/data' dataset"
+                ) from e
+            arr = f["data"][:]
+        return arr
+
 
 def convert_to_db(x: np.ndarray, min_db: int) -> np.ndarray:
     """ Converts Sentinel 1 unitless backscatter coefficient
@@ -180,6 +210,8 @@ def float_to_int16(arr, precision = 1000):
     return arr
 
 
+
+
 def write_train_to_tif(arr: np.ndarray,
               point: list,
               name,
@@ -234,8 +266,8 @@ def write_ard_to_tif(arr: np.ndarray,
                                                north=north,
                                                width=arr.shape[1],
                                                height=arr.shape[0])
-    arr[arr > 0.255] = 0.255
-    arr = arr / 0.255
+    #arr[arr > 0.255] = 0.255
+    #arr = arr / 0.255
     arr = arr * 255
     arr = np.uint8(arr)
     
@@ -379,7 +411,8 @@ def download_raw_tile(tile_idx: tuple, local_path: str,
     y = tile_idx[1]
 
     path_to_tile = f'{local_path}{str(x)}/{str(y)}/'
-    s3_path_to_tile = f'{str(args.year)}/{subfolder}/{str(x)}/{str(y)}/'
+    s3_path_to_tile = f'dev-ttc-lithops-usw2/{str(args.year)}/{subfolder}/{str(x)}/{str(y)}/'
+    #s3_path_to_tile = f'{str(args.year)}/{subfolder}/{str(x)}/{str(y)}/'
     if subfolder == "tiles":
         folder_to_check = len(glob(path_to_tile + "*.tif")) > 0
     if subfolder == "processed":
@@ -459,8 +492,8 @@ def download_s1_tile(data: np.ndarray, bbx: list, api_key, year: int,
                                                )
     # Convert s1 to monthly mosaics, and write to disk
     s1 = tof_downloading.process_sentinel_1_tile(s1, s1_dates)
-    hkl.dump(to_int16(s1), s1_file, mode='w', compression='gzip')
-    hkl.dump(s1_dates, s1_dates_file, mode='w', compression='gzip')
+    hkl.dump(to_int16(s1), s1_file, compression='gzip')
+    hkl.dump(s1_dates, s1_dates_file, compression='gzip')
 
 
 def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year, initial_bbx, expansion) -> None:
@@ -468,7 +501,7 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year, initial_bbx
        including:
         - Clouds
         - Sentinel 1
-        - Sentinel 2 (10 and 20 m)
+        - Sentinel 2 (10 and 20 m) L2A
         - DEM
 
        Writes the raw data to the output/x/y folder as .hkl structure
@@ -504,22 +537,27 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year, initial_bbx
     
     make_output_and_temp_folders(folder)
 
-    clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl'
+    clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl' # every image in the catalogue
     cloud_mask_file = f'{folder}raw/clouds/cloudmask_{tile_idx}.hkl'
     shadows_file = f'{folder}raw/clouds/shadows_{tile_idx}.hkl'
     s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
     s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
     s2_10_file = f'{folder}raw/s2_10/{tile_idx}.hkl'
-    s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
+    s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl' # best n images that get used to create the ARD
     s2_dates_file = f'{folder}raw/misc/s2_dates_{tile_idx}.hkl'
-    s2_file = f'{folder}raw/s2/{tile_idx}.hkl' # deprecated?
-    clean_steps_file = f'{folder}raw/clouds/clean_steps_{tile_idx}.hkl'
+    #s2_file = f'{folder}raw/s2/{tile_idx}.hkl' # deprecated?
+    clean_steps_file = f'{folder}raw/clouds/clean_steps_{tile_idx}.hkl' # intiger indices of the clouds
     dem_file = f'{folder}raw/misc/dem_{tile_idx}.hkl'
 
     if not (os.path.exists(clouds_file)):
         print(f"Downloading {clouds_file}")
 
         # Identify images with <30% cloud cover
+        # For a really big bounding box, 60x60 km centered aroudn the tile
+        # we download the entire catalogue of available images but at 120m resolution
+        # we calculate a multitemporal cloud mask on top of that 120m data
+        # cloud_probs get returned are every 5 days because this is all the images
+        # 91 images
         cloud_probs, cloud_percent, all_dates, all_local_clouds = tof_downloading.identify_clouds_big_bbx(
             cloud_bbx = cloud_bbx, 
             shadow_bbx = bbx, # deprecated
@@ -589,15 +627,15 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year, initial_bbx
             print(i, x, y)
 
         print(f"Downloading {len(clean_dates)} of {len(clean_dates)+len(to_remove)} total steps")
-        hkl.dump(cloud_probs, clouds_file, mode='w', compression='gzip')
-        hkl.dump(clean_dates, clean_steps_file, mode='w', compression='gzip')
+        hkl.dump(cloud_probs, clouds_file, compression='gzip')
+        hkl.dump(clean_dates, clean_steps_file, compression='gzip')
     else:
         clean_dates =  np.arange(0, 9)
             
     if not (os.path.exists(s2_10_file)) and len(clean_dates) > 2:
         print(f"Downloading {s2_10_file}")
-        clean_steps = list(hkl.load(clean_steps_file))
-        cloud_probs = hkl.load(clouds_file)
+        clean_steps = list(safe_load(clean_steps_file))
+        cloud_probs = safe_load(clouds_file)
         s2_10, s2_20, s2_dates, clm = tof_downloading.download_sentinel_2_new(bbx,
                                                      clean_steps = clean_steps,
                                                      api_key = api_key, dates = dates,
@@ -609,10 +647,10 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year, initial_bbx
         to_remove_dates = [val for i, val in enumerate(clean_steps) if val not in s2_dates]
 
         # Save all the files to disk (temporarily)
-        hkl.dump(to_int16(s2_10), s2_10_file, mode='w', compression='gzip')
-        hkl.dump(to_int16(s2_20), s2_20_file, mode='w', compression='gzip')
-        hkl.dump(s2_dates, s2_dates_file, mode='w', compression='gzip')
-        hkl.dump(clm, cloud_mask_file, mode='w', compression='gzip')
+        hkl.dump(to_int16(s2_10), s2_10_file, compression='gzip')
+        hkl.dump(to_int16(s2_20), s2_20_file, compression='gzip')
+        hkl.dump(s2_dates, s2_dates_file, compression='gzip')
+        hkl.dump(clm, cloud_mask_file, compression='gzip')
         # We need to know the size to ensure that Sentinel-1 is the same size as
         # Sentinel-2
         size = s2_20.shape[1:3]
@@ -630,13 +668,59 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year, initial_bbx
     if not os.path.exists(dem_file) and len(clean_dates) > 2:
         print(f'Downloading DEM: {dem_file}')
         dem = tof_downloading.download_dem(dem_bbx, api_key = api_key)
-        hkl.dump(dem, dem_file, mode='w', compression='gzip')
+        hkl.dump(dem, dem_file, compression='gzip')
 
     return bbx, len(clean_dates)
 
 #####################################################
 ################# ARD CREATION FNS ##################
 #####################################################
+
+
+import numpy as np
+
+def pad_crop_to_hw(arr, target_hw, align="top-left", pad_value=0):
+    """
+    arr: np.ndarray with shape (T, H, W, C)
+    target_hw: (H_target, W_target)
+    align: "top-left" (default) or "center" — controls where cropping/padding happens
+    pad_value: constant value for padding
+    """
+    T, H, W, C = arr.shape
+    Ht, Wt = target_hw
+
+    # --- compute crop indices ---
+    if align == "center":
+        hs = max(0, (H - Ht) // 2)
+        ws = max(0, (W - Wt) // 2)
+    else:  # top-left
+        hs, ws = 0, 0
+
+    he = min(H, hs + Ht)
+    we = min(W, ws + Wt)
+
+    cropped = arr[:, hs:he, ws:we, :]
+
+    # --- compute padding needed (bottom/right for top-left; symmetric for center) ---
+    ch, cw = cropped.shape[1:3]
+    pad_h = max(0, Ht - ch)
+    pad_w = max(0, Wt - cw)
+
+    if align == "center":
+        ph1 = pad_h // 2
+        ph2 = pad_h - ph1
+        pw1 = pad_w // 2
+        pw2 = pad_w - pw1
+    else:  # top-left (pad on bottom/right)
+        ph1, ph2, pw1, pw2 = 0, pad_h, 0, pad_w
+
+    padded = np.pad(
+        cropped,
+        pad_width=((0,0), (ph1, ph2), (pw1, pw2), (0,0)),
+        mode="constant",
+        constant_values=pad_value
+    )
+    return padded
 
 def process_tile(x: int, y: int, data: pd.DataFrame, 
                  local_path: str, bbx, make_shadow: bool = False) -> np.ndarray:
@@ -681,10 +765,10 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     clean_steps_file = f'{folder}raw/clouds/clean_steps_{tile_idx}.hkl'
     dem_file = f'{folder}raw/misc/dem_{tile_idx}.hkl'
     
-    clouds = hkl.load(clouds_file)
+    clouds = safe_load(clouds_file)
     if os.path.exists(cloud_mask_file):
         # These are the S2Cloudless / Sen2Cor masks
-        clm = hkl.load(cloud_mask_file).repeat(2, axis = 1).repeat(2, axis = 2)
+        clm = safe_load(cloud_mask_file).repeat(2, axis = 1).repeat(2, axis = 2)
         for i in range(0, clm.shape[0]):
             mins = np.maximum(i - 1, 0)
             maxs = np.minimum(i + 1, clm.shape[0])
@@ -696,7 +780,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     else:
         clm = None
 
-    s1 = hkl.load(s1_file)
+    s1 = safe_load(s1_file)
     s1 = np.float32(s1) / 65535
     for i in range(s1.shape[0]):
         s1_i = s1[i]
@@ -707,11 +791,11 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     s1[..., -2] = convert_to_db(s1[..., -2], 22)
     s1 = s1.astype(np.float32)
 
-    s2_10 = to_float32(hkl.load(s2_10_file))        
-    s2_20 = to_float32(hkl.load(s2_20_file))
-    dem = hkl.load(dem_file)
+    s2_10 = to_float32(safe_load(s2_10_file))        
+    s2_20 = to_float32(safe_load(s2_20_file))
+    dem = safe_load(dem_file)
     dem = median_filter(dem, size =5)
-    image_dates = hkl.load(s2_dates_file)
+    image_dates = safe_load(s2_dates_file)
     
     # Ensure arrays are the same dims
     width = s2_20.shape[1] * 2
@@ -719,6 +803,9 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     s1 = adjust_shape(s1, width, height)
     s2_10 = adjust_shape(s2_10, width, height)
     dem = adjust_shape(dem, width, height)
+    dem = resize(dem, (width, height))
+
+    s1 = pad_crop_to_hw(s1, (width, height), align="center", pad_value=0) # # from (12,621,617,2) -> (12,622,618,2)
 
     print(f'### Array shapes ### \nClouds: {clouds.shape}, \n'
           f'S1: {s1.shape} \n'
@@ -932,7 +1019,7 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
             for i in range(sentinel2.shape[0]):
                 write_ard_to_tif(sentinel2[i, ..., :3], bbx,
                                 f"{str(x)}{str(y)}/{str(x)}X{str(y)}Y_{str(i)}_RAW", "")
-        _, interp, to_remove = cloud_removal.remove_cloud_and_shadows(
+        sentinel2, interp, to_remove = cloud_removal.remove_cloud_and_shadows(
                 sentinel2, cloudshad, cloudshad, image_dates,
                  pfcps = fcps, 
                  sentinel1 = #np.mean(s1, axis = 0),
@@ -942,6 +1029,10 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
                   ndbi[..., np.newaxis]], axis = -1),
                 mosaic = None,
             )
+        #if not os.path.exists(f"{str(x)}{str(y)}"):
+        #    os.mkdir("{str(x)}{str(y)}")
+
+        #mosaic = np.median(sentinel2, axis = 0)
         #write_ard_to_tif(mosaic[..., :3], bbx,
         #                        f"{str(x)}{str(y)}/{str(x)}X{str(y)}Y_MOSAIC", "")
         interp_pct = 100*np.mean(interp >0.05, axis = (1, 2))
@@ -1004,6 +1095,32 @@ def make_indices(arr):
     indices[:, ...,  2] = msavi2(arr)
     indices[:, ...,  3] = grndvi(arr)
     return indices
+
+
+def fill_zeros_with_temporal_median(x: np.ndarray) -> np.ndarray:
+    """
+    x: numpy array of shape [T, H, W, C]
+    Returns a copy where zeros are replaced by the non-zero median across T.
+    If all-T values at a pixel are zero, zeros remain.
+    Dtype is preserved (integers are rounded to nearest).
+    """
+    if x.ndim != 4:
+        raise ValueError("Expected shape [T, H, W, C].")
+
+    orig_dtype = x.dtype
+    # Work in float for NaN support (no copy if already float)
+    xf = x.astype(np.float32, copy=False)
+
+    # Compute per-pixel median across T ignoring zeros
+    xf_nonzero_as_nan = np.where(xf == 0, np.nan, xf)              # [T,H,W,C]
+    med = np.nanmedian(xf_nonzero_as_nan, axis=0)                  # [H,W,C]
+    med = np.where(np.isnan(med), 0.0, med)                        # zeros where all-T were zero
+
+    # Replace zeros in every frame with the median image (broadcast over T)
+    zero_mask = (x == 0)                                           # [T,H,W,C], uses original to decide replacements
+    print(f"the zero mask mean is {np.mean(zero_mask, axis = (1, 2, 3))}")
+    y = np.where(zero_mask, med[None, ...], x).astype(orig_dtype)  # preserve dtype
+    return y
 
 
 def make_and_smooth_indices(arr, dates):
@@ -1160,18 +1277,23 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
         np.median(grndvi(s2), axis = 0)[..., np.newaxis]], axis = -1)
     ard_ndmi_file = f"{args.local_path}{str(x)}/{str(y)}/ard_ndmi.hkl"
     ard_ndmi = (ndmi(s2) * 10000).astype(np.int16) // 5 * 5
-    hkl.dump(ard_ndmi, ard_ndmi_file, mode='w', compression='gzip')
+    hkl.dump(ard_ndmi, ard_ndmi_file, compression='gzip')
     np.save(f"{args.local_path}{str(x)}/{str(y)}/ard_dates.npy", dates)
 
-    if WRITE_MONTHLY_TIFS:
-        for i in range(s2.shape[0]):
-            write_ard_to_tif(s2[i, ..., :3], bbx,
-                             f"{str(x)}{str(y)}/{str(x)}X{str(y)}Y_{str(i)}", "")
+    
 
     s2, dates, interp = smooth_large_tile(s2, dates, interp)
+    if WRITE_MONTHLY_TIFS:
+        for i in range(s2.shape[0]):
+            write_ard_to_tif(s1[i, ..., :3], bbx,
+                             f"{str(x)}{str(y)}/{str(x)}X{str(y)}Y_{str(i)}", "")
     s2_median = s2_median[np.newaxis]
     #med_evi = np.percentile(s2_median[..., 10].flatten(), 0.5)
+    
+    s1 = fill_zeros_with_temporal_median(s1)
     s1_median = np.median(s1, axis = 0)[np.newaxis].astype(np.float32)
+    np.save("s1_median.npy", s1)
+
     #s2_median = np.median(s2, axis = 0)[np.newaxis].astype(np.float32)
 
     fname = f"{str(x)}X{str(y)}Y{str(year)}"
@@ -1191,7 +1313,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
     print(f"ARD is {ard_median.shape} shape")
     hkl.dump(ard_median,
       f"{path_to_tile}ard/{str(x)}X{str(y)}Y_ard.hkl", 
-      mode='w',
       compression='gzip')
     key = f'{str(year)}/ard/{x}/{y}/{str(x)}X{str(y)}Y_ard.hkl'
     uploader.upload(bucket = args.s3_bucket, key = key, 
@@ -1208,7 +1329,6 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
 
         hkl.dump(composite,
                  composite_fname, 
-                 mode='w',
                  compression='gzip')
 
         print(f"Saved composite to {composite_fname} of shape {composite.shape} and type {composite.dtype}")
@@ -1263,7 +1383,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             os.makedirs(os.path.realpath("train-ard"))
         fout = f"train-ard/{str(PLOTID)}.hkl"
         fouttif =  f"train-ard/{str(PLOTID)}.tif"
-        hkl.dump(train_sample, fout, mode = 'w', compression = 'gzip')
+        hkl.dump(train_sample, fout, compression = 'gzip')
         print(f"Saved to {fout}")
         
         key = f'train-samples-128/{str(PLOTID)}.hkl'
@@ -1773,7 +1893,8 @@ if __name__ == '__main__':
             bucket = args.db_path.split("/")[2]
             download_single_file(args.db_path, data, AWSKEY, AWSSECRET, bucket)
         data = pd.read_csv(data)
-        data = data[data['country'] == args.country]
+        #data = data[data['country'] == args.country]
+        #data = data[data['Year'] == args.year]
         data = data.reset_index(drop = True)
         #data = data.sample(frac=1).reset_index(drop=True)
         n_to_process = len(data)
@@ -1942,8 +2063,9 @@ if __name__ == '__main__':
                       print("The latitude is", lat)
                   time0 = time.time()
                   print(args.redownload, type(args.redownload))
-                  if (args.redownload == False) or not processed:
+                  if (args.redownload == False):# or not processed:
                       time1 = time.time()
+                      print("Dwonloading s3nt hub")
                       bbx, n_images = download_tile(x = x,
                                                     y = y, 
                                                     data = data, 
@@ -1957,6 +2079,7 @@ if __name__ == '__main__':
                       print(f"Finished downloading imagery in {np.around(time2 - time0, 1)} seconds")
                   else:
                       bbx = make_bbox(initial_bbx, expansion = 300/30)
+                      print("Downloading from s3!!!")
                       download_raw_tile((x, y), args.local_path, "raw")
                       if os.path.exists(f'{args.local_path}{str(x)}/{str(y)}/processed/'):
                           shutil.rmtree(f'{args.local_path}{str(x)}/{str(y)}/processed/')
@@ -1968,7 +2091,7 @@ if __name__ == '__main__':
                       s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
                       try:
                           print(os.listdir(f'{folder}raw/s2_20/'))
-                          size = hkl.load(s2_20_file)
+                          size = safe_load(s2_20_file)
                           size = size.shape[1:3]
                       except:
                           bbx, n_images = download_tile(x = x,
@@ -1978,7 +2101,7 @@ if __name__ == '__main__':
                                                     year = args.year, 
                                                     initial_bbx = initial_bbx,
                                                     expansion = expansion)
-                          size = hkl.load(s2_20_file)
+                          size = safe_load(s2_20_file)
                           size = size.shape[1:3]
                       if args.redownload_s1 == True:
                           download_s1_tile(data = data, 
@@ -2011,7 +2134,6 @@ if __name__ == '__main__':
                         print(f"ARD is {ard_median.shape} shape")
                         hkl.dump(ard_median,
                                   f"{path_to_tile}ard/{str(x)}X{str(y)}Y_ard.hkl", 
-                                  mode='w',
                                   compression='gzip')
                         key = f'{str(year)}/ard/{x}/{y}/{str(x)}X{str(y)}Y_ard.hkl'
                         uploader.upload(bucket = args.s3_bucket, key = key, 
@@ -2034,13 +2156,11 @@ if __name__ == '__main__':
 
                               hkl.dump(ard_median,
                                   f"{path_to_tile}ard/{str(x)}X{str(y)}Y_ard.hkl", 
-                                  mode='w',
                                   compression='gzip')
 
                               print(f"Features are {features.shape} shape")
                               hkl.dump(features,
                                   f"{path_to_tile}raw/feats/{str(x)}X{str(y)}Y_feats.hkl", 
-                                  mode='w',
                                   compression='gzip')
 
                               key = f'{str(year)}/ard/{x}/{y}/{str(x)}X{str(y)}Y_ard.hkl'
@@ -2058,6 +2178,8 @@ if __name__ == '__main__':
                           file = write_tif(predictions, bbx, x, y, path_to_tile)
                           key = f'{str(year)}/tiles/{x}/{y}/{str(x)}X{str(y)}Y_FINAL.tif'
                           uploader.upload(bucket = args.s3_bucket, key = key, file = file)
+                          path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/raw/'
+                          shutil.rmtree(path_to_tile)
 
                           
                       if args.ul_flag:
@@ -2078,8 +2200,8 @@ if __name__ == '__main__':
                 
                 except Exception as e:
                     exception_counter += 1
-                    path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/'
-                    shutil.rmtree(path_to_tile)
+                    #path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/'
+                    #shutil.rmtree(path_to_tile)
                     print(f"Ran into {str(e)} error, skipping {x}/{y}/")
                     traceback.print_exc()
                     s2 = None
