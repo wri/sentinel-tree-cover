@@ -15,6 +15,7 @@ from scipy.ndimage.morphology import binary_dilation, binary_erosion
 import math
 from scipy.signal import medfilt
 from scipy.ndimage.filters import minimum_filter1d, uniform_filter1d
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import seaborn as sns
 from matplotlib import pyplot as plt
 
@@ -46,8 +47,7 @@ def download_and_unzip_data(x, y, local_path, awskey, awssecret):
     local_path = '../project-monitoring/tiles/'
     
     ard_path = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/'
-    conn = boto3.client('s3', aws_access_key_id=awskey,
-                        aws_secret_access_key=awssecret) 
+    conn = boto3.client('s3')
     for year in YEARS:
 
         local_path = '../project-monitoring/tiles/'
@@ -95,21 +95,19 @@ def moving_average(a, n=3):
 
 
 def load_ard_and_dates(x, y, year, local_path):
-    local_path = '../project-monitoring/tiles/'
     ard_path = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/ard_ndmi.hkl'
     ard_dates = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/ard_dates.npy'
     dem = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/dem_{str(x)}X{str(y)}Y.hkl'
-                
     try:
         x = hkl.load(ard_path)
         y = np.load(ard_dates)
         y = ((year - 2017) * 365) + y
         dem = hkl.load(dem)
-    except:
+    except Exception:
         x = np.zeros((3, 3))
         y = np.zeros((3, 3))
         dem = np.zeros((3, 3))
-        print(f"{year} does not exist")
+        print(f"ARD data for {year} not found: {ard_path}")
     return x, y, dem
 
 
@@ -190,21 +188,15 @@ def remove_noise(arr, thresh = 15):
 
 def identify_anomaly_events(inp, n, shape):
     '''Looks for >= n values out of shape moving window within inp'''
-    inp_ = inp == n    
-    sums = np.sum(sliding_window_view(inp_, window_shape = (shape, 1, 1)), axis = 3).squeeze()
-    sums = np.concatenate([np.zeros_like(sums[0])[np.newaxis],
-                           sums,
-                           np.zeros_like(sums[0])[np.newaxis]], axis = 0)
+    inp_ = np.ascontiguousarray(inp == n)
+    sums = np.sum(sliding_window_view(inp_, window_shape=(shape, 1, 1)), axis=3).squeeze()
+    z = np.zeros_like(sums[0:1])
+    sums = np.concatenate([z, sums, z], axis=0)
     if shape == 5:
-        sums = np.concatenate([np.zeros_like(sums[0])[np.newaxis],
-                           sums,
-                           np.zeros_like(sums[0])[np.newaxis]], axis = 0)
-
-    if shape == 4:
-        sums = np.concatenate([np.zeros_like(sums[0])[np.newaxis],
-                           sums], axis = 0)
-    sums = sums.astype(np.int16,copy=False)
-    return sums
+        sums = np.concatenate([z, sums, z], axis=0)
+    elif shape == 4:
+        sums = np.concatenate([z, sums], axis=0)
+    return sums.astype(np.int16, copy=False)
 
 
 def remove_nonoverlapping_events(candidate, anomaly, thresh = 2):
@@ -246,54 +238,76 @@ def make_and_analyze_kde_for_one_img(ard, step, ref, multiplier):
     '''Makes the 2.5, 5, 10, and 25% KDE for a single image based on
     ref stable pixels'''
     kde = gaussian_kde(ref[:, step])
-    reg_grid = np.arange(-10000, 10000, 20)
-    cdf = tuple(ndtr(np.ravel(item - kde.dataset) / kde.factor).mean()
-            for item in reg_grid)
-    cdf_2_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - (0.025 * multiplier)))]
-    cdf_5_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - (0.05 * multiplier)))]
-    cdf_10_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - (0.1  / multiplier)))]
-    cdf_25_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - 0.25))]
-    #cdf_50_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - 0.50))]
+    reg_grid = np.arange(-10000, 10000, 20, dtype=np.float64)
+    # Vectorized CDF: (n_grid, 1) - (1, n_samp) -> (n_grid, n_samp), then ndtr, mean(axis=1)
+    cdf = ndtr((reg_grid[:, np.newaxis] - kde.dataset) / kde.factor).mean(axis=1)
+    cdf_2_percentile = reg_grid[np.argmin(np.abs(cdf - (0.025 * multiplier)))]
+    cdf_5_percentile = reg_grid[np.argmin(np.abs(cdf - (0.05 * multiplier)))]
+    cdf_10_percentile = reg_grid[np.argmin(np.abs(cdf - (0.1 / multiplier)))]
+    cdf_25_percentile = reg_grid[np.argmin(np.abs(cdf - 0.25))]
     f = ard[step] >= cdf_5_percentile
     m = ard[step] >= cdf_10_percentile
     b = ard[step] >= cdf_25_percentile
     h = ard[step] >= cdf_2_percentile
-    
-    percentiles = np.zeros_like(ard[step], dtype = np.float32)
-    for i in range(0, 100, 5):
-        fraction = i / 100
-        cdf_percentile = np.array(reg_grid)[np.argmin(abs(np.array(cdf) - fraction))]
-        is_greater = ard[step] >= cdf_percentile
-        percentiles[is_greater] = fraction
-        
+    # Percentiles 0, 5, ..., 95: same order as original (low to high so highest qualifying fraction wins)
+    fractions = np.linspace(0, 0.95, 20)
+    idx = np.searchsorted(cdf, fractions)
+    idx = np.clip(idx, 0, len(reg_grid) - 1)
+    threshold_values = reg_grid[idx]
+    percentiles = np.zeros_like(ard[step], dtype=np.float32)
+    for i in range(20):
+        percentiles[ard[step] >= threshold_values[i]] = fractions[i]
     return f, m, b, h, percentiles
 
-def make_all_kde(ard, stable, maxpx = 36000, multiplier = 1):
-    '''For all images in ard stack, make 2.5, 5, 10, 25% KDE
-    based on stable px'''
+def make_all_kde(ard, stable, maxpx=36000, multiplier=1, n_workers=4):
+    '''For all images in ard stack, make 2.5, 5, 10, 25% KDE based on stable px.
+    n_workers > 1 uses a thread pool to process images in parallel; set to 1 to disable.'''
     d = ard[:, stable]
     d = d.swapaxes(0, 1)
-    # Sample up to 10% of the image (600 * 600) of the stable pixels
     dsamp = np.random.randint(0, d.shape[0], np.minimum(maxpx, d.shape[0]))
     d = d[dsamp]
-    percentiles = np.zeros_like(ard, dtype = np.float32)
+    n_imgs = ard.shape[0]
+    percentiles = np.zeros_like(ard, dtype=np.float32)
     kde = np.zeros_like(ard)
     kde10 = np.zeros_like(ard)
     kde2 = np.zeros_like(ard)
     kde_expected = np.zeros_like(ard)
     to_delete = []
-    for i in range(ard.shape[0]):
+
+    def _one_img(i):
         try:
-            kde[i], kde10[i], kde_expected[i], kde2[i], percentiles[i] = make_and_analyze_kde_for_one_img(ard, i, d, multiplier)
-        except:
-            kde[i], kde10[i], kde_expected[i], kde2[i], percentiles[i] = 0., 0., 0., 0., 0.
-            to_delete.append(i)
+            return i, make_and_analyze_kde_for_one_img(ard, i, d, multiplier)
+        except Exception:
+            return i, None
+
+    if n_workers <= 1:
+        for i in range(n_imgs):
+            idx, res = _one_img(i)
+            if res is None:
+                to_delete.append(idx)
+                kde[idx] = kde10[idx] = kde_expected[idx] = kde2[idx] = 0.0
+                percentiles[idx] = 0.0
+            else:
+                kde[idx], kde10[idx], kde_expected[idx], kde2[idx], percentiles[idx] = res
+    else:
+        n_workers = min(n_workers, n_imgs)
+        with ThreadPoolExecutor(max_workers=n_workers) as ex:
+            for fut in as_completed([ex.submit(_one_img, i) for i in range(n_imgs)]):
+                idx, res = fut.result()
+                if res is None:
+                    to_delete.append(idx)
+                    kde[idx] = kde10[idx] = kde_expected[idx] = kde2[idx] = 0.0
+                    percentiles[idx] = 0.0
+                else:
+                    kde[idx], kde10[idx], kde_expected[idx], kde2[idx], percentiles[idx] = res
+
     if len(to_delete) > 0:
-        kde = np.delete(kde, to_delete, 0)
-        kde10 = np.delete(kde10, to_delete, 0)
-        kde_expected = np.delete(kde_expected, to_delete, 0)
-        kde2 = np.delete(kde2, to_delete, 0)
-        percentiles = np.delete(percentiles, to_delete, 0)
+        to_keep = np.setdiff1d(np.arange(n_imgs), to_delete)
+        kde = kde[to_keep]
+        kde10 = kde10[to_keep]
+        kde_expected = kde_expected[to_keep]
+        kde2 = kde2[to_keep]
+        percentiles = percentiles[to_keep]
     return kde, kde10, kde_expected, kde2, percentiles
 
 def check_for_step_change(fs):
@@ -381,15 +395,16 @@ def identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, year):
         identify_anomaly_events(kde, 0, 5) >= 5)
     #negative_anomaly_2 = identify_anomaly_events(kde, 0, 3) >= 3
     
-    img_2prior_start = np.sum(dates <= ((year - 2017 - 2) * 365 ))
-    img_1p5prior_start = np.sum(dates <= ((year - 2017 - 1.5) * 365 ))
-    img_prior_start = np.sum(dates <= ((year - 2017 - 1) * 365 ))
-    img_prior_mid = np.sum(dates <= ((year - 2017 - 0.5) * 365 ))
-    img_current_start = np.sum(dates <= ((year - 2017) * 365 ))
-    img_next_start = np.sum(dates <= ((year - 2017 + 1) * 365 ))
-    img_next_mid = np.sum(dates <= ((year - 2017 + 1.5) * 365 ))
-    img_next_end = np.sum(dates <= ((year - 2017 + 2) * 365 ))
-    img_next2_end = np.sum(dates <= ((year - 2017 + 3) * 365 ))
+    # One sort + vectorized searchsorted instead of 9x np.sum(dates <= x)
+    y0 = (year - 2017) * 365
+    thresholds = np.array([
+        y0 - 2 * 365, y0 - 1.5 * 365, y0 - 365, y0 - 0.5 * 365, y0,
+        y0 + 365, y0 + 1.5 * 365, y0 + 2 * 365, y0 + 3 * 365
+    ])
+    sorted_dates = np.sort(dates)
+    date_inds = np.searchsorted(sorted_dates, thresholds, side='right')
+    (img_2prior_start, img_1p5prior_start, img_prior_start, img_prior_mid,
+     img_current_start, img_next_start, img_next_mid, img_next_end, img_next2_end) = date_inds
 
     if year == 2018:
         positive_anomaly = positive_anomaly
@@ -504,8 +519,13 @@ def remove_unstable_gain(loss, gain, fs):
     return gain 
 
 
-def adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments, N_YEARS):
-    print(f"Starting adjust loss gain, with {N_YEARS} and {gain.shape}, {loss.shape}, {ndmiloss.shape}")
+def adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments, N_YEARS, max_year=None, actual_years=None):
+    """max_year: last calendar year in data (e.g. 2025). actual_years: array of calendar years [y0, y1, ...] for logging."""
+    if max_year is None:
+        max_year = 2016 + N_YEARS
+    if actual_years is None:
+        actual_years = np.arange(2017, 2017 + N_YEARS, dtype=np.int32)
+    print(f"Starting adjust loss gain, N_YEARS={N_YEARS}, years {actual_years[0]}-{max_year}, shapes {gain.shape}, {loss.shape}")
     fs = fs.astype(np.float32, copy=False)
     ff = temporal_filter(fs)
 
@@ -550,23 +570,23 @@ def adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments, N_YEARS):
     #TODO: Put this in a LOOP for END_YEAR - 1
     print("Starting mid-year gain calculations")
     for i in range(1, N_YEARS - 2):
-        print(f"Calculating gain {i} for {i + 2018}, with {ff.shape}, {gain.shape}")
+        print(f"  Gain {i} -> {int(actual_years[i+1])}, {ff.shape}, {gain.shape}")
         gain[i] = adjust_gain_with_ndmi(i + 1, ff, gain)
 
     # TODO: Convert this to be an END_YEAR
     candidate2022 = ((ff[N_YEARS - 1] - np.min(ff[N_YEARS-3:N_YEARS-1], axis = 0) >= 50) * (ff[N_YEARS-1] > 50))
     candidate2022 = candidate2022 * np.logical_or(ff[N_YEARS - 2] < 30, ff[N_YEARS - 3] < 30)
-    print(f"making candidate for end year: {candidate2022.shape}")
+    print(f"Making candidate gain for {max_year}: {candidate2022.shape}")
     gain[N_YEARS - 2] = remove_nonoverlapping_events(candidate2022, np.max(gain[N_YEARS - 2:N_YEARS - 1], axis = 0), 4) * (N_YEARS - 1)
 
     #loss2 = np.copy(loss)
     loss[0] = 0.
     # TODO: Put this in a LOOP for END_YEAR - 1
     for i in range(1, N_YEARS - 2):
-        print(f"Calculating loss {i} for {i + 2018}, with {ff.shape}, {loss.shape}")
+        print(f"  Loss {i} -> {int(actual_years[i+1])}, adj={adjustments[i+1]:.2f}")
         loss[i] = adjust_loss_with_ndmi(i, ff, loss, ndmiloss, adjustments[i+1])
 
-    print(f"Calculating loss for the end year: {loss22.shape}, {N_YEARS - 1}")
+    print(f"Calculating loss for {max_year}: {loss22.shape}, index {N_YEARS - 1}")
     loss[-1] = loss22 * (N_YEARS - 1)
     #loss[4] = adjust_loss_with_ndmi(4, ff, loss, ndmiloss)
     #loss[4][loss[4] > 0] = 5.
@@ -1256,7 +1276,7 @@ def write_tif(arr: np.ndarray,
                                 width=arr.shape[1],
                                 count=1,
                                 dtype="uint8",
-                                compress='zstd',
+                                compress='lzw',
                                 predictor=2,
                                 crs='+proj=longlat +datum=WGS84 +no_defs',
                                 transform=transform)

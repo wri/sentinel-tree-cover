@@ -22,10 +22,21 @@ import shutil
 from datetime import datetime, timezone, timedelta
 import gc
 import traceback
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 DRIVE = 'John'
-END_YEAR = 2025
+START_YEAR = 2017
+END_YEAR = 2026  # exclusive: years 2017..END_YEAR-1 (e.g. 2025)
+# If True, download TTC tile data from s3://tof-output/YEAR/tiles/ before loading; if False, use only what's on disk
+REFRESH_TTC = False
+TTC_BASE = f'/Volumes/{DRIVE}'  # local base for tof-output-{YEAR}/{x}/{y}/
+S3_BUCKET_TTC = 'tof-output'
+VERBOSE = True   # False = fewer prints (faster I/O)
+GC_EVERY_N_TILES = 5  # gc.collect() every N tiles (0 = every tile)
+
+def _log(*args, **kwargs):
+    if VERBOSE:
+        print(*args, **kwargs)
 
 def days_since_creation_date(path_to_file):
     """
@@ -59,13 +70,12 @@ def nan_helper(y):
     return np.isnan(y), lambda z: z.nonzero()[0]
 
 # Passed memprofile
-def validate_ard(n_imgs_per_year, ard, dates):
+def validate_ard(n_imgs_per_year, ard, dates, start_year=START_YEAR):
     # Compares between-year and within-year NDMI values
     # To look for huge shifts that could mean that
     # The ARD data for a specific year is problematic
     total_imgs = 0
     annual_ndmis = []
-    year = 2017
     for i in n_imgs_per_year:
         start = total_imgs
         end = total_imgs + i
@@ -75,24 +85,24 @@ def validate_ard(n_imgs_per_year, ard, dates):
             total_imgs += i
         else:
             annual_ndmis.append(np.nan)
-        year += 1
-    nans, x= nan_helper(annual_ndmis)
+    nans, x = nan_helper(annual_ndmis)
     annual_ndmis = np.array(annual_ndmis)
     if sum(nans) > 0:
         l = np.interp(x(nans), x(~nans), annual_ndmis[~nans])
         annual_ndmis[nans]= np.interp(x(nans), x(~nans), annual_ndmis[~nans])
     annual_ndmi_diff = np.diff(annual_ndmis)
-    year = 2017
+    abs_diffs = np.abs(annual_ndmi_diff)
+    sum_abs = np.sum(abs_diffs)
+    n_d = len(annual_ndmi_diff)
     outliers = []
-    for i in range(len(n_imgs_per_year) - 1):
-        other_diffs = np.copy(annual_ndmi_diff)
-        other_diffs = np.delete(other_diffs, i)
-        mean_others = np.mean(np.abs(other_diffs))
-        outlier_ratio = annual_ndmi_diff[i] / mean_others
-        if outlier_ratio >= 3 and i == 0:
-            outliers.append(i)
-        year += 1
-    print(annual_ndmis)
+    if n_d > 1:
+        for i in range(n_d):
+            mean_others = (sum_abs - abs_diffs[i]) / (n_d - 1)
+            if mean_others > 0:
+                outlier_ratio = annual_ndmi_diff[i] / mean_others
+                if outlier_ratio >= 3 and i == 0:
+                    outliers.append(i)
+    _log(annual_ndmis)
     return outliers
 
 # Passed memprofile
@@ -151,58 +161,55 @@ def validate_gain(gain, potential_loss, fs):
     return gain
 
 # Passed memprofile
-def remove_unstable_loss(year, med, fs, nans):
-    # if the loss year is 2018, then there is only 1 image before -- if it goes back to trees
-    # but there is no gain, then theres no loss...
+def remove_unstable_loss(year, med, fs, nans, start_year=START_YEAR, n_years=None, year_index=None):
+    # If the loss year is start_year+1, then there is only 1 image before
     # If there is increase in tree cover for both of two years after a loss event
-    # But no gain/rotation event is detected, then remove the loss
-    # Also -- should require loss events to be > 500m away from
-    # No image predictions
+    # but no gain/rotation event is detected, then remove the loss
+    if n_years is None:
+        n_years = nans.shape[0]
+    yi = year_index if year_index is not None else (year - start_year)  # index into fs/nans
 
-    def _id_lgl(year, fs, gain):
-        second_largest_loss = np.partition(np.diff(fs, axis = 0), 1, axis = 0)[1]
-        largest_gain = np.max(np.diff(fs, axis = 0)[:year + 1], axis = 0)
+    def _id_lgl(year_idx, fs, gain):
+        second_largest_loss = np.partition(np.diff(fs, axis=0), 1, axis=0)[1]
+        largest_gain = np.max(np.diff(fs, axis=0)[:year_idx + 1], axis=0)
         second_largest_loss[second_largest_loss >= -30] = 0
         largest_gain[largest_gain <= 40] = 0.
         largest_gain = largest_gain / 2
         largest_gain[gain > 0] = 0.
-        loss_clip = np.maximum(largest_gain, second_largest_loss * - 1)
+        loss_clip = np.maximum(largest_gain, second_largest_loss * -1)
         loss_clip[loss_clip > 40] = 40
         return loss_clip
 
     gain = np.logical_or(
         np.logical_and(med >= 150, med <= 160),
         np.logical_and(med >= 101, med <= 105)
-        )
-    ttc_year = fs[year - 2017]
+    )
+    ttc_year = fs[yi]
     loss_year = med == (year - 1817)
-    if year == 2021:
-        thresh = 60
-    else:
-        thresh = 60
-    if np.logical_and(year < 2022, year > 2018):
-        next_year = np.mean(fs[year - 2016:year+2-2016], axis = 0)
+    thresh = 60
+    if yi > 0 and yi < n_years - 1 and (year > start_year + 1 and year < start_year + 5):
+        # middle years: 2+ images before and 2+ after
+        next_year = np.mean(fs[yi + 1:min(yi + 3, n_years)], axis=0)
         unstable_loss = (next_year > thresh) * (ttc_year < 40) * loss_year
-        no_img_lossyear = binary_dilation(nans[year - 2017] == 1, iterations = 15)#* loss_year
-        no_img_before = binary_dilation(nans[year - 2018] == 1, iterations = 15)# * loss_year
-        no_img_after = binary_dilation(nans[year - 2016] == 1, iterations = 15)# * loss_year
-        no_img_lossyear = np.logical_or(no_img_lossyear, no_img_before)
-        no_img_lossyear = np.logical_or(no_img_lossyear, no_img_after)
-        #unstable_loss = np.logical_or(unstable_loss, no_img_lossyear)
-    elif year == 2018:
-        # if the loss year is 2018, then there is only 1 image before -- if it goes back to trees
-        next_year = np.mean(fs[year - 2016:], axis = 0)
+        no_img_lossyear = binary_dilation(nans[yi] == 1, iterations=15)
+        if yi >= 1:
+            no_img_lossyear = np.logical_or(no_img_lossyear, binary_dilation(nans[yi - 1] == 1, iterations=15))
+        if yi + 1 < n_years:
+            no_img_lossyear = np.logical_or(no_img_lossyear, binary_dilation(nans[yi + 1] == 1, iterations=15))
+    elif yi == 1 or (year_index is None and year == start_year + 1):
+        # first loss year in array: only 1 image before
+        next_year = np.mean(fs[yi + 1:], axis=0)
         unstable_loss = (next_year > 50) * (ttc_year < 50) * loss_year
-        no_img_lossyear = binary_dilation(nans[year - 2017] == 1, iterations = 15)# * loss_year
-        no_img_before = binary_dilation(nans[year - 2018] == 1, iterations = 15)# * loss_year
-        no_img_after = binary_dilation(nans[year - 2016] == 1, iterations = 15)# * loss_year
-        no_img_lossyear = np.logical_or(no_img_lossyear, no_img_before)
-        no_img_lossyear = np.logical_or(no_img_lossyear, no_img_after)
-        #unstable_loss = np.logical_or(unstable_loss, no_img_lossyear)
+        no_img_lossyear = binary_dilation(nans[yi] == 1, iterations=15)
+        if yi >= 1:
+            no_img_lossyear = np.logical_or(no_img_lossyear, binary_dilation(nans[yi - 1] == 1, iterations=15))
+        if yi + 1 < n_years:
+            no_img_lossyear = np.logical_or(no_img_lossyear, binary_dilation(nans[yi + 1] == 1, iterations=15))
     else:
-        no_img_2022 = binary_dilation(nans[year - 2017] == 1, iterations = 30)# * loss_year
-        no_img_2021 = binary_dilation(nans[year - 2018] == 1, iterations = 30)# * loss_year
-        no_img_lossyear = np.logical_or(no_img_2022, no_img_2021)
+        # later years (e.g. start_year + 5 and beyond)
+        no_img_lossyear = binary_dilation(nans[yi] == 1, iterations=30)
+        if yi >= 1:
+            no_img_lossyear = np.logical_or(no_img_lossyear, binary_dilation(nans[yi - 1] == 1, iterations=30))
         unstable_loss = no_img_lossyear
     
     #np.save("fs.npy", fs)
@@ -216,12 +223,9 @@ def remove_unstable_loss(year, med, fs, nans):
 
     # If there has previously been a decrease in tree cover, or a non-gain increase
     # Then the loss threshold is incremented accordingly
-    #loss_clip = _id_lgl(year - 2017, fs, gain)
-    #loss_mask = (- 1 * np.min(np.diff(fs, axis = 0), axis = 0)) < (50 + loss_clip)
-    #loss_clip = np.sum(fs[:(year - 2017)] < 30, axis = 0)
-    #print("GAIN", np.mean(gain))
-    prior_notree = np.sum(fs[:year - 2016] < 30, axis = 0) >= 1
-    prior_gain = np.max(fs[:year - 2016], axis = 0) - np.min(fs[:year - 2016], axis = 0)
+    # prior years: all years before current (loss) year
+    prior_notree = np.sum(fs[:yi] < 30, axis=0) >= 1 if yi > 0 else np.zeros_like(ttc_year, dtype=bool)
+    prior_gain = np.max(fs[:yi], axis=0) - np.min(fs[:yi], axis=0) if yi > 0 else np.zeros_like(ttc_year)
     #prior_gain = np.max(np.diff(fs[:year - 2015], axis = 0), 0) >= 50
     prior_notree *= (gain == 0)
     prior_gain = (prior_gain >= 40) * (gain == 0)
@@ -255,96 +259,137 @@ def remove_unstable_loss(year, med, fs, nans):
     return unstable_loss, no_img_lossyear
 
 
-def load_ttc_tiles(x, y):
+def download_ttc_tile_from_s3(x, y, awskey, awssecret, ttc_base=None, years=None, s3_client=None):
+    """
+    Download TTC tile data from s3://tof-output/YEAR/tiles/{x}/{y}/ to local
+    ttc_base/tof-output-{YEAR}/{x}/{y}/ for each year. Creates dirs as needed.
+    Pass s3_client to reuse one client (faster when processing many tiles).
+    """
+    if ttc_base is None:
+        ttc_base = TTC_BASE
+    if years is None:
+        years = range(START_YEAR, END_YEAR)
+    conn = s3_client if s3_client is not None else boto3.client('s3')
+    x, y = str(int(x)), str(int(y))
+    for year in years:
+        s3_prefix = f"{year}/tiles/{x}/{y}/"
+        local_dir = os.path.join(ttc_base, f"tof-output-{year}", x, y)
+        os.makedirs(local_dir, exist_ok=True)
+        try:
+            paginator = conn.get_paginator('list_objects_v2')
+            for page in paginator.paginate(Bucket=S3_BUCKET_TTC, Prefix=s3_prefix):
+                for obj in page.get('Contents', []):
+                    key = obj['Key']
+                    if key.endswith('/'):
+                        continue
+                    rel = os.path.relpath(key, s3_prefix)
+                    target = os.path.join(local_dir, rel)
+                    os.makedirs(os.path.dirname(target), exist_ok=True)
+                    conn.download_file(S3_BUCKET_TTC, key, target)
+            # if we listed nothing, no error but nothing written
+        except Exception as e:
+            print(f"  TTC S3 download {year}/{x}/{y}: {e}")
+
+
+def load_ttc_tiles(x, y, ttc_base=None):
+    if ttc_base is None:
+        ttc_base = TTC_BASE
 
     def _load_file(dir_i):
-        smooth_files = [file for file in os.listdir(dir_i)  if "_SMOOTH" in file]
-        smooth_files = [file for file in smooth_files if os.path.splitext(file)[-1] == '.tif']
-        smooth_x = [file for file in smooth_files  if "_SMOOTH_X" in file]
-        smooth_y = [file for file in smooth_files  if "_SMOOTH_Y" in file]
-        smooth_xy = [file for file in smooth_files  if "_SMOOTH_XY" in file]
-
-        if len(smooth_files) > 0:
-            if len(smooth_files) > 1:
-                if len(smooth_xy) > 0:
-                    files = smooth_xy
-                elif len(smooth_x) > 0:
-                    files = smooth_x
-                elif len(smooth_y) > 0:
-                    files = smooth_y
-            else:
-                files = smooth_files
-        else:
-            files = [file for file in os.listdir(dir_i)  if "_FINAL" in file and file.endswith(".tif")]
-        print(dir_i + files[0])
-        return dir_i + files[0]
-    # Loads all years of data for a specific X, Y tile pair
-    f20_path = f'/Volumes/{DRIVE}/tof-output-2020/{str(x)}/{str(y)}/{str(x)}X{str(y)}Y_FINAL.tif'
-    
-    data = {
-        'f17': np.zeros((3, 3)),
-        'f18': np.zeros((3, 3)),
-        'f19': np.zeros((3, 3)),
-        'f20': np.zeros((3, 3)),
-        'f21': np.zeros((3, 3)),
-        'f22': np.zeros((3, 3)),
-        'f23': np.zeros((3, 3)),
-        'f24': np.zeros((3, 3)),
-    }
-    for i in range(2017, END_YEAR):
         try:
-            fpath = f'/Volumes/{DRIVE}/tof-output-{str(i)}/{str(x)}/{str(y)}/'
-            fpath = _load_file(fpath)
+            all_files = os.listdir(dir_i)
+        except OSError:
+            return None
+        smooth = [f for f in all_files if "_SMOOTH" in f and os.path.splitext(f)[-1] == ".tif"]
+        smooth = None
+        if smooth:
+            smooth_xy = [f for f in smooth if "_SMOOTH_XY" in f]
+            smooth_x = [f for f in smooth if "_SMOOTH_X" in f]
+            smooth_y = [f for f in smooth if "_SMOOTH_Y" in f]
+            files = smooth_xy or smooth_x or smooth_y or smooth
+        else:
+            files = [f for f in all_files if "_FINAL" in f and f.endswith(".tif")]
+        if not files:
+            return None
+        return os.path.join(dir_i, files[0])
+
+    def _load_one_year(i):
+        key = 'f' + str(i)[-2:]
+        dir_i = os.path.join(ttc_base, f'tof-output-{i}', str(x), str(y))
+        fpath = _load_file(dir_i)
+        if fpath is None:
+            return i, None
+        try:
             with rs.open(fpath) as arr:
                 fx = arr.read(1).astype(np.float32)[np.newaxis]
-            print(f"{i} processed {days_since_creation_date(fpath)} days ago")
-            key = 'f' + str(i)[-2:]
-            data[key] = fx
-        except:
-            continue
+            return i, (key, fx, fpath)
+        except Exception:
+            return i, None
+
+    data = {}
+    for i in range(START_YEAR, END_YEAR):
+        data['f' + str(i)[-2:]] = np.zeros((3, 3))
+    n_workers = min(END_YEAR - START_YEAR, 8)
+    with ThreadPoolExecutor(max_workers=n_workers) as ex:
+        futures = {ex.submit(_load_one_year, i): i for i in range(START_YEAR, END_YEAR)}
+        for fut in as_completed(futures):
+            i, result = fut.result()
+            if result is not None:
+                key, fx, fpath = result
+                data[key] = fx
+                if VERBOSE:
+                    _log(f"{i} processed {days_since_creation_date(fpath)} days ago")
 
     list_of_files = list(data.values())
-    # get the shape
-    # make a numb_years_valid file
-    # return numb_years_valid
-    valid_shape = [x.shape[1:] for x in list_of_files if x.shape[0] != 3][0]
+    # Resize all tiles to a common shape so we can concatenate (years may have different grid sizes)
+    valid_shapes = [x.shape[1:] for x in list_of_files if x.shape[0] != 3]
+    if not valid_shapes:
+        raise ValueError(f"No valid TTC data for tile {x},{y}")
+    target_h = min(s[0] for s in valid_shapes)
+    target_w = min(s[1] for s in valid_shapes)
+    target_shape = (target_h, target_w)
+    resized = []
+    for i, arr in enumerate(list_of_files):
+        if arr.shape[0] == 3:
+            resized.append(arr)
+        else:
+            if arr.shape[1:] != target_shape:
+                arr = resize(np.ascontiguousarray(arr), (1, target_h, target_w), order=1, preserve_range=True, anti_aliasing=True).astype(np.float32)
+            else:
+                arr = np.ascontiguousarray(arr.copy())
+            resized.append(arr)
+    list_of_files = resized
+
+    # Fill placeholders (3,3) from nearest resized year so all arrays are (1, target_h, target_w)
+    valid_idx = [i for i in range(len(list_of_files)) if list_of_files[i].shape[0] != 3]
+    for i in range(len(list_of_files)):
+        if list_of_files[i].shape[0] == 3:
+            if i == 0:
+                print(f"{START_YEAR} does not exist")
+            # nearest valid index (prefer next, then previous)
+            j = min(valid_idx, key=lambda j: (abs(j - i), j))
+            list_of_files[i] = list_of_files[j].copy()
+
+    valid_shape = target_shape
     n_valid_years = np.zeros(valid_shape)
-    nans = np.zeros((len(list_of_files), valid_shape[0], valid_shape[1]), dtype = np.float32)
+    nans = np.zeros((len(list_of_files), valid_shape[0], valid_shape[1]), dtype=np.float32)
     try:
         for i in range(len(list_of_files)):
-            if list_of_files[i].shape[0] == 3:
-                if i == 0:
-                    print("17 does not exist")
-                    list_of_files[i] = list_of_files[i + 1] if list_of_files[i + 1] != 3 else list_of_files[i + 2]
-                    #nans[0] = 1.
-                elif i == len(list_of_files) - 1:
-                    list_of_files[i] = list_of_files[i - 1]
-                    #nans[i] = 1
-                else:
-                    next_img = list_of_files[i + 1].shape[0] != 3
-                    prev_img = list_of_files[i - 1].shape[0] != 3
-                    if (next_img and prev_img):
-                        list_of_files[i] = (list_of_files[i - 1] + list_of_files[i + 1]) / 2
-                    elif next_img:
-                        list_of_files[i] = list_of_files[i + 1]
-                    else:
-                        list_of_files[i] = list_of_files[i - 1]
-                    #nans[i] = 1
-            else:
+            if list_of_files[i].shape[0] != 3:
                 nans[i] = list_of_files[i] == 255
-    except:
+    except Exception:
         print(f"Skipping {str(x)}, {str(y)}")
-        #list_of_files[i] = np.zeros((3, 3))
+        raise
 
-    fs = np.concatenate(list_of_files, axis = 0) # , f22
+    fs = np.concatenate(list_of_files, axis=0)
     fs = np.float32(fs)
-    print(f"The FS is {fs.shape}")
+    _log(f"  TTC: {fs.shape[0]} years, grid {fs.shape[1]}x{fs.shape[2]}")
     #fs = 100 * (fs - 15) / 85
     fs[fs < 0] = 0.
     fs[fs < 20] = 0.
     
+    n_valid_years[:] = np.sum((fs != 255) & ~np.isnan(fs), axis=0)
     for i in range(0, fs.shape[0]):
-        n_valid_years[np.logical_and(fs[i] != 255, ~np.isnan(fs[i]))] += 1
         if i == 0:
             isnan = np.logical_or(np.isnan(fs[i]), fs[i] >= 255)
             fs[i, isnan] = fs[i + 1, isnan]
@@ -358,10 +403,12 @@ def load_ttc_tiles(x, y):
             isnan = isnan * isnannext * isnanbefore
             fs[i, isnan] = (fs[i - 1, isnan] + fs[i + 1, isnan]) / 2
     
-    stable = np.sum(np.logical_and(fs >= 40, fs <= 100), axis = 0) >= 6 # 40
+    n_years = fs.shape[0]
+    stable_n = min(6, n_years)  # require at least 6 years of stable when available
+    stable = np.sum(np.logical_and(fs >= 40, fs <= 100), axis=0) >= stable_n
     stable = binary_erosion(stable)
-    print(f"There are: {np.sum(stable)} stable pixels")
-    notree = np.sum(fs < 50, axis = 0) == 6 # 30
+    _log(f"  Stable pixels: {np.sum(stable)}")
+    notree = np.sum(fs < 50, axis=0) == n_years
     notree = binary_erosion(notree)
     #np.save('notree.npy', notree)
     fs = change.temporal_filter(fs)
@@ -382,8 +429,7 @@ def validate_patch_gain(fs, gain, loss):
             #else:
             #    print(f"{prior_treecover}, {np.sum(Zlabeled == i)}")
 
-year = 2019
-country = 'Para'
+country = 'Rwanda'
 local_path = '../project-monitoring/tiles/'
 output_path = f'/Volumes/John/change-new/{country.replace(" ", "")}/'
 country = country.title()
@@ -391,6 +437,26 @@ print(country)
 
 if __name__ == '__main__':
     import argparse
+    parser = argparse.ArgumentParser(description="Change detection job (TTC + ARD)")
+    parser.add_argument(
+        "--refresh_ttc",
+        action="store_true",
+        default=None,
+        help="Download TTC tiles from s3://tof-output/YEAR/tiles/ before loading (overrides REFRESH_TTC)",
+    )
+    parser.add_argument(
+        "--no_refresh_ttc",
+        action="store_true",
+        help="Use only existing TTC files on disk (default)",
+    )
+    args, _ = parser.parse_known_args()
+    if args.refresh_ttc:
+        REFRESH_TTC = True
+    if args.no_refresh_ttc:
+        REFRESH_TTC = False
+
+    # Use START_YEAR..END_YEAR for ARD/TTC year range
+    change.YEARS = list(range(START_YEAR, END_YEAR))
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
@@ -402,16 +468,21 @@ if __name__ == '__main__':
         AWSKEY = key['awskey']
         AWSSECRET = key['awssecret']
 
-    data = pd.read_csv('asia.csv')#"process_area_2022.csv")
-    data = pd.read_csv('justdiggit.csv')#"process_area_2022.csv")
+    s3_client = None
+    if REFRESH_TTC:
+        s3_client = boto3.client('s3')
+
+    data = pd.read_csv("process_area_2022.csv")
+    data = pd.read_csv('rwanda-tiles.csv')#"process_area_2022.csv")
     #data = pd.read_csv('maharashtra.csv')
     #data = pd.read_csv("santacruz.csv")
-    #data = data[data['country'] == 'Para']
+    data = data[data['country'] == country]
     try:
-        data['X_tile'] = data['X_tile'].str.extract('(\d+)', expand=False)
-        data['X_tile'] = pd.to_numeric(data['X_tile'])
-        data['Y_tile'] = data['Y_tile'].str.extract('(\d+)', expand=False)
-        data['Y_tile'] = pd.to_numeric(data['Y_tile'])
+        # Allow numeric or string columns (e.g. "2233" or 2233)
+        for col in ('X_tile', 'Y_tile'):
+            if col in data.columns:
+                ser = data[col].astype(str).str.extract(r'(\d+)', expand=False)
+                data[col] = pd.to_numeric(ser)
     except Exception as e:
         print(f"Ran into {str(e)} error")
         traceback.print_exc()
@@ -442,67 +513,62 @@ if __name__ == '__main__':
             print(i, fname, " exists")
         else:
             try:
-                print(f"STARTING {x}, {y}")
-                
-                # Open all the TTC data, unzip, make the bounding box
-                fs, changemap, stable, notree, n_valid_years, nans = load_ttc_tiles(x, y) # WORKS
-                adjustments = []
-                for i in range(fs.shape[0]):
-                    adj = 0
-                    if i > 0:
-                        # If it is a decrease, and then an increase, for the whole tile
-                        # Then we are priming the model to think this is an anomaly,
-                        # Rather than a true change
-                        # So we offset the base loss change by this amount
-                        # 40 - 50 = -10
-                        adj = np.mean(fs[i] - fs[i - 1])
-                        #print(f'{i+2017} - {i + 2016}: {adj}, {np.std(fs[i] - fs[i - 1])}')
-                        
-                    if i < (fs.shape[0] - 1):
-                        # 40 - 50 = -10
-                        adj2 = np.mean(fs[i] - fs[i + 1])
-                        adj = (adj + adj2) / 2
-
-                    if i == 0:
-                        adjustments.append(0)
+                print(f"\n--- Tile {x}, {y} ---")
+                if REFRESH_TTC:
+                    _log("  Downloading TTC from s3://tof-output/YEAR/tiles/ ...")
+                    download_ttc_tile_from_s3(x, y, AWSKEY, AWSSECRET, s3_client=s3_client)
+                fs, changemap, stable, notree, n_valid_years, nans = load_ttc_tiles(x, y)
+                _log("  TTC mean % and adjustment by year:")
+                # Vectorized: same formula (mean of year-to-year diffs, averaged with next when available)
+                n_y = fs.shape[0]
+                diffs = np.diff(fs.astype(np.float32), axis=0)
+                diff_means = np.mean(diffs, axis=(1, 2))
+                adjustments = [0.0]
+                for i in range(1, n_y):
+                    if i < n_y - 1:
+                        adj = (diff_means[i - 1] + diff_means[i]) * 0.5
                     else:
-                        adjustments.append(adj)
-                    print(f'{i+2017}: {np.mean(fs[i])}%, {adj}')
-                change.download_and_unzip_data(x, y, local_path, AWSKEY, AWSSECRET) # WORKS
-                print("The data has been downloaded")
+                        adj = float(diff_means[i - 1])
+                    adjustments.append(adj)
+                    _log(f"    {START_YEAR + i}: {np.mean(fs[i]):.2f}% mean TC, adj={adj:.2f}")
+                change.download_and_unzip_data(x, y, local_path, AWSKEY, AWSSECRET)
+                _log("The data has been downloaded")
                 bbx = change.tile_bbx(x, y, data) 
 
-                # Load the separate ARD files
-                #! TODO: Make the data loading be agnostic to the years, enabling 2023 data
-                list_of_files, list_of_dates, dem = change.load_all_ard(x, y, local_path) # WORKS
-                print("The data has been loaded")
-                ard_path = f'{local_path}/{str(year)}/{str(x)}/{str(y)}/'
-                dem = median_filter(dem, size = 9)
+                # Load the separate ARD files (years come from change.YEARS = range(START_YEAR, END_YEAR))
+                list_of_files, list_of_dates, dem = change.load_all_ard(x, y, local_path)
+                _log("The data has been loaded")
+                dem = median_filter(dem, size=9)
                 dem = resize(dem, (n_valid_years.shape), 0)
 
-                # Identify which years have valid data, and convert them to a single np arr
-                #list_of_files = [a17, a18, a19, a20, a21, a22]
-                #list_of_dates = [d17, d18, d19, d20, d21, d22]
-                shapes = [val.shape[1] for i, val in enumerate(list_of_files)]
-
-                MAX_YEAR = 2021
-                print(shapes)
-                for i in shapes[-3:]:
-                    if i != 3:
-                        MAX_YEAR += 1
-                N_YEARS = MAX_YEAR - 2016
-                print(f"The max year is {MAX_YEAR}, giving {N_YEARS} years")
+                # Identify which years have valid data; derive N_YEARS and actual calendar years
                 years_with_data = [i for i, val in enumerate(list_of_files) if val.shape[1] != 3]
                 list_of_files = [val for i, val in enumerate(list_of_files) if i in years_with_data]
                 list_of_dates = [val for i, val in enumerate(list_of_dates) if i in years_with_data]
-                print(f"ARD data: {np.array(years_with_data) + 2017}")
-                n_imgs_per_year = np.zeros((N_YEARS, ), dtype = np.int32)
+                N_YEARS = len(years_with_data)
+                actual_years = np.array([START_YEAR + idx for idx in years_with_data], dtype=np.int32)
+                MAX_YEAR = int(actual_years.max()) if N_YEARS else START_YEAR
+                _log(f"  ARD: years {actual_years.tolist()}, N_YEARS={N_YEARS}, range {int(actual_years.min())}-{MAX_YEAR}")
+                if MAX_YEAR >= 2024:
+                    _log(f"  (includes 2024, 2025 in processing)")
+
+                # Resize ARD arrays to the TTC grid (contiguous input can be faster)
+                ttc_grid = n_valid_years.shape
+                resized = []
+                for arr in list_of_files:
+                    if arr.shape[1:] != ttc_grid:
+                        arr = resize(np.ascontiguousarray(arr), (arr.shape[0], ttc_grid[0], ttc_grid[1]), order=1, preserve_range=True, anti_aliasing=True).astype(np.float32)
+                    resized.append(arr)
+                list_of_files = resized
+
+                n_imgs_per_year = np.zeros((N_YEARS,), dtype=np.int32)
+                _log("  ARD per year (year: n_images, shape):")
                 for i, val in enumerate(list_of_files):
-                    print(i, val.shape)
                     if val.shape[1] != 3:
                         n_imgs_per_year[i] = val.shape[0]
+                    _log(f"    {actual_years[i]}: {n_imgs_per_year[i]} imgs, {val.shape}")
 
-                ard = np.concatenate(list_of_files, axis = 0)
+                ard = np.concatenate(list_of_files, axis=0)
                 dates = np.concatenate(list_of_dates)
                 #np.save("dates.npy", dates)
 
@@ -513,13 +579,14 @@ if __name__ == '__main__':
                 # And can mean that a bad baseline is set
                 outliers = validate_ard(n_imgs_per_year, ard, dates)
                 if len(outliers) > 0:
-                    print("Removing 2017 as an outlier")
-                    ims2018 = ard[n_imgs_per_year[1]:n_imgs_per_year[2]]
-                    ard[:n_imgs_per_year[0]] = np.median(ims2018, axis = (0))[np.newaxis]
-                    fs[0] = np.mean(fs[0:2], axis = 0)
+                    _log(f"Removing {START_YEAR} as an outlier")
+                    ims_second_year = ard[n_imgs_per_year[1]:n_imgs_per_year[2]]
+                    ard[:n_imgs_per_year[0]] = np.median(ims_second_year, axis=(0))[np.newaxis]
+                    fs[0] = np.mean(fs[0:2], axis=0)
 
                 kde = None
                 if (len(years_with_data) > 3) and np.sum(stable) > 100:
+                    _log("  --- Change detection (gain/loss) ---")
                     # Create the Kernel Density Estimates based on the stable tree pixels
                     # Assume that with 2%, so 7000 samples, we can get a good KDE
                     # With 2000 samples we need it to be in the 200, which is 2.8 isntead of 10
@@ -542,28 +609,26 @@ if __name__ == '__main__':
                             n_years = upper - lower
                             stable_twoyear = np.sum(np.logical_and(fs[lower:upper] >= 40, fs[lower:upper] <= 100), axis = 0) >= n_years # 40
                             stable_twoyear = binary_erosion(stable_twoyear)
-                            print(f"There are {np.sum(stable_twoyear)} stable pixels for {i + 2017}")
-                            kde_win, kde10_win, kde_expected_win, kde2_win, percentiles = change.make_all_kde(ard, stable_twoyear)
-                            loss[i], ndmiloss[i] = change.identify_loss_in_year(kde2_win, kde_win, kde_expected_win, kde2_win, dates, 2017 + i + 1) 
+                            _log(f"    Stable pixels for {actual_years[i + 1]}: {np.sum(stable_twoyear)}")
+                            kde_win, kde10_win, kde_expected_win, kde2_win, percentiles = change.make_all_kde(ard, stable_twoyear, maxpx = 20000)
+                            loss[i], ndmiloss[i] = change.identify_loss_in_year(kde2_win, kde_win, kde_expected_win, kde2_win, dates, actual_years[i + 1])
                         # Can only detect gain if there is at least 1% stable pixels
-                        #if np.sum(stable) > (600*600*.01):
-                        gain[i] = change.identify_gain_in_year(kde, kde10, kde_expected, dates, 2017 + i + 1) * (i + 2)
+                        gain[i] = change.identify_gain_in_year(kde, kde10, kde_expected, dates, actual_years[i + 1]) * (i + 2)
                         # Can detect loss with the two-year KDE values where <2% stable
                         if np.sum(stable) >= (600*600*.02):
-                            loss[i], ndmiloss[i] = change.identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, 2017 + i + 1) 
+                            loss[i], ndmiloss[i] = change.identify_loss_in_year(kde, kde10, kde_expected, kde2, dates, actual_years[i + 1]) 
                         loss[i] *= (i + 2)
                         ndmiloss[i] *= (i + 2)
 
                     # Predicate the gain on loss if there is a NT -> T -> NT
                     potential_loss = np.copy(loss)
-                    print(gain.shape, loss.shape, potential_loss.shape, fs.shape, "GAINLOSS")
                     gain = validate_gain(gain, potential_loss, fs)
 
                     # Fuzzy set matching btwn NDMI gain/loss and subraction gain/loss
                     #if kde is not None:
 
                     # TODO!: THIS ONE DOES NOT WORK
-                    gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments, N_YEARS)
+                    gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, dates, adjustments, N_YEARS, max_year=MAX_YEAR, actual_years=actual_years)
                     #gain, loss = change.adjust_loss_gain(gain, loss, ndmiloss, fs, kde, kde10, kde_expected, kde2, dates)
                     #else:
 
@@ -585,26 +650,29 @@ if __name__ == '__main__':
                     cfs_trees = change.calc_tree_change(movingavg, 5, stable, dem)
                     cfs_trees10 = change.calc_tree_change(movingavg, 10, stable, dem)
                     befores = []
+                    _log("  Gain fraction by year (before filter):")
                     for i in range(1, N_YEARS):
-                        print(f'{i + 2017}: {np.mean(gain == i)}')
-                        befores.append(np.mean(gain == i))
+                        frac = np.mean(gain == i)
+                        _log(f"    {actual_years[i]}: {frac:.6f}")
+                        befores.append(frac)
 
                     modifier = 0.
-                    if np.sum(stable) < 6000:
+                    n_stable = int(np.sum(stable))
+                    if n_stable < 6000:
                         modifier += 0.025
-                    if np.sum(stable) < 4000:
+                    if n_stable < 4000:
                         modifier += 0.025
-                    if np.sum(stable) < 2000:
+                    if n_stable < 2000:
                         modifier += 0.025
-                    if np.sum(stable) < 1000:
+                    if n_stable < 1000:
                         modifier += 0.025
-                    if np.sum(stable) < 500:
+                    if n_stable < 500:
                         modifier += 0.05
-                    if np.sum(stable) < 250:
+                    if n_stable < 250:
                         modifier += 0.05
-                    if np.sum(stable) < 100:
+                    if n_stable < 100:
                         modifier += 0.05
-                    print(f"The modifier is: {modifier}")
+                    _log(f"  Modifier: {modifier}")
                     gainpx, Zlabeled, additional_gain, gaindates = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
                             cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier)
 
@@ -615,14 +683,20 @@ if __name__ == '__main__':
                     gain[~np.isin(Zlabeled, gainpx)] = 0.
                     gain = np.maximum(gain, additional_gain)
                     afters = []
+                    _log("  Gain fraction by year (after filter):")
                     for i in range(1, N_YEARS):
-                        print(f'{i + 2017}: {np.mean(gain == i)}')
-                        afters.append(np.mean(gain == i))
-                    ratio = (np.array(afters) / np.array(befores)) 
-                    total_before = np.sum(np.array(befores))
-                    total_after = np.sum(np.array(afters))
-                    print(f'The ratio of gain remaining is {ratio}')
-                    print(f'Before: {total_before}, After: {total_after}, Change: {total_after / total_before}')
+                        frac = np.mean(gain == i)
+                        _log(f"    {actual_years[i]}: {frac:.6f}")
+                        afters.append(frac)
+                    befores_arr = np.array(befores)
+                    afters_arr = np.array(afters)
+                    with np.errstate(divide="ignore", invalid="ignore"):
+                        ratio = np.where(befores_arr > 0, afters_arr / befores_arr, np.nan)
+                    total_before = np.nansum(befores_arr)
+                    total_after = np.nansum(afters_arr)
+                    _log(f"  Ratio of gain remaining: {ratio}")
+                    if total_before > 0:
+                        _log(f"  Before: {total_before:.4f}, After: {total_after:.4f}, Change: {total_after / total_before:.4f}")
                     ratio = ratio * (np.array(befores) > 0.02)
                     ratio_flaglow = np.logical_and(ratio > 0, ratio < 0.33)
                     ratio_flaghigh = np.logical_and(ratio > 0, ratio < 0.1)
@@ -631,7 +705,8 @@ if __name__ == '__main__':
                     ratio_flagveryhigh = np.nanmax(np.array(befores) - np.array(afters)) > 0.15
                     absolute_flag = np.nanmax(np.array(befores) - np.array(afters)) > 0.05
                     #ratio_flaghigh = np.logical_or(ratio_flaghigh, (befores[-1] / total_before) > 0.8)
-                    print("VH, H, L", ratio_flagveryhigh, ratio_flaghigh, ratio_flaglow, absolute_flag)
+                    _log("  Flags: ratio_very_high={}, ratio_high={}, ratio_low={}, absolute={}".format(
+                        ratio_flagveryhigh, ratio_flaghigh, ratio_flaglow, absolute_flag))
                     if ratio_flagveryhigh:
                         gainpx, Zlabeled, additional_gain, gaindates = change.filter_gain_px(gain, loss, percentiles, fs, cfs_flat, cfs_hill, cfs_steep,
                                                 cfs_trees, cfs_trees10, notree, dem, dates, n_imgs_per_year, modifier + 0.2)
@@ -651,8 +726,8 @@ if __name__ == '__main__':
                     for i in range(1, N_YEARS):
                         afters.append(np.mean(gain == i))
                     afters = np.array(afters)
-                    print(f"After2: {np.sum(afters)}")
-                    print('after2', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+                    _log(f"  Gain after 2nd filter: total={np.sum(afters):.4f} | by year: {dict(zip(actual_years[1:].tolist(), np.round(afters, 6).tolist()))}")
+                    _log(f"  Memory: {psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2:.0f} MB")
 
                     # If more than 80% of gain is removed, or 10% of the total plot
                     # Then we're likely in an area that has false positive gain
@@ -678,19 +753,30 @@ if __name__ == '__main__':
                     # If there is no tree -> tree -> no tree, and no gain event
                     # Then we can't say there is a loss event, because why would it be more likely
                     # For the loss to be true than for the gain to be true? 
-                    for i in range(2017, 2017 + N_YEARS):
-                        unstable_loss, noimg = remove_unstable_loss(i, med, fs, nans)
+                    for yi, year in enumerate(actual_years):
+                        unstable_loss, noimg = remove_unstable_loss(
+                            year, med, fs, nans, start_year=START_YEAR, n_years=N_YEARS, year_index=yi
+                        )
                         unstable_loss[gain > 0] = 0.
                         loss_flag = np.logical_or(unstable_loss, noimg)
-                        loss_flag = loss_flag * (med == (i - 2017 + 201))
-                        med[loss_flag] = np.median(fs, axis = 0)[loss_flag]
+                        loss_flag = loss_flag * (med == (year - 1817))
+                        med[loss_flag] = np.median(fs, axis=0)[loss_flag]
 
-                    lte2_data = binary_dilation(n_valid_years <= 2, iterations = 50)
-                    #np.save("lte2data.npy", lte2_data)
-                    #np.save("med.npy", np.median(fs, axis = 0))
+                    lte2_data = binary_dilation(n_valid_years <= 2, iterations=50)
                     is_oob = np.logical_and(med > 110, med < 150)
-                    med[is_oob] = np.median(fs, axis = 0)[is_oob]
-                    med[lte2_data] = np.median(fs, axis = 0)[lte2_data]
+                    med[is_oob] = np.median(fs, axis=0)[is_oob]
+                    med[lte2_data] = np.median(fs, axis=0)[lte2_data]
+
+                    # If the most recent expected year (e.g. 2025) is missing, don't assign change
+                    # to the terminal year — we can't confirm it without the following year.
+                    if actual_years[-1] < END_YEAR - 1:
+                        terminal_year = int(actual_years[-1])
+                        last_year_med = terminal_year - 1817
+                        mask_terminal = (med == last_year_med)
+                        n_reset = np.sum(mask_terminal)
+                        if n_reset > 0:
+                            med[mask_terminal] = np.median(fs, axis=0)[mask_terminal]
+                            _log(f"  Most recent year ({END_YEAR - 1}) missing: reset {n_reset} px change in terminal year {terminal_year} to median (no change)")
                 else:
                     med = np.median(fs, axis = 0)
                 change.write_tif(med, bbx, x, y, output_path, suffix = suffix)
@@ -702,10 +788,9 @@ if __name__ == '__main__':
                     continue
                 
 
-                #del afters, befores, med, rotational, lte2_data, is_oob, unstable_loss
-                #del ratio, movingavg, potential_loss, dem, fs, gain, loss
-                gc.collect()
-                for year in range(2017, 2017 + N_YEARS):
+                if GC_EVERY_N_TILES == 0 or (i % GC_EVERY_N_TILES == 0):
+                    gc.collect()
+                for year in actual_years.tolist():
                     shutil.rmtree(f"{local_path}/{str(year)}/{str(x)}/{str(y)}/")
                     
             except Exception as e:

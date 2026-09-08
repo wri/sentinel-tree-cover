@@ -567,11 +567,6 @@ def download_sentinel_1_composite(
     dates_q3 = (f'{str(year)}-07-15', f'{str(year)}-09-15')
     dates_q4 = (f'{str(year)}-10-15' , f'{str(year)}-12-15')
 
-    #dates_q1 = (f'{str(year)}-01-15', f'{str(year)}-04-15')
-    #dates_q2 = (f'{str(year)}-05-15', f'{str(year)}-08-15')
-    #dates_q3 = (f'{str(year)}-09-15', f'{str(year)}-12-15')
-    #dates_q4 = (f'{str(year)}-10-01' , f'{str(year)}-12-15')
-
     #try:
     for date in [dates_q1, dates_q2, dates_q3, dates_q4]:
         evalscript = """

@@ -27,11 +27,11 @@ class FileUploader:
         self.awskey = awskey
         self.awssecret = awssecret
         self.config = botocore.config.Config(max_pool_connections=20)
+        # Credentials come from the default boto3 provider chain
+        # (env vars incl. AWS_SESSION_TOKEN, or ~/.aws profile/SSO).
         self.s3client = boto3.client(
             's3',
             config=self.config,
-            aws_access_key_id=self.awskey,
-            aws_secret_access_key=self.awssecret,
         )
         self.stream = stream
         self.overwrite = overwrite
@@ -62,11 +62,7 @@ class FileUploader:
                 ExtraArgs={'ACL': 'bucket-owner-full-control'})
         else:
             try:
-                boto3.client(
-                    's3',
-                    aws_access_key_id=self.awskey,
-                    aws_secret_access_key=self.awssecret,
-                ).head_object(Bucket=bucket, Key=key)
+                boto3.client('s3').head_object(Bucket=bucket, Key=key)
                 #print(f'removing {file}')
                 #os.remove(file)
 
@@ -163,7 +159,10 @@ def upload_raw_processed_s3(path_to_tile, x, y, uploader, year, nocleanup = Fals
         Returns:
          None
     '''
+    if path_to_tile[-4:] == "raw/":
+        path_to_tile = path_to_tile[:-4]
     if os.path.isfile(path_to_tile + "ard_dates.npy"):
+        print("The ARD has been found!")
         # Add the DEM here too right? 
         dem_file = f'{path_to_tile}raw/misc/dem_{x}X{y}Y.hkl'
         fnames = [path_to_tile + "ard_dates.npy", path_to_tile + "ard_ndmi.hkl", dem_file]
@@ -173,27 +172,31 @@ def upload_raw_processed_s3(path_to_tile, x, y, uploader, year, nocleanup = Fals
                 tozip.write(file, compress_type=zipfile.ZIP_DEFLATED)
         _file = path_to_tile + f'{x}X{y}Y_ard.zip'
         key = f'{str(year)}/change/{x}/{y}/{x}X{y}Y_ard.zip'
-        print(f"uploading {_file}")
-        uploader.upload(bucket = 'tof-output', key = key, file = _file)
+        print(f"uploading {_file} to {key}")
+        uploader.upload(bucket = 'wri-restoration-geodata-ttc', key = key, file = _file)
         os.remove(_file)
+    else:
+        print(f"Did not find: {path_to_tile}ard_dates.npy")
     if os.path.isfile(path_to_tile + "ard_ndmi.hkl"):
         os.remove(path_to_tile + "ard_ndmi.hkl")
 
-    for folder in glob(path_to_tile + "raw/*/"):
-        for file in os.listdir(folder):
-            _file = folder + file
-            internal_folder = folder[len(path_to_tile):]
-            key = f'{str(year)}/raw/{x}/{y}/' + internal_folder + file
-            uploader.upload(bucket='tof-output', key=key, file=_file)
-            if not nocleanup:
-                os.remove(_file)
+    #for folder in glob(path_to_tile + "raw/*/"):
+    #    for file in os.listdir(folder):
+    #        _file = folder + file
+    #        internal_folder = folder[len(path_to_tile):]
+    #        key = f'{str(year)}/raw/{x}/{y}/' + internal_folder + file
+    #        uploader.upload(bucket='tof-output', key=key, file=_file)
+    #        if not nocleanup:
+    #           os.remove(_file)
+    '''
     for folder in glob(path_to_tile + "processed/*/"):
         for file in os.listdir(folder):
             _file = folder + file
             internal_folder = folder[len(path_to_tile):]
             key = f'{str(year)}/processed/{x}/{y}/' + internal_folder + file
-            uploader.upload(bucket='tof-output', key=key, file=_file)
+            uploader.upload(bucket='wri-restoration-geodata-ttc', key=key, file=_file)
             os.remove(_file)
+    '''
     if os.path.isdir(path_to_tile + "feats"):
         for folder in glob(path_to_tile + "feats/*/"):
             for file in os.listdir(folder):
@@ -207,9 +210,7 @@ def file_in_local_or_s3(file, key, apikey, apisecret, bucket):
     """
 
     exists = False
-    s3 = boto3.resource('s3',
-                        aws_access_key_id=apikey,
-                        aws_secret_access_key=apisecret)
+    s3 = boto3.resource('s3')
     bucket = s3.Bucket(bucket)
     objs = list(bucket.objects.filter(Prefix=key))
 
@@ -268,9 +269,7 @@ def download_folder(s3_folder, local_dir, apikey, apisecret, bucket):
     Checks to see if a file/key pair exists locally or on s3 or neither, and downloads the folder
     """
 
-    s3 = boto3.resource('s3',
-                        aws_access_key_id=apikey,
-                        aws_secret_access_key=apisecret)
+    s3 = boto3.resource('s3')
     bucket = s3.Bucket(bucket)
     print(f"Downloading: {s3_folder}")
     for obj in bucket.objects.filter(Prefix=s3_folder):
@@ -281,7 +280,16 @@ def download_folder(s3_folder, local_dir, apikey, apisecret, bucket):
         if obj.key[-1] == '/':
             continue
         print(obj.key, target)
-        bucket.download_file(obj.key, target)
+        #if 's1' in obj.key:
+        ##    items = obj.key.split("raw")
+        #    key_to_download = "".join(items[:2]) + "raw" + items[-1]
+        #    key_to_download = key_to_download.replace("//", "/")
+        #    print(f"This is the S1 key: {key_to_download}")
+        #else:
+        key_to_download = obj.key
+        #print(f"This is the S2 key: {key_to_download}")
+            
+        bucket.download_file(key_to_download, target)
 
 
 def delete_folder(s3_folder, apikey, apisecret, bucket):
@@ -289,9 +297,7 @@ def delete_folder(s3_folder, apikey, apisecret, bucket):
     Checks to see if a file/key pair exists locally or on s3 or neither, and downloads the folder
     """
 
-    s3 = boto3.resource('s3',
-                        aws_access_key_id=apikey,
-                        aws_secret_access_key=apisecret)
+    s3 = boto3.resource('s3')
     bucket = s3.Bucket(bucket)
     bucket.objects.filter(Prefix=s3_folder).delete()
 
@@ -302,9 +308,7 @@ def download_file(s3_file, local_file, apikey, apisecret, bucket):
     if exists -- download the file
     """
 
-    s3 = boto3.resource('s3',
-                        aws_access_key_id=apikey,
-                        aws_secret_access_key=apisecret)
+    s3 = boto3.resource('s3')
     bucket = s3.Bucket(bucket)
 
     print(f"Starting download of {s3_file} to {local_file} from {bucket}")
@@ -323,16 +327,14 @@ def download_file(s3_file, local_file, apikey, apisecret, bucket):
 
 
 def download_single_file(s3_file, local_file, apikey, apisecret, bucket):
-     conn = boto3.client('s3', aws_access_key_id=apikey,
-                        aws_secret_access_key=apisecret) 
+     conn = boto3.client('s3')
      print(f"Starting download of {s3_file} to {local_file} from {bucket}")
      key = "/".join(s3_file.split("/")[3:])
      print(key)
      conn.download_file(bucket, key, local_file)
 
 def download_ard_file(s3_file, local_file, apikey, apisecret, bucket):
-     conn = boto3.client('s3', aws_access_key_id=apikey,
-                        aws_secret_access_key=apisecret) 
+     conn = boto3.client('s3')
      print(f"Starting download of {s3_file} to {local_file} from {bucket}")
      key = s3_file#"/".join(s3_file.split("/")[3:])
      print(key)

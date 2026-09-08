@@ -20,14 +20,10 @@ class FileDownloader:
         self.s3resource = boto3.resource(
             's3',
             config=self.config,
-            aws_access_key_id=AWSKEY,
-            aws_secret_access_key=AWSSECRET,
         )
         self.s3client = boto3.client(
             's3',
             config=self.config,
-            aws_access_key_id=AWSKEY,
-            aws_secret_access_key=AWSSECRET,
         )
         self.stream = stream
         self.files = None

@@ -45,22 +45,6 @@ class Smoother:
         x = np.reshape(x, (self.size, self.dimx * self.dimy * self.nbands))
         x = self.smooth(x)
         x = np.reshape(x, (self.size, self.dimx, self.dimy, self.nbands))
-
-        # median of zip(range(0, 72, 6), range(6, 72, 6))
-        '''
-        monthly = np.zeros((self.outsize, self.dimx, self.dimy, self.nbands),
-                           dtype=np.float32)
-        index = 0
-        if self.average:
-            for start, end in zip(
-                    range(0, self.size + 2,
-                          self.size // self.outsize),  #0, 72, 6
-                    range(self.size // self.outsize, self.size + 2,
-                          self.size // self.outsize)):  # 6, 72, 6
-                monthly[index] = np.mean(x[start:end], axis=0)
-                index += 1
-            return monthly
-        '''
         if self.average:
             x = np.reshape(x, (12, x.shape[0] // 12, x.shape[1], x.shape[2], x.shape[3]))
             x = np.mean(x, axis = 1)

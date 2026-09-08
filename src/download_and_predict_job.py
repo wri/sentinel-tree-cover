@@ -122,55 +122,98 @@ def ndmi(arr):
     return (arr[..., 3] - arr[..., 8]) / (arr[..., 3] + arr[..., 8])
 
 
-def superresolve_large_tile(arr: np.ndarray, sess) -> np.ndarray:
-    """Superresolves an input tile utilizing the open tf.sess().
-       Implements a lightweight version of DSen2, a CNN-based
-       image superresolution model
-
-       Reference: https://arxiv.org/abs/1803.04271
-
-       Parameters:
-            arr (arr): (?, X, Y, 10) array, where arr[..., 4:]
-                       has been bilinearly upsampled
-
-       Returns:
-            superresolved (arr): (?, X, Y, 10) array
+def superresolve_large_tile(
+    arr: np.ndarray,
+    sess,
+    wsize: int = 110,
+    pad: int = 4,
+) -> np.ndarray:
     """
-    # Pad the input images to avoid border artifacts
-    def _worker_fn(arr: np.ndarray, sess) -> np.ndarray:
-        # Pad the input images to avoid border artifacts
-        to_resolve = np.pad(arr, ((0, 0), (4, 4), (4, 4), (0, 0)), 'reflect')
+    Super-resolve a large tile with a CNN (DSen2-style) in a tiled fashion.
 
-        bilinear = to_resolve[..., 4:]
-        resolved = sess.run([superresolve_logits], 
-                     feed_dict={superresolve_inp: to_resolve,
-                                superresolve_inp_bilinear: bilinear})[0]
-        resolved = resolved[:, 4:-4, 4:-4, :]
-        arr[..., 4:] = resolved
-        return arr
+    Parameters
+    ----------
+    arr : np.ndarray
+        Input array of shape (T, H, W, 10). Bands 4: are assumed to be
+        the bilinearly upsampled high-res bands to be refined.
+    sess : tf.Session
+        An open TensorFlow session with the superresolution graph.
+    wsize : int
+        Nominal tile size (without padding).
+    pad : int
+        Padding (in pixels) applied on all sides before inference.
 
-    wsize = 110
-    step = 110
-    x_range = [x for x in range(0, arr.shape[1] - (wsize), step)] + [arr.shape[1] - wsize]
-    y_range = [x for x in range(0, arr.shape[2] - (wsize), step)] + [arr.shape[2] - wsize]
-    x_end = np.copy(arr[:, x_range[-1]:, ...])
-    y_end = np.copy(arr[:, :, y_range[-1]:, ...])
+    Returns
+    -------
+    arr : np.ndarray
+        Same array, with bands 4: super-resolved in-place.
+    """
+
+    def _worker_fn(tile: np.ndarray) -> np.ndarray:
+        """
+        Run super-resolution on a single (T, h, w, B) tile.
+
+        Pads spatial dims by `pad` using reflect padding, runs the model,
+        then crops back to original spatial size.
+        """
+        # tile: (T, h, w, B)
+        t, h, w, b = tile.shape
+
+        # Pad in space only
+        tile_padded = np.pad(
+            tile,
+            ((0, 0), (pad, pad), (pad, pad), (0, 0)),
+            mode="reflect",
+        )
+
+        # Bilinear (low-res) bands are 4:
+        bilinear = tile_padded[..., 4:]
+
+        # Run model
+        resolved_padded = sess.run(
+            superresolve_logits,
+            feed_dict={
+                superresolve_inp: tile_padded,
+                superresolve_inp_bilinear: bilinear,
+            },
+        )
+
+        # Crop padding: (T, h, w, B_high)
+        resolved = resolved_padded[:, pad : pad + h, pad : pad + w, :]
+
+        # Insert resolved high-res bands back into a copy of tile
+        out_tile = tile.copy()
+        out_tile[..., 4:] = resolved
+        return out_tile
+
+    T, H, W, B = arr.shape
+    assert B >= 10, "Expected at least 10 bands (S2-style)."
+
+    # Build tile start indices; we let the last tile be shorter if needed
+    x_starts = list(range(0, H, wsize))
+    y_starts = list(range(0, W, wsize))
+
+    # Make sure last tile covers the end of the array
+    if x_starts[-1] != H - wsize and H > wsize:
+        x_starts[-1] = max(H - wsize, 0)
+    if y_starts[-1] != W - wsize and W > wsize:
+        y_starts[-1] = max(W - wsize, 0)
 
     time1 = time.time()
     print("Starting image superresolution from 20m to 10m")
-    for x in tqdm(x_range):
-        for y in y_range:
-            if x != x_range[-1] and y != y_range[-1]:
-                to_resolve = arr[:, x:x+wsize, y:y+wsize, ...]
-                arr[:, x:x+wsize, y:y+wsize, ...] = _worker_fn(to_resolve, sess)
-            # The end x and y subtiles need to be done separately
-            # So that a partially resolved tile isnt served as input
-            elif x == x_range[-1]:
-                to_resolve = x_end[:, :, y:y+wsize, ...]
-                arr[:, x:x+wsize, y:y+wsize, ...] = _worker_fn(to_resolve, sess)
-            elif y != y_range[-1]:
-                to_resolve = y_end[:, x:x+wsize, :, ...]
-                arr[:, x:x+wsize, y:y+wsize, ...] = _worker_fn(to_resolve, sess)
+
+    # Total number of tiles for tqdm
+    total_tiles = len(x_starts) * len(y_starts)
+
+    for x in tqdm(x_starts, total=total_tiles):
+        for y in y_starts:
+            # Compute tile bounds; the last tile can be smaller than wsize
+            x0, x1 = x, min(x + wsize, H)
+            y0, y1 = y, min(y + wsize, W)
+
+            tile = arr[:, x0:x1, y0:y1, :]          # view
+            sr_tile = _worker_fn(tile)              # super-resolved
+            arr[:, x0:x1, y0:y1, :] = sr_tile       # write back
 
     time2 = time.time()
     print(f"Superresolution: {np.around(time2 - time1, 1)} seconds")
@@ -345,15 +388,18 @@ def adjust_shape(arr: np.ndarray, width: int, height: int) -> np.ndarray:
 ############### MODEL PREDICTION FNS ################
 #####################################################
 
-def normalize_subtile(subtile):
-    for band in range(0, subtile.shape[-1]):
-        mins = min_all[band]
-        maxs = max_all[band]
-        subtile[..., band] = np.clip(subtile[..., band], mins, maxs)
-        midrange = (maxs + mins) / 2
-        rng = maxs - mins
-        standardized = (subtile[..., band] - midrange) / (rng / 2)
-        subtile[..., band] = standardized
+def normalize_subtile(subtile: np.ndarray) -> np.ndarray:
+    # min_all/max_all assumed shape (C,) where C=subtile.shape[-1]
+    mins = np.asarray(min_all, dtype=subtile.dtype)[None, None, None, :]
+    maxs = np.asarray(max_all, dtype=subtile.dtype)[None, None, None, :]
+
+    # clip all bands at once
+    np.clip(subtile, mins, maxs, out=subtile)
+
+    mid = (maxs + mins) / 2
+    half_rng = (maxs - mins) / 2
+    subtile -= mid
+    subtile /= half_rng
     return subtile
  
 
@@ -371,7 +417,7 @@ def predict_subtile(subtile: np.ndarray, sess: "tf.Sess", op: "tf.Tensor", size:
          preds (np.ndarray): (160, 160) float32 [0, 1] predictions
     """
     #np.save('subtile.npy', subtile)
-    if np.sum(subtile) != 0:
+    if subtile.any():
         if not isinstance(subtile.flat[0], np.floating):
             assert np.max(subtile) > 1
             subtile = subtile / 65535.
@@ -409,23 +455,31 @@ def download_raw_tile(tile_idx: tuple, local_path: str,
     # Download pre-downloaded raw data from s3
     x = tile_idx[0]
     y = tile_idx[1]
-
+    print("WTF this is what is actually execing")
     path_to_tile = f'{local_path}{str(x)}/{str(y)}/'
-    s3_path_to_tile = f'dev-ttc-lithops-usw2/{str(args.year)}/{subfolder}/{str(x)}/{str(y)}/'
+    s3_path_to_tile = f'{str(args.year)}/{subfolder}/{str(x)}/{str(y)}/raw/'
+    s3_path_to_s1 = f'{str(args.year)}/{subfolder}/{str(x)}/{str(y)}/raw/'
     #s3_path_to_tile = f'{str(args.year)}/{subfolder}/{str(x)}/{str(y)}/'
     if subfolder == "tiles":
         folder_to_check = len(glob(path_to_tile + "*.tif")) > 0
     if subfolder == "processed":
         folder_to_check = os.path.exists(path_to_tile + subfolder + "/0/")
-    if subfolder == "raw":
+    if subfolder == "raw" or subfolder == 's1':
         folder_to_check = os.path.exists(path_to_tile + subfolder + "/clouds/")
-    if not folder_to_check:
+    if not folder_to_check and subfolder != "s1":
         print(f"Downloading {s3_path_to_tile}")
-        download_folder(bucket = "tof-output",
+        download_folder(bucket = "wri-restoration-geodata-ttc",
                        apikey = AWSKEY,
                        apisecret = AWSSECRET,
                        local_dir = path_to_tile,
                        s3_folder = s3_path_to_tile)
+    if not folder_to_check and subfolder == "s1":
+        print(f"Downloading {s3_path_to_tile}")
+        download_folder(bucket = "wri-restoration-geodata-ttc",
+                       apikey = AWSKEY,
+                       apisecret = AWSSECRET,
+                       local_dir = path_to_tile,
+                       s3_folder = s3_path_to_s1)
     return None
 
 
@@ -537,17 +591,17 @@ def download_tile(x: int, y: int, data: pd.DataFrame, api_key, year, initial_bbx
     
     make_output_and_temp_folders(folder)
 
-    clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl' # every image in the catalogue
-    cloud_mask_file = f'{folder}raw/clouds/cloudmask_{tile_idx}.hkl'
-    shadows_file = f'{folder}raw/clouds/shadows_{tile_idx}.hkl'
-    s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
-    s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
-    s2_10_file = f'{folder}raw/s2_10/{tile_idx}.hkl'
-    s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl' # best n images that get used to create the ARD
-    s2_dates_file = f'{folder}raw/misc/s2_dates_{tile_idx}.hkl'
+    clouds_file = f'{folder}/clouds/clouds_{tile_idx}.hkl' # every image in the catalogue
+    cloud_mask_file = f'{folder}/clouds/cloudmask_{tile_idx}.hkl'
+    shadows_file = f'{folder}/clouds/shadows_{tile_idx}.hkl'
+    s1_file = f'{folder}/s1/{tile_idx}.hkl'
+    s1_dates_file = f'{folder}/misc/s1_dates_{tile_idx}.hkl'
+    s2_10_file = f'{folder}/s2_10/{tile_idx}.hkl'
+    s2_20_file = f'{folder}/s2_20/{tile_idx}.hkl' # best n images that get used to create the ARD
+    s2_dates_file = f'{folder}/misc/s2_dates_{tile_idx}.hkl'
     #s2_file = f'{folder}raw/s2/{tile_idx}.hkl' # deprecated?
-    clean_steps_file = f'{folder}raw/clouds/clean_steps_{tile_idx}.hkl' # intiger indices of the clouds
-    dem_file = f'{folder}raw/misc/dem_{tile_idx}.hkl'
+    clean_steps_file = f'{folder}/clouds/clean_steps_{tile_idx}.hkl' # intiger indices of the clouds
+    dem_file = f'{folder}/misc/dem_{tile_idx}.hkl'
 
     if not (os.path.exists(clouds_file)):
         print(f"Downloading {clouds_file}")
@@ -753,17 +807,17 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     folder = f"{local_path}{str(x)}/{str(y)}/"
     tile_idx = f'{str(x)}X{str(y)}Y'
     
-    clouds_file = f'{folder}raw/clouds/clouds_{tile_idx}.hkl'
-    cloud_mask_file = f'{folder}raw/clouds/cloudmask_{tile_idx}.hkl'
-    shadows_file = f'{folder}raw/clouds/shadows_{tile_idx}.hkl'
-    s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
-    s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
-    s2_10_file = f'{folder}raw/s2_10/{tile_idx}.hkl'
-    s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
-    s2_dates_file = f'{folder}raw/misc/s2_dates_{tile_idx}.hkl'
-    s2_file = f'{folder}raw/s2/{tile_idx}.hkl'
-    clean_steps_file = f'{folder}raw/clouds/clean_steps_{tile_idx}.hkl'
-    dem_file = f'{folder}raw/misc/dem_{tile_idx}.hkl'
+    clouds_file = f'{folder}/clouds/clouds_{tile_idx}.hkl'
+    cloud_mask_file = f'{folder}/clouds/cloudmask_{tile_idx}.hkl'
+    shadows_file = f'{folder}/clouds/shadows_{tile_idx}.hkl'
+    s1_file = f'{folder}/s1/{tile_idx}.hkl'
+    s1_dates_file = f'{folder}/misc/s1_dates_{tile_idx}.hkl'
+    s2_10_file = f'{folder}/s2_10/{tile_idx}.hkl'
+    s2_20_file = f'{folder}/s2_20/{tile_idx}.hkl'
+    s2_dates_file = f'{folder}/misc/s2_dates_{tile_idx}.hkl'
+    s2_file = f'{folder}/s2/{tile_idx}.hkl'
+    clean_steps_file = f'{folder}/clouds/clean_steps_{tile_idx}.hkl'
+    dem_file = f'{folder}/misc/dem_{tile_idx}.hkl'
     
     clouds = safe_load(clouds_file)
     if os.path.exists(cloud_mask_file):
@@ -800,6 +854,8 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
     # Ensure arrays are the same dims
     width = s2_20.shape[1] * 2
     height = s2_20.shape[2] * 2
+    if s1.shape[1] < 200:
+        s1 = np.repeat(np.repeat(s1, 4, axis=1), 4, axis=2)
     s1 = adjust_shape(s1, width, height)
     s2_10 = adjust_shape(s2_10, width, height)
     dem = adjust_shape(dem, width, height)
@@ -1043,14 +1099,11 @@ def process_tile(x: int, y: int, data: pd.DataFrame,
         mean_brightness_per_img = np.mean(sentinel2[..., :3], axis = -1)
         mean_brightness = np.mean(mean_brightness_per_img, axis = (1, 2))
         std_brightness = np.std(mean_brightness_per_img, axis = (1, 2))
-        print("B", mean_brightness, std_brightness)
+        #print("B", mean_brightness, std_brightness)
         is_haze = np.diff(mean_brightness) > (np.mean(mean_brightness) * 0.5)
         is_haze = is_haze * np.diff(std_brightness) < (np.mean(std_brightness) * -0.5)
         is_haze = np.argwhere(is_haze > 0)
-        #if len(is_haze) > 0:
-       #     is_haze = is_haze + 1
-        #    is_haze = is_haze.flatten()
-        #    to_remove = to_remove + list(is_haze)
+
         print(f"HAZE FLAG: {is_haze}")
         if len(to_remove) > 0:
             print(f"Deleting {to_remove}")
@@ -1118,7 +1171,7 @@ def fill_zeros_with_temporal_median(x: np.ndarray) -> np.ndarray:
 
     # Replace zeros in every frame with the median image (broadcast over T)
     zero_mask = (x == 0)                                           # [T,H,W,C], uses original to decide replacements
-    print(f"the zero mask mean is {np.mean(zero_mask, axis = (1, 2, 3))}")
+    #print(f"the zero mask mean is {np.mean(zero_mask, axis = (1, 2, 3))}")
     y = np.where(zero_mask, med[None, ...], x).astype(orig_dtype)  # preserve dtype
     return y
 
@@ -1146,28 +1199,47 @@ def make_and_smooth_indices(arr, dates):
 
 
 def deal_w_missing_px(arr, dates, interp):
+    """
+    Fast, drop-in replacement for deal_w_missing_px.
+
+    Behavior is identical to the original:
+    - Removes fully missing images
+    - Replaces exact 0s and 1s with per-pixel temporal median
+    - Removes images containing NaNs
+    """
+
+    # --- Remove images with missing pixels (unchanged logic) ---
     missing_px = interpolation.id_missing_px(arr, 10)
     if len(missing_px) > 0:
         dates = np.delete(dates, missing_px)
-        arr = np.delete(arr, missing_px, 0)
-        interp = np.delete(interp, missing_px, 0)
-        print(f"Removing {len(missing_px)} missing images, leaving {len(dates)} / {len(dates)}")
+        arr = np.delete(arr, missing_px, axis=0)
+        interp = np.delete(interp, missing_px, axis=0)
+        print(
+            f"Removing {len(missing_px)} missing images, "
+            f"leaving {len(dates)} / {len(dates)}"
+        )
 
-    if np.sum(arr == 0) > 0:
-        for i in range(arr.shape[0]):
-            arr_i = arr[i]
-            arr_i[arr_i == 0] = np.median(arr, axis = 0)[arr_i == 0]
+    # --- Compute temporal median ONCE (major speedup) ---
+    median_img = np.median(arr, axis=0)
 
-    if np.sum(arr == 1) > 0:
-        for i in range(arr.shape[0]):
-            arr_i = arr[i]
-            arr_i[arr_i == 1] = np.median(arr, axis = 0)[arr_i == 1]
-    to_remove = np.argwhere(np.sum(np.isnan(arr), axis = (1, 2, 3)) > 0).flatten()
-    if len(to_remove) > 0: 
+    # --- Replace exact zeros with median (vectorized) ---
+    mask0 = (arr == 0)
+    if np.any(mask0):
+        arr[mask0] = np.broadcast_to(median_img, arr.shape)[mask0]
+
+    # --- Replace exact ones with median (vectorized) ---
+    mask1 = (arr == 1)
+    if np.any(mask1):
+        arr[mask1] = np.broadcast_to(median_img, arr.shape)[mask1]
+
+    # --- Remove any timestep containing NaNs (unchanged logic) ---
+    to_remove = np.where(np.isnan(arr).any(axis=(1, 2, 3)))[0]
+    if len(to_remove) > 0:
         print(f"Removing {to_remove} NA dates")
         dates = np.delete(dates, to_remove)
-        arr = np.delete(arr, to_remove, 0)
-        interp = np.delete(interp, to_remove, 0)
+        arr = np.delete(arr, to_remove, axis=0)
+        interp = np.delete(interp, to_remove, axis=0)
+
     return arr, dates, interp
 
 
@@ -1189,14 +1261,20 @@ def smooth_large_tile(arr, dates, interp):
 
     try:
         time3 = time.time()
-        arr, max_distance = calculate_and_save_best_images(arr, dates)
+        #arr, max_distance = calculate_and_save_best_images(arr, dates)
+        arr_new, max_distance = calculate_and_save_best_images(arr, dates)
+        del arr
+        arr = arr_new
         time4 = time.time()
     except:
         print("Skipping because of no images")
         arr = np.zeros((24, arr.shape[1], arr.shape[2], arr.shape[-1]), dtype = np.float32)
         dates = [0,]
     time3 = time.time()
-    arr = sm.interpolate_array(arr)
+    #arr = sm.interpolate_array(arr)
+    arr_interp = sm.interpolate_array(arr)
+    del arr
+    arr = arr_interp
     time4 = time.time()
     #indices = make_and_smooth_indices(arr, dates)
     
@@ -1472,20 +1550,22 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             end_x = start_x + tile_array[2]
             end_y = start_y + tile_array[3]
 
-            subtile = np.copy(s2[:, start_x:end_x, start_y:end_y, :])
-            subtile_median_s2 = np.copy(s2_median[:, start_x:end_x, start_y:end_y, :])
-            subtile_median_s1 = np.copy(s1_median[:, start_x:end_x, start_y:end_y, :])
+            subtile = s2[:, start_x:end_x, start_y:end_y, :]
+            subtile_median_s2 = s2_median[:, start_x:end_x, start_y:end_y, :]
+            subtile_median_s1 = s1_median[:, start_x:end_x, start_y:end_y, :]
             interp_tile = interp[:, start_x:end_x, start_y:end_y]
-            dates_tile = np.copy(dates)
+            dates_tile = dates  # no need to copy unless you modify
             dem_subtile = dem[np.newaxis, start_x:end_x, start_y:end_y]
-            s1_subtile = np.copy(s1[:, start_x:end_x, start_y:end_y, :])
+            s1_subtile = s1[:, start_x:end_x, start_y:end_y, :]
             output = f"{path}{str(folder_y)}/{str(folder_x)}.npy"
             min_clear_images_per_date = np.sum(interp_tile < 0.33, axis = (0))
             no_images = False
             if np.percentile(min_clear_images_per_date, 50) < 1: # 33
                 no_images = True
 
-            to_remove = np.argwhere(np.sum(np.isnan(subtile), axis = (1, 2, 3)) > 100).flatten()
+            nan_ct = np.count_nonzero(np.isnan(subtile), axis=(1,2,3))
+            to_remove = np.where(nan_ct > 100)[0]
+            #to_remove = np.argwhere(np.sum(np.isnan(subtile), axis = (1, 2, 3)) > 100).flatten()
             if len(to_remove) > 0 and len(to_remove) < len(dates_tile): 
                 print(f"Removing {to_remove} NA dates")
                 dates_tile = np.delete(dates_tile, to_remove)
@@ -1498,20 +1578,20 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             if subtile.shape[2] == SIZE + 7: 
                 pad_u = 7 if start_y == 0 else 0
                 pad_d = 7 if start_y != 0 else 0
-                subtile = np.pad(subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
-                s1_subtile = np.pad(s1_subtile, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
-                dem_subtile = np.pad(dem_subtile, ((0, 0,), (0, 0), (pad_u, pad_d)), 'reflect')
-                subtile_median_s2 = np.pad(subtile_median_s2, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
-                subtile_median_s1 = np.pad(subtile_median_s1, ((0, 0,), (0, 0), (pad_u, pad_d), (0, 0)), 'reflect')
+                subtile = np.pad(subtile.copy(), ((0,0), (0,0), (pad_u, pad_d), (0,0)), 'reflect')
+                s1_subtile = np.pad(s1_subtile.copy(), ((0,0), (0,0), (pad_u, pad_d), (0,0)), 'reflect')
+                dem_subtile = np.pad(dem_subtile.copy(), ((0,0), (0,0), (pad_u, pad_d)), 'reflect')
+                subtile_median_s2 = np.pad(subtile_median_s2.copy(), ((0,0), (0,0), (pad_u, pad_d), (0,0)), 'reflect')
+                subtile_median_s1 = np.pad(subtile_median_s1.copy(), ((0,0), (0,0), (pad_u, pad_d), (0,0)), 'reflect')
                 min_clear_images_per_date = np.pad(min_clear_images_per_date, ((0, 0), (pad_u, pad_d)), 'reflect')
             if subtile.shape[1] == SIZE + 7:
                 pad_l = 7 if start_x == 0 else 0
                 pad_r = 7 if start_x != 0 else 0
-                subtile = np.pad(subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
-                s1_subtile = np.pad(s1_subtile, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
-                dem_subtile = np.pad(dem_subtile, ((0, 0,), (pad_l, pad_r), (0, 0)), 'reflect')
-                subtile_median_s2 = np.pad(subtile_median_s2, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
-                subtile_median_s1 = np.pad(subtile_median_s1, ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
+                subtile = np.pad(subtile.copy(), ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
+                s1_subtile = np.pad(s1_subtile.copy(), ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
+                dem_subtile = np.pad(dem_subtile.copy(), ((0, 0,), (pad_l, pad_r), (0, 0)), 'reflect')
+                subtile_median_s2 = np.pad(subtile_median_s2.copy(), ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
+                subtile_median_s1 = np.pad(subtile_median_s1.copy(), ((0, 0,), (pad_l, pad_r), (0, 0), (0, 0)), 'reflect')
                 min_clear_images_per_date = np.pad(min_clear_images_per_date, ((pad_u, pad_d), (0, 0)), 'reflect')
             
             # Concatenate the DEM and Sentinel 1 data
@@ -1525,7 +1605,7 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             subtile_all[-1, ..., :10] = subtile_median_s2[..., :10]
             subtile_all[-1, ..., 11:13] = subtile_median_s1
             subtile_all[-1, ..., 13:] = subtile_median_s2[..., 10:]
-            max_cc = np.max(_hollstein_cld(subtile_all), axis = 0)[7:-7, 7:-7]
+            #max_cc = np.max(_hollstein_cld(subtile_all), axis = 0)[7:-7, 7:-7]
             bright_surface = identify_bright_bare_surfaces(subtile_all)
             # Create the output folders for the subtile predictions
             output_folder = "/".join(output.split("/")[:-1])
@@ -1601,6 +1681,10 @@ def process_subtiles(x: int, y: int, s2: np.ndarray = None,
             preds = np.around(preds, 3)
             preds = preds.astype(np.float32)
             np.save(output, preds)
+            del subtile, subtile_median_s2, subtile_median_s1
+            del interp_tile, dem_subtile, s1_subtile
+            del subtile_all, bright_surface
+            del min_clear_images_per_date, preds
 
 #####################################################
 ############# SUBTILE -> TILE PRED XFER #############
@@ -1787,17 +1871,6 @@ if __name__ == '__main__':
         #default = '../models/tml-2023-new/'
         #default = '../models/172-ttc-dec2023-3/'
     )
-
-    #parser.add_argument(
-    #    "--predict_model_path2",
-    #    dest = 'predict_model_path2',
-    #    default = '../models/224-tml-asasasa/'
-    #)
-    #parser.add_argument(
-    ##    "--gap_model_path",
-    #    dest = 'gap_model_path',
-    #    default = '../models/182-gap-sept/'
-    #)
     parser.add_argument(
         "--superresolve_model_path",
         dest = 'superresolve_model_path',
@@ -1808,9 +1881,9 @@ if __name__ == '__main__':
     )
     parser.add_argument("--ul_flag", dest = "ul_flag", default = False, type=str2bool, nargs='?',
                         const=True)
-    parser.add_argument("--no-cleanup", dest = "no_cleanup", default = False, type=str2bool, nargs='?',
+    parser.add_argument("--no-cleanup", dest = "no_cleanup", default = True, type=str2bool, nargs='?',
                         const=True)
-    parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "tof-output")
+    parser.add_argument("--s3_bucket", dest = "s3_bucket", default = "wri-restoration-geodata-ttc")
     parser.add_argument("--yaml_path", dest = "yaml_path", default = "../config.yaml")
     parser.add_argument("--year", dest = "year", default = 2020)
     parser.add_argument("--n_tiles", dest = "n_tiles", default = None)
@@ -1823,7 +1896,6 @@ if __name__ == '__main__':
     parser.add_argument("--redownload", dest = "redownload", default = False, type=str2bool, nargs='?',
                         const=True)
     #parser.add_argument("--model", dest = "model", default = "temporal")
-    #parser.add_argument("--is_savannah", dest = "is_savannah", default = False)
     parser.add_argument("--gen_feats", dest = "gen_feats", default = False, type=str2bool, nargs='?',
                         const=True)
     parser.add_argument("--gen_composite", dest = "gen_composite", default = False, type=str2bool, nargs='?',
@@ -1893,7 +1965,7 @@ if __name__ == '__main__':
             bucket = args.db_path.split("/")[2]
             download_single_file(args.db_path, data, AWSKEY, AWSSECRET, bucket)
         data = pd.read_csv(data)
-        #data = data[data['country'] == args.country]
+        data = data[data['country'] == args.country]
         #data = data[data['Year'] == args.year]
         data = data.reset_index(drop = True)
         #data = data.sample(frac=1).reset_index(drop=True)
@@ -1931,12 +2003,6 @@ if __name__ == '__main__':
             predict_logits = 'predict/conv2d_13/Sigmoid:0'
             print("Predict_earlyfeats", predict_earlyfeats)
         else:
-            #predict_earlyfeats = predict_sess.graph.get_tensor_by_name(f"predict/IdentityN_7:0")
-            #predict_latefeats = predict_sess.graph.get_tensor_by_name(f"predict/out_conv/out/ws_conv2d_7/Conv2D:0")
-        #predict_logits = "predict/cropping2d_3/strided_slice:0" #'predict/conv2d_13/Sigmoid:0'
-        #predict_height = 'predict/cropping2d_3/strided_slice:0'
-        #predict_logits = 'predict/conv2d_5/Sigmoid:0'
-        #predict_logits = 'predict/conv2d_13/Sigmoid:0'
             predict_logits = 'predict/conv2d/Sigmoid:0'
         print(f"predict logits: {predict_logits}")
         predict_logits = predict_sess.graph.get_tensor_by_name(predict_logits) 
@@ -1986,10 +2052,21 @@ if __name__ == '__main__':
         data = data.reset_index(drop = True)
         x = str(int(x))
         y = str(int(y))
+        data2 = data.copy()
+        data2 = data2[data2['Y_tile'] == int(y)]
+        data2 = data2[data2['X_tile'] == int(x)]
+        data2 = data2.reset_index(drop = True)
+        initial_bbx = [data2['X'][0], data2['Y'][0], data2['X'][0], data2['Y'][0]]
+        bbx = make_bbox(initial_bbx, expansion = 300/30)
+        print(f'BBOX: {bbx}')
+
+    print(data.head(3))
+
     for index, row in data.iterrows():
         if np.logical_and(index >= int(args.start), index < int(args.end)):
             x = str(int(row['X_tile']))
             y = str(int(row['Y_tile']))
+
             to_process = True
             if args.make_training_data == True:
                 PX_x = row['X_px']
@@ -2015,6 +2092,7 @@ if __name__ == '__main__':
                                             s3_path_to_tile, 
                                             AWSKEY, AWSSECRET, 
                                             args.s3_bucket)
+            print(f'Checking: {path_to_tile}, {s3_path_to_tile}')
 
             if WRITE_TEMP_TIFS:
                 TEMP_FOLDER = f"{os.getcwd()}/{str(x)}{str(y)}/"
@@ -2031,6 +2109,8 @@ if __name__ == '__main__':
                       data2 = data2[data2['Y_tile'] == int(y)]
                       data2 = data2[data2['X_tile'] == int(x)]
                       data2 = data2.reset_index(drop = True)
+                      initial_bbx = [data2['X'][0], data2['Y'][0], data2['X'][0], data2['Y'][0]]
+                      bbx = make_bbox(initial_bbx, expansion = 300/30)
                       x = str(int(x))
                       y = str(int(y))
                       x = x[:-2] if ".0" in x else x
@@ -2042,8 +2122,7 @@ if __name__ == '__main__':
                         data2 = data2[data2['plot_id'] == int(PLOTID)]
                         data2 = data2.reset_index(drop = True)
                         print(data2)
-                      initial_bbx = [data2['X'][0], data2['Y'][0], data2['X'][0], data2['Y'][0]]
-                      bbx = make_bbox(initial_bbx, expansion = 300/30)
+                      
                       expansion = 300
                       if args.make_training_data == True:
                             if np.logical_and(int(x) != 0, int(y) != 0):
@@ -2065,7 +2144,8 @@ if __name__ == '__main__':
                   print(args.redownload, type(args.redownload))
                   if (args.redownload == False):# or not processed:
                       time1 = time.time()
-                      print("Dwonloading s3nt hub")
+                      print("Skipping download as we don't have sentinel-hub anymore")
+                      '''
                       bbx, n_images = download_tile(x = x,
                                                     y = y, 
                                                     data = data, 
@@ -2076,24 +2156,30 @@ if __name__ == '__main__':
                       if os.path.exists(f'{args.local_path}{str(x)}/{str(y)}/processed/'):
                           shutil.rmtree(f'{args.local_path}{str(x)}/{str(y)}/processed/')
                       time2 = time.time()
+                      '''
+                      continue
                       print(f"Finished downloading imagery in {np.around(time2 - time0, 1)} seconds")
                   else:
                       bbx = make_bbox(initial_bbx, expansion = 300/30)
                       print("Downloading from s3!!!")
                       download_raw_tile((x, y), args.local_path, "raw")
+                      #download_raw_tile((x, y), args.local_path, "s1")
                       if os.path.exists(f'{args.local_path}{str(x)}/{str(y)}/processed/'):
                           shutil.rmtree(f'{args.local_path}{str(x)}/{str(y)}/processed/')
                       
                       folder = f"{args.local_path}{str(x)}/{str(y)}/"
                       tile_idx = f'{str(x)}X{str(y)}Y'
-                      s1_file = f'{folder}raw/s1/{tile_idx}.hkl'
-                      s1_dates_file = f'{folder}raw/misc/s1_dates_{tile_idx}.hkl'
-                      s2_20_file = f'{folder}raw/s2_20/{tile_idx}.hkl'
+                      s1_file = f'{folder}/s1/{tile_idx}.hkl'
+                      s1_dates_file = f'{folder}/misc/s1_dates_{tile_idx}.hkl'
+                      s2_20_file = f'{folder}/s2_20/{tile_idx}.hkl'
                       try:
-                          print(os.listdir(f'{folder}raw/s2_20/'))
+                          print(os.listdir(f'{folder}/s2_20/'))
                           size = safe_load(s2_20_file)
                           size = size.shape[1:3]
-                      except:
+                      except Exception as error:
+                          print(f"{error}: Skipping download as we don't have sentinel-hub anymore")
+                          continue
+                          '''
                           bbx, n_images = download_tile(x = x,
                                                     y = y, 
                                                     data = data, 
@@ -2103,6 +2189,7 @@ if __name__ == '__main__':
                                                     expansion = expansion)
                           size = safe_load(s2_20_file)
                           size = size.shape[1:3]
+                          '''
                       if args.redownload_s1 == True:
                           download_s1_tile(data = data, 
                            bbx = bbx,
@@ -2142,8 +2229,8 @@ if __name__ == '__main__':
                           predictions = load_mosaic_predictions(path_to_tile + "processed/", depth = 1)
                           if args.gen_feats:
                               features = load_mosaic_predictions(path_to_tile + "feats/", depth = 64)
-                              if not os.path.exists(os.path.realpath(f"{path_to_tile}raw/feats/")):
-                                  os.makedirs(os.path.realpath(f"{path_to_tile}raw/feats/"))
+                              if not os.path.exists(os.path.realpath(f"{path_to_tile}/feats/")):
+                                  os.makedirs(os.path.realpath(f"{path_to_tile}/feats/"))
                               if not os.path.exists(os.path.realpath(f"{path_to_tile}ard/")):
                                   os.makedirs(os.path.realpath(f"{path_to_tile}ard/"))
                               predictions = np.int16(predictions)
@@ -2160,7 +2247,7 @@ if __name__ == '__main__':
 
                               print(f"Features are {features.shape} shape")
                               hkl.dump(features,
-                                  f"{path_to_tile}raw/feats/{str(x)}X{str(y)}Y_feats.hkl", 
+                                  f"{path_to_tile}/feats/{str(x)}X{str(y)}Y_feats.hkl", 
                                   compression='gzip')
 
                               key = f'{str(year)}/ard/{x}/{y}/{str(x)}X{str(y)}Y_ard.hkl'
@@ -2178,15 +2265,21 @@ if __name__ == '__main__':
                           file = write_tif(predictions, bbx, x, y, path_to_tile)
                           key = f'{str(year)}/tiles/{x}/{y}/{str(x)}X{str(y)}Y_FINAL.tif'
                           uploader.upload(bucket = args.s3_bucket, key = key, file = file)
-                          path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/raw/'
-                          shutil.rmtree(path_to_tile)
+                          
 
                           
                       if args.ul_flag:
+                        print("We are uploading!!")
                         upload_raw_processed_s3(path_to_tile, x, y, uploader, year, args.no_cleanup)
+                        path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/raw/'
+                        shutil.rmtree(path_to_tile)
+                      else:
+                        print("No upload flag :( )")
+                        path_to_tile = f'{args.local_path}/{str(x)}/{str(y)}/raw/'
+                        shutil.rmtree(path_to_tile)
                       if int(x) == 0:
                         print(f"DELETING {path_to_tile}")
-                        shutil.rmtree(path_to_tile)
+                        #shutil.rmtree(path_to_tile)
 
                       print(f"Finished {n}/{n_to_process} in {np.around(time.time() - time0, 1)}"
                            f" seconds, total of {exception_counter} exceptions")

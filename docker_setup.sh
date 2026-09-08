@@ -1,8 +1,10 @@
 # Step to build and push new edits to docker image
 docker build -t tof_download . &&\
+
+DOCKER_BUILDKIT=1 docker buildx build   --platform=linux/amd64   -t tof_download:amd   --load   . &&\
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 838255262149.dkr.ecr.us-east-1.amazonaws.com &&\
-docker tag tof_download:latest 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download:latest &&\
-docker push 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download:latest
+docker tag tof_download:amd 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download:amd &&\
+docker push 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download:amd
 
 docker build -t tof_analysis . &&\
 docker tag tof_analysis:latest 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_analysis:latest &&\
@@ -19,14 +21,21 @@ sudo yum install tmux -y
 
 aws configure
 
+sudo service docker start &&\
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 838255262149.dkr.ecr.us-east-1.amazonaws.com &&\
-docker pull 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download:latest &&\
-tmux new -s node-node-4
+docker system prune -f &&\
+docker pull 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download:amd &&\
+tmux new -s node-node-11
 
 docker run -it --entrypoint /bin/bash 838255262149.dkr.ecr.us-east-1.amazonaws.com/tof_download
 wget -O src/downloading/io.py https://raw.githubusercontent.com/wri/sentinel-tree-cover/refs/heads/master/src/downloading/io.py 
+wget -O src/download_and_predict_job.py https://raw.githubusercontent.com/wri/sentinel-tree-cover/refs/heads/master/src/download_and_predict_job.py 
+
 cd src
 python3 download_and_predict_job.py --country "Zambia" --ul_flag True
+
+bash predict_job.sh 100 200 4 "Ethiopia" 2024 False True True "s3://tof-output/2020/databases/ethiopia-2024.csv"
+bash predict_job.sh 0 500 4 "Rwanda" 2025 True True True "ethiopia-2024.csv"
 
 
 # Steps to update a node with a new image

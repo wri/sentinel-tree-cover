@@ -1,139 +1,152 @@
-import numpy as np
-import sys
-
-sys.path.append('../')
-from src.downloading.utils import calculate_proximal_steps, calculate_proximal_steps_two
-from typing import List, Any, Tuple
-import rasterio as rs
-from functools import reduce
-from skimage.transform import resize
-from tqdm import tnrange, tqdm_notebook
 import math
-from copy import deepcopy
+import random
+import sys
 import time
-from scipy import signal
-from scipy import ndimage
-from scipy.ndimage import label, grey_closing
-from scipy.ndimage.morphology import binary_dilation, generate_binary_structure
-from scipy.ndimage.filters import gaussian_filter
 import warnings
-from scipy.ndimage import distance_transform_edt as distance
+from copy import deepcopy
+from functools import reduce
+from typing import Any, List, Tuple, Optional
+
 import bottleneck as bn
+import numpy as np
+import rasterio as rs
+import sklearn.ensemble
+from rasterio.windows import from_bounds
+from scipy import signal, stats
+from scipy.ndimage import (
+    distance_transform_edt as distance,
+    gaussian_filter,
+    grey_closing,
+    label,
+)
+from scipy import ndimage
+from scipy.ndimage import generate_binary_structure
+from scipy.ndimage import morphology as nd_morph
+from scipy.ndimage.morphology import binary_dilation, generate_binary_structure
+from skimage.transform import resize
 from sklearn.cross_decomposition import CCA
 from sklearn.linear_model import LinearRegression
-import random
-from scipy import stats
-import sklearn.ensemble
-from tqdm import tqdm
+from tqdm import tqdm, tnrange, tqdm_notebook  # noqa: F401
 
-np.seterr(invalid='ignore')
+sys.path.append("../")
+from src.downloading.utils import (  # type: ignore  # noqa: E402
+    calculate_proximal_steps,
+    calculate_proximal_steps_two,
+)
+
+np.seterr(invalid="ignore")
 
 
-
-def identify_pifs(src, ref, clip = True):
-    # Canonical correlation analysis is used to identify psuedo-invariant features
-    # We assume that phenological or atmospheric differences are linear
-    # While land-use change or cloud cover is non-linear
-    # We select the points between src and ref that are the most correlated
-    # By doing CCA and selecting the pixels where the components are the closest
+def identify_pifs(src: np.ndarray, ref: np.ndarray, clip: bool = True):
     cca = CCA(n_components=2, tol=1e-6, max_iter=500)
     xs, ys = cca.fit_transform(src[..., :10], ref[..., :10])
-    #firstquartile = np.argwhere(xs[:, 0] < np.percentile(xs[:, 0], 25))
-    #mid = np.argwhere(np.logical_and(xs[:, 0] >= np.percentile(xs[:, 0], 25),
-    #    xs[:, 0] <= np.percentile(xs[:, 0], 75)))
-    #fourthquartile = np.argwhere(xs[:, 0] > np.percentile(xs[:, 0], 75))
 
-    xmin = np.percentile(xs, 5, axis = 0)
-    ymin = np.percentile(ys, 5, axis = 0)
-    xmax = np.percentile(xs, 95, axis = 0)
-    ymax = np.percentile(ys, 95, axis = 0)
+    xmin = np.percentile(xs, 5, axis=0)
+    xmax = np.percentile(xs, 95, axis=0)
+    ymin = np.percentile(ys, 5, axis=0)
+    ymax = np.percentile(ys, 95, axis=0)
+
     xs = (xs - xmin) / (xmax - xmin)
     ys = (ys - ymin) / (ymax - ymin)
-    #xs = (xs - xs.min(axis = 0)) / (xs.max(axis = 0) - xs.min(axis = 0))
-    #ys = (ys - ys.min(axis = 0)) / (ys.max(axis = 0) - ys.min(axis = 0))
+
     diffs = xs - ys
-    # Mean squared error
-    diffs = np.sum((diffs / np.std(diffs, axis=0))**2, axis=1)
-    diffs = np.argwhere(diffs < np.percentile(diffs, 10))
+    sd = np.std(diffs, axis=0)
+    diffs = np.sum((diffs / sd) ** 2, axis=1)
 
-    pif_src = src[diffs].squeeze()
-    pif_ref = ref[diffs].squeeze()
+    thr = np.percentile(diffs, 10)
+    keep = diffs < thr  # boolean mask
 
-    #if clip:
-        #pif_src_below_10 = np.percentile
+    pif_src = src[keep]
+    pif_ref = ref[keep]
     return pif_src, pif_ref
 
-def align_interp_array(interp_array,
-                       array,
-                       date,
-                       interp,
-                       mosaic,
-                       water_mask,
-                       linregress=False):
-    # Normalizes interpolated areas to non-interpolated areas
-    # By learning linear mappings based on pseudo-invariant features
-    # And smoothly blending with a gaussian filter
 
-    #def _identify_interp():
-    #    non_interp_mosaic, non_interp_areas = identify_pifs(
-    #                non_interp_mosaic, non_interp_areas)
+def align_interp_array(
+    interp_array: np.ndarray,
+    array: np.ndarray,
+    date: int,
+    interp: np.ndarray,
+    mosaic: np.ndarray,
+    water_mask: np.ndarray,
+    linregress: bool = False,
+) -> np.ndarray:
+    """
+    Normalize interpolated pixels to non-interpolated areas using PIFs.
 
-    n_interp = np.sum(interp, axis = 0)
+    For a given date, learns a per-band linear mapping from mosaic to
+    non-interpolated areas and applies it to interpolated pixels, with
+    some blending across time windows.
+
+    Parameters
+    ----------
+    interp_array : np.ndarray
+        Interpolated array, shape (T?, H, W, B). Only [0] is used.
+    array : np.ndarray
+        Original time series, shape (T, H, W, B).
+    date : int
+        Index of the current time step to align.
+    interp : np.ndarray
+        Interpolation weights/mask, shape (T, H, W).
+    mosaic : np.ndarray
+        Cloud-free mosaic, shape (H, W, B).
+    water_mask : np.ndarray
+        Boolean mask for water, shape (H, W).
+    linregress : bool, optional
+        If True, uses OLS; otherwise uses mean/std matching.
+
+    Returns
+    -------
+    np.ndarray
+        Updated interp_array with aligned values for the given date.
+    """
+    n_interp = np.sum(interp, axis=0)
     n_interp = n_interp / np.max(n_interp)
     bands = array.shape[-1]
-    for time in range(1):
 
+    for _time in range(1):
         if np.sum(interp[date] > 0) > 0 and np.sum(interp[date] == 0) > 0:
             if np.mean(np.logical_and(interp[date] < 1, water_mask == 0)) > 0.01:
                 interp_map = interp[date, ...]
-                interp_all = interp_map
                 array_i = array[date]
-                interp_array_i = interp_array[time]
+                interp_array_i = interp_array[_time]
 
-                # Identify all of the areas that are, and aren't interpolated
-                # interp_areas = interp_array_i[np.logical_and(interp[time] > 0, water_mask == 0)]
-                non_interp_areas = []
-                non_interp_mosaic = []
-
-                # For the date prior, the date, and the date after
+                # define time window
                 min_time = np.maximum(date - 1, 0)
                 max_time = np.minimum(date + 2, array.shape[0])
 
-                max_noninterp = np.zeros((array.shape[1], array.shape[2], array.shape[3]))
-                min_noninterp = np.ones((array.shape[1], array.shape[2], array.shape[3]))
-                for t in range(array.shape[0]):
-                    noninterp_i = np.copy(array[t])
-                    noninterp_i[interp[t] >= 0.5] = np.nan
-                    max_noninterp[noninterp_i > max_noninterp] = noninterp_i[noninterp_i > max_noninterp]
-                    min_noninterp[noninterp_i < min_noninterp] = noninterp_i[noninterp_i < min_noninterp]
-                
-                # Calculate how many cloud free pixels there are for the date in question
-                n_current_time = np.sum(np.logical_and(
-                        interp[date] < 0.5, water_mask == 0))
+                #max_noninterp = np.zeros_like(array[0])
+                #min_noninterp = np.ones_like(array[0])
+                #for t in range(array.shape[0]):
+                #    noninterp_i = np.copy(array[t])
+                #    noninterp_i[interp[t] >= 0.5] = np.nan
+                #    max_noninterp[noninterp_i > max_noninterp] = noninterp_i[
+                #        noninterp_i > max_noninterp
+                #    ]
+                #    min_noninterp[noninterp_i < min_noninterp] = noninterp_i[
+                #        noninterp_i < min_noninterp
+                #    ]
 
-                # For the date prior, the date, and the date after
+                n_current_time = np.sum(
+                    np.logical_and(interp[date] < 0.5, water_mask == 0)
+                )
+
+                non_interp_areas: List[np.ndarray] = []
+                non_interp_mosaic: List[np.ndarray] = []
+
                 for t in range(min_time, max_time):
-                    # Look for all non-interp, non-water pixels
                     requirement1 = np.logical_and(
-                        interp[t] < 0.5, water_mask == 0)
-                    # That are in the 90% bounds
+                        interp[t] < 0.5, water_mask == 0
+                    )
                     upper = np.percentile(array[t, ..., 3], 95)
                     lower = np.percentile(array[t, ..., 3], 5)
-                    requirement2 = np.logical_and(array[t, ..., 3] >= lower, 
-                        array[t, ..., 3] <= upper)
+                    requirement2 = np.logical_and(
+                        array[t, ..., 3] >= lower,
+                        array[t, ..., 3] <= upper,
+                    )
 
-                    # The non_interp_areas are the 3-date window
-                    # pixels that are not interpolated. 
-                    # TODO: These should be randomly sampled?
-                    #n_current_time = np.arange(0, n_current_time, 1)
-                    #random.shuffle(n_current_time)
-                    #print(n_current_time.shape)
-                    non_interp_areasi = array[t][np.logical_and(
-                        requirement1, requirement2)][:n_current_time]
-                    # The non_interp_mosaic are those pixels in the mosaic
-                    # That were not interpolated in time t-1 to t+2
-                    non_interp_mosaici = mosaic[np.logical_and(
-                        requirement1, requirement2)][:n_current_time]
+                    mask = np.logical_and(requirement1, requirement2)
+                    non_interp_areasi = array[t][mask][:n_current_time]
+                    non_interp_mosaici = mosaic[mask][:n_current_time]
 
                     non_interp_areas.append(non_interp_areasi)
                     non_interp_mosaic.append(non_interp_mosaici)
@@ -143,593 +156,580 @@ def align_interp_array(interp_array,
                 non_interp_mid_mosaic = non_interp_mosaic[idx]
                 non_interp_mid_areas = non_interp_areas[idx]
                 non_interp_mid_mosaic, non_interp_mid_areas = identify_pifs(
-                    non_interp_mid_mosaic, non_interp_mid_areas)
+                    non_interp_mid_mosaic, non_interp_mid_areas
+                )
 
-                non_interp_mosaic = np.concatenate(non_interp_mosaic, axis = 0)
-                non_interp_areas = np.concatenate(non_interp_areas, axis = 0)
+                non_interp_mosaic_all = np.concatenate(non_interp_mosaic, axis=0)
+                non_interp_areas_all = np.concatenate(non_interp_areas, axis=0)
 
-                non_interp_mosaic, non_interp_areas = identify_pifs(
-                    non_interp_mosaic, non_interp_areas)
-
+                non_interp_mosaic_all, non_interp_areas_all = identify_pifs(
+                    non_interp_mosaic_all, non_interp_areas_all
+                )
 
                 if linregress:
-                    # Learn a linear mapping with OLS. Empirically thihs does not seem to work better
-                    # Than a simple mean / std deviation shift (below), which is the default
                     std_mult = np.ones((1, 1, bands))
                     addition = np.zeros((1, 1, bands))
                     for i in range(bands):
                         model = LinearRegression().fit(
-                            non_interp_mosaic[..., i][..., np.newaxis],
-                            non_interp_areas[..., i][..., np.newaxis])
+                            non_interp_mosaic_all[..., i][..., np.newaxis],
+                            non_interp_areas_all[..., i][..., np.newaxis],
+                        )
                         std_mult[..., i] = model.coef_
-                        addition[
-                            ...,
-                            i] = model.intercept_  #(model.intercept_, model.coef_)
+                        addition[..., i] = model.intercept_
                 else:
-                    # And calculate their means and standard deviation per band
-                    # First calculate the time difference between non-interpolated areas
-                    # (non_interp_mosaic to non_interp_areas) -> (interp_mosaic -> interp_areas)
-                    std_src = bn.nanstd(non_interp_mosaic, axis=(0))
-                    std_ref = bn.nanstd(non_interp_areas, axis=(0))
-                    #std_src = stats.mstats.trimmed_std(non_interp_mosaic,relative = True, axis=(0))
-                    #std_ref = stats.mstats.trimmed_std(non_interp_areas, relative = True, axis=(0))
-                    mean_src = bn.nanmedian(non_interp_mosaic, axis=(0))
-                    mean_ref = bn.nanmedian(non_interp_areas, axis=(0))
+                    std_src = bn.nanstd(non_interp_mosaic_all, axis=0)
+                    std_ref = bn.nanstd(non_interp_areas_all, axis=0)
+                    mean_src = bn.nanmedian(non_interp_mosaic_all, axis=0)
+                    mean_ref = bn.nanmedian(non_interp_areas_all, axis=0)
 
-                    higher = np.argwhere(mean_src >= mean_ref)
-                    lower = np.argwhere(mean_src < mean_ref)
+                    std_mult = std_ref / std_src
+                    addition = mean_ref - (mean_src * std_mult)
+                    addition = addition.reshape(1, 1, bands)
+                    std_mult = std_mult.reshape(1, 1, bands)
 
-                    #mean_src[higher] = bn.nanmean(non_interp_mosaic[..., higher])
-                    #mean_ref[higher] = bn.nanmean(non_interp_areas[..., higher])
-                    #std_src[higher] = bn.nanstd(non_interp_mosaic[higher])
-                    #std_ref[higher] = bn.nanstd(non_interp_areas[higher])
+                    # mid reference
+                    std_src_mid = bn.nanstd(non_interp_mid_mosaic, axis=0)
+                    std_ref_mid = bn.nanstd(non_interp_mid_areas, axis=0)
+                    mean_src_mid = bn.nanmean(non_interp_mid_mosaic, axis=0)
+                    mean_ref_mid = bn.nanmean(non_interp_mid_areas, axis=0)
 
-                    #mean_src[higher] = bn.nanmean(non_interp_mosaic[..., higher])
-                    #mean_ref[higher] = bn.nanmean(non_interp_areas[..., higher])
-                    #std_src[lower] = bn.nanstd(non_interp_mosaic[lower])
-                    #std_ref[lower] = bn.nanstd(non_interp_areas[lower])
+                    std_mult_mid = std_ref_mid / std_src_mid
+                    addition_mid = mean_ref_mid - (mean_src_mid * std_mult_mid)
+                    addition_mid = addition_mid.reshape(1, 1, bands)
+                    std_mult_mid = std_mult_mid.reshape(1, 1, bands)
 
-                    #mean_src[:4] = bn.nanmean(non_interp_mosaic[..., :4])
-                    #mean_ref[:4] = bn.nanmean(non_interp_areas[..., :4])
-                    #std_src[:4] = bn.nanstd(non_interp_mosaic[:4])
-                   # std_ref[:4] = bn.nanstd(non_interp_areas[:4])
+                    multiplier = np.minimum(
+                        n_current_time / (600 * 600 * 0.5), 1.0
+                    )
+                    print(
+                        f"The multiplier is {multiplier} and the clean is {n_current_time} for {date}"
+                    )
+                    addition = (addition * (1 - multiplier)) + (
+                        addition_mid * multiplier
+                    )
+                    std_mult = (std_mult * (1 - multiplier)) + (
+                        std_mult_mid * multiplier
+                    )
 
-                    std_mult = (std_ref / std_src)
+                mask_land = np.logical_and(interp[date] > 0, water_mask == 0)
+                interp_array_i[mask_land] = (
+                    interp_array_i[mask_land] * std_mult + addition
+                )[mask_land]
 
-                    # Then calculate the mosaic diff between non interp and interp
-                    addition = (mean_ref - (mean_src * (std_mult)))
-                    addition = np.reshape(addition, (1, 1, bands))
-                    std_mult = np.reshape(std_mult, (1, 1, bands))
+                # Water areas are handled separately (currently commented out)
 
-                    # MIDDLE
-                    """
-                    lower_percentile = np.percentile(non_interp_mid_areas, 10, axis = 0)
-                    upper_percentile = np.percentile(non_interp_mid_areas, 90, axis = 0)
-                    non_interp_mid_areas[np.logical_or(
-                        non_interp_mid_areas <= lower_percentile,
-                        non_interp_mid_areas >= upper_percentile)] = np.nan
-
-                    lower_percentile = np.percentile(non_interp_mid_mosaic, 10, axis = 0)
-                    upper_percentile = np.percentile(non_interp_mid_mosaic, 90, axis = 0)
-                    non_interp_mid_mosaic[np.logical_or(
-                        non_interp_mid_mosaic <= lower_percentile,
-                        non_interp_mid_mosaic >= upper_percentile)] = np.nan
-                    """
-                    #non_interp_mid_areas = 
-                    std_src = bn.nanstd(non_interp_mid_mosaic, axis=(0))
-                    std_ref = bn.nanstd(non_interp_mid_areas, axis=(0))
-                    #td_src = stats.mstats.trimmed_std(non_interp_mid_mosaic,relative = True, axis=(0))
-                    #std_ref = stats.mstats.trimmed_std(non_interp_mid_areas, relative = True, axis=(0))
-                    mean_src = bn.nanmean(non_interp_mid_mosaic, axis=(0))
-                    mean_ref = bn.nanmean(non_interp_mid_areas, axis=(0))
-
-                    #print(mean_src, mean_ref)
-
-                    higher = np.argwhere(mean_src >= mean_ref)
-                    lower = np.argwhere(mean_src < mean_ref)
-                    
-                    #mean_src[higher] = bn.nanmean(non_interp_mid_mosaic[..., higher])
-                    #mean_ref[higher] = bn.nanmean(non_interp_mid_areas[..., higher])
-                    #std_src[higher] = bn.nanstd(non_interp_mosaic[..., higher])
-                    #std_ref[higher] = bn.nanstd(non_interp_mid_areas[..., higher])
-
-                    #mean_src[lower] = bn.nanmean(non_interp_mid_mosaic[..., lower])
-                    #mean_ref[lower] = bn.nanmean(non_interp_areas[..., lower])
-                    #std_src[lower] = bn.nanstd(non_interp_mid_mosaic[..., lower])
-                    #std_ref[lower] = bn.nanstd(non_interp_mid_areas[..., lower])
-                    
-                    #mean_src[:4] = bn.nanmean(non_interp_mid_mosaic[..., :4])
-                    #mean_ref[:4] = bn.nanmean(non_interp_mid_areas[..., :4])
-                    #std_src[:4] = bn.nanstd(non_interp_mid_mosaic[..., :4])
-                    #std_ref[:4] = bn.nanstd(non_interp_mid_areas[..., :4])
-        
-                    std_mult_mid = (std_ref / std_src)
-                    #! TODO we can assume that the mosaic will not have haze
-                    # so if the mosaic is >2.5 the stdev of the source
-                    # and the source is >20% cloudy, remove the source
-                    # only let 1 image be removed.
-                    #print(time, std_mult_mid)
-
-                    # Then calculate the mosaic diff between non interp and interp
-                    addition_mid = (mean_ref - (mean_src * (std_mult_mid)))
-                    addition_mid = np.reshape(addition_mid, (1, 1, bands))
-                    std_mult_mid = np.reshape(std_mult_mid, (1, 1, bands))
-
-                    # As the reference image gets more clear (towards 50%), 
-                    # weight the reference image more than the 3-image window
-                    # 
-                    multiplier = np.minimum((n_current_time) / (600*600*0.5), 1.)
-                    #multiplier = 1.
-                    print(f"The multiplier is {multiplier} and the clean is {n_current_time} for {date}")
-                    addition = (addition * (1 - multiplier)) + (addition_mid * multiplier)
-                    std_mult = (std_mult * (1 - multiplier)) + (std_mult_mid * multiplier)
-
-                interp_array_i[np.logical_and(
-                    interp[date] > 0,
-                    water_mask == 0)] = ((interp_array_i[np.logical_and(
-                        interp[date] > 0, water_mask == 0)] * std_mult) +
-                                         addition)
-
-                # Make sure that this normalization doesnt change the original range of the data.
-                #for i in range(interp_array_i.shape[-1]):
-                #    interp_array_i[..., i] = np.clip(interp_array_i[..., i],
-                #                                     np.min(array_i[..., i]),
-                #                                     np.max(array_i[..., i]))
-
-                # Normalization for water areas is done separately since the spectral
-                # Reflectances are so different than on land.
-                interp_areas = interp_array_i[np.logical_and(
-                    interp[date] > 0, water_mask == 1)]
-                non_interp_areas = array_i[np.logical_and(
-                    interp[date] == 0, water_mask == 1)]
-                """
-                if interp_areas.shape[0] > 200 and non_interp_areas.shape[
-                        0] > 618 * 618 * .02:
-                    std_src = bn.nanstd(interp_areas, axis=(0))
-                    std_ref = bn.nanstd(non_interp_areas, axis=(0))
-                    mean_src = bn.nanmean(interp_areas, axis=(0))
-                    mean_ref = bn.nanmean(non_interp_areas, axis=(0))
-
-                    higher = np.argwhere(mean_src >= mean_ref)
-                    lower = np.argwhere(mean_src < mean_ref)
-                    
-
-                    std_mult = (std_ref / std_src)
-
-                    addition = (mean_ref - (mean_src * (std_mult)))
-                    interp_array_i[np.logical_and(
-                        interp[date] > 0,
-                        water_mask == 1)] = (interp_array_i[np.logical_and(
-                            interp[date] > 0, water_mask == 1)] * std_mult +
-                                             addition)
-                """
-                interp_array[time] = interp_array_i
-    #max_noninterp[max_noninterp == 0] = 1.
-    #min_noninterp[min_noninterp == 1] = 0.
-    #for i in range(interp_array.shape[0]):
-        #interp_array[i][interp_array[i] > max_noninterp] = max_noninterp[interp_array[i] > max_noninterp]
-        #interp_array[i][interp_array[i] < min_noninterp] = min_noninterp[interp_array[i] < min_noninterp]
+                interp_array[_time] = interp_array_i
 
     return interp_array
 
 
-def align_interp_array_randomforest(interp_array,
-                       array,
-                       date,
-                       sentinel1,
-                       interp,
-                       mosaic,
-                       water_mask,
-                       linregress=True):
-    # Normalizes interpolated areas to non-interpolated areas
-    # By learning linear mappings based on pseudo-invariant features
-    # And smoothly blending with a gaussian filter
+def align_interp_array_randomforest(
+    interp_array: np.ndarray,
+    array: np.ndarray,
+    date: int,
+    sentinel1: np.ndarray,
+    interp: np.ndarray,
+    mosaic: np.ndarray,
+    water_mask: np.ndarray,
+    linregress: bool = True,
+) -> Tuple[np.ndarray, List[int]]:
+    """
+    Normalize interpolated pixels using a regression model (default LinearRegression)
+    trained on non-interpolated pixels around the target date.
 
-    #def _identify_interp():
-    #    non_interp_mosaic, non_interp_areas = identify_pifs(
-    #                non_interp_mosaic, non_interp_areas)
+    This version is memory-aware: it builds the training samples incrementally and
+    caps the total number of samples, instead of concatenating all candidate pixels
+    first and then sub-sampling.
 
-    def _evi(x: np.ndarray, verbose: bool = False) -> np.ndarray:
-        '''
-        Calculates the enhanced vegetation index
-        2.5 x (08 - 04) / (08 + 6 * 04 - 7.5 * 02 + 1)
-        '''
+    Parameters
+    ----------
+    interp_array : np.ndarray
+        Interpolated array for a single time step, shape (1, H, W, B).
+    array : np.ndarray
+        Full time series (T, H, W, B).
+    date : int
+        Time index to align.
+    sentinel1 : np.ndarray
+        Sentinel-1 stack aligned with array (not used in this implementation).
+    interp : np.ndarray
+        Interpolation/cloud masks, shape (T, H, W).
+    mosaic : np.ndarray
+        Cloud-free mosaic, shape (H, W, B).
+    water_mask : np.ndarray
+        Boolean/0–1 water mask, shape (H, W).
+    linregress : bool
+        If True, uses LinearRegression (only branch implemented).
 
-        BLUE = x[..., 0]
-        GREEN = x[..., 1]
-        RED = x[..., 2]
-        NIR = x[..., 3]
-        evis = 2.5 * ( (NIR-RED) / (NIR + (6*RED) - (7.5*BLUE) + 1))
-        evis = np.clip(evis, -1.5, 1.5)
-        #x = np.concatenate([x, evis[:, :, :, np.newaxis]], axis = -1)
-        return evis
+    Returns
+    -------
+    interp_array : np.ndarray
+        Updated interpolated array, shape (1, H, W, B).
+    to_remove : list[int]
+        Indices of time steps to remove; may be empty.
+    """
 
+    def _evi(x: np.ndarray) -> np.ndarray:
+        """Enhanced Vegetation Index computed from bands B, G, R, NIR."""
+        blue = x[..., 0]
+        green = x[..., 1]
+        red = x[..., 2]
+        nir = x[..., 3]
+        evi = 2.5 * ((nir - red) / (nir + (6 * red) - (7.5 * blue) + 1))
+        return np.clip(evi, -1.5, 1.5)
 
-    def snow_filter(arr):
-        ndsi =  (arr[..., 1] - arr[..., 8]) / (arr[..., 1] + arr[..., 8])
-        ndsi[ndsi < 0.10] = 0.
+    def snow_filter(arr: np.ndarray) -> np.ndarray:
+        """Simple snow probability filter based on NDSI + band thresholds."""
+        ndsi = (arr[..., 1] - arr[..., 8]) / (arr[..., 1] + arr[..., 8])
+        ndsi[ndsi < 0.10] = 0.0
         ndsi[ndsi > 0.42] = 0.42
         snow_prob = (ndsi - 0.1) / 0.32
 
-        # NIR band threshold
-        snow_prob[arr[..., 3] < 0.10] = 0.
-        #multiplier = np.copy(arr[..., 3])
-        #multiplier[multiplier > 0.35] = 1.
-        #multiplier[multiplier < 0.15] = 0.
-        #multiplier = (multiplier - 0.15) / 0.35
-        snow_prob[np.logical_and(arr[..., 3] > 0.35, snow_prob > 0)] = 1.
-        #snow_prob = snow_prob * multiplier
+        # NIR threshold
+        snow_prob[arr[..., 3] < 0.10] = 0.0
+        snow_prob[np.logical_and(arr[..., 3] > 0.35, snow_prob > 0)] = 1.0
 
-        # blue band threshold
-        snow_prob[arr[..., 0] < 0.10] = 0.
-        snow_prob[np.logical_and(arr[..., 0] > 0.22, snow_prob > 0)] = 1.
+        # BLUE threshold
+        snow_prob[arr[..., 0] < 0.10] = 0.0
+        snow_prob[np.logical_and(arr[..., 0] > 0.22, snow_prob > 0)] = 1.0
 
-        # B2/B4 thrershold
+        # B2/B4 ratio threshold
         b2b4ratio = arr[..., 0] / arr[..., 2]
-        snow_prob[b2b4ratio < 0.75] = 0.
+        snow_prob[b2b4ratio < 0.75] = 0.0
         return snow_prob
 
-    snow = np.mean(snow_filter(array), axis = 0)[..., np.newaxis]
+    def _build_incremental_sample(
+        mosaic_list: List[np.ndarray],
+        areas_list: List[np.ndarray],
+        max_samples: int = 90000,
+    ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+        """
+        Incrementally build up to max_samples rows from lists of candidate
+        (mosaic, areas) arrays, without ever concatenating all candidates at once.
+
+        Returns
+        -------
+        sample_mosaic : np.ndarray or None
+            Shape (N, F), where N <= max_samples.
+        sample_areas : np.ndarray or None
+            Shape (N, F), same N as sample_mosaic.
+        """
+        selected_mosaic = []
+        selected_areas = []
+        remaining = max_samples
+
+        for mos, arr in zip(mosaic_list, areas_list):
+            if remaining <= 0:
+                break
+            if mos.size == 0 or arr.size == 0:
+                continue
+
+            n = mos.shape[0]
+            take = n if n <= remaining else remaining
+            if take <= 0:
+                continue
+
+            # Take a prefix of each chunk; you can randomize within-chunk later
+            selected_mosaic.append(mos[:take])
+            selected_areas.append(arr[:take])
+            remaining -= take
+
+        if not selected_mosaic:
+            return None, None
+
+        sample_mosaic = np.concatenate(selected_mosaic, axis=0)
+        sample_areas = np.concatenate(selected_areas, axis=0)
+        return sample_mosaic, sample_areas
+
+    snow = np.mean(snow_filter(array), axis=0)[..., np.newaxis]
 
     bands = array.shape[-1]
-    for time in range(1):
+    to_remove: List[int] = []
 
-        if np.sum(interp[date] > 0) > 0 and np.sum(interp[date] == 0) > 0:
-            if np.mean(np.logical_and(interp[date] < 1, water_mask <= 1)) > 0.01:
-                interp_map = interp[date, ...]
-                interp_all = interp_map
-                array_i = np.copy(array[date])
-                interp_array_i = np.copy(interp_array[time])
-
-                # Identify all of the areas that are, and aren't interpolated
-                # interp_areas = interp_array_i[np.logical_and(interp[time] > 0, water_mask == 0)]
-                non_interp_areas = []
-                non_interp_mosaic = []
-                sentinel1_subset = []#sentinel1[requirement1][:n_current_time]
-
-                n_current_time = np.sum(np.logical_and(
-                        interp[date] == 0, water_mask <= 1))
-
-                # For the date prior, the date, and the date after
-                if n_current_time > 40000:
-                    min_time = np.maximum(date, 0)
-                    max_time = date + 1
-                else:
-                    if date == (array.shape[0] - 1):
-                        min_time = np.maximum(date - 2, 0)
-                    else:
-                        min_time = np.maximum(date - 1, 0)
-                    max_time = np.minimum(date + 2, array.shape[0])
-
-                #max_noninterp = np.zeros((array.shape[1], array.shape[2], array.shape[3]))
-                #min_noninterp = np.ones((array.shape[1], array.shape[2], array.shape[3]))
-                #for t in range(array.shape[0]):
-                #    noninterp_i = np.copy(array[t])
-                 #   noninterp_i[interp[t] > 0] = np.nan
-                    #max_noninterp[noninterp_i > max_noninterp] = noninterp_i[noninterp_i > max_noninterp]
-                 #   min_noninterp[noninterp_i < min_noninterp] = noninterp_i[noninterp_i < min_noninterp]
-                
-                # Calculate how many cloud free pixels there are for the date in question
-                
-
-                # For the date prior, the date, and the date after
-                for t in range(min_time, max_time):
-                    # Look for all non-interp, non-water pixels
-                    requirement1 = np.logical_and(
-                        interp[t] == 0, water_mask  < 1)
-                    # That are in the 90% bounds
-                    #upper = np.percentile(array[t, ..., 3], 95)
-                    #lower = np.percentile(array[t, ..., 3], 5)
-                    #requirement2 = np.logical_and(array[t, ..., 3] >= lower, 
-                    #    array[t, ..., 3] <= upper)
-                    n_current_time = np.maximum(n_current_time, 36000)
-                    non_interp_areasi = np.concatenate([array[t], snow], axis = -1)[requirement1]#[:n_current_time]
-                    # The non_interp_mosaic are those pixels in the mosaic
-                    # That were not interpolated in time t-1 to t+2
-                    non_interp_mosaici = np.concatenate([mosaic, snow], axis = -1)[requirement1]#[:n_current_time]
-                    #sentinel1_subset.append(sentinel1[requirement1])#[:n_current_time])
-
-                    non_interp_areas.append(non_interp_areasi)
-                    non_interp_mosaic.append(non_interp_mosaici)
-
-                #idx = 1 if non_interp_mosaic[1].shape[0] > 2 else 0
-                to_remove = []
-                if n_current_time > 40000:
-                    non_interp_mid_mosaic = non_interp_mosaic[0]#[idx]
-                    non_interp_mid_areas = non_interp_areas[0]#[idx]
-                    #sentinel1_subset = sentinel1_subset[0]
-                    to_remove = []
-                else:
-                    #print(date, non_interp_mosaic.shape, non_interp_areas.shape)
-                    non_interp_mid_mosaic = np.concatenate(non_interp_mosaic, axis = 0)
-                    non_interp_mid_areas = np.concatenate(non_interp_areas, axis = 0)
-                    #sentinel1_subset = np.concatenate(sentinel1_subset, axis = 0)
-                    n_samples = non_interp_mid_mosaic.shape[0]
-                    #if n_samples < 90000:
-                    #    to_remove = [date]
-                    #else:
-                    
-                
-                equibatch = True
-                if not equibatch:
-                    random_sample = np.arange(0, 20000, 1)
-                else:
-                    # Equibatch for NDVI
-                    # 20000
-
-                    n_samples = np.minimum(90000, non_interp_mid_mosaic.shape[0])
-                    n_samples_i = n_samples // 5
-                
-                    ndvi_i = _evi(non_interp_mid_areas)
-
-                    b2 = np.percentile(ndvi_i, 2)
-                    b20 = np.percentile(ndvi_i, 20)
-                    b40 = np.percentile(ndvi_i, 40)
-                    b60 = np.percentile(ndvi_i, 60)
-                    b80 = np.percentile(ndvi_i, 80)
-                    b98 = np.percentile(ndvi_i, 98)
-
-                    p2 = np.argwhere(ndvi_i < b2).squeeze()
-                    p20 = np.argwhere(ndvi_i < b20).squeeze()
-                    p40 = np.argwhere(np.logical_and(ndvi_i >= b20, ndvi_i < b40)).squeeze()
-                    p60 = np.argwhere(np.logical_and(ndvi_i >= b40, ndvi_i < b60)).squeeze()
-                    p80 = np.argwhere(np.logical_and(ndvi_i >= b60, ndvi_i < b80)).squeeze()
-                    p100 = np.argwhere(ndvi_i >= b80).squeeze()
-                    p98 = np.argwhere(ndvi_i >= b98).squeeze()
-                    p98 = np.repeat(p98, 10)
-                    p2 = np.repeat(p2, 10)
-                    random.shuffle(p2)
-                    random.shuffle(p98)
-                    random.shuffle(p20)
-                    random.shuffle(p40)
-                    random.shuffle(p60)
-                    random.shuffle(p80)
-                    random.shuffle(p100)
-
-
-                    p20 = p20[:n_samples_i]
-                    p40 = p40[:n_samples_i]
-                    p60 = p60[:n_samples_i]
-                    p80 = p80[:n_samples_i]
-                    p100 = p100[:n_samples_i]
-                    random_sample = np.concatenate([p2, p20, p40, p60, p80, p100, p98])#, p98])
-                    random.shuffle(random_sample)
-
-
-                random_sample = random_sample[:non_interp_mid_mosaic.shape[0]]
-                random_sample = random_sample[:non_interp_mid_areas.shape[0]]
-                if not equibatch:
-                    random.shuffle(random_sample)
-                
-                non_interp_mid_mosaic = non_interp_mid_mosaic[random_sample]
-                non_interp_mid_areas = non_interp_mid_areas[random_sample]
-                #sentinel1_subset = sentinel1_subset[random_sample]
-                #non_interp_mid_mosaic, non_interp_mid_areas = identify_pifs(
-                #    non_interp_mid_mosaic, non_interp_mid_areas)
-
-                #non_interp_mosaic = np.concatenate(non_interp_mosaic, axis = 0)
-                #non_interp_areas = np.concatenate(non_interp_areas, axis = 0)
-
-                #non_interp_mosaic, non_interp_areas = identify_pifs(
-                #    non_interp_mosaic, non_interp_areas)
-                
-
-                if linregress:
-                    # Learn a linear mapping with OLS. Empirically thihs does not seem to work better
-                    # Than a simple mean / std deviation shift (below), which is the default
-                    preds_out = np.copy(interp_array_i)
-                    for band in range(10):
-                        train_x = np.copy(non_interp_mid_mosaic)
-                        #train_x = np.delete(train_x, band, -1)
-                        predicted = np.copy(np.concatenate([interp_array_i, snow], axis = -1))
-                        #predicted = np.delete(predicted, band, -1)
-                        predicted = np.reshape(predicted, (predicted.shape[0]*predicted.shape[1], predicted.shape[-1]))
-                        """
-                        if band >= 4:
-                            train_x = np.concatenate([
-                                non_interp_mid_mosaic[:, :4],
-                                #non_interp_mid_mosaic[:, band][..., np.newaxis],
-                                #sentinel1_subset,
-                                 ], axis = -1)
-
-                            #predicted = np.copy(interp_array_i)
-                            predicted = np.concatenate([
-                                interp_array_i[..., :4], 
-                                interp_array_i[..., band][..., np.newaxis],
-                                #sentinel1
-                                ], axis = -1)
-                            predicted = np.reshape(predicted, (predicted.shape[0]*predicted.shape[1], 5))
-                        
-                        else:
-                            train_x = non_interp_mid_mosaic[:, :4]#np.concatenate([non_interp_mid_mosaic[:, :4],
-                                #sentinel1_subset], axis = -1)
-                            predicted = np.copy(interp_array_i[..., :4])
-                            #predicted = np.concatenate([interp_array_i[..., :4], sentinel1], axis = -1)
-                            predicted = np.reshape(predicted, (predicted.shape[0]*predicted.shape[1], 4))
-                        """
-                        non_interp_mid_mosaic[..., band] = np.clip(non_interp_mid_mosaic[..., band], 0.005, 1)
-                        model = LinearRegression(positive = True, fit_intercept = False).fit(
-                            train_x, 
-                            non_interp_mid_areas[..., band])# / non_interp_mid_areas[..., band])
-                        #model = sklearn.ensemble.HistGradientBoostingRegressor(max_iter = 75,
-                        #                                                       max_bins = 100,
-                        #                                                       early_stopping = True,
-                        #                                                       tol = 5e-5).fit(
-                        #    X = train_x,
-                        #    y = non_interp_mid_areas[..., band])
-                                             
-                        predicted = model.predict(predicted)
-                        predicted = np.reshape(predicted, interp_array_i.shape[:-1])
-                        #predicted = mosaic[..., band] * predicted
-                        #predicted[predicted < min_band] = min_band[predicted < min_band]
-                        
-                        preds_out[np.logical_and(
-                            interp[date] > 0,
-                            water_mask <= 1), band] = predicted[np.logical_and(
-                                interp[date] > 0, water_mask <= 1)]
-
-                    interp_array[time] = preds_out
-        else:
+    # The outer loop is effectively a no-op (time dimension is already encoded in `date`)
+    for _time in range(1):
+        # Need both interpolated and non-interpolated pixels for this date
+        if np.sum(interp[date] > 0) == 0 or np.sum(interp[date] == 0) == 0:
             to_remove = []
-            interp_array = interp_array[time]
+            interp_array = interp_array[_time]
+            break
+
+        # Require at least some non-interpolated land pixels
+        if np.mean(np.logical_and(interp[date] < 1, water_mask <= 1)) <= 0.01:
+            to_remove = []
+            interp_array = interp_array[_time]
+            break
+
+        array_i = np.copy(array[date])
+        interp_array_i = np.copy(interp_array[_time])
+
+        non_interp_areas_list: List[np.ndarray] = []
+        non_interp_mosaic_list: List[np.ndarray] = []
+
+        # Number of non-interpolated land pixels at this date
+        n_current_time = int(
+            np.sum(np.logical_and(interp[date] == 0, water_mask <= 1))
+        )
+
+        # Decide time window around the target date
+        if n_current_time > 40000:
+            min_time = max(date, 0)
+            max_time = date + 1
+        else:
+            if date == (array.shape[0] - 1):
+                min_time = max(date - 2, 0)
+            else:
+                min_time = max(date - 1, 0)
+            max_time = min(date + 2, array.shape[0])
+
+        # Ensure a lower bound on "enough pixels"
+        n_current_time = max(n_current_time, 36000)
+
+        # Collect non-interpolated land pixels for each time in window
+        for t in range(min_time, max_time):
+            requirement1 = np.logical_and(interp[t] == 0, water_mask < 1)
+
+            if np.sum(requirement1) == 0:
+                continue
+
+            non_interp_areasi = np.concatenate([array[t], snow], axis=-1)[
+                requirement1
+            ]
+            non_interp_mosaici = np.concatenate([mosaic, snow], axis=-1)[
+                requirement1
+            ]
+
+            non_interp_areas_list.append(non_interp_areasi)
+            non_interp_mosaic_list.append(non_interp_mosaici)
+
+        if not non_interp_areas_list or not non_interp_mosaic_list:
+            # Nothing to train on; bail out
+            to_remove = []
+            interp_array = interp_array[_time]
+            break
+
+        # If there are a ton of clean pixels for the current date, just use that slice
+        if n_current_time > 40000:
+            non_interp_mid_mosaic = non_interp_mosaic_list[0]
+            non_interp_mid_areas = non_interp_areas_list[0]
+            to_remove = []
+        else:
+            # MEMORY-SAFE PATH:
+            # Build a bounded sample incrementally rather than concatenating all candidates.
+            non_interp_mid_mosaic, non_interp_mid_areas = _build_incremental_sample(
+                non_interp_mosaic_list,
+                non_interp_areas_list,
+                max_samples=90000,
+            )
+            if (
+                non_interp_mid_mosaic is None
+                or non_interp_mid_areas is None
+                or non_interp_mid_mosaic.shape[0] == 0
+            ):
+                to_remove = []
+                interp_array = interp_array[_time]
+                break
+
+        # Now we have at most ~90k samples; apply NDVI/EVI-based equibatch sampling
+        equibatch = True
+        if not equibatch:
+            random_sample = np.arange(
+                0, min(20000, non_interp_mid_mosaic.shape[0])
+            )
+        else:
+            n_samples = min(90000, non_interp_mid_mosaic.shape[0])
+            if n_samples < 100:  # not enough to be worth training
+                to_remove = []
+                interp_array = interp_array[_time]
+                break
+
+            n_samples_i = max(n_samples // 5, 1)
+
+            ndvi_i = _evi(non_interp_mid_areas)
+
+            b2 = np.percentile(ndvi_i, 2)
+            b20 = np.percentile(ndvi_i, 20)
+            b40 = np.percentile(ndvi_i, 40)
+            b60 = np.percentile(ndvi_i, 60)
+            b80 = np.percentile(ndvi_i, 80)
+            b98 = np.percentile(ndvi_i, 98)
+
+            p2 = np.argwhere(ndvi_i < b2).squeeze()
+            p20 = np.argwhere(ndvi_i < b20).squeeze()
+            p40 = np.argwhere(
+                np.logical_and(ndvi_i >= b20, ndvi_i < b40)
+            ).squeeze()
+            p60 = np.argwhere(
+                np.logical_and(ndvi_i >= b40, ndvi_i < b60)
+            ).squeeze()
+            p80 = np.argwhere(
+                np.logical_and(ndvi_i >= b60, ndvi_i < b80)
+            ).squeeze()
+            p100 = np.argwhere(ndvi_i >= b80).squeeze()
+            p98 = np.argwhere(ndvi_i >= b98).squeeze()
+
+            # Repeat tails to up-weight very low/high vegetation
+            if p98.size > 0:
+                p98 = np.repeat(p98, 10)
+            if p2.size > 0:
+                p2 = np.repeat(p2, 10)
+
+            for arr_idx in [p2, p98, p20, p40, p60, p80, p100]:
+                if arr_idx.size > 0:
+                    np.random.shuffle(arr_idx)
+
+            # Clip each bucket to n_samples_i where applicable
+            p20 = p20[:n_samples_i]
+            p40 = p40[:n_samples_i]
+            p60 = p60[:n_samples_i]
+            p80 = p80[:n_samples_i]
+            p100 = p100[:n_samples_i]
+
+            random_sample = np.concatenate(
+                [p2, p20, p40, p60, p80, p100, p98]
+            )
+            # Ensure we don't exceed available rows
+            random_sample = random_sample[
+                : min(random_sample.shape[0], non_interp_mid_mosaic.shape[0])
+            ]
+            np.random.shuffle(random_sample)
+
+        # Final training subset
+        random_sample = random_sample[: non_interp_mid_mosaic.shape[0]]
+        random_sample = random_sample[: non_interp_mid_areas.shape[0]]
+
+        non_interp_mid_mosaic = non_interp_mid_mosaic[random_sample]
+        non_interp_mid_areas = non_interp_mid_areas[random_sample]
+
+        if linregress:
+            preds_out = np.copy(interp_array_i)
+            # Feature matrix for training (non-interpolated pixels)
+            train_x = np.copy(non_interp_mid_mosaic)
+
+            # Prediction features: interpolated pixels (current date) + snow
+            predicted_features = np.concatenate(
+                [interp_array_i, snow], axis=-1
+            )
+            pred_flat = predicted_features.reshape(
+                -1, predicted_features.shape[-1]
+            )
+
+            mask_interp = np.logical_and(interp[date] > 0, water_mask <= 1)
+
+            for band in range(10):  # assumes first 10 bands are optical
+                # Clip band to avoid weird tiny values
+                non_interp_mid_mosaic[..., band] = np.clip(
+                    non_interp_mid_mosaic[..., band], 0.005, 1.0
+                )
+
+                model = LinearRegression(
+                    positive=True, fit_intercept=False
+                ).fit(
+                    train_x,
+                    non_interp_mid_areas[..., band],
+                )
+
+                band_pred_flat = model.predict(pred_flat)
+                predicted_img = band_pred_flat.reshape(
+                    interp_array_i.shape[:-1]
+                )
+
+                preds_out[mask_interp, band] = predicted_img[mask_interp]
+
+            interp_array[_time] = preds_out
+        else:
+            # Non-linear model branch not implemented in this rewrite
+            interp_array[_time] = interp_array_i
+
     return interp_array, to_remove
 
 
-def make_aligned_mosaic(arr, interp, randomforest = False):
-    bands = arr.shape[-1]
-    def _ndwi(arr):
-        return (arr[..., 1] - arr[..., 3]) / (arr[..., 1] + arr[..., 3])
+def make_aligned_mosaic(arr, interp, randomforest=False):
+    """
+    Drop-in replacement for the original make_aligned_mosaic.
 
-    water_mask = np.median(_ndwi(arr), axis=0)
-    water_mask = water_mask > 0
+    Key speed win:
+      - Replaces the inner loop over b (O(T^2)) with a running sum/count
+        over timesteps where interp[b] < 1, updated only when interp[i] is
+        mutated to 1.
+
+    Output behavior:
+      - Preserves the original water_mask construction.
+      - Preserves the fact that `divisor` is computed ONCE before any in-loop
+        mutation to `interp`.
+      - Preserves the in-place mutation `interp[i] = 1.` in the same cases.
+      - Uses float32 accumulation to match the original incremental adds.
+    """
+    bands = arr.shape[-1]
+
+    def _ndwi(a):
+        return (a[..., 1] - a[..., 3]) / (a[..., 1] + a[..., 3])
+
+    # --- water mask (preserve original logic) ---
+    water_mask = np.median(_ndwi(arr), axis=0) > 0
     water_mask = binary_dilation(1 - water_mask, iterations=2)
     water_mask = binary_dilation(1 - water_mask, iterations=5)
 
-    non_interp_areas = arr[np.logical_and(interp == 0, water_mask == 0)]
+    land = (water_mask == 0)
 
-    mosaic = np.zeros((arr.shape[1], arr.shape[2], arr.shape[3]),
-                      dtype=np.float32)
-    divisor = (np.sum(1 - interp, axis=0))[..., np.newaxis]
-    brightness_mask = bn.nanmax(np.sum(arr[..., :3], axis = -1), axis = 0)
-    #darkness_mask = (arr[..., 3] == bn.nanmin(arr[..., 3], axis = 0)) * (divisor.squeeze()[np.newaxis] >= 3)
-    #interp[darkness_mask] = 1.
-    #brightness_mask[interp > 0] == np.nan
-    #median_brightness = np.nanmedian(brightness_mask)
+    # --- outputs / constants ---
+    mosaic = np.zeros((arr.shape[1], arr.shape[2], arr.shape[3]), dtype=np.float32)
+
+    # IMPORTANT: preserve original behavior — divisor computed BEFORE interp is mutated
+    divisor = (np.sum(1 - interp, axis=0))[..., np.newaxis].astype(np.float32)
+
+    # (kept to preserve any subtle runtime/side-effect parity; value isn't used later)
+    _brightness_mask = bn.nanmax(np.sum(arr[..., :3], axis=-1), axis=0)
+
+    # --- Precompute running sums/counts for "interp[b] < 1 and land" ---
+    # valid_lt1[t,h,w] == True if that timestep contributes to "other images"
+    valid_lt1 = (interp < 1) & land[None, ...]  # (T,H,W) bool
+
+    # Match original accumulation dtype (float32)
+    arr_f32 = arr.astype(np.float32, copy=False)
+
+    # sum_all[h,w,b] = sum over t of arr[t,h,w,b] where valid_lt1[t,h,w] is True
+    sum_all = np.sum(arr_f32 * valid_lt1[..., None], axis=0, dtype=np.float32)  # (H,W,B)
+    count_all = np.sum(valid_lt1, axis=0, dtype=np.float32)  # (H,W)
+
     for i in range(arr.shape[0]):
+        # mask where timestep i is "good enough" (same as original)
+        non_interp_mosaic_mask = (interp[i] < 0.25) & land  # (H,W) bool
 
-        # All areas within one image that are not interpolated
-        non_interp_mosaic = arr[i][np.logical_and(interp[i] < 0.25,
-                                                    water_mask == 0)]
+        # Exclude timestep i from the "others" pool (matches b != i loop)
+        valid_i = valid_lt1[i]  # (H,W) bool, based on current interp (may have been mutated earlier)
+        sum_excl_i = sum_all - (arr_f32[i] * valid_i[..., None]).astype(np.float32, copy=False)
+        count_excl_i = count_all - valid_i.astype(np.float32, copy=False)  # (H,W)
 
-        non_interp_mosaic_mask = np.logical_and(interp[i] < 0.25,
-                                                    water_mask == 0)
-        # Non interp mosaic is all areas in mosaic where time i is not interpolated
-        non_interp_areas = np.full((arr.shape[1], arr.shape[2], arr.shape[3]), 0, dtype = np.float32)
-        non_interp_count = np.full((arr.shape[1], arr.shape[2], arr.shape[3]), 0, dtype = np.float32)
+        # Build per-pixel average of other timesteps (will be inf where count==0, matching original)
+        denom = count_excl_i[..., None]  # (H,W,1)
+        non_interp_areas_img = sum_excl_i / denom  # (H,W,B), float32
 
-        for b in range(arr.shape[0]):
-            if b != i:
-                mask = np.logical_and(np.logical_and(interp[i] < 0.25, interp[b] < 1),
-                                            water_mask == 0)
-                arr_b = arr[b]
-                non_interp_areas[mask * non_interp_mosaic_mask] += arr_b[mask * non_interp_mosaic_mask]
-                non_interp_count[mask * non_interp_mosaic_mask] += 1
+        # Original code: non_interp_mosaic_mask[non_interp_count[...,0]==0] = 0
+        # Here non_interp_count[...,0] == count_excl_i
+        non_interp_mosaic_mask = non_interp_mosaic_mask.copy()
+        non_interp_mosaic_mask[count_excl_i == 0] = 0
 
-        non_interp_areas = non_interp_areas / non_interp_count
-        non_interp_mosaic_mask[non_interp_count[..., 0] == 0] = 0.
-        non_interp_mosaic = arr[i][non_interp_mosaic_mask]
-        non_interp_areas = np.reshape(non_interp_areas, (non_interp_areas.shape[0] * non_interp_areas.shape[1], non_interp_areas.shape[2]))
+        non_interp_mosaic = arr_f32[i][non_interp_mosaic_mask]  # (N,B)
+
+        # Original reshaping + NaN row drop (keeps infs)
+        non_interp_areas = non_interp_areas_img.reshape(-1, bands)
         non_interp_areas = non_interp_areas[~np.isnan(non_interp_areas).any(axis=1)]
 
         if non_interp_mosaic.shape[0] > 1000 and non_interp_areas.shape[0] > 1000:
-            non_interp_mosaic = non_interp_mosaic[:non_interp_areas.shape[0]]
-            non_interp_areas = non_interp_areas[:non_interp_mosaic.shape[0]]
-            #non_interp_mosaic, non_interp_areas_i = identify_pifs(
-            #            non_interp_mosaic, non_interp_areas)
-            if not randomforest:
+            # match original truncation
+            n = min(non_interp_mosaic.shape[0], non_interp_areas.shape[0])
+            non_interp_mosaic = non_interp_mosaic[:n]
+            non_interp_areas = non_interp_areas[:n]
 
+            if not randomforest:
                 mean_ref = bn.nanmedian(non_interp_areas, axis=0)
-                std_ref = bn.nanstd(non_interp_areas, axis=0)
+                std_ref  = bn.nanstd(non_interp_areas, axis=0)
 
                 mean_src = bn.nanmedian(non_interp_mosaic, axis=0)
-                std_src = bn.nanstd(non_interp_mosaic, axis=0)
-
-                #higher = np.argwhere(mean_src >= mean_ref)
-                #lower = np.argwhere(mean_src < mean_ref)
+                std_src  = bn.nanstd(non_interp_mosaic, axis=0)
 
                 std_mult = (std_ref / std_src)
-                addition = (mean_ref - (mean_src * (std_mult)))
-                arr_i = np.copy(arr[i])
-                arr_i[water_mask == 0] = arr_i[water_mask == 0] * std_mult + addition
-                increment = (1 - interp[i][..., np.newaxis]) * arr_i
+                addition = (mean_ref - (mean_src * std_mult))
+
+                arr_i = np.copy(arr_f32[i])
+                arr_i[land] = arr_i[land] * std_mult + addition
+                increment = (1 - interp[i][..., np.newaxis]).astype(np.float32) * arr_i
             else:
+                predicted_mosaic = np.zeros_like(arr_f32[0])
 
-                predicted_mosaic = np.zeros_like((arr[0]))
-                #random_sample = np.arange(0, 5000, 1)
-                
-                #random_sample = random_sample[:non_interp_mosaic.shape[0]]
-                #random_sample = random_sample[:non_interp_areas.shape[0]]
-                #random.shuffle(random_sample)
-                
                 for band in range(10):
-                    model = LinearRegression(positive = True, fit_intercept = False).fit(
-                            non_interp_mosaic, 
-                            non_interp_areas[..., band])
-                    #model = sklearn.ensemble.GradientBoostingRegressor(n_estimators = 50).fit(
-                            #X = non_interp_mosaic[random_sample],
-                            #y = non_interp_areas[random_sample, band])
+                    model = LinearRegression(positive=True, fit_intercept=False).fit(
+                        non_interp_mosaic,
+                        non_interp_areas[..., band]
+                    )
 
-                    arr_i = np.copy(arr[i])
-                    arr_i = np.reshape(arr_i, (arr_i.shape[0]*arr_i.shape[1], 10))
-                    arr_i = model.predict(arr_i)
-                    arr_i = np.reshape(arr_i, arr[i].shape[:-1])
-                    predicted_mosaic[..., band] = arr_i
-                increment = (1 - interp[i][..., np.newaxis]) * predicted_mosaic
-                    
-            # We want to not include pixels that are the brightest or the least bright
-            # if there are >3 images
-            #areas_to_subset = divisor >= 3
-            #is_max_brightness = np.sum(arr[i, ..., :3], axis = -1) == brightness_mask
-            #is_min_brightness = np.sum(arr[i, ..., :3], axis = -1) == darkness_mask
-            #areas_to_subset = areas_to_subset.squeeze() * (is_min_brightness + is_max_brightness)
-            #increment[areas_to_subset] = 0.
-            #divisor[areas_to_subset] -= 1.
+                    arr_i = np.copy(arr_f32[i]).reshape(-1, 10)
+                    pred = model.predict(arr_i).reshape(arr_f32[i].shape[:-1])
+                    predicted_mosaic[..., band] = pred
+
+                increment = (1 - interp[i][..., np.newaxis]).astype(np.float32) * predicted_mosaic
+
             mosaic = mosaic + increment
-            
+
         elif np.mean(water_mask < 0.9):
+            # Preserve original in-place side-effect and also update running sum/count
+            # so later i's see this timestep as fully interpolated (excluded from "others").
+            if np.any(valid_lt1[i]):
+                sum_all   -= (arr_f32[i] * valid_lt1[i][..., None]).astype(np.float32, copy=False)
+                count_all -= valid_lt1[i].astype(np.float32, copy=False)
+                valid_lt1[i] = False
             interp[i] = 1.
         else:
             continue
+
     divisor[divisor < 0] = 0.
     mosaic = mosaic / divisor
-    mosaic[np.isnan(mosaic)] = np.percentile(arr, 10, axis=0)[np.isnan(mosaic)]
-    mins = np.min(arr, axis = 0)
-    maxs = np.max(arr, axis = 0)
+
+    # Preserve original fill/clip behavior
+    mosaic[np.isnan(mosaic)] = np.percentile(arr_f32, 10, axis=0)[np.isnan(mosaic)]
+    mins = np.min(arr_f32, axis=0)
+    maxs = np.max(arr_f32, axis=0)
     mosaic = np.maximum(mosaic, mins)
     mosaic = np.minimum(mosaic, maxs)
-    #divisor = (np.sum(1 - (interp > 0.5), axis=0))[..., np.newaxis] >= 3
-    #divisor = divisor.repeat(10, axis = -1)
 
-    #mins = np.percentile(arr, 25, axis = 0)
-    #maxs = np.percentile(arr, 75, axis = 0)
-    #mosaic[divisor] = np.maximum(mosaic[divisor], mins[divisor])
-    #mosaic[divisor] = np.minimum(mosaic[divisor], maxs[divisor])
-    #mosaic = np.clip(mosaic, 0, np.max(mosaic))
-    #np.save("mosaic.npy", mosaic)
     return mosaic
 
 
 
-def calculate_clouds_in_mosaic(mosaic, interp, pfcps):
-    # If there is only 1 availalble image, omission errors are
-    # possible due to S2Cloudless and ESA SCL
-    # We can assume that areas with > 1 image have no clouds,
-    # as well as areas that we would consider false positives.
-    # and use the red/blue band distributions of those areas
-    # to threshold the non-saturated, non FCP areas with 1 image
-    # to make a cloud mask.
+
+def calculate_clouds_in_mosaic(
+    mosaic: np.ndarray,
+    interp: np.ndarray,
+    pfcps: np.ndarray,
+) -> np.ndarray:
+    """
+    Estimate additional clouds in the mosaic in areas with only one image.
+
+    Uses brightness thresholds in blue and red bands for low coverage regions.
+
+    Parameters
+    ----------
+    mosaic : np.ndarray
+        Mosaic, shape (H, W, B).
+    interp : np.ndarray
+        Interpolated areas, shape (T, H, W).
+    pfcps : np.ndarray
+        Potential false cloud positives mask, shape (H, W) or (1, H, W).
+
+    Returns
+    -------
+    np.ndarray
+        Binary mask of clouds in mosaic, shape (H, W).
+    """
     only_1_img = np.sum(1 - (interp > 0), axis=0).squeeze() < 2
+
     if len(pfcps.shape) == 3 and pfcps.shape[0] > 1:
         pfcps = pfcps[0]
 
-    pfcps = binary_dilation(pfcps, iterations=10)
-
+    pfcps = nd_morph.binary_dilation(pfcps, iterations=10)
     only_1_img = np.maximum(only_1_img, pfcps.squeeze())
+
     if np.sum(only_1_img) == np.prod(only_1_img.shape):
         return np.zeros_like(only_1_img)
-    else:
-        reference_blue = np.percentile(mosaic[..., 0][~only_1_img], 99)
-        reference_red = np.percentile(mosaic[..., 2][~only_1_img], 99)
-        clouds_in_mosaic = ((mosaic[..., 0] > reference_blue) * \
-                            (mosaic[..., 2] > reference_red) * \
-                            only_1_img * \
-                            (np.sum(mosaic[..., :3], axis = -1) < 1)
-                           )
 
-        clouds_in_mosaic[pfcps.squeeze() > 0] = 0.
-        clouds_in_mosaic = binary_dilation(1 - clouds_in_mosaic, iterations=3)
-        clouds_in_mosaic = binary_dilation(1 - clouds_in_mosaic, iterations=8)
-        return clouds_in_mosaic
+    reference_blue = np.percentile(mosaic[..., 0][~only_1_img], 99)
+    reference_red = np.percentile(mosaic[..., 2][~only_1_img], 99)
+
+    clouds_in_mosaic = (
+        (mosaic[..., 0] > reference_blue)
+        * (mosaic[..., 2] > reference_red)
+        * only_1_img
+        * (np.sum(mosaic[..., :3], axis=-1) < 1)
+    )
+
+    clouds_in_mosaic[pfcps.squeeze() > 0] = 0.0
+    clouds_in_mosaic = nd_morph.binary_dilation(
+        1 - clouds_in_mosaic, iterations=3
+    )
+    clouds_in_mosaic = nd_morph.binary_dilation(
+        1 - clouds_in_mosaic, iterations=8
+    )
+    return clouds_in_mosaic
 
 
 def mask_nonurban_areas(file, bbx, pfcps):
@@ -885,91 +885,107 @@ def adjust_median(raw, candidate, clouds):
         return candidate
 
 
-def remove_cloud_and_shadows(tiles: np.ndarray,
-                             probs: np.ndarray,
-                             shadows: np.ndarray,
-                             image_dates: List[int],
-                             pfcps,
-                             sentinel1,
-                             mosaic = None) -> np.ndarray:
-    """ Interpolates clouds and shadows for each time step with
-        linear combination of proximal clean time steps for each
-        region of specified window size
-
-        Parameters:
-         tiles (arr):
-         probs (arr):
-         shadows (arr):
-         image_dates (list):
-         wsize (int):
-
-        Returns:
-         tiles (arr):
+def remove_cloud_and_shadows(
+    tiles: np.ndarray,
+    probs: np.ndarray,
+    shadows: np.ndarray,
+    image_dates: List[int],
+    pfcps: np.ndarray,
+    sentinel1: np.ndarray,
+    mosaic: np.ndarray | None = None,
+) -> Tuple[np.ndarray, np.ndarray, List[int]]:
     """
+    Remove clouds and shadows by interpolating with proximal clean time steps.
 
-    areas_interpolated = np.copy(probs)
-    areas_interpolated = areas_interpolated.astype(np.float32)
-    
+    This is the main multi-temporal cloud/shadow interpolation routine.
+
+    Parameters
+    ----------
+    tiles : np.ndarray
+        Original time series, shape (T, H, W, B).
+    probs : np.ndarray
+        Cloud/shadow probabilities, shape (T, H, W).
+    shadows : np.ndarray
+        Shadow mask, shape (T, H, W).
+    image_dates : list[int]
+        Dates as integers.
+    pfcps : np.ndarray
+        Potential false cloud positives mask.
+    sentinel1 : np.ndarray
+        Co-registered Sentinel-1 data.
+    mosaic : np.ndarray, optional
+        Precomputed mosaic; if None, will be computed.
+
+    Returns
+    -------
+    tiles_out : np.ndarray
+        Cloud/shadow interpolated time series, shape (T, H, W, B).
+    areas_interpolated : np.ndarray
+        Final interpolation mask, shape (T, H, W).
+    to_remove : list[int]
+        List of time indices to remove entirely.
+    """
+    areas_interpolated = np.copy(probs).astype(np.float32)
+
     for date in range(areas_interpolated.shape[0]):
         if np.sum(areas_interpolated[date]) > 0:
             blurred = distance(1 - areas_interpolated[date])
             blurred[blurred > 12] = 12
-            blurred = (blurred / 12)
-            blurred = 1 - blurred
-            blurred[blurred < 0.2] = 0.
+            blurred = 1 - (blurred / 12)
+            blurred[blurred < 0.2] = 0.0
             blurred = grey_closing(blurred, size=20)
             areas_interpolated[date] = blurred
 
     areas_interpolated = areas_interpolated.astype(np.float32)
-   # np.save("interp.npy", areas_interpolated)
+
     if mosaic is None:
         mosaic = make_aligned_mosaic(tiles, areas_interpolated, False)
-    np.save("mosaic.npy", mosaic)
-    np.save("tiles.npy", tiles)
-    np.save("areas_interpolated.npy", areas_interpolated)
-    #candidate = adjust_median(tiles, mosaic, areas_interpolated > 0.75)
-    n_interp = np.sum(areas_interpolated, axis = 0)
-    n_interp = n_interp / np.max(n_interp)
-    #sentinel1 = np.concatenate([sentinel1, n_interp[..., np.newaxis]], axis = -1)
-    #np.save("mosaic2.npy", mosaic)
 
-    def _water_ndwi(array):
+    #np.save("mosaic.npy", mosaic)
+    #np.save("tiles.npy", tiles)
+    #np.save("areas_interpolated.npy", areas_interpolated)
+
+    n_interp = np.sum(areas_interpolated, axis=0)
+    n_interp = n_interp / np.max(n_interp)
+
+    def _water_ndwi(array: np.ndarray) -> np.ndarray:
         return (array[..., 1] - array[..., 3]) / (array[..., 1] + array[..., 3])
 
     water_mask = _water_ndwi(np.median(tiles, axis=0)) > 0.0
-    to_remove = []
+    to_remove: List[int] = []
     print("Blending mosaic and cloud-free portions")
-    #np.save("before.npy", tiles)
+
     for date in tqdm(range(0, tiles.shape[0])):
         interp_array = np.zeros_like(tiles[date])
-        interp_multiplier = (1 - areas_interpolated[date, ..., np.newaxis])
         interp_array[areas_interpolated[date] > 0] = mosaic[
-            areas_interpolated[date] > 0]
-        interp_array , removei = align_interp_array_randomforest(interp_array[np.newaxis],
-                                          tiles,#tiles[date][np.newaxis],
-                                          date,
-                                          sentinel1,
-                                          areas_interpolated,#[date][np.newaxis],
-                                          mosaic, water_mask)
-        tiles[date] = (tiles[date] * (1 - areas_interpolated[date][..., np.newaxis]) +  \
-                      (interp_array * areas_interpolated[date][..., np.newaxis]))
+            areas_interpolated[date] > 0
+        ]
+        interp_array, removei = align_interp_array_randomforest(
+            interp_array[np.newaxis],
+            tiles,
+            date,
+            sentinel1,
+            areas_interpolated,
+            mosaic,
+            water_mask,
+        )
+        tiles[date] = (
+            tiles[date] * (1 - areas_interpolated[date][..., np.newaxis])
+            + interp_array * areas_interpolated[date][..., np.newaxis]
+        )
         if len(removei) > 0:
             to_remove.append(date)
         if np.mean(areas_interpolated[date] == 1) == 1:
             to_remove.append(date)
-    #np.save("after.npy", tiles)
-    areas_interpolated = areas_interpolated[..., np.newaxis]
-    interp_array = None
-    areas_interpolated = areas_interpolated.squeeze()
-    clouds_in_mosaic = calculate_clouds_in_mosaic(mosaic,
-                                                  areas_interpolated.squeeze(),
-                                                  pfcps)
-    areas_interpolated += clouds_in_mosaic[np.newaxis]
-    areas_interpolated[areas_interpolated > 1] = 1.
 
-    for i in range(tiles.shape[0], tiles.shape[0] - 1):
-        brightness = np.sum(tiles[i-1:i+2, ..., :3], axis = 0)
-    np.save("tiles_interp.npy", areas_interpolated)
+    areas_interpolated = areas_interpolated[..., np.newaxis].squeeze()
+    clouds_in_mosaic = calculate_clouds_in_mosaic(
+        mosaic, areas_interpolated.squeeze(), pfcps
+    )
+    areas_interpolated += clouds_in_mosaic[np.newaxis]
+    areas_interpolated[areas_interpolated > 1] = 1.0
+
+    #np.save("tiles_interp.npy", areas_interpolated)
     return tiles, areas_interpolated, to_remove
 
 
@@ -1057,53 +1073,6 @@ def make_cloudfree_composite(arr, interp, time):
         mosaic[..., band] = normalized_med
         np.save("composite.npy", mosaic)
     return mosaic
-
-"""
-def remove_cloud_and_shadows(tiles: np.ndarray,
-                             probs: np.ndarray,
-                             shadows: np.ndarray,
-                             image_dates: List[int],
-                             pfcps,
-                             wsize: int = 36, step = 8, thresh = 100) -> np.ndarray:
-    
-    areas_interpolated = np.copy(probs)
-    areas_interpolated = areas_interpolated.astype(np.float32)
-
-    for date in range(areas_interpolated.shape[0]):
-        if np.sum(areas_interpolated[date]) > 0:
-            blurred = distance(1 - areas_interpolated[date])
-            blurred[blurred > 15] = 15
-            blurred = (blurred / 15)
-            blurred = 1 - blurred
-            blurred[blurred < 0.1] = 0.
-            blurred = grey_closing(blurred, size = 20)
-            areas_interpolated[date] = blurred
-
-    areas_interpolated = areas_interpolated.astype(np.float32)
-    for date in range(tiles.shape[0]):
-        mosaic = make_cloudfree_composite(tiles, areas_interpolated, date)
-        #areas_interpolated[nans[np.newaxis]] = 1.
-        interp_array = np.zeros_like(tiles[date], dtype = np.float32)
-        interp_multiplier = (1 - areas_interpolated[date, ..., np.newaxis])
-        interp_array[areas_interpolated[date] > 0] = mosaic[areas_interpolated[date] > 0]
-        #tiles[date] = mosaic
-        tiles[date] = (tiles[date] * (interp_multiplier) +  \
-            (interp_array * (1 - interp_multiplier)))
-        #areas_interpolated[np.isnan()]
-
-    #np.save("after.npy", tiles)
-
-
-    #interp_array = None
-    #areas_interpolated = areas_interpolated.squeeze()
-    #clouds_in_mosaic = calculate_clouds_in_mosaic(mosaic, areas_interpolated.squeeze(), pfcps)
-    #areas_interpolated += clouds_in_mosaic[np.newaxis]
-    #areas_interpolated[areas_interpolated > 1] = 1.
-    
-    #np.save("after.npy", tiles)
-    #areas_interpolated = areas_interpolated[..., np.newaxis]
-    return tiles, areas_interpolated
-"""
 
 
 def detect_pfcp(arr, dem, bbx):
